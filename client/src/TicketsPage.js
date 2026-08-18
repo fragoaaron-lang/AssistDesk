@@ -1,0 +1,209 @@
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { useAuth } from './AuthContext';
+import NotificationBell from './NotificationBell';
+
+function TicketsPage() {
+  const { token, user, logout } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [tickets, setTickets] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [services, setServices] = useState([]);
+  const [form, setForm] = useState({ subject: '', description: '', priority: 'medium', department_id: '' });
+
+  const loadTickets = async () => {
+    const res = await axios.get('http://localhost:3001/api/tickets', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setTickets(res.data);
+  };
+
+  const loadDepartments = async () => {
+    const res = await axios.get('http://localhost:3001/api/catalog/departments', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const options = res.data.departments || [];
+    setDepartments(options);
+    if (!form.department_id && options.length > 0) {
+      setForm((current) => ({ ...current, department_id: String(options[0].id), subject: '' }));
+    }
+  };
+
+  const loadServices = async () => {
+    const res = await axios.get('http://localhost:3001/api/catalog/services', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setServices(res.data.services || []);
+  };
+
+  useEffect(() => {
+    if (token) {
+      loadTickets();
+      loadDepartments();
+      loadServices();
+    }
+  }, [token]);
+
+  const availableSubjects = services
+    .filter((service) => String(service.department_id) === String(form.department_id))
+    .map((service) => service.name);
+
+  const subjectOptions = availableSubjects.length > 0
+    ? availableSubjects
+    : ['General Request', 'Support Request', 'Department Inquiry'];
+
+  const createTicket = async (e) => {
+    e.preventDefault();
+    await axios.post('http://localhost:3001/api/tickets', { ...form, user_id: user?.id || 0 }, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const nextDepartmentId = departments[0]?.id ? String(departments[0].id) : '';
+    setForm({ subject: '', description: '', priority: 'medium', department_id: nextDepartmentId });
+    loadTickets();
+  };
+
+  const handleDepartmentChange = (departmentId) => {
+    setForm((current) => ({ ...current, department_id: departmentId, subject: '' }));
+  };
+
+  const updateStatus = async (id, status) => {
+    await axios.put(`http://localhost:3001/api/tickets/${id}/status`, { status }, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    loadTickets();
+  };
+
+  return (
+    <div className="app-shell">
+      <div className="page-shell">
+        <div className={`mobile-menu-backdrop ${mobileMenuOpen ? 'show' : ''}`} onClick={() => setMobileMenuOpen(false)} />
+        <header className="page-header">
+          <button
+            type="button"
+            className="mobile-menu-toggle"
+            aria-label="Open navigation menu"
+            aria-expanded={mobileMenuOpen}
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+          >
+            ☰
+          </button>
+          <div className="header-brand">
+            <div className="brand-badge">
+              <img src="/assistdesk-logo.svg" alt="AssistDesk logo" />
+            </div>
+            <div>
+              <h1>AssistDesk</h1>
+              <p>Service requests and case tracking</p>
+            </div>
+          </div>
+          <div className="nav-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/tickets">Tickets</a>
+            <a href="/assistant">Assistant</a>
+            {user?.role === 'admin' && (
+              <>
+                <a href="/admin/reports">Reports</a>
+                <a href="/admin/catalog">Catalog</a>
+              </>
+            )}
+          </div>
+          <div className="header-actions">
+            <button className="institutional-btn secondary small" onClick={logout}>Logout</button>
+            <NotificationBell />
+          </div>
+        </header>
+
+        <aside className={`mobile-menu-drawer ${mobileMenuOpen ? 'open' : ''}`}>
+          <div className="mobile-menu-head">
+            <strong>Menu</strong>
+            <button type="button" className="mobile-menu-close" onClick={() => setMobileMenuOpen(false)}>×</button>
+          </div>
+          <div className="nav-links">
+            <a href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</a>
+            <a href="/tickets" onClick={() => setMobileMenuOpen(false)}>Tickets</a>
+            <a href="/assistant" onClick={() => setMobileMenuOpen(false)}>Assistant</a>
+            {user?.role === 'admin' && (
+              <>
+                <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Reports</a>
+                <a href="/admin/catalog" onClick={() => setMobileMenuOpen(false)}>Catalog</a>
+              </>
+            )}
+          </div>
+          <div className="mobile-profile-summary">
+            <div className="brand-badge small-badge">
+              <img src="/assistdesk-logo.svg" alt="AssistDesk logo" />
+            </div>
+            <div>
+              <div className="mobile-profile-name">{user?.name || 'User'}</div>
+              <div className="mobile-profile-role">{user?.role || 'Member'}</div>
+            </div>
+          </div>
+          <div className="mobile-menu-actions">
+            <button className="institutional-btn secondary small" onClick={() => { setMobileMenuOpen(false); logout(); }}>Logout</button>
+            <div className="mobile-menu-bell"><NotificationBell /></div>
+          </div>
+        </aside>
+
+        <div className="page-intro">
+          <div>
+            <h2>Support tickets</h2>
+            <p>Submit a request and monitor progress through clearly organized service channels.</p>
+          </div>
+        </div>
+
+        {user?.role !== 'admin' && (
+          <div className="institutional-card" style={{ marginBottom: '20px' }}>
+            <h3>Create a new request</h3>
+            <form onSubmit={createTicket}>
+              <select className="institutional-select" value={form.department_id} onChange={(e) => handleDepartmentChange(e.target.value)} required>
+                <option value="">Select a department</option>
+                {departments.map((department) => (
+                  <option key={department.id} value={department.id}>{department.name}</option>
+                ))}
+              </select>
+              <select className="institutional-select" value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} required>
+                <option value="">Select a subject</option>
+                {subjectOptions.map((subject) => (
+                  <option key={subject} value={subject}>{subject}</option>
+                ))}
+              </select>
+              <textarea className="institutional-textarea" placeholder="Describe your issue" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
+              <select className="institutional-select" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
+              <button className="institutional-btn" type="submit">Create Ticket</button>
+            </form>
+          </div>
+        )}
+
+        <div className="institutional-card">
+          <h3>Recent tickets</h3>
+          <div className="list-stack">
+            {tickets.map((ticket) => (
+              <div key={ticket.id}>
+                <h4 style={{ margin: '0 0 6px' }}>{ticket.subject}</h4>
+                <div className="small-muted"><strong>Status:</strong> {ticket.status}</div>
+                <div className="small-muted"><strong>Priority:</strong> {ticket.priority}</div>
+                <div className="small-muted"><strong>Department:</strong> {ticket.Department?.name}</div>
+                <p style={{ margin: '8px 0 0' }}>{ticket.description}</p>
+                {user?.role === 'admin' && (
+                  <div className="inline-actions">
+                    <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'open')}>Open</button>
+                    <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'in_progress')}>In Progress</button>
+                    <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'resolved')}>Resolved</button>
+                    <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'closed')}>Closed</button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default TicketsPage;

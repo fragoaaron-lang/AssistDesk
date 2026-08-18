@@ -1,0 +1,28 @@
+# Node
+node_modules/
+npm-debug.log*
+.env
+.env.*
+.DS_Store
+
+# Build outputs
+client/build/
+server/build/
+build/
+
+# Logs
+logs/
+*.log
+
+# OS files
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# Mac
+.DS_Store
+
+# Other
+.idea/
+coverage/
