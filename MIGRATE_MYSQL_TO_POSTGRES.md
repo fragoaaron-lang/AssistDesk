@@ -39,50 +39,10 @@ Notes
 - I cannot access or modify live databases from this environment; migration commands must be run locally or on a machine you control.
 - If you want me to generate a provider-specific migration command, tell me the source DB type (no passwords) and I will provide the exact command to run locally.
 
-Option A — Recommended: use `pgloader` (fast, preserves types)
+Post-migration checklist
 
-1. Install `pgloader` (Linux/macOS) or run in Docker. On Windows use WSL or Docker.
+- Ensure Vercel environment variables are set for Postgres (`DATABASE_URL` or individual `DB_` vars).
+- Trigger a redeploy and verify `/health` and API endpoints.
+- Rotate any credentials you exposed during troubleshooting.
 
-2. Create a Postgres instance (managed provider or local). Note connection info: host, port (5432), user, password, db name.
-
-3. Run `pgloader` with a command like:
-
-pgloader mysql://root:MYSQL_PASS@mysql-host/assistdesk postgresql://pguser:PG_PASS@pg-host/assistdesk
-
-4. Verify data in Postgres, run app tests.
-
-Option B — Export SQL and adapt
-
-1. Dump MySQL data:
-
-mysqldump --routines --no-create-db --databases assistdesk -u root -p > dump_mysql.sql
-
-2. Edit `dump_mysql.sql` to remove MySQL-specific syntax (ENGINE=, `
-CHARSET`, backticks, `AUTO_INCREMENT` to `SERIAL` replacements for schema). This is manual and error-prone.
-
-3. Create Postgres DB and import with `psql`.
-
-Option C — Use a migration tool or ETL (e.g., AWS DMS, third-party)
-
-Checklist after migration
-
-- Set Vercel environment variables for Postgres (in Vercel dashboard → Settings → Environment Variables):
-  - `DB_DIALECT=postgres`
-  - `DB_HOST`, `DB_PORT` (usually 5432), `DB_USER`, `DB_PASS`, `DB_NAME`
-- Locally set `.env` with those values for development.
-- Install server dependencies and redeploy:
-
-cd server
-npm install
-npm start
-
-- Run the connection test from repo root:
-
-node -e "require('./server/models').sequelize.authenticate().then(()=>console.log('DB OK')).catch(e=>{console.error('DB ERR',e);process.exit(1)})"
-
-Security note
-
-- Back up MySQL data before deleting anything.
-- Rotate any DB credentials that were shared or exposed.
-
-Tell me which migration option to use next and whether you want me to run a repo-wide cleanup for leftover `mysql` mentions (I will commit and push any non-destructive edits).
+If you want me to prepare a migration command for a specific source DB, tell me the source type and host (no passwords) and I will prepare a non-destructive command you can run locally.
