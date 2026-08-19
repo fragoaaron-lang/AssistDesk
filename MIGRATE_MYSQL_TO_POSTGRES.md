@@ -1,20 +1,10 @@
 Migration plan: MySQL → Postgres
 
-Migration plan: MySQL → Postgres
-
-NOTE: Per project request, MySQL SQL artifacts previously stored in the repository have been permanently removed.
+NOTE: Per project request, repository MySQL SQL artifacts have been permanently removed.
 
 Overview
 
-This project originally uses MySQL with `sequelize` + `mysql2`. The repo has been updated so the server DB config reads `DB_DIALECT` (defaults to `postgres`) and `server/package.json` now depends on `pg` and `pg-hstore`.
-Deleting MySQL artifacts
-
-MySQL-related SQL files that previously existed in the repository have been permanently removed per request. This operation was limited to repository files only — no production database servers or external data stores were modified.
-
-Security note
-
-- If you had shared credentials during troubleshooting, rotate those credentials now.
-
+This project originally used MySQL with `sequelize` + `mysql2`. The repo has been updated so the server DB config reads `DB_DIALECT` (defaults to `postgres`) and `server/package.json` depends on `pg` and `pg-hstore`.
 
 I cannot access your live databases from here. Follow one of the migration paths below to move data and switch production to Postgres.
 
@@ -59,18 +49,9 @@ npm start
 
 node -e "require('./server/models').sequelize.authenticate().then(()=>console.log('DB OK')).catch(e=>{console.error('DB ERR',e);process.exit(1)})"
 
-Deleting MySQL artifacts
-
-If you want me to remove MySQL-related files in the repo (for example `database/schema.sql`, `database/seed.sql`, and remove `mysql2`), confirm explicitly. I will NOT delete your production database or run destructive commands against it; you must delete the MySQL server/data yourself or confirm credentials and intent for me to provide exact commands.
-
-If you confirm, I can:
-
-- Remove or archive `database/schema.sql` and `database/seed.sql` (create backups first).
-- Ensure `server/package.json` no longer lists `mysql2` (done).
-
 Security note
 
 - Back up MySQL data before deleting anything.
 - Rotate any DB credentials that were shared or exposed.
 
-Tell me which migration option to use and whether I should proceed to remove MySQL files in the repo (I will create backups instead of hard delete unless you explicitly request deletion).
+Tell me which migration option to use next and whether you want me to run a repo-wide cleanup for leftover `mysql` mentions (I will commit and push any non-destructive edits).
