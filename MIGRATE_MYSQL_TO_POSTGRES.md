@@ -1,8 +1,20 @@
 Migration plan: MySQL → Postgres
 
+Migration plan: MySQL → Postgres
+
+NOTE: Per project request, MySQL SQL artifacts previously stored in the repository have been permanently removed.
+
 Overview
 
 This project originally uses MySQL with `sequelize` + `mysql2`. The repo has been updated so the server DB config reads `DB_DIALECT` (defaults to `postgres`) and `server/package.json` now depends on `pg` and `pg-hstore`.
+Deleting MySQL artifacts
+
+MySQL-related SQL files that previously existed in the repository have been permanently removed per request. This operation was limited to repository files only — no production database servers or external data stores were modified.
+
+Security note
+
+- If you had shared credentials during troubleshooting, rotate those credentials now.
+
 
 I cannot access your live databases from here. Follow one of the migration paths below to move data and switch production to Postgres.
 
