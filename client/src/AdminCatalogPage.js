@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 import NotificationBell from './NotificationBell';
 
@@ -15,7 +16,7 @@ function AdminCatalogPage() {
   const [message, setMessage] = useState('');
 
   const api = axios.create({
-    baseURL: 'http://localhost:3001/api/catalog',
+    baseURL: `${API_BASE_URL}/api/catalog`,
     headers: { Authorization: `Bearer ${token}` },
   });
 

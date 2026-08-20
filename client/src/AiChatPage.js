@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 import NotificationBell from './NotificationBell';
 
@@ -15,7 +16,7 @@ function AiChatPage() {
 
     try {
       const res = await axios.post(
-        'http://localhost:3001/api/ai/ask',
+        `${API_BASE_URL}/api/ai/ask`,
         { message, user_id: user?.id || 0 },
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 import NotificationBell from './NotificationBell';
 
@@ -11,7 +12,7 @@ function AdminReportsPage() {
 
   const loadReports = async () => {
     try {
-      const res = await axios.get('http://localhost:3001/api/admin/reports', {
+      const res = await axios.get(`${API_BASE_URL}/api/admin/reports`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setReports(res.data);

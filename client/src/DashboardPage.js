@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 import { getSocket } from './socket';
 import NotificationBell from './NotificationBell';
@@ -27,15 +28,15 @@ function DashboardPage() {
 
   const loadData = async () => {
     try {
-      const dashboardRes = await axios.get('http://localhost:3001/api/dashboard', { headers: { Authorization: `Bearer ${token}` } });
-      const notificationsRes = await axios.get('http://localhost:3001/api/dashboard/notifications', { headers: { Authorization: `Bearer ${token}` } });
+      const dashboardRes = await axios.get(`${API_BASE_URL}/api/dashboard`, { headers: { Authorization: `Bearer ${token}` } });
+      const notificationsRes = await axios.get(`${API_BASE_URL}/api/dashboard/notifications`, { headers: { Authorization: `Bearer ${token}` } });
       
       setDashboard(dashboardRes.data);
       setNotifications(notificationsRes.data);
       
       // Try to load saved marker positions, but don't fail if endpoint errors
       try {
-        const positionsRes = await axios.get('http://localhost:3001/api/dashboard/marker-positions', { headers: { Authorization: `Bearer ${token}` } });
+        const positionsRes = await axios.get(`${API_BASE_URL}/api/dashboard/marker-positions`, { headers: { Authorization: `Bearer ${token}` } });
         if (positionsRes.data?.positions) {
           setMarkerPositions(positionsRes.data.positions);
         }
