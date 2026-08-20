@@ -1,0 +1,9 @@
+{
+  "name": "assistdesk",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "install:server": "npm install --prefix server",
+    "start": "npm install --prefix server --no-fund --no-audit && npm start --prefix server"
+  }
+}
