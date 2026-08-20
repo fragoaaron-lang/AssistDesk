@@ -5,10 +5,25 @@ let io = null;
 const JWT_SECRET = process.env.JWT_SECRET || 'assistdesk-secret';
 
 const createSocketServer = (server) => {
+  const allowedOrigins = [
+    process.env.CLIENT_URL,
+    process.env.FRONTEND_URL,
+    'http://localhost:3005',
+    'http://localhost:3000',
+  ].filter(Boolean);
+
   io = new Server(server, {
     cors: {
-      origin: '*',
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+          return;
+        }
+
+        callback(new Error('Not allowed by CORS'));
+      },
       methods: ['GET', 'POST'],
+      credentials: true,
     },
   });
 

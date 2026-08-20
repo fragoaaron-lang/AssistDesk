@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 import NotificationBell from './NotificationBell';
 
@@ -12,14 +13,14 @@ function TicketsPage() {
   const [form, setForm] = useState({ subject: '', description: '', priority: 'medium', department_id: '' });
 
   const loadTickets = async () => {
-    const res = await axios.get('http://localhost:3001/api/tickets', {
+    const res = await axios.get(`${API_BASE_URL}/api/tickets`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     setTickets(res.data);
   };
 
   const loadDepartments = async () => {
-    const res = await axios.get('http://localhost:3001/api/catalog/departments', {
+    const res = await axios.get(`${API_BASE_URL}/api/catalog/departments`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const options = res.data.departments || [];
@@ -30,7 +31,7 @@ function TicketsPage() {
   };
 
   const loadServices = async () => {
-    const res = await axios.get('http://localhost:3001/api/catalog/services', {
+    const res = await axios.get(`${API_BASE_URL}/api/catalog/services`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     setServices(res.data.services || []);
@@ -54,7 +55,7 @@ function TicketsPage() {
 
   const createTicket = async (e) => {
     e.preventDefault();
-    await axios.post('http://localhost:3001/api/tickets', { ...form, user_id: user?.id || 0 }, {
+    await axios.post(`${API_BASE_URL}/api/tickets`, { ...form, user_id: user?.id || 0 }, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const nextDepartmentId = departments[0]?.id ? String(departments[0].id) : '';
@@ -67,7 +68,7 @@ function TicketsPage() {
   };
 
   const updateStatus = async (id, status) => {
-    await axios.put(`http://localhost:3001/api/tickets/${id}/status`, { status }, {
+    await axios.put(`${API_BASE_URL}/api/tickets/${id}/status`, { status }, {
       headers: { Authorization: `Bearer ${token}` },
     });
     loadTickets();

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from './config';
 import { connectSocket, disconnectSocket } from './socket';
 
 const AuthContext = createContext();
@@ -17,7 +18,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
-        const res = await axios.get('http://localhost:3001/api/auth/me', {
+        const res = await axios.get(`${API_BASE_URL}/api/auth/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(res.data.user);
@@ -34,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   const login = async (email, password) => {
-    const res = await axios.post('http://localhost:3001/api/auth/login', { email, password });
+    const res = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
     localStorage.setItem('assistdesk_token', res.data.token);
     setToken(res.data.token);
     setUser(res.data.user);
@@ -43,7 +44,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (name, email, password, role, departmentId = null) => {
-    const res = await axios.post('http://localhost:3001/api/auth/register', { name, email, password, role, department_id: departmentId });
+    const res = await axios.post(`${API_BASE_URL}/api/auth/register`, { name, email, password, role, department_id: departmentId });
     localStorage.setItem('assistdesk_token', res.data.token);
     setToken(res.data.token);
     setUser(res.data.user);

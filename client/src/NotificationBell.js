@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getSocket } from './socket';
 import axios from 'axios';
+import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 
 function NotificationBell() {
@@ -10,7 +11,7 @@ function NotificationBell() {
 
   const loadNotifications = async () => {
     try {
-      const res = await axios.get('http://localhost:3001/api/dashboard/notifications', {
+      const res = await axios.get(`${API_BASE_URL}/api/dashboard/notifications`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setNotifications(res.data);

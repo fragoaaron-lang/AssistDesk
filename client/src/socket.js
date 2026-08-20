@@ -1,4 +1,5 @@
 import { io } from 'socket.io-client';
+import { API_BASE_URL } from './config';
 
 let socket = null;
 
@@ -12,7 +13,7 @@ export const connectSocket = (token) => {
     return null;
   }
 
-  socket = io('http://localhost:3001', {
+  socket = io(API_BASE_URL, {
     auth: { token },
     transports: ['websocket'],
   });
