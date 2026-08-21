@@ -9,6 +9,13 @@ try {
 const sequelize = require('./config/db');
 
 async function migrate() {
+  // If no database credentials are provided, skip migrations to avoid failing builds.
+  const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
+  const hasDbCreds = Boolean(process.env.DB_HOST && process.env.DB_USER && process.env.DB_PASS);
+  if (!hasDatabaseUrl && !hasDbCreds) {
+    console.warn('No database credentials found (DATABASE_URL or DB_HOST/DB_USER/DB_PASS). Skipping migrations.');
+    process.exit(0);
+  }
   try {
     console.log('Running sequelize.sync() to apply model changes...');
     await sequelize.sync({ alter: true });
