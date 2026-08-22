@@ -45,6 +45,23 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'AssistDesk API is running' });
 });
 
+// Serve React static build if present (for SPA routing, keep API routes under /api)
+const path = require('path');
+const fs = require('fs');
+const clientBuildPath = path.join(__dirname, '..', 'client', 'build');
+if (fs.existsSync(clientBuildPath)) {
+  app.use(express.static(clientBuildPath));
+
+  // Fallback to index.html for SPA routes (do not override /api or /health)
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path === '/health') {
+      return next();
+    }
+
+    res.sendFile(path.join(clientBuildPath, 'index.html'));
+  });
+}
+
 sequelize
   .authenticate()
   .then(() => {
