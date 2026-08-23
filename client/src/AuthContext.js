@@ -1,9 +1,19 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import axios from 'axios';
-import { API_BASE_URL } from './config';
-import { connectSocket, disconnectSocket } from './socket';
+import { supabase, isSupabaseConfigured } from './supabaseClient';
 
 const AuthContext = createContext();
+
+const mapSupabaseUser = (authUser) => {
+  if (!authUser) return null;
+
+  return {
+    id: authUser.id,
+    name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
+    email: authUser.email,
+    role: authUser.user_metadata?.role || 'student',
+    department_id: authUser.user_metadata?.department_id || null,
+  };
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -12,20 +22,29 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const loadUser = async () => {
-      if (!token) {
+      if (!isSupabaseConfigured || !supabase) {
         setLoading(false);
         return;
       }
 
       try {
-        const res = await axios.get(`${API_BASE_URL}/api/auth/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setUser(res.data.user);
-        connectSocket(token);
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error || !session) {
+          localStorage.removeItem('assistdesk_token');
+          setToken(null);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
+        localStorage.setItem('assistdesk_token', session.access_token);
+        setToken(session.access_token);
+        setUser(mapSupabaseUser(session.user));
       } catch (error) {
         localStorage.removeItem('assistdesk_token');
         setToken(null);
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -35,25 +54,60 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   const login = async (email, password) => {
-    const res = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
-    localStorage.setItem('assistdesk_token', res.data.token);
-    setToken(res.data.token);
-    setUser(res.data.user);
-    connectSocket(res.data.token);
-    return res.data;
+    if (!isSupabaseConfigured || !supabase) {
+      throw new Error('Supabase is not configured. Add REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY.');
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      throw error;
+    }
+
+    const authUser = mapSupabaseUser(data.user);
+    localStorage.setItem('assistdesk_token', data.session.access_token);
+    setToken(data.session.access_token);
+    setUser(authUser);
+    return { user: authUser, token: data.session.access_token };
   };
 
   const register = async (name, email, password, role, departmentId = null) => {
-    const res = await axios.post(`${API_BASE_URL}/api/auth/register`, { name, email, password, role, department_id: departmentId });
-    localStorage.setItem('assistdesk_token', res.data.token);
-    setToken(res.data.token);
-    setUser(res.data.user);
-    connectSocket(res.data.token);
-    return res.data;
+    if (!isSupabaseConfigured || !supabase) {
+      throw new Error('Supabase is not configured. Add REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY.');
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name,
+          role,
+          department_id: departmentId,
+        },
+      },
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    const authUser = mapSupabaseUser(data.user);
+    if (data.session) {
+      localStorage.setItem('assistdesk_token', data.session.access_token);
+      setToken(data.session.access_token);
+      setUser(authUser);
+      return { user: authUser, token: data.session.access_token };
+    }
+
+    setUser(authUser);
+    return { user: authUser, token: null };
   };
 
-  const logout = () => {
-    disconnectSocket();
+  const logout = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     localStorage.removeItem('assistdesk_token');
     setToken(null);
     setUser(null);

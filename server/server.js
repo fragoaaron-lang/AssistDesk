@@ -23,12 +23,17 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
+    // Allow non-browser requests (no origin) and explicit allowed origins.
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
       return;
     }
 
-    callback(new Error('Not allowed by CORS'));
+    // For disallowed origins, do not throw an error (which results in 500).
+    // Instead, deny CORS by calling back with null and false so the request
+    // proceeds but without CORS headers (the browser will block it).
+    console.warn('CORS: blocking origin', origin);
+    callback(null, false);
   },
   credentials: true,
 }));
@@ -53,7 +58,7 @@ if (fs.existsSync(clientBuildPath)) {
   app.use(express.static(clientBuildPath));
 
   // Fallback to index.html for SPA routes (do not override /api or /health)
-  app.get('*', (req, res, next) => {
+  app.use((req, res, next) => {
     if (req.path.startsWith('/api') || req.path === '/health') {
       return next();
     }
