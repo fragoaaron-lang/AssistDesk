@@ -26,3 +26,7 @@ Thumbs.db
 # Other
 .idea/
 coverage/
+
+# Local dev environment artifacts
+supabase/
+*.lnk
