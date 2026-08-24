@@ -10,7 +10,7 @@ function TicketsPage() {
   const [tickets, setTickets] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [services, setServices] = useState([]);
-  const [form, setForm] = useState({ subject: '', description: '', priority: 'medium', department_id: '' });
+  const [form, setForm] = useState({ subject: '', description: '', category: 'Other', priority: 'medium', department_id: '' });
 
   const loadTickets = async () => {
     const res = await axios.get(`${API_BASE_URL}/api/tickets`, {
@@ -59,7 +59,7 @@ function TicketsPage() {
       headers: { Authorization: `Bearer ${token}` },
     });
     const nextDepartmentId = departments[0]?.id ? String(departments[0].id) : '';
-    setForm({ subject: '', description: '', priority: 'medium', department_id: nextDepartmentId });
+    setForm({ subject: '', description: '', category: 'Other', priority: 'medium', department_id: nextDepartmentId });
     loadTickets();
   };
 
@@ -169,6 +169,13 @@ function TicketsPage() {
                 ))}
               </select>
               <textarea className="institutional-textarea" placeholder="Describe your issue" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
+              <select className="institutional-select" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                <option>Hardware</option>
+                <option>Building Maintenance</option>
+                <option>Department Concern</option>
+                <option>Account or Records</option>
+                <option>Other</option>
+              </select>
               <select className="institutional-select" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -187,12 +194,15 @@ function TicketsPage() {
               <div key={ticket.id}>
                 <h4 style={{ margin: '0 0 6px' }}>{ticket.subject}</h4>
                 <div className="small-muted"><strong>Status:</strong> {ticket.status}</div>
+                <div className="small-muted"><strong>Category:</strong> {ticket.category || 'Other'}</div>
                 <div className="small-muted"><strong>Priority:</strong> {ticket.priority}</div>
+                <div className="small-muted"><strong>Estimated completion:</strong> {ticket.estimated_completion_at ? new Date(ticket.estimated_completion_at).toLocaleString() : 'Being estimated'}</div>
                 <div className="small-muted"><strong>Department:</strong> {ticket.Department?.name}</div>
                 <p style={{ margin: '8px 0 0' }}>{ticket.description}</p>
                 {user?.role === 'admin' && (
                   <div className="inline-actions">
                     <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'open')}>Open</button>
+                    <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'pending')}>Pending</button>
                     <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'in_progress')}>In Progress</button>
                     <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'resolved')}>Resolved</button>
                     <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'closed')}>Closed</button>

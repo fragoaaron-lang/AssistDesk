@@ -115,6 +115,10 @@ function AiChatPage() {
             <input className="institutional-input" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Ask about enrollment, transcript, IT support..." style={{ flex: '1 1 280px', marginBottom: 0 }} />
             <button className="institutional-btn" type="submit">Send</button>
           </form>
+          <div className="inline-actions" style={{ marginTop: '0.8rem' }}>
+            <button className="institutional-btn small secondary" type="button" onClick={() => setMessage('status of my tickets')}>Track my requests</button>
+            <button className="institutional-btn small secondary" type="button" onClick={() => setMessage('submit request: ')}>Submit a request</button>
+          </div>
 
           <div style={{ marginTop: '1rem', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem', minHeight: '300px', background: '#fbfdff' }}>
             {history.length === 0 && <p className="helper-text">No conversation yet.</p>}
@@ -136,6 +140,18 @@ function AiChatPage() {
                     <div><strong>Processing Time:</strong> {entry.service.processing_time}</div>
                   </div>
                 )}
+                {entry.ticket && (
+                  <div style={{ marginTop: '0.4rem', background: '#eef7ff', padding: '0.7rem', borderRadius: '10px' }}>
+                    <div><strong>Ticket:</strong> #{entry.ticket.id}</div>
+                    <div><strong>Status:</strong> {entry.ticket.status}</div>
+                    <div><strong>Estimated completion:</strong> {new Date(entry.ticket.estimated_completion_at).toLocaleString()}</div>
+                  </div>
+                )}
+                {entry.tickets && entry.tickets.map((ticket) => (
+                  <div key={ticket.id} style={{ marginTop: '0.4rem', background: '#f7f7f7', padding: '0.7rem', borderRadius: '10px' }}>
+                    #{ticket.id} {ticket.subject} | {ticket.status} | ETA: {ticket.estimated_completion_at ? new Date(ticket.estimated_completion_at).toLocaleString() : 'pending'}
+                  </div>
+                ))}
               </div>
             ))}
           </div>

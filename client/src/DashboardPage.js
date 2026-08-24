@@ -190,8 +190,8 @@ function DashboardPage() {
 
         <div className="page-intro">
           <div>
-            <h2>Welcome, {user?.name || 'user'}</h2>
-            <p>Manage student and campus support requests from one institutional dashboard.</p>
+            <h2>{user?.role === 'admin' ? 'Department administrator dashboard' : user?.role === 'faculty' ? 'Faculty dashboard' : user?.role === 'staff' ? 'Staff dashboard' : 'Student dashboard'}</h2>
+            <p>{user?.role === 'admin' ? 'Prioritize and resolve requests for your department.' : 'Submit requests and follow every update through resolution.'}</p>
           </div>
         </div>
 
@@ -200,6 +200,11 @@ function DashboardPage() {
           <div className="metric-card"><strong>{dashboard.stats.tickets || 0}</strong><div>Total Tickets</div></div>
           <div className="metric-card"><strong>{dashboard.stats.openTickets || 0}</strong><div>Pending Tickets</div></div>
           <div className="metric-card"><strong>{dashboard.announcements?.length || 0}</strong><div>Announcements</div></div>
+        </div>
+
+        <div className="institutional-card" style={{ marginBottom: '20px' }}>
+          <h3>{user?.role === 'admin' ? 'Department workload' : 'Your request workspace'}</h3>
+          <p className="small-muted">{user?.role === 'admin' ? 'Review ticket volume on the campus map and manage assigned requests.' : user?.role === 'faculty' ? 'Faculty members can submit academic and campus support requests and monitor their progress.' : user?.role === 'staff' ? 'Staff members can report operational concerns and follow service updates.' : 'Students can submit categorized requests and view their status and estimated completion.'}</p>
         </div>
 
         <div className="institutional-card" style={{ marginBottom: '20px' }}>

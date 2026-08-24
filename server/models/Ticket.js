@@ -23,15 +23,25 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: false,
       },
+      category: {
+        type: DataTypes.STRING(80),
+        allowNull: false,
+        defaultValue: 'Other',
+      },
       priority: {
         type: DataTypes.ENUM('low', 'medium', 'high', 'urgent'),
         allowNull: false,
         defaultValue: 'medium',
       },
       status: {
-        type: DataTypes.ENUM('open', 'in_progress', 'resolved', 'closed'),
+        type: DataTypes.ENUM('open', 'pending', 'in_progress', 'resolved', 'closed'),
         allowNull: false,
         defaultValue: 'open',
+      },
+      estimated_completion_at: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: DataTypes.NOW,
       },
       created_at: {
         type: DataTypes.DATE,

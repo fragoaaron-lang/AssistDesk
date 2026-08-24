@@ -18,6 +18,13 @@ const scoreText = (query, target) => {
   return score;
 };
 
+const getEstimatedCompletion = (priority, requestedAt = new Date()) => {
+  const hoursByPriority = { urgent: 8, high: 24, medium: 48, low: 72 };
+  const estimated = new Date(requestedAt);
+  estimated.setHours(estimated.getHours() + (hoursByPriority[priority] || hoursByPriority.medium));
+  return estimated;
+};
+
 const inferDepartmentId = async (subject, description) => {
   const faqs = await Faq.findAll({ include: [{ model: Department }] });
   const services = await Service.findAll({ include: [{ model: Department }] });
@@ -39,7 +46,7 @@ const inferDepartmentId = async (subject, description) => {
 
 exports.createTicket = async (req, res) => {
   try {
-    const { user_id, subject, description, priority = 'medium', department_id: selectedDepartmentId } = req.body;
+    const { user_id, subject, description, category = 'Other', priority = 'medium', department_id: selectedDepartmentId, estimated_completion_at } = req.body;
     if (!subject || !description) {
       return res.status(400).json({ message: 'Subject and description are required.' });
     }
@@ -53,8 +60,10 @@ exports.createTicket = async (req, res) => {
       department_id: resolvedDepartmentId || 1,
       subject,
       description,
+      category,
       priority,
       status: 'open',
+      estimated_completion_at: estimated_completion_at || getEstimatedCompletion(priority),
     });
 
     await TicketUpdate.create({
@@ -103,6 +112,10 @@ exports.getTickets = async (req, res) => {
         { model: TicketUpdate, order: [['created_at', 'ASC']] },
       ],
       order: [['created_at', 'DESC']],
+    });
+    tickets.forEach((ticket) => {
+      if (!ticket.category) ticket.category = 'Other';
+      if (!ticket.estimated_completion_at) ticket.estimated_completion_at = getEstimatedCompletion(ticket.priority, ticket.created_at);
     });
     return res.json(tickets);
   } catch (error) {
