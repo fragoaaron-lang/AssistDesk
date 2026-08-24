@@ -17,6 +17,7 @@ const PORT = process.env.PORT || 3001;
 const allowedOrigins = [
   process.env.CLIENT_URL,
   process.env.FRONTEND_URL,
+  'https://assist-desk-ebon.vercel.app',
   'http://localhost:3005',
   'http://localhost:3000',
 ].filter(Boolean);
