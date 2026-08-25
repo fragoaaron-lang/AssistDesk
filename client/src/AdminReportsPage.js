@@ -77,7 +77,6 @@ function AdminReportsPage() {
           <div className="nav-links">
             <a href="/dashboard">Dashboard</a>
             <a href="/tickets">Tickets</a>
-            <a href="/assistant">Assistant</a>
             {user?.role === 'admin' && (
               <>
                 <a href="/admin/reports">Reports</a>
@@ -99,7 +98,6 @@ function AdminReportsPage() {
           <div className="nav-links">
             <a href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</a>
             <a href="/tickets" onClick={() => setMobileMenuOpen(false)}>Tickets</a>
-            <a href="/assistant" onClick={() => setMobileMenuOpen(false)}>Assistant</a>
             {user?.role === 'admin' && (
               <>
                 <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Reports</a>
