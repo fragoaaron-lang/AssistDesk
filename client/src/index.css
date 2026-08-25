@@ -211,6 +211,21 @@ button, input, select, textarea {
   gap: 14px;
 }
 
+.header-brand-button {
+  border: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.header-brand-button:focus-visible {
+  outline: 2px solid #ffd35a;
+  outline-offset: 6px;
+  border-radius: 8px;
+}
+
 .brand-badge {
   display: grid;
   place-items: center;

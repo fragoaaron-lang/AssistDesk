@@ -71,6 +71,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('assistdesk_token');
     setToken(null);
     setUser(null);
+    window.location.assign('/login');
   };
 
   return (

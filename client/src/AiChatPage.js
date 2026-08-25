@@ -46,7 +46,7 @@ function AiChatPage() {
           >
             ☰
           </button>
-          <div className="header-brand">
+          <button type="button" className="header-brand header-brand-button" onClick={() => window.location.assign('/login')} aria-label="Return to AssistDesk login">
             <div className="brand-badge">
               <img src="/assistdesk-logo.svg" alt="AssistDesk logo" />
             </div>
@@ -54,7 +54,7 @@ function AiChatPage() {
               <h1>AssistDesk</h1>
               <p>AI institutional assistant</p>
             </div>
-          </div>
+          </button>
           <div className="nav-links">
             <a href="/dashboard">Dashboard</a>
             <a href="/tickets">Tickets</a>

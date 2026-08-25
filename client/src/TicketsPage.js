@@ -88,7 +88,7 @@ function TicketsPage() {
           >
             ☰
           </button>
-          <div className="header-brand">
+          <button type="button" className="header-brand header-brand-button" onClick={() => window.location.assign('/login')} aria-label="Return to AssistDesk login">
             <div className="brand-badge">
               <img src="/assistdesk-logo.svg" alt="AssistDesk logo" />
             </div>
@@ -96,7 +96,7 @@ function TicketsPage() {
               <h1>AssistDesk</h1>
               <p>Service requests and case tracking</p>
             </div>
-          </div>
+          </button>
           <div className="nav-links">
             <a href="/dashboard">Dashboard</a>
             <a href="/tickets">Tickets</a>
