@@ -85,7 +85,7 @@ function ChatbotWidget() {
   };
 
   return (
-    <div className={`chatbot-widget${open ? ' is-open' : ''}`}>
+    <div className={`chatbot-widget header-chatbot${open ? ' is-open' : ''}`}>
       {open && (
         <section className="chatbot-panel" aria-label="AssistDesk help chatbot">
           <div className="chatbot-header">

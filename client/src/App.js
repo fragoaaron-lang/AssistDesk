@@ -9,7 +9,6 @@ import AdminCatalogPage from './AdminCatalogPage';
 import AdminReportsPage from './AdminReportsPage';
 import AiChatPage from './AiChatPage';
 import TicketsPage from './TicketsPage';
-import ChatbotWidget from './ChatbotWidget';
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -83,7 +82,6 @@ function App() {
           />
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
-        <ChatbotWidget />
       </BrowserRouter>
     </AuthProvider>
   );
