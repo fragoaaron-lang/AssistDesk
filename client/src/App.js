@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './AuthContext';
 import ProtectedRoute from './ProtectedRoute';
@@ -11,6 +11,29 @@ import AiChatPage from './AiChatPage';
 import TicketsPage from './TicketsPage';
 
 function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const splashTimer = window.setTimeout(() => setShowSplash(false), 1800);
+    return () => window.clearTimeout(splashTimer);
+  }, []);
+
+  if (showSplash) {
+    return (
+      <main className="splash-screen" aria-label="Loading AssistDesk">
+        <div className="splash-mark">
+          <div className="splash-logo-wrap">
+            <img src="/assistdesk-logo.svg" alt="" />
+          </div>
+          <span className="splash-pulse" />
+        </div>
+        <h1>AssistDesk</h1>
+        <p>Institutional support portal</p>
+        <div className="splash-progress" aria-hidden="true"><span /></div>
+      </main>
+    );
+  }
+
   return (
     <AuthProvider>
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
