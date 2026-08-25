@@ -11,15 +11,6 @@ function DashboardPage() {
   const [dashboard, setDashboard] = useState({ departments: [], announcements: [], stats: {} });
   const [notifications, setNotifications] = useState([]);
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [selectedDepartment, setSelectedDepartment] = useState(null);
-  const [markerPositions, setMarkerPositions] = useState(() => {
-    try {
-      const saved = window.localStorage.getItem('campus-map-marker-positions');
-      return saved ? JSON.parse(saved) : {};
-    } catch (error) {
-      return {};
-    }
-  });
 
   const visibleDepartments = useMemo(
     () => (dashboard.departments || []).filter((dept) => !['Registrar', 'IT Helpdesk'].includes(dept.name)),
@@ -34,15 +25,6 @@ function DashboardPage() {
       setDashboard(dashboardRes.data);
       setNotifications(notificationsRes.data);
       
-      // Try to load saved marker positions, but don't fail if endpoint errors
-      try {
-        const positionsRes = await axios.get(`${API_BASE_URL}/api/dashboard/marker-positions`, { headers: { Authorization: `Bearer ${token}` } });
-        if (positionsRes.data?.positions) {
-          setMarkerPositions(positionsRes.data.positions);
-        }
-      } catch (err) {
-        console.warn('Could not load saved marker positions:', err.message);
-      }
     } catch (error) {
       console.error('Error loading dashboard:', error);
     }
@@ -66,28 +48,6 @@ function DashboardPage() {
     };
   }, [token]);
 
-  useEffect(() => {
-    if (!visibleDepartments.length || typeof window === 'undefined') return;
-
-    const nextPositions = {};
-    let changed = false;
-
-    visibleDepartments.forEach((dept, index) => {
-      const existing = markerPositions[dept.id];
-      const position = existing || getDefaultMarkerPosition(index, visibleDepartments.length || 1);
-      nextPositions[dept.id] = position;
-      if (!existing) changed = true;
-    });
-
-    if (changed) {
-      setMarkerPositions(nextPositions);
-    }
-  }, [visibleDepartments]);
-
-  const getHeatColor = (count) => {
-    return count >= 6 ? '#e53935' : '#155eef';
-  };
-
   const getHeatStrength = (count) => Math.min(0.92, 0.2 + (Number(count) * 0.12));
 
   const getVolumeLabel = (level) => {
@@ -96,23 +56,18 @@ function DashboardPage() {
     return 'Low Volume';
   };
 
-  const getDefaultMarkerPosition = (index, total) => {
-    const columns = Math.min(4, Math.max(2, Math.ceil(Math.sqrt(total || 1))));
-    const rows = Math.ceil((total || 1) / columns);
-    const column = index % columns;
-    const row = Math.floor(index / columns);
-    return {
-      x: (column + 1) * (100 / (columns + 1)),
-      y: (row + 1) * (100 / (rows + 1)),
-    };
-  };
-
-  const getDepartmentMarkerPosition = (dept, index) => {
-    if (markerPositions[dept.id]) {
-      return markerPositions[dept.id];
-    }
-
-    return getDefaultMarkerPosition(index, visibleDepartments.length || 1);
+  const getBuildingPosition = (department) => {
+    const name = String(department.name || '').toLowerCase();
+    if (name.includes('crim')) return { x: 64, y: 13 };
+    if (name.includes('nurs')) return { x: 60, y: 75 };
+    if (name.includes('clinic')) return { x: 54, y: 35 };
+    if (name.includes('maintenance')) return { x: 82, y: 57 };
+    if (name.includes('student')) return { x: 18, y: 34 };
+    if (name.includes('account')) return { x: 52, y: 45 };
+    if (name.includes('education')) return { x: 54, y: 22 };
+    if (name.includes('hm')) return { x: 52, y: 45 };
+    if (name.includes('cs') || name.includes('technology')) return { x: 42, y: 34 };
+    return { x: 50, y: 50 };
   };
 
 
@@ -208,7 +163,10 @@ function DashboardPage() {
 
         <div className="institutional-card" style={{ marginBottom: '20px' }}>
           <div className="map-toolbar">
-            <h3>Campus support map</h3>
+            <div>
+              <h3>Campus request forecast</h3>
+              <p className="map-subtitle">Live request intensity by building</p>
+            </div>
             <div className="actions">
               <button className="institutional-btn small secondary" onClick={() => setZoomLevel((value) => Math.max(0.8, value - 0.2))}>−</button>
               <button className="institutional-btn small secondary" onClick={() => setZoomLevel(1)}>Reset</button>
@@ -225,8 +183,8 @@ function DashboardPage() {
               >
                 <img src="/schoolmap.png" alt="Campus map" />
                 <div className="heatmap-layer" aria-hidden="true">
-                  {visibleDepartments.filter((dept) => Number(dept.ticket_count || 0) > 0).map((dept, index) => {
-                    const pos = getDepartmentMarkerPosition(dept, index);
+                  {visibleDepartments.filter((dept) => Number(dept.ticket_count || 0) > 0).map((dept) => {
+                    const pos = getBuildingPosition(dept);
                     const ticketCount = Number(dept.ticket_count || 0);
                     return (
                       <span
@@ -242,42 +200,11 @@ function DashboardPage() {
                     );
                   })}
                 </div>
-                {visibleDepartments.map((dept, index) => {
-                    const pos = getDepartmentMarkerPosition(dept, index);
-                    const ticketCount = Number(dept.ticket_count || 0);
-                    const markerColor = getHeatColor(ticketCount);
-                    const isActive = ticketCount > 0;
-                    return (
-                      <button
-                        key={dept.id}
-                        type="button"
-                        className={`department-pill${isActive ? ' active' : ''}`}
-                        onClick={() => setSelectedDepartment(dept)}
-                        style={{ left: `${pos.x}%`, top: `${pos.y}%`, background: markerColor }}
-                        title={`${dept.name} (${ticketCount} ticket${ticketCount === 1 ? '' : 's'})`}
-                      >
-                        <span className="department-pill-label">{dept.name.slice(0, 2).toUpperCase()}</span>
-                      </button>
-                    );
-                  })}
-                {selectedDepartment && (
-                  <div className="department-card">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
-                      <strong>{selectedDepartment.name}</strong>
-                      <button type="button" onClick={() => setSelectedDepartment(null)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '1rem' }}>×</button>
-                    </div>
-                    <div className="small-muted" style={{ marginBottom: '0.4rem' }}>{selectedDepartment.description}</div>
-                    <div><strong>Point Person:</strong> {selectedDepartment.point_person || 'TBC'}</div>
-                    <div><strong>Contact:</strong> {selectedDepartment.contact_number}</div>
-                    <div><strong>Office Hours:</strong> {selectedDepartment.office_hours}</div>
-                    <div style={{ marginTop: '0.45rem' }}><strong>Volume:</strong> {getVolumeLabel(selectedDepartment.volume_level || 'low')}</div>
-                    {selectedDepartment.location && (
-                      <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(selectedDepartment.location)}`} target="_blank" rel="noreferrer" style={{ display: 'inline-block', marginTop: '0.6rem' }}>
-                        Navigate to this department
-                      </a>
-                    )}
-                  </div>
-                )}
+                <div className="heatmap-legend">
+                  <span><i className="legend-swatch low" /> Low</span>
+                  <span><i className="legend-swatch moderate" /> Moderate</span>
+                  <span><i className="legend-swatch high" /> High</span>
+                </div>
               </div>
             </div>
           </div>
