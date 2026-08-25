@@ -4,7 +4,6 @@ import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 import { getSocket } from './socket';
 import NotificationBell from './NotificationBell';
-import ChatbotWidget from './ChatbotWidget';
 
 function DashboardPage() {
   const { user, logout, token } = useAuth();
@@ -108,7 +107,6 @@ function DashboardPage() {
           <div className="header-actions">
             <button className="institutional-btn secondary small" onClick={logout}>Logout</button>
             <NotificationBell />
-            <ChatbotWidget />
           </div>
         </header>
 

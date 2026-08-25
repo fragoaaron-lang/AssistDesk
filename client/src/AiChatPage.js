@@ -3,7 +3,6 @@ import axios from 'axios';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 import NotificationBell from './NotificationBell';
-import ChatbotWidget from './ChatbotWidget';
 
 function AiChatPage() {
   const { token, user, logout } = useAuth();
@@ -69,7 +68,6 @@ function AiChatPage() {
           <div className="header-actions">
             <button className="institutional-btn secondary small" onClick={logout}>Logout</button>
             <NotificationBell />
-            <ChatbotWidget />
           </div>
         </header>
 
