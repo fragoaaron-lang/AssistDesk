@@ -441,20 +441,72 @@ button, input, select, textarea {
   border-radius: 12px;
 }
 
+.heatmap-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: 12px;
+  background:
+    radial-gradient(ellipse at 18% 22%, rgba(255, 35, 35, 0.22), transparent 14%),
+    radial-gradient(ellipse at 72% 36%, rgba(255, 225, 0, 0.18), transparent 20%),
+    linear-gradient(135deg, rgba(80, 220, 55, 0.2), rgba(0, 180, 255, 0.12));
+  mix-blend-mode: multiply;
+}
+
+.heatmap-spot {
+  position: absolute;
+  width: var(--heat-size);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(235, 22, 22, var(--heat-opacity)) 0 12%, rgba(255, 184, 0, calc(var(--heat-opacity) * 0.78)) 32%, rgba(70, 220, 40, calc(var(--heat-opacity) * 0.52)) 58%, transparent 74%);
+  filter: blur(5px);
+}
+
 .department-pill {
   position: absolute;
   transform: translate(-50%, -50%);
   z-index: 2;
   color: white;
-  border-radius: 999px;
-  padding: 7px 9px;
+  width: 30px;
+  height: 38px;
+  padding: 0;
   font-size: 12px;
   font-weight: 700;
   border: 3px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  transform: translate(-50%, -68%) rotate(-45deg);
   box-shadow: 0 3px 10px rgba(0,0,0,0.35);
-  white-space: nowrap;
+  white-space: normal;
   cursor: grab;
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.department-pill-label {
+  display: block;
+  transform: rotate(45deg);
+}
+
+.department-pill.active {
+  transform: translate(-50%, -68%) rotate(-45deg) scale(1.12);
+}
+
+.department-pill:not(.active) {
+  background: #155eef !important;
+}
+
+.department-pill::after {
+  content: '';
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #fff;
 }
 
 .department-pill.dragging {
@@ -463,7 +515,7 @@ button, input, select, textarea {
 }
 
 .department-pill.active {
-  transform: translate(-50%, -50%) scale(1.08);
+  transform: translate(-50%, -68%) rotate(-45deg) scale(1.12);
   box-shadow: 0 0 0 3px rgba(255,255,255,0.95), 0 8px 18px rgba(0,0,0,0.3);
   filter: saturate(1.15);
   animation: departmentPulse 1.4s ease-in-out infinite;

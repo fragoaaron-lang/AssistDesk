@@ -85,11 +85,10 @@ function DashboardPage() {
   }, [visibleDepartments]);
 
   const getHeatColor = (count) => {
-    if (count >= 6) return '#d32f2f';
-    if (count >= 3) return '#fbc02d';
-    if (count > 0) return '#1f6f78';
-    return '#2e7d32';
+    return count >= 6 ? '#e53935' : '#155eef';
   };
+
+  const getHeatStrength = (count) => Math.min(0.92, 0.2 + (Number(count) * 0.12));
 
   const getVolumeLabel = (level) => {
     if (level === 'high') return 'High Volume';
@@ -225,6 +224,24 @@ function DashboardPage() {
                 style={{ transform: `scale(${zoomLevel})` }}
               >
                 <img src="/schoolmap.png" alt="Campus map" />
+                <div className="heatmap-layer" aria-hidden="true">
+                  {visibleDepartments.filter((dept) => Number(dept.ticket_count || 0) > 0).map((dept, index) => {
+                    const pos = getDepartmentMarkerPosition(dept, index);
+                    const ticketCount = Number(dept.ticket_count || 0);
+                    return (
+                      <span
+                        key={`heat-${dept.id}`}
+                        className="heatmap-spot"
+                        style={{
+                          left: `${pos.x}%`,
+                          top: `${pos.y}%`,
+                          '--heat-opacity': getHeatStrength(ticketCount),
+                          '--heat-size': `${Math.min(34, 16 + ticketCount * 2)}%`,
+                        }}
+                      />
+                    );
+                  })}
+                </div>
                 {visibleDepartments.map((dept, index) => {
                     const pos = getDepartmentMarkerPosition(dept, index);
                     const ticketCount = Number(dept.ticket_count || 0);
@@ -239,7 +256,7 @@ function DashboardPage() {
                         style={{ left: `${pos.x}%`, top: `${pos.y}%`, background: markerColor }}
                         title={`${dept.name} (${ticketCount} ticket${ticketCount === 1 ? '' : 's'})`}
                       >
-                        {dept.name.slice(0, 2).toUpperCase()}
+                        <span className="department-pill-label">{dept.name.slice(0, 2).toUpperCase()}</span>
                       </button>
                     );
                   })}
