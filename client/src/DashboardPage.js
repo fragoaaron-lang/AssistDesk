@@ -4,9 +4,10 @@ import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 import { getSocket } from './socket';
 import NotificationBell from './NotificationBell';
+import LogoutButton from './LogoutButton';
 
 function DashboardPage() {
-  const { user, logout, token } = useAuth();
+  const { user, token } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dashboard, setDashboard] = useState({ departments: [], announcements: [], stats: {} });
   const [notifications, setNotifications] = useState([]);
@@ -105,7 +106,7 @@ function DashboardPage() {
             )}
           </div>
           <div className="header-actions">
-            <button className="institutional-btn secondary small" onClick={logout}>Logout</button>
+            <LogoutButton />
             <NotificationBell />
           </div>
         </header>
@@ -135,7 +136,7 @@ function DashboardPage() {
             </div>
           </div>
           <div className="mobile-menu-actions">
-            <button className="institutional-btn secondary small" onClick={() => { setMobileMenuOpen(false); logout(); }}>Logout</button>
+            <LogoutButton onBeforeLogout={() => setMobileMenuOpen(false)} />
             <div className="mobile-menu-bell"><NotificationBell /></div>
           </div>
         </aside>

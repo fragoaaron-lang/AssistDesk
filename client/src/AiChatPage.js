@@ -3,9 +3,10 @@ import axios from 'axios';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 import NotificationBell from './NotificationBell';
+import LogoutButton from './LogoutButton';
 
 function AiChatPage() {
-  const { token, user, logout } = useAuth();
+  const { token, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [history, setHistory] = useState([]);
@@ -66,7 +67,7 @@ function AiChatPage() {
             )}
           </div>
           <div className="header-actions">
-            <button className="institutional-btn secondary small" onClick={logout}>Logout</button>
+            <LogoutButton />
             <NotificationBell />
           </div>
         </header>
@@ -96,7 +97,7 @@ function AiChatPage() {
             </div>
           </div>
           <div className="mobile-menu-actions">
-            <button className="institutional-btn secondary small" onClick={() => { setMobileMenuOpen(false); logout(); }}>Logout</button>
+            <LogoutButton onBeforeLogout={() => setMobileMenuOpen(false)} />
             <div className="mobile-menu-bell"><NotificationBell /></div>
           </div>
         </aside>
