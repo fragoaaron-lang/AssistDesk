@@ -13,10 +13,21 @@ function DashboardPage() {
   const [notifications, setNotifications] = useState([]);
   const [zoomLevel, setZoomLevel] = useState(1);
 
-  const visibleDepartments = useMemo(
-    () => (dashboard.departments || []).filter((dept) => !['Registrar', 'IT Helpdesk'].includes(dept.name)),
-    [dashboard.departments]
-  );
+  const visibleDepartments = dashboard.departments || [];
+
+  const mapTickets = useMemo(() => {
+    if (dashboard.tickets && dashboard.tickets.length > 0) return dashboard.tickets;
+
+    return visibleDepartments.flatMap((department) => (
+      Array.from({ length: Number(department.ticket_count || 0) }, (_, index) => ({
+        id: `department-${department.id}-ticket-${index}`,
+        department_id: department.id,
+        subject: `Ticket ${index + 1} - ${department.name}`,
+        priority: 'medium',
+        status: 'open',
+      }))
+    ));
+  }, [dashboard.tickets, visibleDepartments]);
 
   const loadData = async () => {
     try {
@@ -186,7 +197,7 @@ function DashboardPage() {
                   })}
                 </div>
                 <div className="ticket-pin-layer">
-                  {(dashboard.tickets || []).map((ticket) => {
+                  {mapTickets.map((ticket) => {
                     const pos = getTicketPosition(ticket);
                     return (
                       <span
