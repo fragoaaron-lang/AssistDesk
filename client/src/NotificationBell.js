@@ -43,6 +43,7 @@ function NotificationBell() {
   return (
     <div style={{ position: 'relative' }}>
       <button
+        className="notification-button"
         onClick={() => setOpen((prev) => !prev)}
         style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1rem', borderRadius: '999px', background: '#1976d2', color: '#fff', border: 'none', cursor: 'pointer' }}
       >
