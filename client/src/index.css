@@ -734,6 +734,7 @@ button, input, select, textarea {
     width: 100%;
   }
   .header-actions {
+    display: none;
     width: auto;
     margin-left: auto;
     justify-content: flex-end;
