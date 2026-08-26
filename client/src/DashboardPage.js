@@ -196,12 +196,20 @@ function DashboardPage() {
                         className={`ticket-pin ${ticket.priority || 'medium'}`}
                         style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
                         title={`${ticket.subject} (${ticket.status})`}
+                        role="img"
                         aria-label={`${ticket.subject}, ${ticket.status}`}
                       />
                     );
                   })}
                 </div>
                 <div className="heatmap-legend">
+                  <strong>Ticket priority</strong>
+                  <span><i className="ticket-legend-swatch low" /> Low</span>
+                  <span><i className="ticket-legend-swatch medium" /> Medium</span>
+                  <span><i className="ticket-legend-swatch high" /> High</span>
+                  <span><i className="ticket-legend-swatch urgent" /> Urgent</span>
+                  <span className="legend-divider" aria-hidden="true" />
+                  <strong>Request volume</strong>
                   <span><i className="legend-swatch low" /> Low</span>
                   <span><i className="legend-swatch moderate" /> Moderate</span>
                   <span><i className="legend-swatch high" /> High</span>

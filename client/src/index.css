@@ -726,6 +726,8 @@ button, input, select, textarea {
   border: 2px solid white;
   border-radius: 50% 50% 50% 0;
   box-shadow: 0 2px 7px rgba(8, 32, 56, 0.4);
+  pointer-events: auto;
+  cursor: help;
 }
 
 .ticket-pin::after {
@@ -740,6 +742,23 @@ button, input, select, textarea {
 .ticket-pin.medium { background: #f2b632; }
 .ticket-pin.high { background: #ed7d31; }
 .ticket-pin.urgent { background: #d9343a; }
+
+.heatmap-legend strong { flex-basis: 100%; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.ticket-legend-swatch {
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+  border: 1px solid white;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 0 1px 3px rgba(8, 32, 56, 0.3);
+}
+
+.ticket-legend-swatch.low { background: #37c94f; }
+.ticket-legend-swatch.medium { background: #f2b632; }
+.ticket-legend-swatch.high { background: #ed7d31; }
+.ticket-legend-swatch.urgent { background: #d9343a; }
+.legend-divider { flex-basis: 100%; height: 1px; background: var(--border); }
 
 .department-pill {
   position: absolute;
