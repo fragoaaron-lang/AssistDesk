@@ -224,6 +224,36 @@ button, input, select, textarea {
   z-index: 20;
 }
 
+.ticket-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: -4px 0 20px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: white;
+  color: var(--text);
+  box-shadow: 0 4px 14px rgba(8, 32, 56, 0.08);
+  font-weight: 600;
+}
+
+.ticket-notice.success { border-color: #8bd6a0; background: #effbf2; color: #176b35; }
+.ticket-notice.error { border-color: #e6a4a4; background: #fff3f3; color: #9b2525; }
+
+.ticket-notice-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #b9d4df;
+  border-top-color: var(--teal);
+  border-radius: 50%;
+  animation: ticket-spin 0.75s linear infinite;
+}
+
+@keyframes ticket-spin {
+  to { transform: rotate(360deg); }
+}
+
 .header-brand {
   display: flex;
   align-items: center;

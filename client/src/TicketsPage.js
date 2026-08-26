@@ -12,6 +12,7 @@ function TicketsPage() {
   const [departments, setDepartments] = useState([]);
   const [services, setServices] = useState([]);
   const [form, setForm] = useState({ subject: '', description: '', category: 'Other', priority: 'medium', department_id: '' });
+  const [submissionState, setSubmissionState] = useState({ status: 'idle', message: '' });
 
   const loadTickets = async () => {
     const res = await axios.get(`${API_BASE_URL}/api/tickets`, {
@@ -56,12 +57,19 @@ function TicketsPage() {
 
   const createTicket = async (e) => {
     e.preventDefault();
-    await axios.post(`${API_BASE_URL}/api/tickets`, { ...form, user_id: user?.id || 0 }, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const nextDepartmentId = departments[0]?.id ? String(departments[0].id) : '';
-    setForm({ subject: '', description: '', category: 'Other', priority: 'medium', department_id: nextDepartmentId });
-    loadTickets();
+    setSubmissionState({ status: 'loading', message: 'Creating your ticket...' });
+
+    try {
+      await axios.post(`${API_BASE_URL}/api/tickets`, { ...form, user_id: user?.id || 0 }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const nextDepartmentId = departments[0]?.id ? String(departments[0].id) : '';
+      setForm({ subject: '', description: '', category: 'Other', priority: 'medium', department_id: nextDepartmentId });
+      await loadTickets();
+      setSubmissionState({ status: 'success', message: 'Ticket created successfully.' });
+    } catch (error) {
+      setSubmissionState({ status: 'error', message: 'Unable to create ticket. Please try again.' });
+    }
   };
 
   const handleDepartmentChange = (departmentId) => {
@@ -113,6 +121,13 @@ function TicketsPage() {
             <NotificationBell />
           </div>
         </header>
+
+        {submissionState.status !== 'idle' && (
+          <div className={`ticket-notice ${submissionState.status}`} role={submissionState.status === 'loading' ? 'status' : 'alert'} aria-live="polite">
+            {submissionState.status === 'loading' && <span className="ticket-notice-spinner" aria-hidden="true" />}
+            <span>{submissionState.message}</span>
+          </div>
+        )}
 
         <aside className={`mobile-menu-drawer ${mobileMenuOpen ? 'open' : ''}`}>
           <div className="mobile-menu-head">
@@ -181,7 +196,9 @@ function TicketsPage() {
                 <option value="high">High</option>
                 <option value="urgent">Urgent</option>
               </select>
-              <button className="institutional-btn" type="submit">Create Ticket</button>
+              <button className="institutional-btn" type="submit" disabled={submissionState.status === 'loading'}>
+                {submissionState.status === 'loading' ? 'Creating Ticket...' : 'Create Ticket'}
+              </button>
             </form>
           </div>
         )}
