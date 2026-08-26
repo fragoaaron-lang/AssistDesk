@@ -71,6 +71,13 @@ function DashboardPage() {
     return { x: 50, y: 50 };
   };
 
+  const getTicketPosition = (ticket, index) => {
+    const department = (dashboard.departments || []).find((item) => Number(item.id) === Number(ticket.department_id));
+    const basePosition = getBuildingPosition(department || {});
+    const offset = (index % 3) - 1;
+    return { x: basePosition.x + offset * 1.8, y: basePosition.y + (index % 2 === 0 ? -1.8 : 1.8) };
+  };
+
 
   return (
     <div className="app-shell">
@@ -176,6 +183,20 @@ function DashboardPage() {
                           '--heat-opacity': getHeatStrength(ticketCount),
                           '--heat-size': `${Math.min(34, 16 + ticketCount * 2)}%`,
                         }}
+                      />
+                    );
+                  })}
+                </div>
+                <div className="ticket-pin-layer">
+                  {(dashboard.tickets || []).map((ticket, index) => {
+                    const pos = getTicketPosition(ticket, index);
+                    return (
+                      <span
+                        key={`ticket-pin-${ticket.id}`}
+                        className={`ticket-pin ${ticket.priority || 'medium'}`}
+                        style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
+                        title={`${ticket.subject} (${ticket.status})`}
+                        aria-label={`${ticket.subject}, ${ticket.status}`}
                       />
                     );
                   })}

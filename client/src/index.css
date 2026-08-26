@@ -681,6 +681,36 @@ button, input, select, textarea {
   filter: blur(5px);
 }
 
+.ticket-pin-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.ticket-pin {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  transform: translate(-50%, -100%) rotate(-45deg);
+  border: 2px solid white;
+  border-radius: 50% 50% 50% 0;
+  box-shadow: 0 2px 7px rgba(8, 32, 56, 0.4);
+}
+
+.ticket-pin::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: white;
+}
+
+.ticket-pin.low { background: #37c94f; }
+.ticket-pin.medium { background: #f2b632; }
+.ticket-pin.high { background: #ed7d31; }
+.ticket-pin.urgent { background: #d9343a; }
+
 .department-pill {
   position: absolute;
   transform: translate(-50%, -50%);

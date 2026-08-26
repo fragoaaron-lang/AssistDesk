@@ -35,6 +35,12 @@ exports.getDashboard = async (req, res) => {
       ticketCounts.map((row) => [String(row.department_id), Number(row.ticket_count)])
     );
 
+    const tickets = await Ticket.findAll({
+      attributes: ['id', 'department_id', 'subject', 'priority', 'status', 'created_at'],
+      order: [['created_at', 'DESC']],
+      raw: true,
+    });
+
     const departmentsWithStats = departments.map((department) => {
       const ticketCount = ticketCountMap[String(department.id)] || 0;
       const volumeLevel = ticketCount >= 6 ? 'high' : ticketCount >= 3 ? 'moderate' : 'low';
@@ -57,7 +63,7 @@ exports.getDashboard = async (req, res) => {
       openTickets: await Ticket.count({ where: { status: 'open' } }),
     };
 
-    return res.json({ departments: departmentsWithStats, announcements, stats, topConcernDepartments });
+    return res.json({ departments: departmentsWithStats, announcements, stats, topConcernDepartments, tickets });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Unable to load dashboard.' });
