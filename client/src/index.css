@@ -720,11 +720,12 @@ button, input, select, textarea {
 
 .ticket-pin {
   position: absolute;
-  width: 13px;
-  height: 13px;
-  transform: translate(-50%, -100%) rotate(-45deg);
+  width: 24px;
+  height: 32px;
+  transform: translate(-50%, -100%);
   border: 2px solid white;
-  border-radius: 50% 50% 50% 0;
+  border-radius: 50% 50% 50% 50%;
+  clip-path: polygon(50% 100%, 8% 47%, 8% 32%, 16% 16%, 30% 5%, 50% 1%, 70% 5%, 84% 16%, 92% 32%, 92% 47%);
   box-shadow: 0 2px 7px rgba(8, 32, 56, 0.4);
   pointer-events: auto;
   cursor: help;
@@ -733,7 +734,11 @@ button, input, select, textarea {
 .ticket-pin::after {
   content: '';
   position: absolute;
-  inset: 3px;
+  width: 10px;
+  height: 10px;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
   border-radius: 50%;
   background: white;
 }
