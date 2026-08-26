@@ -714,12 +714,13 @@ button, input, select, textarea {
 .ticket-pin-layer {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  z-index: 4;
   pointer-events: none;
 }
 
 .ticket-pin {
   position: absolute;
+  display: block;
   width: 24px;
   height: 32px;
   transform: translate(-50%, -100%);
@@ -729,6 +730,7 @@ button, input, select, textarea {
   box-shadow: 0 2px 7px rgba(8, 32, 56, 0.4);
   pointer-events: auto;
   cursor: help;
+  z-index: 5;
 }
 
 .ticket-pin::after {
@@ -743,10 +745,10 @@ button, input, select, textarea {
   background: white;
 }
 
-.ticket-pin.low { background: #37c94f; }
-.ticket-pin.medium { background: #f2b632; }
-.ticket-pin.high { background: #ed7d31; }
-.ticket-pin.urgent { background: #d9343a; }
+.ticket-pin.low { background-color: #37c94f; }
+.ticket-pin.medium { background-color: #f2b632; }
+.ticket-pin.high { background-color: #ed7d31; }
+.ticket-pin.urgent { background-color: #d9343a; }
 
 .heatmap-legend strong { flex-basis: 100%; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
 .ticket-legend-swatch {
