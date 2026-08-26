@@ -82,9 +82,15 @@ function DashboardPage() {
     return { x: 50, y: 50 };
   };
 
-  const getTicketPosition = (ticket) => {
+  const getTicketPosition = (ticket, departmentTicketIndex) => {
     const department = (dashboard.departments || []).find((item) => Number(item.id) === Number(ticket.department_id));
-    return getBuildingPosition(department || {});
+    const basePosition = getBuildingPosition(department || {});
+    const angle = departmentTicketIndex * 2.39996;
+    const radius = departmentTicketIndex === 0 ? 0 : Math.min(7, 2.5 + departmentTicketIndex * 0.8);
+    return {
+      x: basePosition.x + Math.cos(angle) * radius,
+      y: basePosition.y + Math.sin(angle) * radius,
+    };
   };
 
 
@@ -197,8 +203,12 @@ function DashboardPage() {
                   })}
                 </div>
                 <div className="ticket-pin-layer">
-                  {mapTickets.map((ticket) => {
-                    const pos = getTicketPosition(ticket);
+                  {mapTickets.map((ticket, index) => {
+                    const departmentTicketIndex = mapTickets
+                      .slice(0, index)
+                      .filter((item) => Number(item.department_id) === Number(ticket.department_id))
+                      .length;
+                    const pos = getTicketPosition(ticket, departmentTicketIndex);
                     return (
                       <span
                         key={`ticket-pin-${ticket.id}`}
