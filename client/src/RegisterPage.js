@@ -39,7 +39,7 @@ function RegisterPage({ modal = false, onSwitch }) {
   };
 
   return (
-    <div className={modal ? 'auth-shell auth-modal-shell' : 'auth-shell'}>
+    <div className={modal ? 'auth-modal-content' : 'auth-shell'}>
       <div className="auth-card">
         <div className="auth-hero">
           <div className="brand-badge" style={{ width: '72px', height: '72px', marginBottom: '14px', background: 'rgba(255,255,255,0.18)' }}>
