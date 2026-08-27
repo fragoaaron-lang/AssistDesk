@@ -12,7 +12,6 @@ function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [role, setRole] = useState('student');
-  const [departmentId, setDepartmentId] = useState('');
   const [message, setMessage] = useState('');
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -32,7 +31,7 @@ function RegisterPage() {
 
     try {
       const name = `${firstName.trim()} ${middleInitial.toUpperCase()}. ${lastName.trim()}`;
-      await register(name, email, password, role, role === 'admin' ? departmentId : null);
+      await register(name, email, password, role, null);
       navigate('/dashboard');
     } catch (error) {
       setMessage(error.response?.data?.message || 'Registration failed.');
@@ -71,16 +70,7 @@ function RegisterPage() {
               <option value="student">Student</option>
               <option value="faculty">Faculty</option>
               <option value="staff">Staff</option>
-              <option value="admin">Admin</option>
             </select>
-            {role === 'admin' && (
-              <input
-                className="institutional-input"
-                value={departmentId}
-                onChange={(e) => setDepartmentId(e.target.value)}
-                placeholder="Department ID"
-              />
-            )}
             <button className="institutional-btn" type="submit" style={{ width: '100%' }}>Register</button>
           </form>
           {message && <p style={{ color: 'red', marginTop: '0.8rem' }}>{message}</p>}

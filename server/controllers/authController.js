@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const { User, PasswordResetToken, Department } = require('../models');
+const { User, PasswordResetToken } = require('../models');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'assistdesk-secret';
 const JWT_EXPIRES_IN = '8h';
@@ -17,6 +17,7 @@ const sanitizeUser = (user) => ({
 
 const PASSWORD_POLICY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const PUBLIC_ROLES = ['student', 'faculty', 'staff'];
 
 const validatePassword = (password) => {
   if (!PASSWORD_POLICY.test(password)) {
@@ -47,21 +48,13 @@ exports.register = async (req, res) => {
     if (!EMAIL_PATTERN.test(normalizedEmail)) {
       return res.status(400).json({ message: 'Please provide a valid email address.' });
     }
+    if (!PUBLIC_ROLES.includes(role)) {
+      return res.status(403).json({ message: 'Administrator accounts are created by the system developer.' });
+    }
     const passwordError = validatePassword(password);
 
     if (passwordError) {
       return res.status(400).json({ message: passwordError });
-    }
-
-    if (role === 'admin' && !department_id) {
-      return res.status(400).json({ message: 'Department is required for admin accounts.' });
-    }
-
-    if (role === 'admin') {
-      const department = await Department.findByPk(Number(department_id));
-      if (!department) {
-        return res.status(400).json({ message: 'Selected department does not exist.' });
-      }
     }
 
     const existingUser = await User.findOne({ where: { email: normalizedEmail } });
@@ -75,7 +68,7 @@ exports.register = async (req, res) => {
       email: normalizedEmail,
       password_hash,
       role,
-      department_id: role === 'admin' ? Number(department_id) : null,
+      department_id: null,
     });
 
     const token = signToken(user);
