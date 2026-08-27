@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 
-function RegisterPage() {
+function RegisterPage({ modal = false, onSwitch }) {
   const [firstName, setFirstName] = useState('');
   const [middleInitial, setMiddleInitial] = useState('');
   const [lastName, setLastName] = useState('');
@@ -39,7 +39,7 @@ function RegisterPage() {
   };
 
   return (
-    <div className="auth-shell">
+    <div className={modal ? 'auth-shell auth-modal-shell' : 'auth-shell'}>
       <div className="auth-card">
         <div className="auth-hero">
           <div className="brand-badge" style={{ width: '72px', height: '72px', marginBottom: '14px', background: 'rgba(255,255,255,0.18)' }}>
@@ -74,7 +74,7 @@ function RegisterPage() {
             <button className="institutional-btn" type="submit" style={{ width: '100%' }}>Register</button>
           </form>
           {message && <p style={{ color: 'red', marginTop: '0.8rem' }}>{message}</p>}
-          <p className="helper-text"><a href="/login">Already have an account?</a></p>
+          <p className="helper-text">{modal ? <button type="button" className="auth-switch-button" onClick={onSwitch}>Already have an account?</button> : <a href="/login">Already have an account?</a>}</p>
         </div>
       </div>
     </div>

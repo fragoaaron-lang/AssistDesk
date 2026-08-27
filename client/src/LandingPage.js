@@ -1,6 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
+import LoginPage from './LoginPage';
+import RegisterPage from './RegisterPage';
 
 function LandingPage() {
+  const [authModal, setAuthModal] = useState(null);
+
   return (
     <main className="landing-page">
       <section className="landing-hero">
@@ -12,8 +16,8 @@ function LandingPage() {
             <span>AssistDesk</span>
           </a>
           <div className="landing-nav-actions">
-            <a className="landing-text-link" href="/login">Log in</a>
-            <a className="landing-nav-button" href="/register">Create account</a>
+            <button className="landing-text-link landing-action-button" type="button" onClick={() => setAuthModal('login')}>Log in</button>
+            <button className="landing-nav-button landing-action-button" type="button" onClick={() => setAuthModal('register')}>Create account</button>
           </div>
         </nav>
         <div className="landing-hero-content">
@@ -21,8 +25,8 @@ function LandingPage() {
           <h1>Get the right help, without the runaround.</h1>
           <p className="landing-lede">AssistDesk brings campus services, support requests, and real-time updates into one clear place.</p>
           <div className="landing-actions">
-            <a className="landing-primary-button" href="/register">Start a request <span aria-hidden="true">→</span></a>
-            <a className="landing-secondary-button" href="/login">Log in to AssistDesk</a>
+            <button className="landing-primary-button landing-action-button" type="button" onClick={() => setAuthModal('register')}>Start a request <span aria-hidden="true">→</span></button>
+            <button className="landing-secondary-button landing-action-button" type="button" onClick={() => setAuthModal('login')}>Log in to AssistDesk</button>
           </div>
         </div>
         <div className="landing-scroll-note" aria-hidden="true">Explore support services <span>↓</span></div>
@@ -56,6 +60,15 @@ function LandingPage() {
         <span>AssistDesk</span>
         <span>Support that moves with your campus.</span>
       </footer>
+
+      {authModal && (
+        <div className="auth-modal-backdrop" role="presentation" onMouseDown={() => setAuthModal(null)}>
+          <div className="auth-modal" role="dialog" aria-modal="true" aria-label={authModal === 'login' ? 'Log in to AssistDesk' : 'Create an AssistDesk account'} onMouseDown={(event) => event.stopPropagation()}>
+            <button className="auth-modal-close" type="button" onClick={() => setAuthModal(null)} aria-label="Close authentication window">×</button>
+            {authModal === 'login' ? <LoginPage modal onSwitch={() => setAuthModal('register')} /> : <RegisterPage modal onSwitch={() => setAuthModal('login')} />}
+          </div>
+        </div>
+      )}
     </main>
   );
 }
