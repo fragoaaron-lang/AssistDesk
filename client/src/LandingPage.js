@@ -15,6 +15,7 @@ function LandingPage() {
             <span className="landing-brand-mark"><img src="/assistdesk-logo.svg" alt="" /></span>
             <span>AssistDesk</span>
           </a>
+          <button className="landing-nav-button landing-action-button" type="button" onClick={() => setAuthModal('login')}>Sign in</button>
         </nav>
         <div className="landing-hero-content">
           <p className="landing-kicker">Institutional support, connected</p>
