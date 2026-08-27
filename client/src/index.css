@@ -236,9 +236,6 @@ button, input, select, textarea {
 .auth-modal-backdrop { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 24px; overflow-y: auto; background: rgba(8, 32, 56, 0.72); backdrop-filter: blur(5px); animation: landingModalIn 0.2s ease-out both; }
 .auth-modal { position: relative; width: min(980px, 100%); max-height: calc(100vh - 48px); overflow-y: auto; border-radius: 24px; box-shadow: 0 24px 80px rgba(0,0,0,0.35); }
 .auth-modal-shell { min-height: auto; padding: 0; background: transparent; }
-.auth-modal-shell .auth-hero { display: none; }
-.auth-modal-shell .auth-card { display: block; }
-.auth-modal-shell .auth-form { padding: 42px 38px 34px; }
 .auth-modal-shell .auth-card { width: 100%; }
 .auth-modal-close { position: absolute; top: 12px; right: 14px; z-index: 2; width: 38px; height: 38px; border: 0; border-radius: 50%; background: rgba(8, 32, 56, 0.12); color: var(--navy); font-size: 1.7rem; line-height: 1; cursor: pointer; }
 .auth-switch-button { padding: 0; border: 0; background: transparent; color: var(--teal); font: inherit; cursor: pointer; }
