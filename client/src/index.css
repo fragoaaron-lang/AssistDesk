@@ -237,6 +237,7 @@ button, input, select, textarea {
 .auth-modal { position: relative; width: min(980px, 100%); max-height: calc(100vh - 48px); overflow: hidden; border-radius: 24px; background: linear-gradient(145deg, #ffffff 0%, #f1f8fb 100%); box-shadow: 0 24px 80px rgba(0,0,0,0.35); }
 .auth-modal-content { min-height: auto; padding: 0; background: transparent; }
 .auth-modal-content .auth-card { width: 100%; border-radius: 0; background: transparent; box-shadow: none; }
+.auth-modal-content .auth-form { background: #ffffff; }
 .auth-modal-close { position: absolute; top: 12px; right: 14px; z-index: 2; width: 38px; height: 38px; border: 0; border-radius: 50%; background: rgba(8, 32, 56, 0.12); color: var(--navy); font-size: 1.7rem; line-height: 1; cursor: pointer; }
 .auth-switch-button { padding: 0; border: 0; background: transparent; color: var(--teal); font: inherit; cursor: pointer; }
 .auth-switch-button:hover { text-decoration: underline; }
