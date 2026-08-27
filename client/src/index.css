@@ -610,6 +610,45 @@ button, input, select, textarea {
 
 .form-row > * { flex: 1; }
 
+.password-field { position: relative; }
+.password-field .institutional-input { padding-right: 68px; }
+.password-visibility {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 43px;
+  padding: 0 12px;
+  border: 0;
+  background: transparent;
+  color: var(--navy);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.password-visibility:focus-visible { outline: 2px solid var(--teal); outline-offset: -2px; border-radius: 8px; }
+.password-eye {
+  display: block;
+  position: relative;
+  width: 22px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-radius: 75% 15%;
+  transform: rotate(45deg);
+}
+
+.password-eye::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  top: 2px;
+  left: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.password-visibility.visible .password-eye { opacity: 0.65; }
+
 .helper-text { color: var(--muted); font-size: 0.95rem; margin: 8px 0 0; }
 
 .map-shell {
@@ -853,7 +892,7 @@ button, input, select, textarea {
   .institutional-card { padding: 14px; border-radius: 14px; box-shadow: 0 8px 22px rgba(8, 32, 56, 0.08); }
   .institutional-card h3 { font-size: 1.05rem; }
   .stat-grid { grid-template-columns: 1fr; }
-  .form-row { flex-direction: column; }
+  .form-row { flex-direction: column; gap: 0; }
   .header-actions {
     width: auto;
     justify-content: flex-end;

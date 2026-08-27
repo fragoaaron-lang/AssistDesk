@@ -16,6 +16,7 @@ const sanitizeUser = (user) => ({
 });
 
 const PASSWORD_POLICY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 const validatePassword = (password) => {
   if (!PASSWORD_POLICY.test(password)) {
@@ -40,6 +41,12 @@ exports.register = async (req, res) => {
 
     const normalizedName = name.trim();
     const normalizedEmail = email.trim().toLowerCase();
+    if (normalizedName.split(/\s+/).length < 3) {
+      return res.status(400).json({ message: 'First name, middle initial, and last name are required.' });
+    }
+    if (!EMAIL_PATTERN.test(normalizedEmail)) {
+      return res.status(400).json({ message: 'Please provide a valid email address.' });
+    }
     const passwordError = validatePassword(password);
 
     if (passwordError) {
