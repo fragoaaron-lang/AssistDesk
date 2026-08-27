@@ -15,18 +15,13 @@ function LandingPage() {
             <span className="landing-brand-mark"><img src="/assistdesk-logo.svg" alt="" /></span>
             <span>AssistDesk</span>
           </a>
-          <div className="landing-nav-actions">
-            <button className="landing-text-link landing-action-button" type="button" onClick={() => setAuthModal('login')}>Log in</button>
-            <button className="landing-nav-button landing-action-button" type="button" onClick={() => setAuthModal('register')}>Create account</button>
-          </div>
         </nav>
         <div className="landing-hero-content">
           <p className="landing-kicker">Institutional support, connected</p>
           <h1>Get the right help, without the runaround.</h1>
           <p className="landing-lede">AssistDesk brings campus services, support requests, and real-time updates into one clear place.</p>
           <div className="landing-actions">
-            <button className="landing-primary-button landing-action-button" type="button" onClick={() => setAuthModal('register')}>Start a request <span aria-hidden="true">→</span></button>
-            <button className="landing-secondary-button landing-action-button" type="button" onClick={() => setAuthModal('login')}>Log in to AssistDesk</button>
+            <button className="landing-primary-button landing-action-button" type="button" onClick={() => setAuthModal('login')}>Sign in</button>
           </div>
         </div>
         <div className="landing-scroll-note" aria-hidden="true">Explore support services <span>↓</span></div>
