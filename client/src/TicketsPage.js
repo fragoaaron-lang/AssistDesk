@@ -67,6 +67,7 @@ function TicketsPage() {
       setForm({ subject: '', description: '', category: 'Other', priority: 'medium', department_id: nextDepartmentId });
       await loadTickets();
       setSubmissionState({ status: 'success', message: 'Ticket created successfully.' });
+      window.setTimeout(() => setSubmissionState({ status: 'idle', message: '' }), 2200);
     } catch (error) {
       setSubmissionState({ status: 'error', message: 'Unable to create ticket. Please try again.' });
     }
@@ -123,9 +124,12 @@ function TicketsPage() {
         </header>
 
         {submissionState.status !== 'idle' && (
-          <div className={`ticket-notice ${submissionState.status}`} role={submissionState.status === 'loading' ? 'status' : 'alert'} aria-live="polite">
-            {submissionState.status === 'loading' && <span className="ticket-notice-spinner" aria-hidden="true" />}
-            <span>{submissionState.message}</span>
+          <div className="ticket-modal-backdrop">
+            <div className={`ticket-notice ${submissionState.status}`} role={submissionState.status === 'loading' ? 'status' : 'alert'} aria-live="polite">
+              {submissionState.status === 'loading' && <span className="ticket-notice-spinner" aria-hidden="true" />}
+              {submissionState.status === 'success' && <span className="ticket-success-icon" aria-hidden="true">✓</span>}
+              <span>{submissionState.message}</span>
+            </div>
           </div>
         )}
 

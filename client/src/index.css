@@ -289,18 +289,33 @@ button, input, select, textarea {
   z-index: 20;
 }
 
+.ticket-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(8, 32, 56, 0.42);
+  backdrop-filter: blur(3px);
+  animation: ticket-modal-in 0.18s ease-out both;
+}
+
 .ticket-notice {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: -4px 0 20px;
-  padding: 12px 16px;
+  width: min(420px, 100%);
+  min-height: 92px;
+  justify-content: center;
+  padding: 22px 26px;
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 18px;
   background: white;
   color: var(--text);
-  box-shadow: 0 4px 14px rgba(8, 32, 56, 0.08);
+  box-shadow: 0 18px 50px rgba(8, 32, 56, 0.28);
   font-weight: 600;
+  text-align: center;
 }
 
 .ticket-notice.success { border-color: #8bd6a0; background: #effbf2; color: #176b35; }
@@ -314,6 +329,9 @@ button, input, select, textarea {
   border-radius: 50%;
   animation: ticket-spin 0.75s linear infinite;
 }
+
+.ticket-success-icon { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #2ca650; color: white; font-weight: 800; }
+@keyframes ticket-modal-in { from { opacity: 0; } to { opacity: 1; } }
 
 .ticket-form-card.is-submitting { border-color: rgba(31, 111, 120, 0.38); }
 .ticket-form-card.is-submitting::before {
