@@ -1013,7 +1013,12 @@ button, input, select, textarea {
   .map-toolbar .actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .map-toolbar .actions .institutional-btn { width: 100%; min-height: 40px; padding: 8px 6px; }
   .map-frame { padding: 6px; }
-  .heatmap-legend { left: 8px; right: 8px; bottom: 8px; justify-content: center; gap: 7px; padding: 7px; font-size: 0.7rem; }
+  .heatmap-legend { left: 8px; right: 8px; bottom: 8px; justify-content: center; gap: 4px 6px; padding: 5px 6px; font-size: 0.58rem; }
+  .heatmap-legend strong { font-size: 0.52rem; }
+  .heatmap-legend span { gap: 3px; }
+  .heatmap-legend .legend-swatch,
+  .heatmap-legend .ticket-legend-swatch { width: 7px; height: 7px; }
+  .heatmap-legend .ticket-legend-swatch { border-width: 1px; }
   .chatbot-widget { right: 10px; bottom: 10px; }
   .chatbot-launcher { min-width: 64px; height: 50px; padding: 0 12px; }
   .chatbot-panel { width: calc(100vw - 20px); height: min(600px, calc(100vh - 84px)); border-radius: 15px; }
