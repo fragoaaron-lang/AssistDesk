@@ -77,7 +77,7 @@ function DashboardPage() {
     if (name.includes('student')) return { x: 18, y: 34 };
     if (name.includes('account')) return { x: 52, y: 45 };
     if (name.includes('education')) return { x: 54, y: 22 };
-    if (name.includes('hm')) return { x: 52, y: 45 };
+    if (name.includes('hm') || name.includes('charm')) return { x: 52, y: 45 };
     if (name.includes('cs') || name.includes('technology')) return { x: 42, y: 34 };
     return { x: 50, y: 50 };
   };
