@@ -1,13 +1,11 @@
 require('dotenv').config();
 
 const { Sequelize } = require('sequelize');
-const url = require('url');
-
-// Support selecting the SQL dialect via env var. Default to MySQL.
-const dialect = process.env.DB_DIALECT || 'mysql';
 
 // If a single DATABASE_URL is provided (common on hosts), use it directly.
 const DATABASE_URL = process.env.DATABASE_URL;
+const urlDialect = DATABASE_URL ? new URL(DATABASE_URL).protocol.replace(':', '') : null;
+const dialect = urlDialect || process.env.DB_DIALECT || 'mysql';
 
 let sequelize;
 
