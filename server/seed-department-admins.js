@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const { sequelize, Department, User } = require('./models');
+const { sequelize, Department, User, Admin } = require('./models');
 
 const accounts = [
   ['Basic Education Department', 'basiceducation@tcc.edu'],
@@ -47,6 +47,21 @@ async function seed() {
       if (!created) {
         await user.update({ role: 'admin', department_id: department.id, password_hash }, { transaction });
       }
+      await Admin.findOrCreate({
+        where: { email },
+        defaults: {
+          user_id: user.id,
+          department_id: department.id,
+          name: `${departmentName} Admin`,
+          email,
+          password_hash,
+        },
+        transaction,
+      });
+      await Admin.update(
+        { user_id: user.id, department_id: department.id, name: `${departmentName} Admin`, password_hash },
+        { where: { email }, transaction }
+      );
       results.push({ department: department.name, email, created: created ? 'created' : 'updated' });
     }
 

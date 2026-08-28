@@ -13,6 +13,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const { createSocketServer } = require('./utils/socket');
 
 const app = express();
+const { Admin, User } = models;
 const PORT = process.env.PORT || 3001;
 const allowedOrigins = [
   process.env.CLIENT_URL,
@@ -68,11 +69,31 @@ if (fs.existsSync(clientBuildPath)) {
   });
 }
 
+async function backfillAdminTable() {
+  const adminUsers = await User.findAll({ where: { role: 'admin' } });
+  for (const user of adminUsers) {
+    if (!user.department_id) continue;
+    await Admin.findOrCreate({
+      where: { email: user.email },
+      defaults: {
+        user_id: user.id,
+        department_id: user.department_id,
+        name: user.name,
+        email: user.email,
+        password_hash: user.password_hash,
+      },
+    });
+  }
+}
+
 sequelize
   .authenticate()
   .then(() => {
     console.log('Database connection established successfully.');
     return sequelize.sync({ alter: true, force: false });
+  })
+  .then(() => {
+    return backfillAdminTable();
   })
   .then(() => {
     const server = app.listen(PORT, () => {

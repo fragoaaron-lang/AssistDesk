@@ -57,6 +57,7 @@ module.exports = (sequelize, DataTypes) => {
 
   User.associate = (models) => {
     User.belongsTo(models.Department, { foreignKey: 'department_id' });
+    User.hasOne(models.Admin, { foreignKey: 'user_id' });
   };
 
   return User;

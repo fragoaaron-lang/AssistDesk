@@ -7,6 +7,7 @@ const db = {
 };
 
 db.User = require('./User')(sequelize, DataTypes);
+db.Admin = require('./Admin')(sequelize, DataTypes);
 db.PasswordResetToken = require('./PasswordResetToken')(sequelize, DataTypes);
 db.Department = require('./Department')(sequelize, DataTypes);
 db.Service = require('./Service')(sequelize, DataTypes);
