@@ -94,6 +94,10 @@ sequelize
     return sequelize.sync({ alter: true, force: false });
   })
   .then(() => {
+    return Admin.sync({ alter: false });
+  })
+  .then(() => {
+    console.log('Admins table is ready.');
     return backfillAdminTable();
   })
   .then(() => {
