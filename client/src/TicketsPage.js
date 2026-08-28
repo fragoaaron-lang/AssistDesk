@@ -167,9 +167,9 @@ function TicketsPage() {
         </div>
 
         {user?.role !== 'admin' && (
-          <div className="institutional-card" style={{ marginBottom: '20px' }}>
+          <div className={`institutional-card ticket-form-card ${submissionState.status === 'loading' ? 'is-submitting' : ''}`} style={{ marginBottom: '20px' }}>
             <h3>Create a new request</h3>
-            <form onSubmit={createTicket}>
+            <form onSubmit={createTicket} aria-busy={submissionState.status === 'loading'}>
               <select className="institutional-select" value={form.department_id} onChange={(e) => handleDepartmentChange(e.target.value)} required>
                 <option value="">Select a department</option>
                 {departments.map((department) => (
@@ -196,7 +196,8 @@ function TicketsPage() {
                 <option value="high">High</option>
                 <option value="urgent">Urgent</option>
               </select>
-              <button className="institutional-btn" type="submit" disabled={submissionState.status === 'loading'}>
+              <button className="institutional-btn ticket-submit-button" type="submit" disabled={submissionState.status === 'loading'}>
+                {submissionState.status === 'loading' && <span className="ticket-submit-spinner" aria-hidden="true" />}
                 {submissionState.status === 'loading' ? 'Creating Ticket...' : 'Create Ticket'}
               </button>
             </form>

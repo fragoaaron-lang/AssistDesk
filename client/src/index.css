@@ -315,8 +315,31 @@ button, input, select, textarea {
   animation: ticket-spin 0.75s linear infinite;
 }
 
+.ticket-form-card.is-submitting { border-color: rgba(31, 111, 120, 0.38); }
+.ticket-form-card.is-submitting::before {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 3px;
+  margin: -14px 0 14px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: linear-gradient(90deg, transparent, var(--teal), #ffd35a, transparent);
+  background-size: 220% 100%;
+  animation: ticket-progress 1.1s linear infinite;
+}
+
+.ticket-submit-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 148px; }
+.ticket-submit-button:disabled { cursor: wait; opacity: 0.78; }
+.ticket-submit-spinner { width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.45); border-top-color: white; border-radius: 50%; animation: ticket-spin 0.75s linear infinite; }
+
 @keyframes ticket-spin {
   to { transform: rotate(360deg); }
+}
+
+@keyframes ticket-progress {
+  from { background-position: 110% 0; }
+  to { background-position: -110% 0; }
 }
 
 .header-brand {
