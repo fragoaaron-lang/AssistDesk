@@ -91,13 +91,13 @@ sequelize
   .authenticate()
   .then(() => {
     console.log('Database connection established successfully.');
-    return sequelize.sync({ alter: true, force: false });
-  })
-  .then(() => {
     return Admin.sync({ alter: false });
   })
   .then(() => {
     console.log('Admins table is ready.');
+    return sequelize.sync({ alter: true, force: false });
+  })
+  .then(() => {
     return backfillAdminTable();
   })
   .then(() => {
