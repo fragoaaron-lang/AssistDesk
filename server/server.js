@@ -11,6 +11,7 @@ const ticketRoutes = require('./routes/ticketRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const { createSocketServer } = require('./utils/socket');
+const seedDepartmentAdmins = require('./seed-department-admins');
 
 const app = express();
 const { Admin, User } = models;
@@ -94,6 +95,11 @@ sequelize
   })
   .then(() => {
     return backfillAdminTable();
+  })
+  .then(() => {
+    if (!process.env.SEED_ADMIN_PASSWORD) return null;
+    console.log('SEED_ADMIN_PASSWORD detected; seeding department admins...');
+    return seedDepartmentAdmins({ closeConnection: false });
   })
   .then(() => {
     const server = app.listen(PORT, () => {

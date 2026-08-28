@@ -18,7 +18,7 @@ const accounts = [
   ['IT department', 'it@tcc.edu'],
 ];
 
-async function seed() {
+async function seed({ closeConnection = true } = {}) {
   const password = process.env.SEED_ADMIN_PASSWORD;
   if (!password) throw new Error('SEED_ADMIN_PASSWORD is required.');
 
@@ -71,11 +71,15 @@ async function seed() {
     await transaction.rollback();
     throw error;
   } finally {
-    await sequelize.close();
+    if (closeConnection) await sequelize.close();
   }
 }
 
-seed().catch((error) => {
-  console.error(error.message);
-  process.exitCode = 1;
-});
+module.exports = seed;
+
+if (require.main === module) {
+  seed().catch((error) => {
+    console.error(error.message);
+    process.exitCode = 1;
+  });
+}
