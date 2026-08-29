@@ -12,7 +12,7 @@ const defaultPrefs = {
 };
 
 function ProfilePage() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [prefs, setPrefs] = useState(() => {
     try {
@@ -22,6 +22,8 @@ function ProfilePage() {
       return defaultPrefs;
     }
   });
+  const [passwordForm, setPasswordForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
+  const [passwordState, setPasswordState] = useState({ status: 'idle', message: '' });
 
   useEffect(() => {
     localStorage.setItem('assistdesk_profile_prefs', JSON.stringify(prefs));
@@ -29,6 +31,45 @@ function ProfilePage() {
 
   const updatePreference = (key, value) => {
     setPrefs((current) => ({ ...current, [key]: value }));
+  };
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+
+    if (!passwordForm.oldPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setPasswordState({ status: 'error', message: 'All password fields are required.' });
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordState({ status: 'error', message: 'New passwords do not match.' });
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          oldPassword: passwordForm.oldPassword,
+          newPassword: passwordForm.newPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Unable to change password.');
+      }
+
+      setPasswordState({ status: 'success', message: data.message || 'Password changed successfully.' });
+      setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error) {
+      setPasswordState({ status: 'error', message: error.message || 'Unable to change password.' });
+    }
   };
 
   return (
@@ -160,6 +201,42 @@ function ProfilePage() {
               <option value="Campus Maintenance">Campus Maintenance</option>
             </select>
           </label>
+        </div>
+
+        <div className="institutional-card">
+          <h3>Change password</h3>
+          <form onSubmit={handlePasswordChange} className="password-change-form">
+            <input
+              className="institutional-input"
+              type="password"
+              placeholder="Current password"
+              value={passwordForm.oldPassword}
+              onChange={(e) => setPasswordForm((current) => ({ ...current, oldPassword: e.target.value }))}
+              required
+            />
+            <input
+              className="institutional-input"
+              type="password"
+              placeholder="New password"
+              value={passwordForm.newPassword}
+              onChange={(e) => setPasswordForm((current) => ({ ...current, newPassword: e.target.value }))}
+              required
+            />
+            <input
+              className="institutional-input"
+              type="password"
+              placeholder="Confirm new password"
+              value={passwordForm.confirmPassword}
+              onChange={(e) => setPasswordForm((current) => ({ ...current, confirmPassword: e.target.value }))}
+              required
+            />
+            <button className="institutional-btn" type="submit">Update password</button>
+          </form>
+          {passwordState.message && (
+            <p className={`profile-password-message ${passwordState.status}`}>
+              {passwordState.message}
+            </p>
+          )}
         </div>
       </div>
     </div>

@@ -190,3 +190,36 @@ exports.resetPassword = async (req, res) => {
     return res.status(500).json({ message: 'Unable to reset password.' });
   }
 };
+
+exports.changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ message: 'Current password and new password are required.' });
+    }
+
+    const passwordError = validatePassword(newPassword);
+    if (passwordError) {
+      return res.status(400).json({ message: passwordError });
+    }
+
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password_hash);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Current password is incorrect.' });
+    }
+
+    const password_hash = await bcrypt.hash(newPassword, 10);
+    await user.update({ password_hash });
+
+    return res.json({ message: 'Password changed successfully.' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Unable to change password.' });
+  }
+};
