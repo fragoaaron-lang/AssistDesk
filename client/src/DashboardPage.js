@@ -279,7 +279,8 @@ function DashboardPage() {
                   High/Urgent
                 </span>
               </div>
-            </div>\n          </div>
+            </div>
+          </div>
         </div>
 
         <div className="institutional-card">

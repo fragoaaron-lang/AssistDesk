@@ -1194,6 +1194,7 @@ button, input, select, textarea {
 .map-toolbar .actions { display: flex; gap: 8px; }
 
 .map-frame {
+  position: relative;
   padding: 14px;
   overflow: auto;
   max-height: 900px;
