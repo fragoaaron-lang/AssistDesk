@@ -1465,16 +1465,35 @@ button, input, select, textarea {
   .heatmap-legend {
     left: 6px;
     bottom: 6px;
-    max-width: 110px;
-    padding: 8px;
-    font-size: 0.8rem;
-    border-radius: 5px;
+    max-width: 85px;
+    padding: 6px;
+    font-size: 0.75rem;
+    border-radius: 4px;
     transform: none;
     transform-origin: unset;
+    gap: 4px;
   }
-  .heatmap-legend strong { font-size: 0.7rem; }
+  .heatmap-legend strong { font-size: 0.65rem; margin-bottom: 1px; }
+  .heatmap-legend span { font-size: 0.7rem; gap: 4px; }
   .heatmap-legend .legend-swatch,
-  .heatmap-legend .ticket-legend-swatch { width: 6px; height: 6px; }
+  .heatmap-legend .ticket-legend-swatch { width: 5px; height: 5px; }
+  .heatmap-legend .ticket-legend-swatch { border-width: 1px; }
+}
+
+@media (max-width: 390px) {
+  .heatmap-legend {
+    left: 4px;
+    bottom: 4px;
+    max-width: 70px;
+    padding: 4px;
+    font-size: 0.65rem;
+    border-radius: 3px;
+    gap: 2px;
+  }
+  .heatmap-legend strong { font-size: 0.55rem; margin-bottom: 0; }
+  .heatmap-legend span { font-size: 0.6rem; gap: 3px; }
+  .heatmap-legend .legend-swatch,
+  .heatmap-legend .ticket-legend-swatch { width: 4px; height: 4px; }
 }
 
 @media (max-width: 390px) {
