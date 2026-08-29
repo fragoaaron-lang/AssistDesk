@@ -12,6 +12,21 @@ function DashboardPage() {
   const [dashboard, setDashboard] = useState({ departments: [], announcements: [], stats: {} });
   const [notifications, setNotifications] = useState([]);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [showWelcomeSplash, setShowWelcomeSplash] = useState(() => sessionStorage.getItem('assistdesk_show_welcome_splash') === 'true');
+
+  useEffect(() => {
+    if (!showWelcomeSplash) return;
+
+    const splashTimer = window.setTimeout(() => {
+      sessionStorage.removeItem('assistdesk_show_welcome_splash');
+      sessionStorage.removeItem('assistdesk_welcome_name');
+      setShowWelcomeSplash(false);
+    }, 1800);
+
+    return () => window.clearTimeout(splashTimer);
+  }, [showWelcomeSplash]);
+
+  const welcomeName = (sessionStorage.getItem('assistdesk_welcome_name') || user?.name || 'User').split(' ')[0];
 
   const visibleDepartments = dashboard.departments || [];
 
@@ -93,6 +108,22 @@ function DashboardPage() {
     };
   };
 
+
+  if (showWelcomeSplash) {
+    return (
+      <main className="splash-screen" aria-label="Loading AssistDesk">
+        <div className="splash-mark">
+          <div className="splash-logo-wrap">
+            <img src="/assistdesk-logo.svg" alt="" />
+          </div>
+          <span className="splash-pulse" />
+        </div>
+        <h1>{`Welcome back, ${welcomeName}`}</h1>
+        <p>Preparing your support workspace</p>
+        <div className="splash-progress" aria-hidden="true"><span /></div>
+      </main>
+    );
+  }
 
   return (
     <div className="app-shell">

@@ -25,6 +25,8 @@ function LoginPage({ modal = false, onSwitch }) {
       const userName = result?.user?.name || email.split('@')[0];
       const firstName = userName.split(' ')[0];
       setWelcomeName(firstName);
+      sessionStorage.setItem('assistdesk_show_welcome_splash', 'true');
+      sessionStorage.setItem('assistdesk_welcome_name', firstName);
       navigate('/dashboard');
     } catch (error) {
       setMessage(error.response?.data?.message || 'Login failed.');

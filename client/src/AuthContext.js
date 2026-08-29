@@ -85,6 +85,8 @@ export const AuthProvider = ({ children }) => {
       persistWelcomeName(currentName.split(' ')[0]);
     }
 
+    sessionStorage.removeItem('assistdesk_show_welcome_splash');
+    sessionStorage.removeItem('assistdesk_welcome_name');
     localStorage.removeItem('assistdesk_token');
     setToken(null);
     setUser(null);
