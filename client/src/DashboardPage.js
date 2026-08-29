@@ -268,16 +268,6 @@ function DashboardPage() {
                   <span className="legend-swatch high" aria-hidden="true"></span>
                   High
                 </span>
-                <div className="legend-divider"></div>
-                <strong>Request priority</strong>
-                <span>
-                  <span className="ticket-legend-swatch low" aria-hidden="true"></span>
-                  Low/Medium
-                </span>
-                <span>
-                  <span className="ticket-legend-swatch high" aria-hidden="true"></span>
-                  High/Urgent
-                </span>
               </div>
             </div>
           </div>
