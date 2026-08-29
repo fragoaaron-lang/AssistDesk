@@ -1256,8 +1256,8 @@ button, input, select, textarea {
 }
 
 .legend-swatch.low { background: #37c94f; }
-.legend-swatch.moderate { background: #ffd21f; }
-.legend-swatch.high { background: #e53935; }
+.legend-swatch.moderate { background: #1f9dd9; }
+.legend-swatch.high { background: #ed1725; }
 
 .heatmap-spot {
   position: absolute;
@@ -1305,7 +1305,7 @@ button, input, select, textarea {
 }
 
 .ticket-pin.low { background-color: #37c94f; }
-.ticket-pin.medium { background-color: #1f9dd9; }
+.ticket-pin.moderate { background-color: #1f9dd9; }
 .ticket-pin.high { background-color: #ed1725; }
 
 .heatmap-legend strong { flex-basis: 100%; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }

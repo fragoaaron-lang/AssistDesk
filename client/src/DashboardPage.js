@@ -38,7 +38,7 @@ function DashboardPage() {
         id: `department-${department.id}-ticket-${index}`,
         department_id: department.id,
         subject: `Ticket ${index + 1} - ${department.name}`,
-        priority: 'medium',
+        priority: 'moderate',
         status: 'open',
       }))
     ));
@@ -255,7 +255,7 @@ function DashboardPage() {
                 </div>
               </div>
               <div className="heatmap-legend" role="region" aria-label="Map legend">
-                <strong>Request intensity</strong>
+                <strong>Priority level</strong>
                 <span>
                   <span className="legend-swatch low" aria-hidden="true"></span>
                   Low
