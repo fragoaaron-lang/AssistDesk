@@ -30,6 +30,11 @@ function DashboardPage() {
 
   const visibleDepartments = dashboard.departments || [];
 
+  const getPriorityByIndex = (index) => {
+    const priorities = ['low', 'moderate', 'high'];
+    return priorities[index % 3];
+  };
+
   const mapTickets = useMemo(() => {
     if (dashboard.tickets && dashboard.tickets.length > 0) return dashboard.tickets;
 
@@ -38,7 +43,7 @@ function DashboardPage() {
         id: `department-${department.id}-ticket-${index}`,
         department_id: department.id,
         subject: `Ticket ${index + 1} - ${department.name}`,
-        priority: 'moderate',
+        priority: getPriorityByIndex(index),
         status: 'open',
       }))
     ));
