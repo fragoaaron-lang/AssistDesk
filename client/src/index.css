@@ -1228,8 +1228,9 @@ button, input, select, textarea {
 
 .heatmap-legend {
   position: absolute;
+  right: 12px;
   bottom: 12px;
-  left: 12px;
+  left: auto;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1427,8 +1428,8 @@ button, input, select, textarea {
   .map-toolbar .actions .institutional-btn { width: 100%; min-height: 40px; padding: 8px 6px; }
   .map-frame { padding: 6px; }
   .heatmap-legend {
-    left: 8px;
-    right: auto;
+    right: 8px;
+    left: auto;
     bottom: 8px;
     width: auto;
     max-width: 120px;
@@ -1463,7 +1464,8 @@ button, input, select, textarea {
 
 @media (max-width: 480px) {
   .heatmap-legend {
-    left: 6px;
+    right: 6px;
+    left: auto;
     bottom: 6px;
     max-width: 85px;
     padding: 6px;
@@ -1482,7 +1484,8 @@ button, input, select, textarea {
 
 @media (max-width: 390px) {
   .heatmap-legend {
-    left: 4px;
+    right: 4px;
+    left: auto;
     bottom: 4px;
     max-width: 70px;
     padding: 4px;
