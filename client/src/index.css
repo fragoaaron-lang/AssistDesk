@@ -777,11 +777,20 @@ button, input, select, textarea {
   align-items: center;
   justify-content: center;
   gap: 10px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .auth-submit-btn.is-loading {
-  opacity: 0.92;
+  opacity: 0.96;
   cursor: wait;
+  animation: auth-button-pulse 1.2s ease-in-out infinite;
+  box-shadow: 0 0 0 10px rgba(31, 111, 120, 0.08), 0 12px 24px rgba(31, 111, 120, 0.18);
+}
+
+@keyframes auth-button-pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(31, 111, 120, 0.12); }
+  50% { transform: scale(1.015); box-shadow: 0 0 0 10px rgba(31, 111, 120, 0.06); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(31, 111, 120, 0.12); }
 }
 
 .auth-spinner {
