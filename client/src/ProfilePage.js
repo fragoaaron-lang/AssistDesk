@@ -8,6 +8,7 @@ const defaultPrefs = {
   compactMode: false,
   emailUpdates: true,
   pushAlerts: true,
+  darkMode: false,
   accent: 'teal',
   favoriteDepartment: 'All departments',
 };
@@ -389,6 +390,11 @@ function ProfilePage() {
           <label className="preference-row">
             <span>Push alerts</span>
             <input type="checkbox" checked={prefs.pushAlerts} onChange={(e) => updatePreference('pushAlerts', e.target.checked)} />
+          </label>
+
+          <label className="preference-row">
+            <span>Dark mode</span>
+            <input type="checkbox" checked={prefs.darkMode} onChange={(e) => updatePreference('darkMode', e.target.checked)} />
           </label>
 
           <label className="preference-row select-row">
