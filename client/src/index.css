@@ -617,6 +617,36 @@ button, input, select, textarea {
   cursor: pointer;
 }
 
+.profile-user-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.profile-upload-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 6px;
+  background: rgba(31, 111, 120, 0.12);
+  border: 1px solid rgba(31, 111, 120, 0.18);
+  color: var(--navy);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.profile-upload-button input {
+  display: none;
+}
+
+.profile-save-button {
+  margin-top: 16px;
+}
+
 .profile-avatar-upload input,
 .profile-avatar-upload-label input,
 .mobile-upload-label input {

@@ -226,17 +226,18 @@ function ProfilePage() {
               ) : (
                 <span className="profile-avatar-placeholder">+</span>
               )}
-              <label className="profile-avatar-upload-label">
+            </div>
+            <div className="profile-user-meta">
+              <div className="profile-name">{user?.name || 'Student User'}</div>
+              <div className="profile-meta">{user?.email || 'student@assistdesk.edu'}</div>
+              <div className="profile-meta">Role: {user?.role || 'student'}</div>
+              <label className="profile-upload-button">
                 <input type="file" accept="image/*" onChange={handleProfilePhotoChange} />
                 <span>Upload photo</span>
               </label>
             </div>
-            <div>
-              <div className="profile-name">{user?.name || 'Student User'}</div>
-              <div className="profile-meta">{user?.email || 'student@assistdesk.edu'}</div>
-              <div className="profile-meta">Role: {user?.role || 'student'}</div>
-            </div>
           </div>
+          <button className="institutional-btn profile-save-button" type="button">Save changes</button>
         </div>
 
         <div className="institutional-card" style={{ marginBottom: '20px' }}>
