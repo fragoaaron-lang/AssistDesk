@@ -40,7 +40,7 @@ function LoginPage({ modal = false, onSwitch }) {
           <div className={`brand-badge auth-logo-badge ${isLoading ? 'is-animating' : ''}`} style={{ width: '72px', height: '72px', marginBottom: '14px', background: 'rgba(255,255,255,0.18)' }}>
             <img src="/assistdesk-logo.svg" alt="AssistDesk logo" />
           </div>
-          <h2>{isLoading ? 'Welcome back' : 'AssistDesk'}</h2>
+          <h2>AssistDesk</h2>
           <p>{isLoading ? 'Preparing your personalized support workspace…' : 'Institutional support for students, faculty, and staff through a secure helpdesk and service portal.'}</p>
         </div>
         <div className="auth-form">
