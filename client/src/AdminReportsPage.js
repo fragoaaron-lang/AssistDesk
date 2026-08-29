@@ -93,18 +93,7 @@ function AdminReportsPage() {
 
         <aside className={`mobile-menu-drawer ${mobileMenuOpen ? 'open' : ''}`}>
           <div className="mobile-menu-head">
-            <strong>Menu</strong>
             <button type="button" className="mobile-menu-close" onClick={() => setMobileMenuOpen(false)}>×</button>
-          </div>
-          <div className="nav-links">
-            <a href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</a>
-            <a href="/tickets" onClick={() => setMobileMenuOpen(false)}>Tickets</a>
-            {user?.role === 'admin' && (
-              <>
-                <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Reports</a>
-                <a href="/admin/catalog" onClick={() => setMobileMenuOpen(false)}>Catalog</a>
-              </>
-            )}
           </div>
           <div className="mobile-profile-summary">
             <div className="brand-badge small-badge">
@@ -114,6 +103,16 @@ function AdminReportsPage() {
               <div className="mobile-profile-name">{user?.name || 'User'}</div>
               <div className="mobile-profile-role">{user?.role || 'Member'}</div>
             </div>
+          </div>
+          <div className="nav-links">
+            <a href="/tickets" onClick={() => setMobileMenuOpen(false)}>Tickets</a>
+            <a href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</a>
+            {user?.role === 'admin' && (
+              <>
+                <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Reports</a>
+                <a href="/admin/catalog" onClick={() => setMobileMenuOpen(false)}>Catalog</a>
+              </>
+            )}
           </div>
           <div className="mobile-menu-actions">
             <LogoutButton onBeforeLogout={() => setMobileMenuOpen(false)} />

@@ -135,18 +135,7 @@ function DashboardPage() {
 
         <aside className={`mobile-menu-drawer ${mobileMenuOpen ? 'open' : ''}`}>
           <div className="mobile-menu-head">
-            <strong>Menu</strong>
             <button type="button" className="mobile-menu-close" onClick={() => setMobileMenuOpen(false)}>×</button>
-          </div>
-          <div className="nav-links">
-            <a href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</a>
-            <a href="/tickets" onClick={() => setMobileMenuOpen(false)}>Tickets</a>
-            {user?.role === 'admin' && (
-              <>
-                <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Reports</a>
-                <a href="/admin/catalog" onClick={() => setMobileMenuOpen(false)}>Catalog</a>
-              </>
-            )}
           </div>
           <div className="mobile-profile-summary">
             <div className="brand-badge small-badge">
@@ -156,6 +145,16 @@ function DashboardPage() {
               <div className="mobile-profile-name">{user?.name || 'User'}</div>
               <div className="mobile-profile-role">{user?.role || 'Member'}</div>
             </div>
+          </div>
+          <div className="nav-links">
+            <a href="/tickets" onClick={() => setMobileMenuOpen(false)}>Tickets</a>
+            <a href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</a>
+            {user?.role === 'admin' && (
+              <>
+                <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Reports</a>
+                <a href="/admin/catalog" onClick={() => setMobileMenuOpen(false)}>Catalog</a>
+              </>
+            )}
           </div>
           <div className="mobile-menu-actions">
             <LogoutButton onBeforeLogout={() => setMobileMenuOpen(false)} />
@@ -220,18 +219,6 @@ function DashboardPage() {
                       />
                     );
                   })}
-                </div>
-                <div className="heatmap-legend">
-                  <strong>Ticket priority</strong>
-                  <span><i className="ticket-legend-swatch low" /> Low</span>
-                  <span><i className="ticket-legend-swatch medium" /> Medium</span>
-                  <span><i className="ticket-legend-swatch high" /> High</span>
-                  <span><i className="ticket-legend-swatch urgent" /> Urgent</span>
-                  <span className="legend-divider" aria-hidden="true" />
-                  <strong>Request volume</strong>
-                  <span><i className="legend-swatch low" /> Low</span>
-                  <span><i className="legend-swatch moderate" /> Moderate</span>
-                  <span><i className="legend-swatch high" /> High</span>
                 </div>
               </div>
             </div>

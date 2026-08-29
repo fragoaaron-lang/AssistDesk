@@ -464,8 +464,8 @@ button, input, select, textarea {
 .mobile-menu-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
+  justify-content: flex-end;
+  margin-bottom: 8px;
   flex-shrink: 0;
 }
 
@@ -479,6 +479,7 @@ button, input, select, textarea {
   margin-bottom: 14px;
   width: 100%;
   flex-shrink: 0;
+  order: 1;
 }
 
 .small-badge {
@@ -506,6 +507,10 @@ button, input, select, textarea {
   line-height: 1;
 }
 
+.mobile-menu-drawer .mobile-profile-summary {
+  order: 1;
+}
+
 .mobile-menu-drawer .nav-links {
   display: flex;
   flex-direction: column;
@@ -513,6 +518,7 @@ button, input, select, textarea {
   width: 100%;
   gap: 10px;
   flex: 0 0 auto;
+  order: 2;
 }
 
 .mobile-menu-drawer .nav-links a {
@@ -532,6 +538,7 @@ button, input, select, textarea {
   margin-top: auto;
   padding-top: 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
+  order: 3;
 }
 
 .mobile-menu-bell {
@@ -817,19 +824,7 @@ button, input, select, textarea {
 }
 
 .heatmap-legend {
-  position: absolute;
-  left: 16px;
-  bottom: 16px;
-  z-index: 3;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--text);
-  font-size: 0.78rem;
-  box-shadow: 0 4px 14px rgba(8, 32, 56, 0.16);
+  display: none !important;
 }
 
 .heatmap-legend span { display: inline-flex; align-items: center; gap: 5px; }
@@ -1013,16 +1008,57 @@ button, input, select, textarea {
   .map-toolbar .actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .map-toolbar .actions .institutional-btn { width: 100%; min-height: 40px; padding: 8px 6px; }
   .map-frame { padding: 6px; }
-  .heatmap-legend { left: 8px; right: 8px; bottom: 8px; justify-content: center; gap: 4px 6px; padding: 5px 6px; font-size: 0.58rem; }
-  .heatmap-legend strong { font-size: 0.52rem; }
-  .heatmap-legend span { gap: 3px; }
+  .heatmap-legend {
+    left: 2px;
+    right: auto;
+    bottom: 2px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: auto;
+    max-width: 52px;
+    gap: 1px;
+    padding: 1px 2px;
+    font-size: 0.12rem;
+    line-height: 1;
+    background: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 1px 2px rgba(8, 32, 56, 0.04);
+    border-radius: 4px;
+    transform: scale(0.8);
+    transform-origin: bottom left;
+  }
+  .heatmap-legend strong {
+    width: 100%;
+    font-size: 0.12rem;
+    letter-spacing: 0.02em;
+  }
+  .heatmap-legend span {
+    gap: 1px;
+    white-space: nowrap;
+  }
   .heatmap-legend .legend-swatch,
-  .heatmap-legend .ticket-legend-swatch { width: 7px; height: 7px; }
+  .heatmap-legend .ticket-legend-swatch { width: 2px; height: 2px; }
   .heatmap-legend .ticket-legend-swatch { border-width: 1px; }
   .chatbot-widget { right: 10px; bottom: 10px; }
   .chatbot-launcher { min-width: 64px; height: 50px; padding: 0 12px; }
   .chatbot-panel { width: calc(100vw - 20px); height: min(600px, calc(100vh - 84px)); border-radius: 15px; }
   .chatbot-faq-list button { min-height: 42px; }
+}
+
+@media (max-width: 480px) {
+  .heatmap-legend {
+    left: 2px;
+    bottom: 2px;
+    max-width: 48px;
+    padding: 1px 2px;
+    font-size: 0.1rem;
+    border-radius: 3px;
+    transform: scale(0.72);
+    transform-origin: bottom left;
+  }
+  .heatmap-legend strong { font-size: 0.1rem; }
+  .heatmap-legend .legend-swatch,
+  .heatmap-legend .ticket-legend-swatch { width: 2px; height: 2px; }
 }
 
 @media (max-width: 390px) {
