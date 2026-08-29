@@ -42,6 +42,7 @@ function ProfilePage() {
   const [photoUploadLoading, setPhotoUploadLoading] = useState(false);
   const [saveState, setSaveState] = useState({ status: 'idle', message: '' });
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [savedSnapshot, setSavedSnapshot] = useState(() => ({
     prefs: (() => {
       try {
@@ -115,12 +116,14 @@ function ProfilePage() {
 
       setSavedSnapshot({ prefs, photo: profilePhoto });
       setShowSaveDialog(false);
+      setShowSuccessDialog(true);
 
       window.setTimeout(() => {
         setSaveState({ status: 'success', message: 'Profile saved successfully.' });
       }, 250);
     } catch (error) {
       setSaveState({ status: 'error', message: 'Unable to save profile changes.' });
+      setShowSuccessDialog(true);
     }
   };
 
@@ -335,11 +338,6 @@ function ProfilePage() {
               </label>
             </div>
           </div>
-          {saveState.message && (
-            <p className={`profile-password-message ${saveState.status === 'success' ? 'success' : saveState.status === 'error' ? 'error' : ''}`}>
-              {saveState.message}
-            </p>
-          )}
         </div>
 
         {showSaveDialog && (
@@ -351,6 +349,21 @@ function ProfilePage() {
                 <button type="button" className="secondary-action-button" onClick={handleCancelChanges}>Cancel</button>
                 <button type="button" className="institutional-btn small" onClick={handleSaveChanges} disabled={saveState.status === 'saving'}>
                   {saveState.status === 'saving' ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showSuccessDialog && (
+          <div className="profile-save-dialog-backdrop" onClick={() => setShowSuccessDialog(false)}>
+            <div className="profile-save-dialog success-dialog" onClick={(event) => event.stopPropagation()}>
+              <div className="success-dialog-icon" aria-hidden="true">✓</div>
+              <h4>{saveState.status === 'success' ? 'Profile saved successfully.' : 'Unable to save profile changes.'}</h4>
+              <p>{saveState.status === 'success' ? 'Your updates are now applied.' : 'Please try again.'}</p>
+              <div className="profile-save-dialog-actions">
+                <button type="button" className="institutional-btn small" onClick={() => setShowSuccessDialog(false)}>
+                  Done
                 </button>
               </div>
             </div>

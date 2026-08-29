@@ -711,6 +711,26 @@ button, input, select, textarea {
   padding: 22px 20px 18px;
 }
 
+.success-dialog {
+  text-align: center;
+  border: 1px solid rgba(16, 136, 102, 0.18);
+  background: linear-gradient(180deg, #ffffff, #f4fff9);
+}
+
+.success-dialog-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: #ffffff;
+  background: linear-gradient(135deg, #1fbf8f, #0d8b6a);
+  margin: 0 auto 14px;
+  box-shadow: 0 10px 18px rgba(16, 136, 102, 0.22);
+}
+
 .profile-save-dialog h4 {
   margin: 0 0 8px;
   color: var(--navy);
