@@ -5,6 +5,7 @@ import { useAuth } from './AuthContext';
 function LoginPage({ modal = false, onSwitch }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [welcomeName, setWelcomeName] = useState(() => localStorage.getItem('assistdesk_last_user_name') || '');
@@ -51,7 +52,10 @@ function LoginPage({ modal = false, onSwitch }) {
           <p className="helper-text">{isLoading ? 'Preparing your dashboard and campus services for your account…' : 'Sign in to manage requests, track services, and access the campus support network.'}</p>
           <form onSubmit={handleSubmit}>
             <input className="institutional-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" autoComplete="email" disabled={isLoading} />
-            <input className="institutional-input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" autoComplete="current-password" disabled={isLoading} />
+            <div className="password-field">
+              <input className="institutional-input" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" autoComplete="current-password" disabled={isLoading} />
+              <button type="button" className={`password-visibility ${showPassword ? 'visible' : ''}`} onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Hide password' : 'Show password'} disabled={isLoading}><span className="password-eye" aria-hidden="true" /></button>
+            </div>
             <button className={`institutional-btn auth-submit-btn ${isLoading ? 'is-loading' : ''}`} type="submit" style={{ width: '100%' }} disabled={isLoading}>
               {isLoading ? <><span className="auth-spinner" aria-hidden="true" />Signing in...</> : 'Login'}
             </button>
