@@ -60,6 +60,14 @@ function ProfilePage() {
   }));
 
   useEffect(() => {
+    if (prefs.darkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+  }, [prefs.darkMode]);
+
+  useEffect(() => {
     if (!user) return;
 
     const keyPhoto = getUserStorageKey(user, 'profile_photo');

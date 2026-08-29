@@ -12,6 +12,24 @@
   --shadow: 0 18px 45px rgba(8, 32, 56, 0.12);
 }
 
+body.dark-mode {
+  --navy: #e8ecf1;
+  --navy-deep: #d4dce6;
+  --teal: #4db3a8;
+  --gold: #f4c540;
+  --cream: #1a1a1a;
+  --surface: #1a1a1a;
+  --surface-soft: #242424;
+  --text: #e8ecf1;
+  --muted: #a0aab5;
+  --border: #404050;
+  --shadow: 0 18px 45px rgba(0, 0, 0, 0.5);
+}
+
+body.dark-mode {
+  background: linear-gradient(135deg, #1a1a1a 0%, #242424 100%);
+}
+
 * { box-sizing: border-box; }
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
