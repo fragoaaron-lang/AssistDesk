@@ -11,6 +11,8 @@ const defaultPrefs = {
   favoriteDepartment: 'All departments',
 };
 
+const PASSWORD_RULE_MESSAGE = 'Password must be at least 8 characters long and include an uppercase letter, lowercase letter, number, and special character.';
+
 function ProfilePage() {
   const { user, token } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -24,10 +26,19 @@ function ProfilePage() {
   });
   const [passwordForm, setPasswordForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
   const [passwordState, setPasswordState] = useState({ status: 'idle', message: '' });
+  const [showPasswordEditor, setShowPasswordEditor] = useState(false);
+  const [showPasswordFields, setShowPasswordFields] = useState({ oldPassword: false, newPassword: false, confirmPassword: false });
 
   useEffect(() => {
     localStorage.setItem('assistdesk_profile_prefs', JSON.stringify(prefs));
   }, [prefs]);
+
+  const togglePasswordVisibility = (fieldName) => {
+    setShowPasswordFields((current) => ({
+      ...current,
+      [fieldName]: !current[fieldName],
+    }));
+  };
 
   const updatePreference = (key, value) => {
     setPrefs((current) => ({ ...current, [key]: value }));
@@ -38,6 +49,11 @@ function ProfilePage() {
 
     if (!passwordForm.oldPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
       setPasswordState({ status: 'error', message: 'All password fields are required.' });
+      return;
+    }
+
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/.test(passwordForm.newPassword)) {
+      setPasswordState({ status: 'error', message: PASSWORD_RULE_MESSAGE });
       return;
     }
 
@@ -204,38 +220,85 @@ function ProfilePage() {
         </div>
 
         <div className="institutional-card">
-          <h3>Change password</h3>
-          <form onSubmit={handlePasswordChange} className="password-change-form">
-            <input
-              className="institutional-input"
-              type="password"
-              placeholder="Current password"
-              value={passwordForm.oldPassword}
-              onChange={(e) => setPasswordForm((current) => ({ ...current, oldPassword: e.target.value }))}
-              required
-            />
-            <input
-              className="institutional-input"
-              type="password"
-              placeholder="New password"
-              value={passwordForm.newPassword}
-              onChange={(e) => setPasswordForm((current) => ({ ...current, newPassword: e.target.value }))}
-              required
-            />
-            <input
-              className="institutional-input"
-              type="password"
-              placeholder="Confirm new password"
-              value={passwordForm.confirmPassword}
-              onChange={(e) => setPasswordForm((current) => ({ ...current, confirmPassword: e.target.value }))}
-              required
-            />
-            <button className="institutional-btn" type="submit">Update password</button>
-          </form>
-          {passwordState.message && (
-            <p className={`profile-password-message ${passwordState.status}`}>
-              {passwordState.message}
-            </p>
+          <div className="profile-section-header">
+            <h3>Security</h3>
+            <button
+              type="button"
+              className="institutional-btn secondary small"
+              onClick={() => setShowPasswordEditor((prev) => !prev)}
+            >
+              {showPasswordEditor ? 'Close' : 'Change password'}
+            </button>
+          </div>
+
+          {showPasswordEditor && (
+            <>
+              <form onSubmit={handlePasswordChange} className="password-change-form">
+                <div className="password-field">
+                  <input
+                    className="institutional-input"
+                    type={showPasswordFields.oldPassword ? 'text' : 'password'}
+                    placeholder="Current password"
+                    value={passwordForm.oldPassword}
+                    onChange={(e) => setPasswordForm((current) => ({ ...current, oldPassword: e.target.value }))}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className={`password-visibility ${showPasswordFields.oldPassword ? 'visible' : ''}`}
+                    onClick={() => togglePasswordVisibility('oldPassword')}
+                    aria-label={showPasswordFields.oldPassword ? 'Hide current password' : 'Show current password'}
+                  >
+                    <span className="password-eye" aria-hidden="true" />
+                  </button>
+                </div>
+
+                <div className="password-field">
+                  <input
+                    className="institutional-input"
+                    type={showPasswordFields.newPassword ? 'text' : 'password'}
+                    placeholder="New password"
+                    value={passwordForm.newPassword}
+                    onChange={(e) => setPasswordForm((current) => ({ ...current, newPassword: e.target.value }))}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className={`password-visibility ${showPasswordFields.newPassword ? 'visible' : ''}`}
+                    onClick={() => togglePasswordVisibility('newPassword')}
+                    aria-label={showPasswordFields.newPassword ? 'Hide new password' : 'Show new password'}
+                  >
+                    <span className="password-eye" aria-hidden="true" />
+                  </button>
+                </div>
+
+                <div className="password-field">
+                  <input
+                    className="institutional-input"
+                    type={showPasswordFields.confirmPassword ? 'text' : 'password'}
+                    placeholder="Confirm new password"
+                    value={passwordForm.confirmPassword}
+                    onChange={(e) => setPasswordForm((current) => ({ ...current, confirmPassword: e.target.value }))}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className={`password-visibility ${showPasswordFields.confirmPassword ? 'visible' : ''}`}
+                    onClick={() => togglePasswordVisibility('confirmPassword')}
+                    aria-label={showPasswordFields.confirmPassword ? 'Hide confirmed new password' : 'Show confirmed new password'}
+                  >
+                    <span className="password-eye" aria-hidden="true" />
+                  </button>
+                </div>
+                <p className="helper-text">Use 8+ characters with uppercase, lowercase, number, and symbol.</p>
+                <button className="institutional-btn" type="submit">Update password</button>
+              </form>
+              {passwordState.message && (
+                <p className={`profile-password-message ${passwordState.status}`}>
+                  {passwordState.message}
+                </p>
+              )}
+            </>
           )}
         </div>
       </div>
