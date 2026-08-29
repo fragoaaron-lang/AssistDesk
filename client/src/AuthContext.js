@@ -4,6 +4,15 @@ import { API_BASE_URL } from './config';
 
 const AuthContext = createContext();
 
+const persistWelcomeName = (name) => {
+  if (name) {
+    localStorage.setItem('assistdesk_last_user_name', name);
+    return;
+  }
+
+  localStorage.removeItem('assistdesk_last_user_name');
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('assistdesk_token'));
@@ -40,8 +49,11 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     const response = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
     const { user, token: newToken } = response.data;
+    const userName = user?.name || email.split('@')[0];
+    const firstName = userName.split(' ')[0];
 
     localStorage.setItem('assistdesk_token', newToken);
+    persistWelcomeName(firstName);
     setToken(newToken);
     setUser(user);
     return { user, token: newToken };
@@ -68,6 +80,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    const currentName = user?.name || localStorage.getItem('assistdesk_last_user_name');
+    if (currentName) {
+      persistWelcomeName(currentName.split(' ')[0]);
+    }
+
     localStorage.removeItem('assistdesk_token');
     setToken(null);
     setUser(null);

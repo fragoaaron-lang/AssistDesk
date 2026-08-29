@@ -7,7 +7,7 @@ function LoginPage({ modal = false, onSwitch }) {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [welcomeName, setWelcomeName] = useState('');
+  const [welcomeName, setWelcomeName] = useState(() => localStorage.getItem('assistdesk_last_user_name') || '');
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -26,7 +26,6 @@ function LoginPage({ modal = false, onSwitch }) {
       setWelcomeName(firstName);
       navigate('/dashboard');
     } catch (error) {
-      setWelcomeName('');
       setMessage(error.response?.data?.message || 'Login failed.');
     } finally {
       setIsLoading(false);
