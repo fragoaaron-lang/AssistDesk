@@ -77,6 +77,13 @@ function DashboardPage() {
 
   const getHeatStrength = (count) => Math.min(0.92, 0.2 + (Number(count) * 0.12));
 
+  const getIntensityLevel = (count) => {
+    const numCount = Number(count || 0);
+    if (numCount >= 8) return 'high';
+    if (numCount >= 3) return 'moderate';
+    return 'low';
+  };
+
   const getVolumeLabel = (level) => {
     if (level === 'high') return 'High Volume';
     if (level === 'moderate') return 'Moderate Volume';
@@ -240,11 +247,13 @@ function DashboardPage() {
                       .slice(0, index)
                       .filter((item) => Number(item.department_id) === Number(ticket.department_id))
                       .length;
+                    const department = visibleDepartments.find((dept) => Number(dept.id) === Number(ticket.department_id));
+                    const intensityLevel = getIntensityLevel(department?.ticket_count);
                     const pos = getTicketPosition(ticket, departmentTicketIndex);
                     return (
                       <span
                         key={`ticket-pin-${ticket.id}`}
-                        className={`ticket-pin ${ticket.priority || 'medium'}`}
+                        className={`ticket-pin ${intensityLevel}`}
                         style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
                         title={`${ticket.subject} (${ticket.status})`}
                         role="img"

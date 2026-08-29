@@ -1304,10 +1304,9 @@ button, input, select, textarea {
   background: white;
 }
 
-.ticket-pin.low,
-.ticket-pin.medium { background-color: #164be8; }
-.ticket-pin.high,
-.ticket-pin.urgent { background-color: #ed1725; }
+.ticket-pin.low { background-color: #37c94f; }
+.ticket-pin.moderate { background-color: #1f9dd9; }
+.ticket-pin.high { background-color: #ed1725; }
 
 .heatmap-legend strong { flex-basis: 100%; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
 .ticket-legend-swatch {
