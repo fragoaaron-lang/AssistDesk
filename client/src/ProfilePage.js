@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
 import NotificationBell from './NotificationBell';
 import LogoutButton from './LogoutButton';
+import { API_BASE_URL } from './config';
 
 const defaultPrefs = {
   compactMode: false,
@@ -63,7 +64,7 @@ function ProfilePage() {
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/auth/change-password`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -75,16 +76,24 @@ function ProfilePage() {
         }),
       });
 
-      const data = await response.json();
+      let data = {};
+      const contentType = response.headers.get('content-type') || '';
+
+      if (contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        data = { message: text.includes('Current password is incorrect') ? 'Current password is incorrect.' : 'Unable to change password.' };
+      }
 
       if (!response.ok) {
-        throw new Error(data.message || 'Unable to change password.');
+        throw new Error(data.message || 'Current password is incorrect.');
       }
 
       setPasswordState({ status: 'success', message: data.message || 'Password changed successfully.' });
       setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error) {
-      setPasswordState({ status: 'error', message: error.message || 'Unable to change password.' });
+      setPasswordState({ status: 'error', message: error.message || 'Current password is incorrect.' });
     }
   };
 
