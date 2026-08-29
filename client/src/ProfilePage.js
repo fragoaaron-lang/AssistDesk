@@ -62,7 +62,7 @@ function ProfilePage() {
         localStorage.setItem('assistdesk_profile_photo', result);
         setProfilePhoto(result);
         setPhotoUploadLoading(false);
-      }, 500);
+      }, 900);
     };
 
     reader.onerror = () => {
@@ -199,7 +199,7 @@ function ProfilePage() {
               {photoUploadLoading && <div className="profile-avatar-loader" aria-label="Uploading profile photo" />}
               <label className={`profile-avatar-upload-label mobile-upload-label ${photoUploadLoading ? 'loading' : ''}`}>
                 <input type="file" accept="image/*" onChange={handleProfilePhotoChange} disabled={photoUploadLoading} />
-                <span>{photoUploadLoading ? 'Loading...' : 'Upload'}</span>
+                <span>{photoUploadLoading ? 'Uploading...' : 'Upload'}</span>
               </label>
             </div>
             <div>
@@ -248,7 +248,7 @@ function ProfilePage() {
               <div className="profile-meta">Role: {user?.role || 'student'}</div>
               <label className={`profile-upload-button ${photoUploadLoading ? 'loading' : ''}`}>
                 <input type="file" accept="image/*" onChange={handleProfilePhotoChange} disabled={photoUploadLoading} />
-                <span>{photoUploadLoading ? 'Processing...' : 'Upload photo'}</span>
+                <span>{photoUploadLoading ? 'Uploading...' : 'Upload photo'}</span>
               </label>
             </div>
           </div>
