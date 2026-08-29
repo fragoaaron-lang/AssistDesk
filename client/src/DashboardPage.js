@@ -240,13 +240,11 @@ function DashboardPage() {
                       .slice(0, index)
                       .filter((item) => Number(item.department_id) === Number(ticket.department_id))
                       .length;
-                    const department = visibleDepartments.find((dept) => Number(dept.id) === Number(ticket.department_id));
-                    const intensityLevel = getIntensityLevel(department?.ticket_count);
                     const pos = getTicketPosition(ticket, departmentTicketIndex);
                     return (
                       <span
                         key={`ticket-pin-${ticket.id}`}
-                        className={`ticket-pin ${intensityLevel}`}
+                        className={`ticket-pin ${ticket.priority || 'medium'}`}
                         style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
                         title={`${ticket.subject} (${ticket.status})`}
                         role="img"
