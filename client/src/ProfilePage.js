@@ -30,6 +30,7 @@ function ProfilePage() {
   const [passwordState, setPasswordState] = useState({ status: 'idle', message: '' });
   const [showPasswordEditor, setShowPasswordEditor] = useState(false);
   const [showPasswordFields, setShowPasswordFields] = useState({ oldPassword: false, newPassword: false, confirmPassword: false });
+  const [photoUploadLoading, setPhotoUploadLoading] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('assistdesk_profile_prefs', JSON.stringify(prefs));
@@ -50,12 +51,24 @@ function ProfilePage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    setPhotoUploadLoading(true);
+    event.target.value = '';
+
     const reader = new FileReader();
     reader.onload = () => {
       const result = typeof reader.result === 'string' ? reader.result : '';
-      localStorage.setItem('assistdesk_profile_photo', result);
-      setProfilePhoto(result);
+
+      window.setTimeout(() => {
+        localStorage.setItem('assistdesk_profile_photo', result);
+        setProfilePhoto(result);
+        setPhotoUploadLoading(false);
+      }, 500);
     };
+
+    reader.onerror = () => {
+      setPhotoUploadLoading(false);
+    };
+
     reader.readAsDataURL(file);
   };
 
@@ -183,9 +196,10 @@ function ProfilePage() {
               ) : (
                 <span>+</span>
               )}
-              <label className="profile-avatar-upload-label mobile-upload-label">
-                <input type="file" accept="image/*" onChange={handleProfilePhotoChange} />
-                <span>Upload</span>
+              {photoUploadLoading && <div className="profile-avatar-loader" aria-label="Uploading profile photo" />}
+              <label className={`profile-avatar-upload-label mobile-upload-label ${photoUploadLoading ? 'loading' : ''}`}>
+                <input type="file" accept="image/*" onChange={handleProfilePhotoChange} disabled={photoUploadLoading} />
+                <span>{photoUploadLoading ? 'Loading...' : 'Upload'}</span>
               </label>
             </div>
             <div>
@@ -226,14 +240,15 @@ function ProfilePage() {
               ) : (
                 <span className="profile-avatar-placeholder">+</span>
               )}
+              {photoUploadLoading && <div className="profile-avatar-loader" aria-label="Uploading profile photo" />}
             </div>
             <div className="profile-user-meta">
               <div className="profile-name">{user?.name || 'Student User'}</div>
               <div className="profile-meta">{user?.email || 'student@assistdesk.edu'}</div>
               <div className="profile-meta">Role: {user?.role || 'student'}</div>
-              <label className="profile-upload-button">
-                <input type="file" accept="image/*" onChange={handleProfilePhotoChange} />
-                <span>Upload photo</span>
+              <label className={`profile-upload-button ${photoUploadLoading ? 'loading' : ''}`}>
+                <input type="file" accept="image/*" onChange={handleProfilePhotoChange} disabled={photoUploadLoading} />
+                <span>{photoUploadLoading ? 'Processing...' : 'Upload photo'}</span>
               </label>
             </div>
           </div>
