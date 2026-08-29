@@ -93,7 +93,7 @@ const buildResponse = async (query) => {
 };
 
 const getEstimatedCompletion = (priority) => {
-  const hoursByPriority = { urgent: 8, high: 24, medium: 48, low: 72 };
+  const hoursByPriority = { high: 24, moderate: 48, low: 72 };
   const estimated = new Date();
   estimated.setHours(estimated.getHours() + (hoursByPriority[priority] || 48));
   return estimated;
@@ -123,9 +123,9 @@ const handleTicketCommand = async (message, userId) => {
     subject: description.slice(0, 200),
     description,
     category: 'Other',
-    priority: 'medium',
+    priority: 'moderate',
     status: 'open',
-    estimated_completion_at: getEstimatedCompletion('medium'),
+    estimated_completion_at: getEstimatedCompletion('moderate'),
   });
   await TicketUpdate.create({ ticket_id: ticket.id, message: 'Ticket created through the assistant.', updated_by: userId });
   await Notification.create({ user_id: userId, message: `Your ticket "${ticket.subject}" has been created.` });

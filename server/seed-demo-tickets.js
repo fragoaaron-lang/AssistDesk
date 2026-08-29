@@ -1,18 +1,18 @@
 const { sequelize, Department, User, Ticket, TicketUpdate } = require('./models');
 
 const samples = [
-  ['Enrollment verification request', 'Enrollment', 'medium', 'open'],
+  ['Enrollment verification request', 'Enrollment', 'moderate', 'open'],
   ['Student ID replacement', 'Student Services', 'high', 'in_progress'],
-  ['Campus Wi-Fi access issue', 'Technical Support', 'urgent', 'pending'],
-  ['Workstation software installation', 'Technical Support', 'medium', 'open'],
+  ['Campus Wi-Fi access issue', 'Technical Support', 'high', 'pending'],
+  ['Workstation software installation', 'Technical Support', 'moderate', 'open'],
   ['Programming laboratory access', 'Facilities', 'low', 'open'],
-  ['Teaching practicum documents', 'Academic Services', 'medium', 'resolved'],
-  ['Hospitality training schedule', 'Academic Services', 'medium', 'open'],
+  ['Teaching practicum documents', 'Academic Services', 'moderate', 'resolved'],
+  ['Hospitality training schedule', 'Academic Services', 'moderate', 'open'],
   ['Criminal justice clearance inquiry', 'Academic Services', 'high', 'pending'],
-  ['Clinical rotation requirements', 'Academic Services', 'urgent', 'in_progress'],
-  ['Transcript request follow-up', 'Records', 'medium', 'open'],
+  ['Clinical rotation requirements', 'Academic Services', 'high', 'in_progress'],
+  ['Transcript request follow-up', 'Records', 'moderate', 'open'],
   ['Tuition assessment question', 'Finance', 'high', 'open'],
-  ['Classroom projector repair', 'Facilities', 'medium', 'pending'],
+  ['Classroom projector repair', 'Facilities', 'moderate', 'pending'],
   ['Health clearance appointment', 'Health Services', 'low', 'resolved'],
 ];
 

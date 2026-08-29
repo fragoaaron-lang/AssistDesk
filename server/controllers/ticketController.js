@@ -19,9 +19,9 @@ const scoreText = (query, target) => {
 };
 
 const getEstimatedCompletion = (priority, requestedAt = new Date()) => {
-  const hoursByPriority = { urgent: 8, high: 24, medium: 48, low: 72 };
+  const hoursByPriority = { high: 24, moderate: 48, low: 72 };
   const estimated = new Date(requestedAt);
-  estimated.setHours(estimated.getHours() + (hoursByPriority[priority] || hoursByPriority.medium));
+  estimated.setHours(estimated.getHours() + (hoursByPriority[priority] || hoursByPriority.moderate));
   return estimated;
 };
 
@@ -46,7 +46,7 @@ const inferDepartmentId = async (subject, description) => {
 
 exports.createTicket = async (req, res) => {
   try {
-    const { user_id, subject, description, category = 'Other', priority = 'medium', department_id: selectedDepartmentId, estimated_completion_at } = req.body;
+    const { user_id, subject, description, category = 'Other', priority = 'moderate', department_id: selectedDepartmentId, estimated_completion_at } = req.body;
     if (!subject || !description) {
       return res.status(400).json({ message: 'Subject and description are required.' });
     }

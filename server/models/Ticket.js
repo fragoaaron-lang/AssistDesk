@@ -29,9 +29,9 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: 'Other',
       },
       priority: {
-        type: DataTypes.ENUM('low', 'medium', 'high', 'urgent'),
+        type: DataTypes.ENUM('low', 'moderate', 'high'),
         allowNull: false,
-        defaultValue: 'medium',
+        defaultValue: 'moderate',
       },
       status: {
         type: DataTypes.ENUM('open', 'pending', 'in_progress', 'resolved', 'closed'),
