@@ -1432,29 +1432,29 @@ button, input, select, textarea {
     left: auto;
     bottom: 8px;
     width: auto;
-    max-width: 120px;
-    gap: 6px;
-    padding: 10px;
-    font-size: 0.85rem;
-    line-height: 1.3;
+    max-width: 90px;
+    gap: 4px;
+    padding: 7px;
+    font-size: 0.72rem;
+    line-height: 1.2;
     background: rgba(255, 255, 255, 0.92);
     box-shadow: 0 3px 8px rgba(8, 32, 56, 0.1);
-    border-radius: 6px;
+    border-radius: 5px;
     transform: none;
     transform-origin: unset;
   }
   .heatmap-legend strong {
     width: 100%;
-    font-size: 0.75rem;
+    font-size: 0.56rem;
     letter-spacing: 0.02em;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
   }
   .heatmap-legend span {
-    gap: 6px;
-    font-size: 0.8rem;
+    gap: 4px;
+    font-size: 0.64rem;
   }
   .heatmap-legend .legend-swatch,
-  .heatmap-legend .ticket-legend-swatch { width: 8px; height: 8px; }
+  .heatmap-legend .ticket-legend-swatch { width: 6px; height: 6px; }
   .heatmap-legend .ticket-legend-swatch { border-width: 1px; }
   .chatbot-widget { right: 10px; bottom: 10px; }
   .chatbot-launcher { min-width: 64px; height: 50px; padding: 0 12px; }
@@ -1467,18 +1467,18 @@ button, input, select, textarea {
     right: 6px;
     left: auto;
     bottom: 6px;
-    max-width: 85px;
-    padding: 6px;
-    font-size: 0.75rem;
-    border-radius: 4px;
+    max-width: 72px;
+    padding: 5px;
+    font-size: 0.62rem;
+    border-radius: 3px;
     transform: none;
     transform-origin: unset;
-    gap: 4px;
+    gap: 3px;
   }
-  .heatmap-legend strong { font-size: 0.65rem; margin-bottom: 1px; }
-  .heatmap-legend span { font-size: 0.7rem; gap: 4px; }
+  .heatmap-legend strong { font-size: 0.5rem; margin-bottom: 0; }
+  .heatmap-legend span { font-size: 0.58rem; gap: 3px; }
   .heatmap-legend .legend-swatch,
-  .heatmap-legend .ticket-legend-swatch { width: 5px; height: 5px; }
+  .heatmap-legend .ticket-legend-swatch { width: 4px; height: 4px; }
   .heatmap-legend .ticket-legend-swatch { border-width: 1px; }
 }
 
@@ -1487,16 +1487,16 @@ button, input, select, textarea {
     right: 4px;
     left: auto;
     bottom: 4px;
-    max-width: 70px;
+    max-width: 62px;
     padding: 4px;
-    font-size: 0.65rem;
-    border-radius: 3px;
+    font-size: 0.56rem;
+    border-radius: 2px;
     gap: 2px;
   }
-  .heatmap-legend strong { font-size: 0.55rem; margin-bottom: 0; }
-  .heatmap-legend span { font-size: 0.6rem; gap: 3px; }
+  .heatmap-legend strong { font-size: 0.45rem; margin-bottom: 0; }
+  .heatmap-legend span { font-size: 0.52rem; gap: 2px; }
   .heatmap-legend .legend-swatch,
-  .heatmap-legend .ticket-legend-swatch { width: 4px; height: 4px; }
+  .heatmap-legend .ticket-legend-swatch { width: 3px; height: 3px; }
 }
 
 @media (max-width: 390px) {
