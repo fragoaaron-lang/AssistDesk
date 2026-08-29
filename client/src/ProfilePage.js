@@ -17,6 +17,7 @@ const PASSWORD_RULE_MESSAGE = 'Password must be at least 8 characters long and i
 function ProfilePage() {
   const { user, token } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState(() => localStorage.getItem('assistdesk_profile_photo') || '');
   const [prefs, setPrefs] = useState(() => {
     try {
       const savedPrefs = JSON.parse(localStorage.getItem('assistdesk_profile_prefs') || '{}');
@@ -43,6 +44,19 @@ function ProfilePage() {
 
   const updatePreference = (key, value) => {
     setPrefs((current) => ({ ...current, [key]: value }));
+  };
+
+  const handleProfilePhotoChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      localStorage.setItem('assistdesk_profile_photo', result);
+      setProfilePhoto(result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handlePasswordChange = async (e) => {
@@ -163,8 +177,16 @@ function ProfilePage() {
             <button type="button" className="mobile-menu-close" onClick={() => setMobileMenuOpen(false)}>×</button>
           </div>
           <div className="mobile-profile-summary">
-            <div className="brand-badge small-badge">
-              <img src="/assistdesk-logo.svg" alt="AssistDesk logo" />
+            <div className="mobile-profile-photo">
+              {profilePhoto ? (
+                <img src={profilePhoto} alt="Profile" className="profile-avatar-image" />
+              ) : (
+                <span>+</span>
+              )}
+              <label className="profile-avatar-upload-label mobile-upload-label">
+                <input type="file" accept="image/*" onChange={handleProfilePhotoChange} />
+                <span>Upload</span>
+              </label>
             </div>
             <div>
               <div className="mobile-profile-name">{user?.name || 'User'}</div>
@@ -198,7 +220,17 @@ function ProfilePage() {
         <div className="institutional-card" style={{ marginBottom: '20px' }}>
           <h3>Account profile</h3>
           <div className="profile-summary-row">
-            <div className="profile-avatar">{(user?.name || 'U').charAt(0).toUpperCase()}</div>
+            <div className="profile-avatar profile-avatar-upload">
+              {profilePhoto ? (
+                <img src={profilePhoto} alt="Profile" className="profile-avatar-image" />
+              ) : (
+                <span className="profile-avatar-placeholder">+</span>
+              )}
+              <label className="profile-avatar-upload-label">
+                <input type="file" accept="image/*" onChange={handleProfilePhotoChange} />
+                <span>Upload photo</span>
+              </label>
+            </div>
             <div>
               <div className="profile-name">{user?.name || 'Student User'}</div>
               <div className="profile-meta">{user?.email || 'student@assistdesk.edu'}</div>
