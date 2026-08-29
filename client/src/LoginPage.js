@@ -10,7 +10,7 @@ function LoginPage({ modal = false, onSwitch }) {
   const [welcomeName, setWelcomeName] = useState(() => localStorage.getItem('assistdesk_last_user_name') || '');
   const { login } = useAuth();
   const navigate = useNavigate();
-  const shouldShowWelcome = Boolean(welcomeName) || isLoading;
+  const shouldShowWelcome = isLoading;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,13 +40,13 @@ function LoginPage({ modal = false, onSwitch }) {
           <div className={`brand-badge auth-logo-badge ${isLoading ? 'is-animating' : ''}`} style={{ width: '72px', height: '72px', marginBottom: '14px', background: 'rgba(255,255,255,0.18)' }}>
             <img src="/assistdesk-logo.svg" alt="AssistDesk logo" />
           </div>
-          <h2>{shouldShowWelcome ? `Welcome back, ${welcomeName || 'Student'}` : 'AssistDesk'}</h2>
-          <p>{shouldShowWelcome ? (isLoading ? 'Preparing your personalized support workspace…' : 'Ready to continue where you left off in your support workspace.') : 'Institutional support for students, faculty, and staff through a secure helpdesk and service portal.'}</p>
+          <h2>{isLoading ? 'Welcome back' : 'AssistDesk'}</h2>
+          <p>{isLoading ? 'Preparing your personalized support workspace…' : 'Institutional support for students, faculty, and staff through a secure helpdesk and service portal.'}</p>
         </div>
         <div className="auth-form">
-          <div className="login-status-badge">{isLoading ? `Welcome back${welcomeName ? `, ${welcomeName}` : ''} — signing in…` : (welcomeName ? `Welcome back, ${welcomeName}` : 'Welcome back')}</div>
-          <h3>{welcomeName ? `Welcome back, ${welcomeName}` : 'Welcome back'}</h3>
-          <p className="helper-text">{isLoading ? `Preparing your dashboard and campus services for ${welcomeName || 'your account'}…` : (welcomeName ? `Continue to manage requests, track services, and access your student support portal.` : 'Sign in to manage requests, track services, and access the campus support network.')}</p>
+          <div className="login-status-badge">{isLoading ? 'Welcome back — signing in…' : 'Welcome back'}</div>
+          <h3>Welcome back</h3>
+          <p className="helper-text">{isLoading ? 'Preparing your dashboard and campus services for your account…' : 'Sign in to manage requests, track services, and access the campus support network.'}</p>
           <form onSubmit={handleSubmit}>
             <input className="institutional-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" autoComplete="email" disabled={isLoading} />
             <input className="institutional-input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" autoComplete="current-password" disabled={isLoading} />
