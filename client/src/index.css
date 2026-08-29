@@ -593,6 +593,64 @@ button, input, select, textarea {
   flex-wrap: wrap;
 }
 
+.profile-summary-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.profile-avatar {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--navy), var(--teal));
+  color: #fff;
+  font-size: 1.45rem;
+  font-weight: 700;
+}
+
+.profile-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.profile-meta {
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+
+.preference-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+.preference-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.preference-row input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+}
+
+.select-row select {
+  width: min(220px, 50vw);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 10px;
+  background: #fbfdff;
+  color: var(--text);
+}
+
 .nav-links a {
   color: white;
   padding: 8px 12px;

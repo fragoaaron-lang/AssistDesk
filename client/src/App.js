@@ -9,6 +9,7 @@ import AdminCatalogPage from './AdminCatalogPage';
 import AdminReportsPage from './AdminReportsPage';
 import AiChatPage from './AiChatPage';
 import TicketsPage from './TicketsPage';
+import ProfilePage from './ProfilePage';
 import ChatbotWidget from './ChatbotWidget';
 import LandingPage from './LandingPage';
 
@@ -79,6 +80,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <TicketsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
               </ProtectedRoute>
             }
           />
