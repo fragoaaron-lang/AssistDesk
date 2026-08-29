@@ -217,7 +217,7 @@ function ProfilePage() {
           </div>
         </div>
 
-        <div className="institutional-card" style={{ marginBottom: '20px' }}>
+        <div className="institutional-card profile-card" style={{ marginBottom: '20px' }}>
           <h3>Account profile</h3>
           <div className="profile-summary-row">
             <div className="profile-avatar profile-avatar-upload">
@@ -237,7 +237,9 @@ function ProfilePage() {
               </label>
             </div>
           </div>
-          <button className="institutional-btn profile-save-button" type="button">Save changes</button>
+          <div className="profile-card-actions">
+            <button className="institutional-btn small profile-save-button" type="button">Save changes</button>
+          </div>
         </div>
 
         <div className="institutional-card" style={{ marginBottom: '20px' }}>

@@ -643,8 +643,21 @@ button, input, select, textarea {
   display: none;
 }
 
+.profile-card {
+  position: relative;
+}
+
+.profile-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
 .profile-save-button {
-  margin-top: 16px;
+  margin-top: 0;
+  min-height: 36px;
+  padding: 8px 14px;
+  font-size: 0.82rem;
 }
 
 .profile-avatar-upload input,
