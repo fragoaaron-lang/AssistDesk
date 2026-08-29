@@ -57,6 +57,7 @@ function AiChatPage() {
             </div>
           </button>
           <div className="nav-links">
+            <a href="/profile">Profile</a>
             <a href="/dashboard">Dashboard</a>
             <a href="/tickets">Tickets</a>
             {user?.role === 'admin' && (
@@ -86,6 +87,7 @@ function AiChatPage() {
             </div>
           </div>
           <div className="nav-links">
+            <a href="/profile" onClick={() => setMobileMenuOpen(false)}>Profile</a>
             <a href="/tickets" onClick={() => setMobileMenuOpen(false)}>Tickets</a>
             <a href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</a>
             {user?.role === 'admin' && (
