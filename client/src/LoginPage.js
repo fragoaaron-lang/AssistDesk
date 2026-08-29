@@ -44,8 +44,7 @@ function LoginPage({ modal = false, onSwitch }) {
           <p>{isLoading ? 'Preparing your personalized support workspace…' : 'Institutional support for students, faculty, and staff through a secure helpdesk and service portal.'}</p>
         </div>
         <div className="auth-form">
-          <div className="login-status-badge">{isLoading ? 'Welcome back — signing in…' : 'Welcome back'}</div>
-          <h3>Welcome back</h3>
+          <div className="login-status-badge">{isLoading ? 'Signing in…' : 'Welcome back'}</div>
           <p className="helper-text">{isLoading ? 'Preparing your dashboard and campus services for your account…' : 'Sign in to manage requests, track services, and access the campus support network.'}</p>
           <form onSubmit={handleSubmit}>
             <input className="institutional-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" autoComplete="email" disabled={isLoading} />
