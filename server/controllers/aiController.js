@@ -99,6 +99,16 @@ const getEstimatedCompletion = (priority) => {
   return estimated;
 };
 
+const mapPriorityToDatabase = (priority) => {
+  // Temporary mapping until database is migrated
+  const priorityMap = {
+    'moderate': 'medium',
+    'low': 'low',
+    'high': 'high',
+  };
+  return priorityMap[priority] || 'medium';
+};
+
 const handleTicketCommand = async (message, userId) => {
   const normalized = normalize(message);
   if (normalized.startsWith('status') || normalized.includes('my tickets') || normalized.includes('track my')) {
@@ -123,7 +133,7 @@ const handleTicketCommand = async (message, userId) => {
     subject: description.slice(0, 200),
     description,
     category: 'Other',
-    priority: 'moderate',
+    priority: mapPriorityToDatabase('moderate'),
     status: 'open',
     estimated_completion_at: getEstimatedCompletion('moderate'),
   });

@@ -44,6 +44,16 @@ const inferDepartmentId = async (subject, description) => {
   return best ? best.id : null;
 };
 
+const mapPriorityToDatabase = (priority) => {
+  // Temporary mapping until database is migrated
+  const priorityMap = {
+    'moderate': 'medium',
+    'low': 'low',
+    'high': 'high',
+  };
+  return priorityMap[priority] || 'medium';
+};
+
 exports.createTicket = async (req, res) => {
   try {
     const { user_id, subject, description, category = 'Other', priority = 'moderate', department_id: selectedDepartmentId, estimated_completion_at } = req.body;
@@ -55,15 +65,18 @@ exports.createTicket = async (req, res) => {
       ? Number(selectedDepartmentId)
       : await inferDepartmentId(subject, description);
 
+    // Map new priority names to old database values temporarily
+    const databasePriority = mapPriorityToDatabase(priority);
+
     const ticket = await Ticket.create({
       user_id: user_id || req.user.id,
       department_id: resolvedDepartmentId || 1,
       subject,
       description,
       category,
-      priority,
+      priority: databasePriority,
       status: 'open',
-      estimated_completion_at: estimated_completion_at || getEstimatedCompletion(priority),
+      estimated_completion_at: estimated_completion_at || getEstimatedCompletion(databasePriority),
     });
 
     await TicketUpdate.create({
