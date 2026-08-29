@@ -90,6 +90,8 @@ function DashboardPage() {
 
   const getBuildingPosition = (department) => {
     const name = String(department.name || '').toLowerCase();
+    if (name.includes('admin')) return { x: 16, y: 50 };
+    if (name.includes('library')) return { x: 78, y: 50 };
     if (name.includes('crim')) return { x: 64, y: 13 };
     if (name.includes('nurs')) return { x: 60, y: 75 };
     if (name.includes('clinic')) return { x: 54, y: 35 };
