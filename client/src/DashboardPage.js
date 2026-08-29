@@ -77,13 +77,6 @@ function DashboardPage() {
 
   const getHeatStrength = (count) => Math.min(0.92, 0.2 + (Number(count) * 0.12));
 
-  const getIntensityLevel = (count) => {
-    const numCount = Number(count || 0);
-    if (numCount >= 8) return 'high';
-    if (numCount >= 3) return 'moderate';
-    return 'low';
-  };
-
   const getVolumeLabel = (level) => {
     if (level === 'high') return 'High Volume';
     if (level === 'moderate') return 'Moderate Volume';
