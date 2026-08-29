@@ -31,6 +31,7 @@ function ProfilePage() {
   const [showPasswordEditor, setShowPasswordEditor] = useState(false);
   const [showPasswordFields, setShowPasswordFields] = useState({ oldPassword: false, newPassword: false, confirmPassword: false });
   const [photoUploadLoading, setPhotoUploadLoading] = useState(false);
+  const [saveState, setSaveState] = useState({ status: 'idle', message: '' });
 
   useEffect(() => {
     localStorage.setItem('assistdesk_profile_prefs', JSON.stringify(prefs));
@@ -45,6 +46,25 @@ function ProfilePage() {
 
   const updatePreference = (key, value) => {
     setPrefs((current) => ({ ...current, [key]: value }));
+  };
+
+  const handleSaveChanges = () => {
+    setSaveState({ status: 'saving', message: 'Saving profile...' });
+
+    try {
+      localStorage.setItem('assistdesk_profile_prefs', JSON.stringify(prefs));
+      if (profilePhoto) {
+        localStorage.setItem('assistdesk_profile_photo', profilePhoto);
+      } else {
+        localStorage.removeItem('assistdesk_profile_photo');
+      }
+
+      window.setTimeout(() => {
+        setSaveState({ status: 'success', message: 'Profile saved successfully.' });
+      }, 450);
+    } catch (error) {
+      setSaveState({ status: 'error', message: 'Unable to save profile changes.' });
+    }
   };
 
   const handleProfilePhotoChange = (event) => {
@@ -208,8 +228,8 @@ function ProfilePage() {
             </div>
           </div>
           <div className="nav-links">
-            <a href="/tickets" onClick={() => setMobileMenuOpen(false)}>Tickets</a>
             <a href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</a>
+            <a href="/tickets" onClick={() => setMobileMenuOpen(false)}>Tickets</a>
             <a href="/profile" onClick={() => setMobileMenuOpen(false)}>Profile</a>
             {user?.role === 'admin' && (
               <>
@@ -253,8 +273,20 @@ function ProfilePage() {
             </div>
           </div>
           <div className="profile-card-actions">
-            <button className="institutional-btn small profile-save-button" type="button">Save changes</button>
+            <button
+              className="institutional-btn small profile-save-button"
+              type="button"
+              onClick={handleSaveChanges}
+              disabled={saveState.status === 'saving'}
+            >
+              {saveState.status === 'saving' ? 'Saving...' : 'Save changes'}
+            </button>
           </div>
+          {saveState.message && (
+            <p className={`profile-password-message ${saveState.status === 'success' ? 'success' : saveState.status === 'error' ? 'error' : ''}`}>
+              {saveState.message}
+            </p>
+          )}
         </div>
 
         <div className="institutional-card" style={{ marginBottom: '20px' }}>

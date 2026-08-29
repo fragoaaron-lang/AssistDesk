@@ -83,9 +83,9 @@ function AdminCatalogPage() {
             </div>
           </button>
           <div className="nav-links">
-            <a href="/profile">Profile</a>
             <a href="/dashboard">Dashboard</a>
             <a href="/tickets">Tickets</a>
+            <a href="/profile">Profile</a>
             {user?.role === 'admin' && (
               <>
                 <a href="/admin/reports">Reports</a>
@@ -113,9 +113,9 @@ function AdminCatalogPage() {
             </div>
           </div>
           <div className="nav-links">
-            <a href="/profile" onClick={() => setMobileMenuOpen(false)}>Profile</a>
-            <a href="/tickets" onClick={() => setMobileMenuOpen(false)}>Tickets</a>
             <a href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</a>
+            <a href="/tickets" onClick={() => setMobileMenuOpen(false)}>Tickets</a>
+            <a href="/profile" onClick={() => setMobileMenuOpen(false)}>Profile</a>
             {user?.role === 'admin' && (
               <>
                 <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Reports</a>
