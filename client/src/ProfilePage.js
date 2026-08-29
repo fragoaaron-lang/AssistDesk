@@ -120,6 +120,9 @@ function ProfilePage() {
 
       window.setTimeout(() => {
         setSaveState({ status: 'success', message: 'Profile saved successfully.' });
+        window.setTimeout(() => {
+          setShowSuccessDialog(false);
+        }, 1800);
       }, 250);
     } catch (error) {
       setSaveState({ status: 'error', message: 'Unable to save profile changes.' });
