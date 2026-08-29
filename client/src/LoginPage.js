@@ -27,6 +27,7 @@ function LoginPage({ modal = false, onSwitch }) {
       setWelcomeName(firstName);
       sessionStorage.setItem('assistdesk_show_welcome_splash', 'true');
       sessionStorage.setItem('assistdesk_welcome_name', firstName);
+      await new Promise((resolve) => window.setTimeout(resolve, 1200));
       navigate('/dashboard');
     } catch (error) {
       setMessage(error.response?.data?.message || 'Login failed.');
