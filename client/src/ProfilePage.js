@@ -14,13 +14,22 @@ const defaultPrefs = {
 
 const PASSWORD_RULE_MESSAGE = 'Password must be at least 8 characters long and include an uppercase letter, lowercase letter, number, and special character.';
 
+const getUserStorageKey = (user, suffix) => {
+  const identifier = user?.id ?? user?.email ?? 'guest';
+  return `assistdesk_${suffix}_${identifier}`;
+};
+
 function ProfilePage() {
   const { user, token } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [profilePhoto, setProfilePhoto] = useState(() => localStorage.getItem('assistdesk_profile_photo') || '');
+  const [profilePhoto, setProfilePhoto] = useState(() => {
+    const key = getUserStorageKey(user, 'profile_photo');
+    return localStorage.getItem(key) || '';
+  });
   const [prefs, setPrefs] = useState(() => {
     try {
-      const savedPrefs = JSON.parse(localStorage.getItem('assistdesk_profile_prefs') || '{}');
+      const key = getUserStorageKey(user, 'profile_prefs');
+      const savedPrefs = JSON.parse(localStorage.getItem(key) || '{}');
       return { ...defaultPrefs, ...savedPrefs };
     } catch (error) {
       return defaultPrefs;
@@ -32,10 +41,51 @@ function ProfilePage() {
   const [showPasswordFields, setShowPasswordFields] = useState({ oldPassword: false, newPassword: false, confirmPassword: false });
   const [photoUploadLoading, setPhotoUploadLoading] = useState(false);
   const [saveState, setSaveState] = useState({ status: 'idle', message: '' });
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [savedSnapshot, setSavedSnapshot] = useState(() => ({
+    prefs: (() => {
+      try {
+        const key = getUserStorageKey(user, 'profile_prefs');
+        return { ...defaultPrefs, ...JSON.parse(localStorage.getItem(key) || '{}') };
+      } catch (error) {
+        return defaultPrefs;
+      }
+    })(),
+    photo: (() => {
+      const key = getUserStorageKey(user, 'profile_photo');
+      return localStorage.getItem(key) || '';
+    })(),
+  }));
 
   useEffect(() => {
-    localStorage.setItem('assistdesk_profile_prefs', JSON.stringify(prefs));
-  }, [prefs]);
+    if (!user) return;
+
+    const keyPhoto = getUserStorageKey(user, 'profile_photo');
+    const keyPrefs = getUserStorageKey(user, 'profile_prefs');
+
+    const storedPhoto = localStorage.getItem(keyPhoto) || '';
+    let storedPrefs = defaultPrefs;
+
+    try {
+      storedPrefs = { ...defaultPrefs, ...JSON.parse(localStorage.getItem(keyPrefs) || '{}') };
+    } catch (error) {
+      storedPrefs = defaultPrefs;
+    }
+
+    setSavedSnapshot({ prefs: storedPrefs, photo: storedPhoto });
+    setProfilePhoto(storedPhoto);
+    setPrefs(storedPrefs);
+  }, [user?.id, user?.email]);
+
+  useEffect(() => {
+    if (!user) return;
+    const hasChanges = JSON.stringify(prefs) !== JSON.stringify(savedSnapshot.prefs) || profilePhoto !== savedSnapshot.photo;
+    if (hasChanges) {
+      setShowSaveDialog(true);
+    } else {
+      setShowSaveDialog(false);
+    }
+  }, [prefs, profilePhoto, savedSnapshot, user]);
 
   const togglePasswordVisibility = (fieldName) => {
     setShowPasswordFields((current) => ({
@@ -52,19 +102,33 @@ function ProfilePage() {
     setSaveState({ status: 'saving', message: 'Saving profile...' });
 
     try {
-      localStorage.setItem('assistdesk_profile_prefs', JSON.stringify(prefs));
-      if (profilePhoto) {
-        localStorage.setItem('assistdesk_profile_photo', profilePhoto);
-      } else {
-        localStorage.removeItem('assistdesk_profile_photo');
+      if (user) {
+        localStorage.setItem(getUserStorageKey(user, 'profile_prefs'), JSON.stringify(prefs));
       }
+      if (profilePhoto) {
+        if (user) {
+          localStorage.setItem(getUserStorageKey(user, 'profile_photo'), profilePhoto);
+        }
+      } else if (user) {
+        localStorage.removeItem(getUserStorageKey(user, 'profile_photo'));
+      }
+
+      setSavedSnapshot({ prefs, photo: profilePhoto });
+      setShowSaveDialog(false);
 
       window.setTimeout(() => {
         setSaveState({ status: 'success', message: 'Profile saved successfully.' });
-      }, 450);
+      }, 250);
     } catch (error) {
       setSaveState({ status: 'error', message: 'Unable to save profile changes.' });
     }
+  };
+
+  const handleCancelChanges = () => {
+    setPrefs(savedSnapshot.prefs);
+    setProfilePhoto(savedSnapshot.photo);
+    setSaveState({ status: 'idle', message: '' });
+    setShowSaveDialog(false);
   };
 
   const handleProfilePhotoChange = (event) => {
@@ -79,7 +143,6 @@ function ProfilePage() {
       const result = typeof reader.result === 'string' ? reader.result : '';
 
       window.setTimeout(() => {
-        localStorage.setItem('assistdesk_profile_photo', result);
         setProfilePhoto(result);
         setPhotoUploadLoading(false);
       }, 900);
@@ -272,22 +335,27 @@ function ProfilePage() {
               </label>
             </div>
           </div>
-          <div className="profile-card-actions">
-            <button
-              className="institutional-btn small profile-save-button"
-              type="button"
-              onClick={handleSaveChanges}
-              disabled={saveState.status === 'saving'}
-            >
-              {saveState.status === 'saving' ? 'Saving...' : 'Save changes'}
-            </button>
-          </div>
           {saveState.message && (
             <p className={`profile-password-message ${saveState.status === 'success' ? 'success' : saveState.status === 'error' ? 'error' : ''}`}>
               {saveState.message}
             </p>
           )}
         </div>
+
+        {showSaveDialog && (
+          <div className="profile-save-dialog-backdrop" onClick={() => setShowSaveDialog(false)}>
+            <div className="profile-save-dialog" onClick={(event) => event.stopPropagation()}>
+              <h4>Save changes?</h4>
+              <p>Do you want to apply these profile updates?</p>
+              <div className="profile-save-dialog-actions">
+                <button type="button" className="secondary-action-button" onClick={handleCancelChanges}>Cancel</button>
+                <button type="button" className="institutional-btn small" onClick={handleSaveChanges} disabled={saveState.status === 'saving'}>
+                  {saveState.status === 'saving' ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="institutional-card" style={{ marginBottom: '20px' }}>
           <h3>Personalization</h3>
