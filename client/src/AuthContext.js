@@ -59,13 +59,14 @@ export const AuthProvider = ({ children }) => {
     return { user, token: newToken };
   };
 
-  const register = async (name, email, password, role, departmentId = null) => {
+  const register = async (name, email, password, role, departmentId = null, studentNumber = '') => {
     const response = await axios.post(`${API_BASE_URL}/api/auth/register`, {
       name,
       email,
       password,
       role,
       department_id: departmentId,
+      student_number: studentNumber,
     });
 
     const { user, token: newToken } = response.data;

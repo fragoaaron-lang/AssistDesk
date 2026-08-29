@@ -10,7 +10,6 @@ const defaultPrefs = {
   pushAlerts: true,
   darkMode: false,
   accent: 'teal',
-  favoriteDepartment: 'All departments',
 };
 
 const PASSWORD_RULE_MESSAGE = 'Password must be at least 8 characters long and include an uppercase letter, lowercase letter, number, and special character.';
@@ -414,16 +413,6 @@ function ProfilePage() {
             </select>
           </label>
 
-          <label className="preference-row select-row">
-            <span>Favorite department</span>
-            <select value={prefs.favoriteDepartment} onChange={(e) => updatePreference('favoriteDepartment', e.target.value)}>
-              <option value="All departments">All departments</option>
-              <option value="Student Services">Student Services</option>
-              <option value="IT Support">IT Support</option>
-              <option value="Registrar">Registrar</option>
-              <option value="Campus Maintenance">Campus Maintenance</option>
-            </select>
-          </label>
         </div>
 
         <div className="institutional-card">
