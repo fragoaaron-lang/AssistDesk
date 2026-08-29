@@ -29,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: 'Other',
       },
       priority: {
-        type: DataTypes.ENUM('low', 'moderate', 'high'),
+        type: DataTypes.ENUM('low', 'medium', 'moderate', 'high', 'urgent'),
         allowNull: false,
         defaultValue: 'moderate',
       },
