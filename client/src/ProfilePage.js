@@ -54,7 +54,7 @@ function ProfilePage() {
     }
 
     if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/.test(passwordForm.newPassword)) {
-      setPasswordState({ status: 'error', message: PASSWORD_RULE_MESSAGE });
+      setPasswordState({ status: 'error', message: 'new password is weak' });
       return;
     }
 
@@ -76,24 +76,42 @@ function ProfilePage() {
         }),
       });
 
+      const rawText = await response.text();
       let data = {};
-      const contentType = response.headers.get('content-type') || '';
 
-      if (contentType.includes('application/json')) {
-        data = await response.json();
-      } else {
-        const text = await response.text();
-        data = { message: text.includes('Current password is incorrect') ? 'Current password is incorrect.' : 'Unable to change password.' };
+      try {
+        data = rawText ? JSON.parse(rawText) : {};
+      } catch (parseError) {
+        const lowered = rawText.toLowerCase();
+        if (lowered.includes('current password is incorrect')) {
+          data = { message: 'entered wrong current password' };
+        } else {
+          data = { message: 'entered wrong current password' };
+        }
       }
 
       if (!response.ok) {
-        throw new Error(data.message || 'Current password is incorrect.');
+        const normalized = (data.message || '').toLowerCase();
+        const mappedMessage = normalized.includes('current password is incorrect') || normalized.includes('wrong current password')
+          ? 'entered wrong current password'
+          : normalized.includes('weak') || normalized.includes('password must be at least 8')
+            ? 'new password is weak'
+            : data.message || 'Unable to change password.';
+
+        throw new Error(mappedMessage);
       }
 
       setPasswordState({ status: 'success', message: data.message || 'Password changed successfully.' });
       setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error) {
-      setPasswordState({ status: 'error', message: error.message || 'Current password is incorrect.' });
+      const fallback = error?.message || 'Unable to change password.';
+      const message = fallback.toLowerCase().includes('wrong current password')
+        ? 'entered wrong current password'
+        : fallback.toLowerCase().includes('weak')
+          ? 'new password is weak'
+          : fallback;
+
+      setPasswordState({ status: 'error', message });
     }
   };
 
