@@ -6,16 +6,30 @@ function LoginPage({ modal = false, onSwitch }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [welcomeName, setWelcomeName] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (isLoading) return;
+
+    setMessage('');
+    setIsLoading(true);
+
     try {
-      await login(email, password);
+      const result = await login(email, password);
+      const userName = result?.user?.name || email.split('@')[0];
+      const firstName = userName.split(' ')[0];
+      setWelcomeName(firstName);
       navigate('/dashboard');
     } catch (error) {
+      setWelcomeName('');
       setMessage(error.response?.data?.message || 'Login failed.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -30,12 +44,15 @@ function LoginPage({ modal = false, onSwitch }) {
           <p>Institutional support for students, faculty, and staff through a secure helpdesk and service portal.</p>
         </div>
         <div className="auth-form">
-          <h3>Welcome back</h3>
-          <p className="helper-text">Sign in to manage requests, track services, and access the campus support network.</p>
+          <div className="login-status-badge">{isLoading ? `Welcome back${welcomeName ? `, ${welcomeName}` : ''} — signing in…` : 'Welcome back'}</div>
+          <h3>{welcomeName ? `Welcome back, ${welcomeName}` : 'Welcome back'}</h3>
+          <p className="helper-text">{isLoading ? `Preparing your dashboard and campus services for ${welcomeName || 'your account'}…` : 'Sign in to manage requests, track services, and access the campus support network.'}</p>
           <form onSubmit={handleSubmit}>
-            <input className="institutional-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
-            <input className="institutional-input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
-            <button className="institutional-btn" type="submit" style={{ width: '100%' }}>Login</button>
+            <input className="institutional-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" autoComplete="email" disabled={isLoading} />
+            <input className="institutional-input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" autoComplete="current-password" disabled={isLoading} />
+            <button className={`institutional-btn auth-submit-btn ${isLoading ? 'is-loading' : ''}`} type="submit" style={{ width: '100%' }} disabled={isLoading}>
+              {isLoading ? <><span className="auth-spinner" aria-hidden="true" />Signing in...</> : 'Login'}
+            </button>
           </form>
           {message && <p style={{ color: 'red', marginTop: '0.8rem' }}>{message}</p>}
           <p className="helper-text">{modal ? <button type="button" className="auth-switch-button" onClick={onSwitch}>Create an account</button> : <a href="/register">Create an account</a>}</p>

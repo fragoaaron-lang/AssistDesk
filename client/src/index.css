@@ -444,17 +444,18 @@ button, input, select, textarea {
   position: fixed;
   top: 0;
   left: 0;
-  width: min(280px, 82vw);
+  width: min(300px, 82vw);
   height: 100vh;
-  background: linear-gradient(180deg, rgba(15, 45, 82, 0.98), rgba(31, 111, 120, 0.98));
+  background: linear-gradient(180deg, rgba(12, 32, 56, 0.98), rgba(16, 82, 97, 0.97));
   color: white;
-  padding: 18px;
+  padding: 16px 14px 18px;
   transform: translateX(-110%);
   transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
   z-index: 30;
   box-shadow: 0 22px 60px rgba(8, 32, 56, 0.3);
   display: flex;
   flex-direction: column;
+  border-right: 1px solid rgba(255,255,255,0.14);
 }
 
 .mobile-menu-drawer.open {
@@ -465,7 +466,7 @@ button, input, select, textarea {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   flex-shrink: 0;
 }
 
@@ -473,10 +474,12 @@ button, input, select, textarea {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.08);
-  margin-bottom: 14px;
+  padding: 14px 12px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+  margin-bottom: 18px;
   width: 100%;
   flex-shrink: 0;
   order: 1;
@@ -500,9 +503,12 @@ button, input, select, textarea {
 
 .mobile-menu-close {
   border: none;
-  background: transparent;
+  background: rgba(255,255,255,0.08);
   color: white;
-  font-size: 1.6rem;
+  font-size: 1.5rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   cursor: pointer;
   line-height: 1;
 }
@@ -519,16 +525,21 @@ button, input, select, textarea {
   gap: 10px;
   flex: 0 0 auto;
   order: 2;
+  padding: 4px 0;
 }
 
 .mobile-menu-drawer .nav-links a {
   width: 100%;
-  min-height: 46px;
+  min-height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
 }
 
 .mobile-menu-actions {
@@ -536,14 +547,22 @@ button, input, select, textarea {
   flex-direction: column;
   gap: 12px;
   margin-top: auto;
-  padding-top: 14px;
+  padding-top: 18px;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   order: 3;
+  min-height: 0;
+  justify-content: flex-end;
+  flex: 1 1 auto;
 }
 
 .mobile-menu-bell {
   display: flex;
   justify-content: flex-start;
+  margin-top: 2px;
+}
+
+.mobile-menu-actions > *:last-child {
+  margin-bottom: 4px;
 }
 
 .mobile-menu-bell > div {
@@ -554,11 +573,17 @@ button, input, select, textarea {
   width: 100%;
   min-height: 46px;
   justify-content: center;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: white;
 }
 
 .mobile-menu-actions .institutional-btn.secondary.small {
   min-height: 46px;
   justify-content: center;
+  background: linear-gradient(135deg, #f7f3e8, #f2d99b);
+  color: var(--navy);
+  border: 1px solid rgba(15,45,82,0.08);
 }
 
 .header-actions {
@@ -714,6 +739,47 @@ button, input, select, textarea {
 .auth-form h3 {
   margin-top: 0;
   color: var(--navy);
+}
+
+.login-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(31, 111, 120, 0.08);
+  color: var(--navy);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.auth-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.auth-submit-btn.is-loading {
+  opacity: 0.92;
+  cursor: wait;
+}
+
+.auth-spinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(255,255,255,0.45);
+  border-top-color: #fff;
+  border-radius: 50%;
+  display: inline-block;
+  animation: auth-spin 0.9s linear infinite;
+}
+
+@keyframes auth-spin {
+  to { transform: rotate(360deg); }
 }
 
 .form-row {
