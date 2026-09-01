@@ -87,6 +87,26 @@ async function backfillAdminTable() {
   }
 }
 
+async function normalizeLegacyTicketPriorities() {
+  const queryInterface = sequelize.getQueryInterface();
+  const ticketsTableExists = await queryInterface.tableExists('tickets');
+  if (!ticketsTableExists) return;
+
+  const [results] = await sequelize.query(`
+    UPDATE tickets
+    SET priority = CASE
+      WHEN priority = 'moderate' THEN 'medium'
+      WHEN priority = 'high' THEN 'urgent'
+      ELSE priority
+    END
+    WHERE priority IN ('moderate', 'high');
+  `);
+
+  if (results && results.affectedRows) {
+    console.log(`Normalized legacy ticket priorities: ${results.affectedRows} row(s) updated.`);
+  }
+}
+
 sequelize
   .authenticate()
   .then(() => {
@@ -95,6 +115,9 @@ sequelize
   })
   .then(() => {
     console.log('Admins table is ready.');
+    return normalizeLegacyTicketPriorities();
+  })
+  .then(() => {
     return sequelize.sync({ alter: true, force: false });
   })
   .then(() => {
