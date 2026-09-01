@@ -19,7 +19,7 @@ const scoreText = (query, target) => {
 };
 
 const getEstimatedCompletion = (priority, requestedAt = new Date()) => {
-  const hoursByPriority = { high: 24, moderate: 48, low: 72 };
+  const hoursByPriority = { high: 24, moderate: 48, medium: 48, low: 72 };
   const estimated = new Date(requestedAt);
   estimated.setHours(estimated.getHours() + (hoursByPriority[priority] || hoursByPriority.moderate));
   return estimated;
