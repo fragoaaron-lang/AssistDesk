@@ -269,12 +269,12 @@ function DashboardPage() {
                   Low
                 </span>
                 <span>
-                  <span className="legend-swatch moderate" aria-hidden="true"></span>
-                  Moderate
+                  <span className="legend-swatch medium" aria-hidden="true"></span>
+                  Medium
                 </span>
                 <span>
-                  <span className="legend-swatch high" aria-hidden="true"></span>
-                  High
+                  <span className="legend-swatch urgent" aria-hidden="true"></span>
+                  Urgent
                 </span>
               </div>
             </div>
