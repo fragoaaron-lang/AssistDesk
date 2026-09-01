@@ -116,10 +116,10 @@ function ChatbotWidget() {
                 type="button" 
                 className="institutional-btn small" 
                 onClick={() => setShowGenderSelect(!showGenderSelect)}
-                title="Change assistant"
-                style={{ padding: '6px 10px', fontSize: '0.75rem' }}
+                title="Change or select a different assistant"
+                style={{ padding: '4px 10px', fontSize: '0.75rem', background: '#e8f1f5', border: '1px solid #b0d4e3', color: '#333' }}
               >
-                👤
+                {gender === 'neutral' ? '👤 Choose Gender' : `Change Gender (${gender === 'boy' ? '👦' : '👧'})`}
               </button>
               <button type="button" className="chatbot-close" aria-label="Close chatbot" onClick={() => setOpen(false)}>×</button>
             </div>
