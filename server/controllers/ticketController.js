@@ -19,9 +19,9 @@ const scoreText = (query, target) => {
 };
 
 const getEstimatedCompletion = (priority, requestedAt = new Date()) => {
-  const hoursByPriority = { high: 24, moderate: 48, medium: 48, low: 72 };
+  const hoursByPriority = { urgent: 24, medium: 48, low: 72 };
   const estimated = new Date(requestedAt);
-  estimated.setHours(estimated.getHours() + (hoursByPriority[priority] || hoursByPriority.moderate));
+  estimated.setHours(estimated.getHours() + (hoursByPriority[priority] || hoursByPriority.medium));
   return estimated;
 };
 
@@ -45,18 +45,13 @@ const inferDepartmentId = async (subject, description) => {
 };
 
 const mapPriorityToDatabase = (priority) => {
-  // Temporary mapping until database is migrated
-  const priorityMap = {
-    'moderate': 'medium',
-    'low': 'low',
-    'high': 'high',
-  };
-  return priorityMap[priority] || 'medium';
+  // Direct mapping - frontend and database use same priority values
+  return priority || 'medium';
 };
 
 exports.createTicket = async (req, res) => {
   try {
-    const { user_id, subject, description, category = 'Other', priority = 'moderate', department_id: selectedDepartmentId, estimated_completion_at } = req.body;
+    const { user_id, subject, description, category = 'Other', priority = 'medium', department_id: selectedDepartmentId, estimated_completion_at } = req.body;
     if (!subject || !description) {
       return res.status(400).json({ message: 'Subject and description are required.' });
     }

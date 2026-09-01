@@ -11,7 +11,7 @@ function TicketsPage() {
   const [tickets, setTickets] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [services, setServices] = useState([]);
-  const [form, setForm] = useState({ subject: '', description: '', category: 'Other', priority: 'moderate', department_id: '' });
+  const [form, setForm] = useState({ subject: '', description: '', category: 'Other', priority: 'medium', department_id: '' });
   const [submissionState, setSubmissionState] = useState({ status: 'idle', message: '' });
 
   const loadTickets = async () => {
@@ -197,8 +197,8 @@ function TicketsPage() {
               </select>
               <select className="institutional-select" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
                 <option value="low">Low</option>
-                <option value="moderate">Moderate</option>
-                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="urgent">Urgent</option>
               </select>
               <button className="institutional-btn ticket-submit-button" type="submit" disabled={submissionState.status === 'loading'}>
                 {submissionState.status === 'loading' && <span className="ticket-submit-spinner" aria-hidden="true" />}

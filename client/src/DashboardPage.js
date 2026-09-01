@@ -31,7 +31,7 @@ function DashboardPage() {
   const visibleDepartments = dashboard.departments || [];
 
   const getPriorityByIndex = (index) => {
-    const priorities = ['low', 'moderate', 'high'];
+    const priorities = ['low', 'medium', 'urgent'];
     return priorities[index % 3];
   };
 
@@ -83,8 +83,8 @@ function DashboardPage() {
   const getHeatStrength = (count) => Math.min(0.92, 0.2 + (Number(count) * 0.12));
 
   const getVolumeLabel = (level) => {
-    if (level === 'high') return 'High Volume';
-    if (level === 'moderate') return 'Moderate Volume';
+    if (level === 'urgent') return 'High Volume';
+    if (level === 'medium') return 'Moderate Volume';
     return 'Low Volume';
   };
 

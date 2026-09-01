@@ -43,7 +43,7 @@ exports.getDashboard = async (req, res) => {
 
     const departmentsWithStats = departments.map((department) => {
       const ticketCount = ticketCountMap[String(department.id)] || 0;
-      const volumeLevel = ticketCount >= 6 ? 'high' : ticketCount >= 3 ? 'moderate' : 'low';
+      const volumeLevel = ticketCount >= 6 ? 'urgent' : ticketCount >= 3 ? 'medium' : 'low';
       return {
         ...department.toJSON(),
         ticket_count: ticketCount,

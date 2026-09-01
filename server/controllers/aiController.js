@@ -93,20 +93,15 @@ const buildResponse = async (query) => {
 };
 
 const getEstimatedCompletion = (priority) => {
-  const hoursByPriority = { high: 24, moderate: 48, low: 72 };
+  const hoursByPriority = { urgent: 24, medium: 48, low: 72 };
   const estimated = new Date();
   estimated.setHours(estimated.getHours() + (hoursByPriority[priority] || 48));
   return estimated;
 };
 
 const mapPriorityToDatabase = (priority) => {
-  // Temporary mapping until database is migrated
-  const priorityMap = {
-    'moderate': 'medium',
-    'low': 'low',
-    'high': 'high',
-  };
-  return priorityMap[priority] || 'medium';
+  // Direct mapping - frontend and database use same priority values
+  return priority || 'medium';
 };
 
 const handleTicketCommand = async (message, userId) => {
@@ -133,9 +128,9 @@ const handleTicketCommand = async (message, userId) => {
     subject: description.slice(0, 200),
     description,
     category: 'Other',
-    priority: mapPriorityToDatabase('moderate'),
+    priority: mapPriorityToDatabase('medium'),
     status: 'open',
-    estimated_completion_at: getEstimatedCompletion('moderate'),
+    estimated_completion_at: getEstimatedCompletion('medium'),
   });
   await TicketUpdate.create({ ticket_id: ticket.id, message: 'Ticket created through the assistant.', updated_by: userId });
   await Notification.create({ user_id: userId, message: `Your ticket "${ticket.subject}" has been created.` });
