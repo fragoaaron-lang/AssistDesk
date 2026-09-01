@@ -106,8 +106,8 @@ exports.createTicket = async (req, res) => {
 
     return res.status(201).json(ticket);
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Unable to create ticket.' });
+    console.error('Ticket creation error:', error.message, error.stack);
+    return res.status(500).json({ message: 'Unable to create ticket.', error: error.message });
   }
 };
 
