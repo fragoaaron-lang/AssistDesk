@@ -4,6 +4,7 @@ import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 import NotificationBell from './NotificationBell';
 import LogoutButton from './LogoutButton';
+import TicketProgressBar from './TicketProgressBar';
 
 function TicketsPage() {
   const { token, user } = useAuth();
@@ -214,7 +215,7 @@ function TicketsPage() {
             {tickets.map((ticket) => (
               <div key={ticket.id}>
                 <h4 style={{ margin: '0 0 6px' }}>{ticket.subject}</h4>
-                <div className="small-muted"><strong>Status:</strong> {ticket.status}</div>
+                <TicketProgressBar status={ticket.status} />
                 <div className="small-muted"><strong>Category:</strong> {ticket.category || 'Other'}</div>
                 <div className="small-muted"><strong>Priority:</strong> {ticket.priority}</div>
                 <div className="small-muted"><strong>Estimated completion:</strong> {ticket.estimated_completion_at ? new Date(ticket.estimated_completion_at).toLocaleString() : 'Being estimated'}</div>
