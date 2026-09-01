@@ -1425,6 +1425,8 @@ button, input, select, textarea {
   .map-toolbar .actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .map-toolbar .actions .institutional-btn { width: 100%; min-height: 40px; padding: 8px 6px; }
   .map-frame { padding: 6px; }
+  .landing-map { display: none; }
+  .map-image img { display: none; }
   .heatmap-legend {
     right: 8px;
     left: auto;
