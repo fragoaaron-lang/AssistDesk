@@ -7,6 +7,7 @@ const router = express.Router();
 router.get('/', authMiddleware, dashboardController.getDashboard);
 router.get('/notifications', authMiddleware, dashboardController.getNotifications);
 router.put('/notifications/read', authMiddleware, dashboardController.markNotificationsRead);
+router.delete('/notifications/:id', authMiddleware, dashboardController.deleteNotification);
 router.post('/marker-positions', authMiddleware, dashboardController.saveMarkerPositions);
 router.get('/marker-positions', authMiddleware, dashboardController.getMarkerPositions);
 

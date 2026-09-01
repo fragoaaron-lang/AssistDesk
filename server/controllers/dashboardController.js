@@ -94,6 +94,27 @@ exports.markNotificationsRead = async (req, res) => {
   }
 };
 
+exports.deleteNotification = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const notification = await Notification.findByPk(id);
+    
+    if (!notification) {
+      return res.status(404).json({ message: 'Notification not found.' });
+    }
+
+    if (notification.user_id !== req.user.id) {
+      return res.status(403).json({ message: 'Unauthorized to delete this notification.' });
+    }
+
+    await notification.destroy();
+    return res.json({ message: 'Notification deleted successfully.' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Unable to delete notification.' });
+  }
+};
+
 exports.saveMarkerPositions = async (req, res) => {
   try {
     const { positions } = req.body;

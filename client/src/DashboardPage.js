@@ -62,6 +62,17 @@ function DashboardPage() {
     }
   };
 
+  const deleteNotification = async (notificationId) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/api/dashboard/notifications/${notificationId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNotifications((current) => current.filter((note) => note.id !== notificationId));
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
+  };
+
   useEffect(() => {
     if (!token) return;
 
@@ -284,9 +295,24 @@ function DashboardPage() {
         <div className="institutional-card">
           <h3>Notifications</h3>
           <div className="notification-list">
-            {notifications.map((note) => (
-              <div key={note.id}>{note.message}</div>
-            ))}
+            {notifications.length === 0 ? (
+              <p className="small-muted" style={{ textAlign: 'center', padding: '16px' }}>No notifications</p>
+            ) : (
+              notifications.map((note) => (
+                <div key={note.id} className="notification-item">
+                  <span className="notification-message">{note.message}</span>
+                  <button
+                    type="button"
+                    className="notification-delete-btn"
+                    onClick={() => deleteNotification(note.id)}
+                    title="Delete notification"
+                    aria-label="Delete notification"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
