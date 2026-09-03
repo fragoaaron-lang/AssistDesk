@@ -103,7 +103,7 @@ exports.deleteNotification = async (req, res) => {
       return res.status(404).json({ message: 'Notification not found.' });
     }
 
-    if (notification.user_id !== req.user.id) {
+    if (Number(notification.user_id) !== Number(req.user.id)) {
       return res.status(403).json({ message: 'Unauthorized to delete this notification.' });
     }
 

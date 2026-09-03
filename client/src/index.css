@@ -1532,6 +1532,21 @@ button, input, select, textarea {
   transform: scale(0.95);
 }
 
+.notification-bell-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  border-bottom: 1px solid #eee;
+  padding: 0.75rem 0;
+}
+
+.notification-bell-content {
+  flex: 1;
+  min-width: 0;
+  color: var(--text);
+  line-height: 1.4;
+}
+
 .department-pill {
   position: absolute;
   transform: translate(-50%, -50%);

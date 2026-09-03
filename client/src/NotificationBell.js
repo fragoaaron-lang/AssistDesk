@@ -21,6 +21,17 @@ function NotificationBell() {
     }
   };
 
+  const deleteNotification = async (notificationId) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/api/dashboard/notifications/${notificationId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNotifications((current) => current.filter((notification) => notification.id !== notificationId));
+    } catch (err) {
+      console.error('Unable to delete notification', err);
+    }
+  };
+
   useEffect(() => {
     if (!token) return;
 
@@ -54,9 +65,20 @@ function NotificationBell() {
           <div style={{ marginBottom: '0.75rem', fontWeight: 'bold' }}>Recent Notifications</div>
           {notifications.length === 0 && <div style={{ color: '#666' }}>No notifications yet.</div>}
           {notifications.map((note) => (
-            <div key={note.id} style={{ borderBottom: '1px solid #eee', padding: '0.75rem 0' }}>
-              {note.message}
-              <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.25rem' }}>{new Date(note.created_at).toLocaleString()}</div>
+            <div key={note.id} className="notification-bell-item">
+              <div className="notification-bell-content">
+                <div>{note.message}</div>
+                <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.25rem' }}>{new Date(note.created_at).toLocaleString()}</div>
+              </div>
+              <button
+                type="button"
+                className="notification-delete-btn"
+                onClick={() => deleteNotification(note.id)}
+                title="Delete notification"
+                aria-label="Delete notification"
+              >
+                ×
+              </button>
             </div>
           ))}
         </div>
