@@ -1691,7 +1691,18 @@ button, input, select, textarea {
   .map-toolbar { padding: 12px; }
   .map-toolbar .actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .map-toolbar .actions .institutional-btn { width: 100%; min-height: 40px; padding: 8px 6px; }
-  .map-frame { padding: 6px; }
+  .map-frame { padding: 2px; }
+  .ticket-pin {
+    width: 12px;
+    height: 17px;
+    border-width: 1px;
+    box-shadow: 0 1px 4px rgba(8, 32, 56, 0.35);
+  }
+  .ticket-pin::after {
+    width: 5px;
+    height: 5px;
+    top: 3px;
+  }
   .landing-map { display: none; }
   .heatmap-legend {
     right: 8px;
