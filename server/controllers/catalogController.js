@@ -8,7 +8,8 @@ const parsePagination = (req) => {
 
 exports.getDepartments = async (req, res) => {
   try {
-    const { page, limit } = parsePagination(req);
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 1000;
     const offset = (page - 1) * limit;
     const { count, rows } = await Department.findAndCountAll({
       limit,
