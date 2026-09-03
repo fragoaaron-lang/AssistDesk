@@ -10,6 +10,14 @@ const normalize = (text) =>
 
 const tokenize = (text) => normalize(text).split(' ').filter(Boolean);
 
+const normalizeFaqQuery = (text) => normalize(text)
+  .replace(/computer science/g, ' cs bscs ')
+  .replace(/basic education/g, ' basic education ')
+  .replace(/criminal justice|criminology/g, ' crim bscrim ')
+  .replace(/hospitality management/g, ' hm bshm ')
+  .replace(/physical therapy/g, ' pt bspt ')
+  .replace(/information technology|it department/g, ' it ');
+
 const scoreText = (query, target) => {
   const qTokens = new Set(tokenize(query));
   const tTokens = tokenize(target);
@@ -21,10 +29,16 @@ const scoreText = (query, target) => {
 };
 
 const scoreFaq = (query, faq) => {
-  const normalizedQuery = normalize(query);
-  const normalizedQuestion = normalize(faq.question);
+  const normalizedQuery = normalizeFaqQuery(query);
+  const normalizedQuestion = normalizeFaqQuery(faq.question);
   if (normalizedQuery === normalizedQuestion) return 1000;
-  return scoreText(query, faq.question) * 5 + scoreText(query, `${faq.answer} ${faq.keywords || ''}`);
+  const questionScore = scoreText(normalizedQuery, normalizedQuestion);
+  const keywordScore = scoreText(normalizedQuery, faq.keywords || '');
+  const genericWords = new Set(['where', 'can', 'i', 'get', 'the', 'a', 'is', 'of', 'to', 'in', 'my', 'who', 'what', 'or', 'and']);
+  const specificQuestionScore = tokenize(normalizedQuestion).filter((token) => !genericWords.has(token)).reduce((score, token) => (
+    normalizedQuery.includes(token) ? score + 3 : score
+  ), 0);
+  return questionScore * 4 + keywordScore + specificQuestionScore;
 };
 
 const getLocalConversationResponse = (query) => {
