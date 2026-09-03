@@ -70,7 +70,7 @@ function TicketsPage() {
   const toggleDepartment = (departmentName) => {
     setExpandedDepartments((current) => ({
       ...current,
-      [departmentName]: current[departmentName] === undefined ? false : !current[departmentName],
+      [departmentName]: current[departmentName] !== true,
     }));
   };
 
@@ -236,14 +236,14 @@ function TicketsPage() {
                   type="button"
                   className="ticket-department-heading"
                   onClick={() => toggleDepartment(departmentGroup.name)}
-                  aria-expanded={expandedDepartments[departmentGroup.name] !== false}
+                  aria-expanded={expandedDepartments[departmentGroup.name] === true}
                 >
                   <span className="ticket-folder-icon" aria-hidden="true" />
                   <span>{departmentGroup.name}</span>
                   <span className="ticket-department-count">{departmentGroup.tickets.length}</span>
-                  <span className="ticket-folder-chevron" aria-hidden="true">{expandedDepartments[departmentGroup.name] === false ? '+' : '−'}</span>
+                  <span className="ticket-folder-chevron" aria-hidden="true">{expandedDepartments[departmentGroup.name] === true ? '−' : '+'}</span>
                 </button>
-                {expandedDepartments[departmentGroup.name] !== false && (
+                {expandedDepartments[departmentGroup.name] === true && (
                   <div className="ticket-department-contents">
                     {departmentGroup.tickets.map((ticket) => (
                       <div key={ticket.id}>
