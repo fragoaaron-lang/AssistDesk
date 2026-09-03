@@ -1,5 +1,22 @@
 const { Department, Service, Faq } = require('../models');
 
+const canonicalDepartments = [
+  ['Basic Education Department', 'Basic Education Department'],
+  ['College of Nursing', 'College of Nursing'],
+  ['CS', 'Computer Science Department'],
+  ['CBA', 'College of Business Administration'],
+  ['CHARM', 'College of Hospitality and Restaurant Management'],
+  ['College of Criminology', 'College of Criminology'],
+  ['College of Physical Therapy', 'College of Physical Therapy'],
+  ['Maintenance Department', 'Maintenance Department'],
+  ['Accounting Department', 'Accounting Department'],
+  ['Library', 'Library'],
+  ['Guidance', 'Guidance Office'],
+  ['Office of Student Affairs', 'Office of Student Affairs'],
+  ['Clinic', 'Clinic'],
+  ['IT Department', 'Information Technology Department'],
+];
+
 const parsePagination = (req) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
@@ -9,14 +26,17 @@ const parsePagination = (req) => {
 exports.getDepartments = async (req, res) => {
   try {
     const page = Number(req.query.page) || 1;
-    const limit = Number(req.query.limit) || 1000;
-    const offset = (page - 1) * limit;
-    const { count, rows } = await Department.findAndCountAll({
-      limit,
-      offset,
-      order: [['created_at', 'DESC']],
+    const limit = Number(req.query.limit) || canonicalDepartments.length;
+    const departmentRecords = await Department.findAll({
+      where: { name: canonicalDepartments.map(([name]) => name) },
+      order: [['name', 'ASC']],
     });
-    return res.json({ departments: rows, total: count, page, limit });
+    const displayNames = Object.fromEntries(canonicalDepartments);
+    const rows = departmentRecords.map((department) => ({
+      ...department.toJSON(),
+      display_name: displayNames[department.name] || department.name,
+    }));
+    return res.json({ departments: rows, total: rows.length, page, limit });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Unable to fetch departments.' });

@@ -234,7 +234,7 @@ function TicketsPage() {
               <select className="institutional-select" value={form.department_id} onChange={(e) => handleDepartmentChange(e.target.value)} required>
                 <option value="">Select a department</option>
                 {departments.map((department) => (
-                  <option key={department.id} value={department.id}>{department.name}</option>
+                  <option key={department.id} value={department.id}>{department.display_name || department.name}</option>
                 ))}
               </select>
               <select className="institutional-select" value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} required>
