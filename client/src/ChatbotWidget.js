@@ -199,7 +199,7 @@ function ChatbotWidget() {
                     <details key={group.title} className="chatbot-faq-group">
                       <summary>{group.title}</summary>
                       <div className="chatbot-faq-group-questions">
-                        {group.questions.map((question) => <button type="button" key={question} onClick={() => sendMessage(null, question)}>{question}</button>)}
+                        {group.questions.map((question) => <button type="button" key={question} onClick={() => { setShowFaqs(false); sendMessage(null, question); }}>{question}</button>)}
                       </div>
                     </details>
                   ))}
