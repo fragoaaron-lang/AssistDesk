@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './AuthContext';
 import ProtectedRoute from './ProtectedRoute';
-import LoginPage from './LoginPage';
-import RegisterPage from './RegisterPage';
 import DashboardPage from './DashboardPage';
 import AdminCatalogPage from './AdminCatalogPage';
 import AdminReportsPage from './AdminReportsPage';
@@ -41,8 +39,6 @@ function App() {
     <AuthProvider>
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
           <Route
             path="/dashboard"
             element={
@@ -91,7 +87,10 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/login" element={<Navigate to="/" replace />} />
+          <Route path="/register" element={<Navigate to="/" replace />} />
           <Route path="/" element={<LandingPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <ChatbotWidget />
       </BrowserRouter>
