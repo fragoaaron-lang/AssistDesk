@@ -56,6 +56,16 @@ function TicketsPage() {
     ? availableSubjects
     : ['General Request', 'Support Request', 'Department Inquiry'];
 
+  const groupedTickets = Object.values(tickets.reduce((groups, ticket) => {
+    const departmentId = ticket.department_id || 'unassigned';
+    const departmentName = ticket.Department?.name || 'Unassigned Department';
+    if (!groups[departmentId]) {
+      groups[departmentId] = { name: departmentName, tickets: [] };
+    }
+    groups[departmentId].tickets.push(ticket);
+    return groups;
+  }, {})).sort((first, second) => first.name.localeCompare(second.name));
+
   const createTicket = async (e) => {
     e.preventDefault();
     setSubmissionState({ status: 'loading', message: 'Creating your ticket...' });
@@ -212,25 +222,29 @@ function TicketsPage() {
         <div className="institutional-card">
           <h3>Recent tickets</h3>
           <div className="list-stack">
-            {tickets.map((ticket) => (
-              <div key={ticket.id}>
-                <h4 style={{ margin: '0 0 6px' }}>{ticket.subject}</h4>
-                <TicketProgressBar status={ticket.status} />
-                <div className="small-muted"><strong>Category:</strong> {ticket.category || 'Other'}</div>
-                <div className="small-muted"><strong>Priority:</strong> {ticket.priority}</div>
-                <div className="small-muted"><strong>Estimated completion:</strong> {ticket.estimated_completion_at ? new Date(ticket.estimated_completion_at).toLocaleString() : 'Being estimated'}</div>
-                <div className="small-muted"><strong>Department:</strong> {ticket.Department?.name}</div>
-                <p style={{ margin: '8px 0 0' }}>{ticket.description}</p>
-                {user?.role === 'admin' && (
-                  <div className="inline-actions">
-                    <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'open')}>Open</button>
-                    <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'pending')}>Pending</button>
-                    <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'in_progress')}>In Progress</button>
-                    <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'resolved')}>Resolved</button>
-                    <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'closed')}>Closed</button>
+            {groupedTickets.map((departmentGroup) => (
+              <section key={departmentGroup.name} className="ticket-department-group">
+                <h4 className="ticket-department-heading">Department: {departmentGroup.name}</h4>
+                {departmentGroup.tickets.map((ticket) => (
+                  <div key={ticket.id}>
+                    <h4 style={{ margin: '0 0 6px' }}>{ticket.subject}</h4>
+                    <TicketProgressBar status={ticket.status} />
+                    <div className="small-muted"><strong>Category:</strong> {ticket.category || 'Other'}</div>
+                    <div className="small-muted"><strong>Priority:</strong> {ticket.priority}</div>
+                    <div className="small-muted"><strong>Estimated completion:</strong> {ticket.estimated_completion_at ? new Date(ticket.estimated_completion_at).toLocaleString() : 'Being estimated'}</div>
+                    <p style={{ margin: '8px 0 0' }}>{ticket.description}</p>
+                    {user?.role === 'admin' && (
+                      <div className="inline-actions">
+                        <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'open')}>Open</button>
+                        <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'pending')}>Pending</button>
+                        <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'in_progress')}>In Progress</button>
+                        <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'resolved')}>Resolved</button>
+                        <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'closed')}>Closed</button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                ))}
+              </section>
             ))}
           </div>
         </div>
