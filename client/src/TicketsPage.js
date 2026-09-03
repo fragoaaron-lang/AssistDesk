@@ -13,6 +13,7 @@ function TicketsPage() {
   const [departments, setDepartments] = useState([]);
   const [services, setServices] = useState([]);
   const [form, setForm] = useState({ subject: '', description: '', category: 'Other', priority: 'medium', department_id: '' });
+  const [attachment, setAttachment] = useState(null);
   const [submissionState, setSubmissionState] = useState({ status: 'idle', message: '' });
   const [expandedDepartments, setExpandedDepartments] = useState({});
 
@@ -57,6 +58,9 @@ function TicketsPage() {
     ? availableSubjects
     : ['General Request', 'Support Request', 'Department Inquiry'];
 
+  const selectedDepartment = departments.find((department) => String(department.id) === String(form.department_id));
+  const isMaintenanceDepartment = selectedDepartment?.name?.toLowerCase().includes('maintenance');
+
   const groupedTickets = Object.values(tickets.reduce((groups, ticket) => {
     const departmentId = ticket.department_id || 'unassigned';
     const departmentName = ticket.Department?.name || 'Unassigned Department';
@@ -79,11 +83,22 @@ function TicketsPage() {
     setSubmissionState({ status: 'loading', message: 'Creating your ticket...' });
 
     try {
-      await axios.post(`${API_BASE_URL}/api/tickets`, { ...form, user_id: user?.id || 0 }, {
+      if (isMaintenanceDepartment && !attachment) {
+        setSubmissionState({ status: 'error', message: 'Please upload an image for a maintenance ticket.' });
+        return;
+      }
+      await axios.post(`${API_BASE_URL}/api/tickets`, {
+        ...form,
+        user_id: user?.id || 0,
+        attachment_data: attachment?.data || null,
+        attachment_name: attachment?.name || null,
+        attachment_type: attachment?.type || null,
+      }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const nextDepartmentId = departments[0]?.id ? String(departments[0].id) : '';
       setForm({ subject: '', description: '', category: 'Other', priority: 'medium', department_id: nextDepartmentId });
+      setAttachment(null);
       await loadTickets();
       setSubmissionState({ status: 'success', message: 'Ticket created successfully.' });
       window.setTimeout(() => setSubmissionState({ status: 'idle', message: '' }), 2200);
@@ -94,6 +109,28 @@ function TicketsPage() {
 
   const handleDepartmentChange = (departmentId) => {
     setForm((current) => ({ ...current, department_id: departmentId, subject: '' }));
+    setAttachment(null);
+  };
+
+  const handleAttachmentChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      setAttachment(null);
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      setSubmissionState({ status: 'error', message: 'Please select an image file.' });
+      event.target.value = '';
+      return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      setSubmissionState({ status: 'error', message: 'Please select an image smaller than 3 MB.' });
+      event.target.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setAttachment({ data: reader.result, name: file.name, type: file.type });
+    reader.readAsDataURL(file);
   };
 
   const updateStatus = async (id, status) => {
@@ -207,6 +244,13 @@ function TicketsPage() {
                 ))}
               </select>
               <textarea className="institutional-textarea" placeholder="Describe your issue" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
+              {isMaintenanceDepartment && (
+                <label className="ticket-image-upload">
+                  <span>Upload an image of the maintenance issue</span>
+                  <input type="file" accept="image/*" onChange={handleAttachmentChange} required />
+                  {attachment && <small>{attachment.name}</small>}
+                </label>
+              )}
               <select className="institutional-select" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
                 <option>Hardware</option>
                 <option>Building Maintenance</option>
@@ -252,6 +296,7 @@ function TicketsPage() {
                         <div className="small-muted"><strong>Priority:</strong> {ticket.priority}</div>
                         <div className="small-muted"><strong>Estimated completion:</strong> {ticket.estimated_completion_at ? new Date(ticket.estimated_completion_at).toLocaleString() : 'Being estimated'}</div>
                         <p style={{ margin: '8px 0 0' }}>{ticket.description}</p>
+                        {ticket.attachment_data && <img className="ticket-attachment-image" src={ticket.attachment_data} alt={ticket.attachment_name || 'Ticket attachment'} />}
                         {user?.role === 'admin' && (
                           <div className="inline-actions">
                             <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'open')}>Open</button>

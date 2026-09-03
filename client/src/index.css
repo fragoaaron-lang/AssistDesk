@@ -1711,6 +1711,38 @@ button, input, select, textarea {
   padding-left: 22px;
 }
 
+.ticket-image-upload {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px dashed var(--teal);
+  border-radius: 8px;
+  background: #f3fbfb;
+  color: var(--navy);
+  font-weight: 700;
+}
+
+.ticket-image-upload input {
+  width: 100%;
+}
+
+.ticket-image-upload small {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.ticket-attachment-image {
+  display: block;
+  width: min(100%, 520px);
+  max-height: 320px;
+  margin-top: 12px;
+  object-fit: contain;
+  object-position: left center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #f7fbff;
+}
+
 .catalog-faq-folder {
   border: 1px solid var(--border);
   border-radius: 9px;

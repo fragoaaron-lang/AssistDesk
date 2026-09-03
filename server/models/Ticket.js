@@ -23,6 +23,18 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: false,
       },
+      attachment_data: {
+        type: DataTypes.TEXT('medium'),
+        allowNull: true,
+      },
+      attachment_name: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+      },
+      attachment_type: {
+        type: DataTypes.STRING(80),
+        allowNull: true,
+      },
       category: {
         type: DataTypes.STRING(80),
         allowNull: false,

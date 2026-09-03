@@ -51,7 +51,7 @@ const mapPriorityToDatabase = (priority) => {
 
 exports.createTicket = async (req, res) => {
   try {
-    const { user_id, subject, description, category = 'Other', priority = 'medium', department_id: selectedDepartmentId, estimated_completion_at } = req.body;
+    const { user_id, subject, description, category = 'Other', priority = 'medium', department_id: selectedDepartmentId, estimated_completion_at, attachment_data, attachment_name, attachment_type } = req.body;
     if (!subject || !description) {
       return res.status(400).json({ message: 'Subject and description are required.' });
     }
@@ -68,6 +68,9 @@ exports.createTicket = async (req, res) => {
       department_id: resolvedDepartmentId || 1,
       subject,
       description,
+      attachment_data: attachment_data || null,
+      attachment_name: attachment_name || null,
+      attachment_type: attachment_type || null,
       category,
       priority: databasePriority,
       status: 'open',
