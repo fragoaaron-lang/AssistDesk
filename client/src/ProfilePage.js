@@ -438,7 +438,9 @@ function ProfilePage() {
         {showSuccessDialog && (
           <div className="profile-save-dialog-backdrop" onClick={() => setShowSuccessDialog(false)}>
             <div className="profile-save-dialog success-dialog" onClick={(event) => event.stopPropagation()}>
-              <div className="success-dialog-icon" aria-hidden="true">✓</div>
+              <div className={`success-dialog-icon ${saveState.status === 'success' ? '' : 'error-dialog-icon'}`} aria-hidden="true">
+                {saveState.status === 'success' ? '✓' : '×'}
+              </div>
               <h4>{saveState.status === 'success' ? 'Profile saved successfully.' : 'Unable to save profile changes.'}</h4>
               <p>{saveState.status === 'success' ? 'Your updates are now applied.' : saveState.message || 'Please try again.'}</p>
               <div className="profile-save-dialog-actions">
