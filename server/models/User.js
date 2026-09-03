@@ -37,6 +37,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 'student',
       },
+      profile_picture: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        defaultValue: null,
+      },
       marker_positions: {
         type: DataTypes.JSON,
         allowNull: true,

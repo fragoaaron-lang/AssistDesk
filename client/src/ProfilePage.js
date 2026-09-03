@@ -20,7 +20,7 @@ const getUserStorageKey = (user, suffix) => {
 };
 
 function ProfilePage() {
-  const { user, token } = useAuth();
+  const { user, token, updateUserProfile } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState(() => {
     const key = getUserStorageKey(user, 'profile_photo');
@@ -107,13 +107,33 @@ function ProfilePage() {
     setPrefs((current) => ({ ...current, [key]: value }));
   };
 
-  const handleSaveChanges = () => {
+  const handleSaveChanges = async () => {
     setSaveState({ status: 'saving', message: 'Saving profile...' });
 
     try {
       if (user) {
         localStorage.setItem(getUserStorageKey(user, 'profile_prefs'), JSON.stringify(prefs));
       }
+
+      if (user && token) {
+        const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ profile_picture: profilePhoto || null }),
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Unable to save profile picture.');
+        }
+
+        updateUserProfile(data.user?.profile_picture || profilePhoto || null);
+      }
+
       if (profilePhoto) {
         if (user) {
           localStorage.setItem(getUserStorageKey(user, 'profile_photo'), profilePhoto);
@@ -133,7 +153,7 @@ function ProfilePage() {
         }, 1800);
       }, 250);
     } catch (error) {
-      setSaveState({ status: 'error', message: 'Unable to save profile changes.' });
+      setSaveState({ status: 'error', message: error.message || 'Unable to save profile changes.' });
       setShowSuccessDialog(true);
     }
   };

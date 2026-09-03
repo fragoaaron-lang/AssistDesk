@@ -12,6 +12,7 @@ const sanitizeUser = (user) => ({
   email: user.email,
   role: user.role,
   department_id: user.department_id || null,
+  profile_picture: user.profile_picture || null,
   created_at: user.created_at,
 });
 
@@ -221,5 +222,31 @@ exports.changePassword = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Unable to change password.' });
+  }
+};
+
+exports.updateProfile = async (req, res) => {
+  try {
+    const { profile_picture } = req.body;
+
+    if (profile_picture === undefined) {
+      return res.status(400).json({ message: 'Profile picture data is required.' });
+    }
+
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    const nextValue = profile_picture ? String(profile_picture).trim() : null;
+    await user.update({ profile_picture: nextValue });
+
+    return res.json({
+      message: 'Profile updated successfully.',
+      user: sanitizeUser(user),
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Unable to update profile.' });
   }
 };

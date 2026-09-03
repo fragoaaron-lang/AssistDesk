@@ -94,8 +94,12 @@ export const AuthProvider = ({ children }) => {
     window.location.assign('/');
   };
 
+  const updateUserProfile = (profilePicture) => {
+    setUser((currentUser) => (currentUser ? { ...currentUser, profile_picture: profilePicture || null } : currentUser));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, logout, updateUserProfile }}>
       {children}
     </AuthContext.Provider>
   );
