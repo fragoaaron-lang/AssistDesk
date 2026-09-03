@@ -46,6 +46,8 @@ const departmentMatchesIntent = (department, intent) => {
   return aliases.some((alias) => departmentName.includes(normalize(alias)) || normalize(alias).includes(departmentName));
 };
 
+const findDepartmentForIntent = (departments, intent) => departments.find((department) => departmentMatchesIntent(department, intent));
+
 const scoreText = (query, target) => {
   const qTokens = new Set(tokenize(query));
   const tTokens = tokenize(target);
@@ -186,7 +188,7 @@ const buildResponse = async (query) => {
     };
   }
 
-  const department = best.item.Department;
+  const department = findDepartmentForIntent(await Department.findAll(), departmentIntent) || best.item.Department;
   const response = best.item.answer || best.item.name || 'I found a likely match in the knowledge base.';
 
   return {
