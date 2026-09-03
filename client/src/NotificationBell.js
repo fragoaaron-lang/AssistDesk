@@ -10,6 +10,7 @@ function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleteMessage, setDeleteMessage] = useState('');
 
   const loadNotifications = async () => {
     try {
@@ -32,6 +33,8 @@ function NotificationBell() {
       await axios.delete(`${API_BASE_URL}/api/dashboard/notifications/${notificationId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      setDeleteMessage('Notification deleted successfully.');
+      window.setTimeout(() => setDeleteMessage(''), 2400);
     } catch (err) {
       setNotifications(previousNotifications);
       console.error('Unable to delete notification', err);
@@ -111,6 +114,7 @@ function NotificationBell() {
           </div>
         </div>
       )}
+      {deleteMessage && <div className="notification-success-popup" role="status">{deleteMessage}</div>}
     </div>
   );
 }

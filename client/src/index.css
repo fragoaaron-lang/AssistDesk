@@ -1594,6 +1594,26 @@ button, input, select, textarea {
   color: #fff;
 }
 
+.notification-success-popup {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1100;
+  padding: 13px 17px;
+  border: 1px solid #8bd6a0;
+  border-radius: 8px;
+  background: #effbf2;
+  color: #176b35;
+  box-shadow: 0 10px 24px rgba(8, 32, 56, 0.16);
+  font-weight: 700;
+  animation: notification-success-in 0.2s ease-out both;
+}
+
+@keyframes notification-success-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .department-pill {
   position: absolute;
   transform: translate(-50%, -50%);

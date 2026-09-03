@@ -13,6 +13,7 @@ function DashboardPage() {
   const [notifications, setNotifications] = useState([]);
   const [deletingNotificationId, setDeletingNotificationId] = useState(null);
   const [pendingNotificationDelete, setPendingNotificationDelete] = useState(null);
+  const [deleteMessage, setDeleteMessage] = useState('');
   const [zoomLevel, setZoomLevel] = useState(1);
   const [showWelcomeSplash, setShowWelcomeSplash] = useState(() => sessionStorage.getItem('assistdesk_show_welcome_splash') === 'true');
 
@@ -73,6 +74,8 @@ function DashboardPage() {
       await axios.delete(`${API_BASE_URL}/api/dashboard/notifications/${notificationId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      setDeleteMessage('Notification deleted successfully.');
+      window.setTimeout(() => setDeleteMessage(''), 2400);
     } catch (error) {
       setNotifications(previousNotifications);
       console.error('Error deleting notification:', error);
@@ -343,6 +346,7 @@ function DashboardPage() {
             </div>
           </div>
         )}
+        {deleteMessage && <div className="notification-success-popup" role="status">{deleteMessage}</div>}
       </div>
     </div>
   );
