@@ -153,7 +153,7 @@ function ProfilePage() {
         const data = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-          throw new Error(data.message || 'Unable to save profile picture.');
+          throw new Error(data.message || `Profile upload failed (${response.status}).`);
         }
 
         const savedPhoto = data.user?.profile_picture || nextPhoto || null;
