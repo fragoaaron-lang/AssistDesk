@@ -119,7 +119,7 @@ function ChatbotWidget() {
                 title="Change or select a different assistant"
                 style={{ padding: '4px 10px', fontSize: '0.75rem', background: '#e8f1f5', border: '1px solid #b0d4e3', color: '#333' }}
               >
-                {gender === 'neutral' ? '👤 Choose Assistant' : `Change to ${gender === 'boy' ? 'Alex' : 'Maya'}`}
+                {gender === 'neutral' ? '👤 Choose Assistant' : `Change to ${gender === 'boy' ? 'Maya' : 'Alex'}`}
               </button>
               <button type="button" className="chatbot-close" aria-label="Close chatbot" onClick={() => setOpen(false)}>×</button>
             </div>
