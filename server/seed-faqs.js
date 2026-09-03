@@ -20,20 +20,20 @@ const faqData = {
   general: [
     ['Who is the president of TCC?', 'Pres. Edmund C. Francisco', 'president tcc school president'],
     ['Who is the secretary of TCC?', 'Ms. Reylyn R. Geron', 'secretary tcc school secretary'],
-    ['Where can I get my college school ID?', 'College school IDs are available at Dantes Studio in Morong Proper.', 'college school id dantes studio morong'],
-    ['What is the enrollment process?', 'For freshman or transferee students: 1. Guidance Office. 2. Registrar\'s Office, Window 5. For old students: 1. Registrar\'s Office, Window 4, for advising of subjects. 2. Window 1, 2, or 3 for encoding subjects; old student encoding is in Window 5. 3. Window 6 for assessment of tuition and other fees. 4. Administration Building for SC fee payment. 5. Window 8 for the cashier. 6. Window 7 for the yellow copy. 7. Window 3 for the white copy. 8. Dean\'s Office for the green copy.', 'enrollment process freshman transferee old student registrar guidance window'],
-    ['Where can I get my TOR?', 'You can get your TOR at the Registrar, Window 1 or 3.', 'tor transcript registrar window 1 3'],
-    ['Where can I get a good moral certificate?', 'You can get a good moral certificate at Guidance, located underground in the Administration Building.', 'good moral certificate guidance administration building'],
-    ['Where can I inquire about tuition or graduation fees?', 'You can inquire at the Accounting Department, Window 6.', 'tuition graduation fee accounting window 6'],
-    ['Where can I ask about my current balance or tuition fee?', 'You can ask at the Cashier, Window 8.', 'current balance tuition fee cashier window 8'],
-    ['Where can I get a college exam permit?', 'You can get an exam permit at the Accounting Department, Window 6. To claim a permit, your current balance must be reduced first.', 'exam permit college accounting window 6 balance'],
-    ['Where can I get a college PE uniform?', 'Your respective professors coordinate college PE uniforms.', 'college pe uniform professor'],
-    ['Where can I locate the nearest parking?', 'Parking is available along the gates, in front of the Administration Building, at CHARM parking, Criminology parking, and along the Education Building through the SHS Building.', 'parking nearest gate administration charm criminology education shs'],
-    ['Where can I get a vehicle sticker pass?', 'Get the vehicle sticker pass at Window 10. Pay the sticker fee first at Window 8, the Cashier.', 'vehicle sticker pass window 10 cashier window 8'],
-    ['Where is the canteen located?', 'The canteen is near the TCC Gymnasium.', 'canteen location gymnasium'],
-    ['Where is the Office of Student Affairs located?', 'The Office of Student Affairs is near the TCC Gymnasium.', 'office student affairs osa location gymnasium'],
-    ['Where can I get Form 137?', 'You can get Form 137 at the Registrar, Window 1 or 3.', 'form 137 registrar window'],
-    ['Where can I get Form 138?', 'You can get Form 138 from your professors or advisers.', 'form 138 professor adviser'],
+    ['Where can I get my college school ID?', 'In Dantes Studio, found in Morong Proper.', 'college school id dantes studio morong'],
+    ['What is the enrollment process?', 'For Freshman/Transferee Students: 1. Guidance Office. 2. Registrar\'s Office (Window 5). For Old Students: 3. Registrar\'s Office (Window 4) to Dean\'s Office (Advising of Subjects). 4. Window 1, 2, or 3 for Encoding subjects. Encoding of Subjects for Old students is in Window 5. 5. Window 6 (Assessment of Tuition & Other fees). 6. Admin Bldg. (SC Fee Payment). 7. Window 8 (Cashier). 8. Window 7 (Passing of yellow copy). 9. Window 3 (Passing of white copy). 10. Dean\'s office (Passing of Green copy).', 'enrollment process freshman transferee old student registrar guidance window'],
+    ['Where can I get my TOR?', 'In Registrar, Window 1 or 3.', 'tor transcript registrar window 1 3'],
+    ['Where can I get a good moral certificate?', 'In guidance, found in the underground of Administration building.', 'good moral certificate guidance administration building'],
+    ['Where can I inquire about tuition or graduation fees?', 'In accounting department, Window 6.', 'tuition graduation fee accounting window 6'],
+    ['Where can I ask about my current balance or tuition fee?', 'In cashier, Window 8.', 'current balance tuition fee cashier window 8'],
+    ['Where can I get a college exam permit?', 'In accounting department, Window 6. Disclaimer: To claim a permit, current balance must be lessened first.', 'exam permit college accounting window 6 balance'],
+    ['Where can I get a college PE uniform?', 'Respective professors will be the ones coordinating about PE uniforms.', 'college pe uniform professor'],
+    ['Where can I locate the nearest parking?', 'Parking can be located along the gates, in front of Administration building, CHARM parking, Criminology parking, and along the Education building until the SHS building.', 'parking nearest gate administration charm criminology education shs'],
+    ['Where can I get a vehicle sticker pass?', 'In Window 10. First, you must pay for the sticker fee in Window 8 (cashier).', 'vehicle sticker pass window 10 cashier window 8'],
+    ['Where is the canteen located?', 'Near TCC Gymnasium.', 'canteen location gymnasium'],
+    ['Where is the Office of Student Affairs located?', 'Near TCC Gymnasium.', 'office student affairs osa location gymnasium'],
+    ['Where can I get Form 137?', 'You can get these in registrar, either Window 1 or 3.', 'form 137 registrar window'],
+    ['Where can I get Form 138?', 'From professors or advisers.', 'form 138 professor adviser'],
   ],
   maintenance: [
     ['Who is the point person for maintenance?', 'The point person for Maintenance is Mr. Jerry San Luis.', 'maintenance point person contact jerry san luis'],
@@ -52,7 +52,7 @@ const faqData = {
   basic: [
     ['Who is the principal of Basic Education?', 'The principal of Basic Education is Mr. Dindo Punzalan.', 'basic education principal dindo punzalan'],
     ['Where can I get a Basic Education uniform or PE uniform?', 'Basic Education uniforms and PE uniforms are available at the Principal\'s Office.', 'basic education uniform pe uniform principal office'],
-    ['Where can I get Basic Education books?', 'Basic Education books can be claimed through the school.', 'basic education books claim'],
+    ['Where can I get Basic Education books?', 'Books can be claimed.', 'basic education books claim'],
     ['Where can I get my Basic Education school ID?', 'Basic Education IDs are taken by section according to the school\'s schedule.', 'basic education school id section schedule'],
     ['Where is the Basic Education Department located?', 'The Basic Education Department is in the SHS, JHS, and Elementary Buildings.', 'basic education department location shs jhs elementary'],
     ['Where can I get the Basic Education class schedule?', 'Basic Education class schedules are given by the respective advisers.', 'basic education class schedule adviser'],
@@ -104,24 +104,30 @@ async function seed() {
   try {
     const departments = await Department.findAll({ transaction });
     const fallback = departments[0];
-    const existing = await Faq.findAll({ attributes: ['question'], transaction });
-    const existingQuestions = new Set(existing.map((faq) => faq.question.toLowerCase()));
+    const existing = await Faq.findAll({ transaction });
+    const existingByQuestion = new Map(existing.map((faq) => [faq.question.toLowerCase(), faq]));
     const rows = [];
+    let updated = 0;
 
     for (const [key, entries] of Object.entries(faqData)) {
       const department = await findDepartment(departmentAliases[key], departments) || fallback;
       if (!department) throw new Error('No departments exist. Run the server database sync first.');
       for (const [question, answer, keywords] of entries) {
-        if (!existingQuestions.has(question.toLowerCase())) {
+        const current = existingByQuestion.get(question.toLowerCase());
+        if (current) {
+          if (current.department_id !== department.id || current.answer !== answer || current.keywords !== keywords) {
+            await current.update({ department_id: department.id, answer, keywords }, { transaction });
+            updated += 1;
+          }
+        } else {
           rows.push({ department_id: department.id, question, answer, keywords });
-          existingQuestions.add(question.toLowerCase());
         }
       }
     }
 
     if (rows.length) await Faq.bulkCreate(rows, { transaction });
     await transaction.commit();
-    console.log(`Added ${rows.length} FAQ entries.`);
+    console.log(`Added ${rows.length} FAQ entries. Updated ${updated} FAQ entries.`);
   } catch (error) {
     await transaction.rollback();
     console.error('FAQ seed failed:', error.message);
