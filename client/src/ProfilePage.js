@@ -167,7 +167,7 @@ function ProfilePage() {
         return savedPhoto;
       } catch (error) {
         setSaveState({ status: 'error', message: error.message || 'Unable to save profile photo.' });
-        return null;
+        throw error;
       }
     }
 
