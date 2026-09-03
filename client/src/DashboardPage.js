@@ -11,6 +11,7 @@ function DashboardPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dashboard, setDashboard] = useState({ departments: [], announcements: [], stats: {} });
   const [notifications, setNotifications] = useState([]);
+  const [deletingNotificationId, setDeletingNotificationId] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [showWelcomeSplash, setShowWelcomeSplash] = useState(() => sessionStorage.getItem('assistdesk_show_welcome_splash') === 'true');
 
@@ -63,13 +64,19 @@ function DashboardPage() {
   };
 
   const deleteNotification = async (notificationId) => {
+    if (deletingNotificationId !== null) return;
+    const previousNotifications = notifications;
+    setDeletingNotificationId(notificationId);
+    setNotifications((current) => current.filter((note) => note.id !== notificationId));
     try {
       await axios.delete(`${API_BASE_URL}/api/dashboard/notifications/${notificationId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setNotifications((current) => current.filter((note) => note.id !== notificationId));
     } catch (error) {
+      setNotifications(previousNotifications);
       console.error('Error deleting notification:', error);
+    } finally {
+      setDeletingNotificationId(null);
     }
   };
 
@@ -304,7 +311,8 @@ function DashboardPage() {
                   <button
                     type="button"
                     className="notification-delete-btn"
-                    onClick={() => deleteNotification(note.id)}
+                    onClick={(event) => { event.stopPropagation(); deleteNotification(note.id); }}
+                    disabled={deletingNotificationId === note.id}
                     title="Delete notification"
                     aria-label="Delete notification"
                   >

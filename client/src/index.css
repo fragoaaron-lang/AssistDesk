@@ -1534,6 +1534,11 @@ button, input, select, textarea {
   color: #ed1725;
 }
 
+.notification-delete-btn:disabled {
+  opacity: 0.45;
+  cursor: wait;
+}
+
 .notification-delete-btn:active {
   transform: scale(0.95);
 }

@@ -8,6 +8,7 @@ function NotificationBell() {
   const { token } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
   const loadNotifications = async () => {
     try {
@@ -22,13 +23,19 @@ function NotificationBell() {
   };
 
   const deleteNotification = async (notificationId) => {
+    if (deletingId !== null) return;
+    const previousNotifications = notifications;
+    setDeletingId(notificationId);
+    setNotifications((current) => current.filter((notification) => notification.id !== notificationId));
     try {
       await axios.delete(`${API_BASE_URL}/api/dashboard/notifications/${notificationId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setNotifications((current) => current.filter((notification) => notification.id !== notificationId));
     } catch (err) {
+      setNotifications(previousNotifications);
       console.error('Unable to delete notification', err);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -73,7 +80,8 @@ function NotificationBell() {
               <button
                 type="button"
                 className="notification-delete-btn"
-                onClick={() => deleteNotification(note.id)}
+                onClick={(event) => { event.stopPropagation(); deleteNotification(note.id); }}
+                disabled={deletingId === note.id}
                 title="Delete notification"
                 aria-label="Delete notification"
               >
