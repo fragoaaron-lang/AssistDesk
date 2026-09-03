@@ -19,13 +19,22 @@ const getUserStorageKey = (user, suffix) => {
   return `assistdesk_${suffix}_${identifier}`;
 };
 
+const getInitials = (name) => {
+  const pieces = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (!pieces.length) return 'U';
+  return pieces.slice(0, 2).map((piece) => piece[0]?.toUpperCase() || '').join('') || 'U';
+};
+
+const getProfilePhotoSource = (user) => {
+  if (user?.profile_picture) return user.profile_picture;
+  const key = getUserStorageKey(user, 'profile_photo');
+  return localStorage.getItem(key) || '';
+};
+
 function ProfilePage() {
   const { user, token, updateUserProfile } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [profilePhoto, setProfilePhoto] = useState(() => {
-    const key = getUserStorageKey(user, 'profile_photo');
-    return localStorage.getItem(key) || '';
-  });
+  const [profilePhoto, setProfilePhoto] = useState(() => getProfilePhotoSource(user));
   const [prefs, setPrefs] = useState(() => {
     try {
       const key = getUserStorageKey(user, 'profile_prefs');
@@ -72,7 +81,7 @@ function ProfilePage() {
     const keyPhoto = getUserStorageKey(user, 'profile_photo');
     const keyPrefs = getUserStorageKey(user, 'profile_prefs');
 
-    const storedPhoto = localStorage.getItem(keyPhoto) || '';
+    const storedPhoto = user?.profile_picture || localStorage.getItem(keyPhoto) || '';
     let storedPrefs = defaultPrefs;
 
     try {
@@ -107,22 +116,18 @@ function ProfilePage() {
     setPrefs((current) => ({ ...current, [key]: value }));
   };
 
-  const handleSaveChanges = async () => {
-    setSaveState({ status: 'saving', message: 'Saving profile...' });
+  const persistProfilePhoto = async (nextPhoto) => {
+    if (!user) return;
 
-    try {
-      if (user) {
-        localStorage.setItem(getUserStorageKey(user, 'profile_prefs'), JSON.stringify(prefs));
-      }
-
-      if (user && token) {
+    if (user && token) {
+      try {
         const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ profile_picture: profilePhoto || null }),
+          body: JSON.stringify({ profile_picture: nextPhoto || null }),
         });
 
         const data = await response.json().catch(() => ({}));
@@ -131,15 +136,41 @@ function ProfilePage() {
           throw new Error(data.message || 'Unable to save profile picture.');
         }
 
-        updateUserProfile(data.user?.profile_picture || profilePhoto || null);
+        const savedPhoto = data.user?.profile_picture || nextPhoto || null;
+        updateUserProfile(savedPhoto);
+        if (savedPhoto) {
+          localStorage.setItem(getUserStorageKey(user, 'profile_photo'), savedPhoto);
+        } else {
+          localStorage.removeItem(getUserStorageKey(user, 'profile_photo'));
+        }
+        setSavedSnapshot((current) => ({ ...current, photo: savedPhoto }));
+        return savedPhoto;
+      } catch (error) {
+        setSaveState({ status: 'error', message: error.message || 'Unable to save profile photo.' });
+        return null;
+      }
+    }
+
+    if (nextPhoto) {
+      localStorage.setItem(getUserStorageKey(user, 'profile_photo'), nextPhoto);
+    } else {
+      localStorage.removeItem(getUserStorageKey(user, 'profile_photo'));
+    }
+
+    setSavedSnapshot((current) => ({ ...current, photo: nextPhoto }));
+    return nextPhoto;
+  };
+
+  const handleSaveChanges = async () => {
+    setSaveState({ status: 'saving', message: 'Saving profile...' });
+
+    try {
+      if (user) {
+        localStorage.setItem(getUserStorageKey(user, 'profile_prefs'), JSON.stringify(prefs));
       }
 
       if (profilePhoto) {
-        if (user) {
-          localStorage.setItem(getUserStorageKey(user, 'profile_photo'), profilePhoto);
-        }
-      } else if (user) {
-        localStorage.removeItem(getUserStorageKey(user, 'profile_photo'));
+        await persistProfilePhoto(profilePhoto);
       }
 
       setSavedSnapshot({ prefs, photo: profilePhoto });
@@ -165,7 +196,7 @@ function ProfilePage() {
     setShowSaveDialog(false);
   };
 
-  const handleProfilePhotoChange = (event) => {
+  const handleProfilePhotoChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -173,13 +204,20 @@ function ProfilePage() {
     event.target.value = '';
 
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       const result = typeof reader.result === 'string' ? reader.result : '';
+      setProfilePhoto(result);
 
-      window.setTimeout(() => {
-        setProfilePhoto(result);
+      try {
+        const savedPhoto = await persistProfilePhoto(result);
+        if (savedPhoto) {
+          setSavedSnapshot((current) => ({ ...current, photo: savedPhoto }));
+        }
+      } catch (error) {
+        console.error('Failed to persist profile photo:', error);
+      } finally {
         setPhotoUploadLoading(false);
-      }, 900);
+      }
     };
 
     reader.onerror = () => {
@@ -311,7 +349,7 @@ function ProfilePage() {
               {profilePhoto ? (
                 <img src={profilePhoto} alt="Profile" className="profile-avatar-image" />
               ) : (
-                <span>+</span>
+                <span className="profile-avatar-placeholder profile-avatar-fallback">{getInitials(user?.name)}</span>
               )}
               {photoUploadLoading && <div className="profile-avatar-loader" aria-label="Uploading profile photo" />}
               <label className={`profile-avatar-upload-label mobile-upload-label ${photoUploadLoading ? 'loading' : ''}`}>
@@ -355,7 +393,7 @@ function ProfilePage() {
               {profilePhoto ? (
                 <img src={profilePhoto} alt="Profile" className="profile-avatar-image" />
               ) : (
-                <span className="profile-avatar-placeholder">+</span>
+                <span className="profile-avatar-placeholder profile-avatar-fallback">{getInitials(user?.name)}</span>
               )}
               {photoUploadLoading && <div className="profile-avatar-loader" aria-label="Uploading profile photo" />}
             </div>
