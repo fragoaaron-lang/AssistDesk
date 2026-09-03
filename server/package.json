@@ -8,7 +8,8 @@
     "dev": "nodemon server.js",
     "db:test": "node db-test.js",
     "migrate": "node db-migrate.js",
-    "seed:admins": "node seed-department-admins.js"
+    "seed:admins": "node seed-department-admins.js",
+    "seed:faqs": "node seed-faqs.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",

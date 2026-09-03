@@ -5,17 +5,30 @@ import { useAuth } from './AuthContext';
 
 const FAQ_GROUPS = [
   {
-    title: 'General student services',
+    title: 'Overall student questions',
     questions: [
-      'Where can I get my ID?',
+      'Who is the president of TCC?',
+      'Who is the secretary of TCC?',
+      'Where can I get my college school ID?',
       'What is the enrollment process?',
       'Where can I get my TOR?',
       'Where can I get a good moral certificate?',
-      'Where can I inquire about tuition or graduate fees?',
+      'Where can I inquire about tuition or graduation fees?',
       'Where can I ask about my current balance or tuition fee?',
       'Where can I get a college exam permit?',
       'Where can I get a college PE uniform?',
       'Who is the point person for maintenance?',
+      'Where is the maintenance department located?',
+      'Who is the point person for the clinic?',
+      'Where is the clinic located?',
+      'Where can I locate the nearest parking?',
+      'Where can I get a vehicle sticker pass?',
+      'Where is the canteen located?',
+      'Where is the Office of Student Affairs located?',
+      'Where can I get Form 137?',
+      'Where can I get Form 138?',
+      'Who is the point person of Guidance?',
+      'Who is the point person of the Library?',
     ],
   },
   {
@@ -26,16 +39,21 @@ const FAQ_GROUPS = [
       'Who is the head of OSA?',
       'Where can I get a uniform or PE uniform?',
       'Where can I get books?',
-      'Where can I get my ID?',
+      'Where can I get my Basic Education school ID?',
+      'Where is the Basic Education Department located?',
+      'Where can I get the Basic Education class schedule?',
+      'Where is the Office of Student Affairs located?',
+      'Where is the principal\'s office located?',
     ],
   },
   ...[
     ['BSCS Department', 'CS'],
     ['BSA / BSBA Department', 'CBA'],
     ['CRIM Department', 'BSCRIM'],
-    ['BSHM Department', 'HM'],
-    ['BSPT Department', 'PT'],
+    ['BSHM Department', 'BSHM'],
+    ['BSPT Department', 'BSPT'],
     ['Nursing Department', 'Nursing'],
+    ['Education Department', 'Education'],
   ].map(([title, label]) => ({
     title,
     questions: [
@@ -47,8 +65,6 @@ const FAQ_GROUPS = [
     ],
   })),
 ];
-
-const flattenFaqs = () => FAQ_GROUPS.flatMap((group) => group.questions);
 
 function ChatbotWidget() {
   const { token, user } = useAuth();
@@ -168,7 +184,14 @@ function ChatbotWidget() {
               <div className="chatbot-faqs">
                 <div className="chatbot-faq-title">Popular questions</div>
                 <div className="chatbot-faq-list">
-                  {flattenFaqs().map((question) => <button type="button" key={question} onClick={() => sendMessage(null, question)}>{question}</button>)}
+                  {FAQ_GROUPS.map((group) => (
+                    <details key={group.title} className="chatbot-faq-group">
+                      <summary>{group.title}</summary>
+                      <div className="chatbot-faq-group-questions">
+                        {group.questions.map((question) => <button type="button" key={question} onClick={() => sendMessage(null, question)}>{question}</button>)}
+                      </div>
+                    </details>
+                  ))}
                 </div>
               </div>
             )}
