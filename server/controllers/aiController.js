@@ -18,6 +18,34 @@ const normalizeFaqQuery = (text) => normalize(text)
   .replace(/physical therapy/g, ' pt bspt ')
   .replace(/information technology|it department/g, ' it ');
 
+const departmentAliases = [
+  { id: 'basic', terms: ['basic education', 'elementary', 'jhs', 'shs'] },
+  { id: 'cs', terms: ['computer science', 'bscs', 'cs department', 'cs'] },
+  { id: 'cba', terms: ['accountancy', 'business administration', 'bsa', 'bsba', 'cba'] },
+  { id: 'crim', terms: ['criminology', 'criminal justice', 'bscrim', 'crim'] },
+  { id: 'hm', terms: ['hospitality management', 'bshm', 'charm', 'hm department'] },
+  { id: 'pt', terms: ['physical therapy', 'bspt', 'pt department'] },
+  { id: 'nursing', terms: ['nursing', 'bsn'] },
+  { id: 'education', terms: ['education department', 'educ department', 'beed', 'bsed'] },
+  { id: 'maintenance', terms: ['maintenance'] },
+  { id: 'clinic', terms: ['clinic'] },
+  { id: 'accounting', terms: ['accounting department', 'accounting'] },
+  { id: 'guidance', terms: ['guidance'] },
+  { id: 'library', terms: ['library'] },
+];
+
+const getDepartmentIntent = (query) => {
+  const normalizedQuery = normalize(query);
+  return departmentAliases.find((department) => department.terms.some((term) => normalizedQuery.includes(term)))?.id || null;
+};
+
+const departmentMatchesIntent = (department, intent) => {
+  if (!department || !intent) return false;
+  const departmentName = normalize(department.name);
+  const aliases = departmentAliases.find((item) => item.id === intent)?.terms || [];
+  return aliases.some((alias) => departmentName.includes(normalize(alias)) || normalize(alias).includes(departmentName));
+};
+
 const scoreText = (query, target) => {
   const qTokens = new Set(tokenize(query));
   const tTokens = tokenize(target);
@@ -28,7 +56,7 @@ const scoreText = (query, target) => {
   return score;
 };
 
-const scoreFaq = (query, faq) => {
+const scoreFaq = (query, faq, departmentIntent) => {
   const normalizedQuery = normalizeFaqQuery(query);
   const normalizedQuestion = normalizeFaqQuery(faq.question);
   if (normalizedQuery === normalizedQuestion) return 1000;
@@ -38,7 +66,10 @@ const scoreFaq = (query, faq) => {
   const specificQuestionScore = tokenize(normalizedQuestion).filter((token) => !genericWords.has(token)).reduce((score, token) => (
     normalizedQuery.includes(token) ? score + 3 : score
   ), 0);
-  return questionScore * 4 + keywordScore + specificQuestionScore;
+  const departmentScore = departmentIntent
+    ? (departmentMatchesIntent(faq.Department, departmentIntent) ? 100 : -100)
+    : 0;
+  return questionScore * 4 + keywordScore + specificQuestionScore + departmentScore;
 };
 
 const getLocalConversationResponse = (query) => {
@@ -107,6 +138,7 @@ const buildResponse = async (query) => {
   const faqs = await Faq.findAll({ include: [{ model: Department }] });
   const services = await Service.findAll({ include: [{ model: Department }] });
   const normalizedQuery = normalize(query);
+  const departmentIntent = getDepartmentIntent(query);
   const exactFaq = faqs.find((faq) => normalize(faq.question) === normalizedQuery);
 
   if (!exactFaq) {
@@ -119,14 +151,17 @@ const buildResponse = async (query) => {
   const scoredFaqs = faqs
     .map((faq) => ({
       item: faq,
-      score: scoreFaq(query, faq),
+      score: scoreFaq(query, faq, departmentIntent),
     }))
     .sort((a, b) => b.score - a.score);
 
   const scoredServices = services
     .map((service) => ({
       item: service,
-      score: scoreText(query, `${service.name} ${service.requirements || ''} ${service.processing_time || ''}`),
+      score: scoreText(query, `${service.name} ${service.requirements || ''} ${service.processing_time || ''}`)
+        + (departmentIntent
+          ? (departmentMatchesIntent(service.Department, departmentIntent) ? 100 : -100)
+          : 0),
     }))
     .sort((a, b) => b.score - a.score);
 
