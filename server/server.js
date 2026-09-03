@@ -50,7 +50,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin', adminRoutes);
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', message: 'AssistDesk API is running' });
+  res.json({ status: 'ok', message: 'AssistDesk API is running', release: 'profile-picture-persistence' });
 });
 
 // Serve React static build if present (for SPA routing, keep API routes under /api)
