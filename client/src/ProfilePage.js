@@ -31,6 +31,26 @@ const getProfilePhotoSource = (user) => {
   return localStorage.getItem(key) || '';
 };
 
+const prepareProfilePhoto = (file) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const image = new Image();
+    image.onload = () => {
+      const maxDimension = 1200;
+      const scale = Math.min(1, maxDimension / Math.max(image.width, image.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(image.width * scale));
+      canvas.height = Math.max(1, Math.round(image.height * scale));
+      canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', 0.82));
+    };
+    image.onerror = () => reject(new Error('Unable to read the selected image.'));
+    image.src = reader.result;
+  };
+  reader.onerror = () => reject(new Error('Unable to read the selected image.'));
+  reader.readAsDataURL(file);
+});
+
 function ProfilePage() {
   const { user, token, updateUserProfile } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -203,28 +223,19 @@ function ProfilePage() {
     setPhotoUploadLoading(true);
     event.target.value = '';
 
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const result = typeof reader.result === 'string' ? reader.result : '';
+    try {
+      const result = await prepareProfilePhoto(file);
       setProfilePhoto(result);
 
-      try {
-        const savedPhoto = await persistProfilePhoto(result);
-        if (savedPhoto) {
-          setSavedSnapshot((current) => ({ ...current, photo: savedPhoto }));
-        }
-      } catch (error) {
-        console.error('Failed to persist profile photo:', error);
-      } finally {
-        setPhotoUploadLoading(false);
+      const savedPhoto = await persistProfilePhoto(result);
+      if (savedPhoto) {
+        setSavedSnapshot((current) => ({ ...current, photo: savedPhoto }));
       }
-    };
-
-    reader.onerror = () => {
+    } catch (error) {
+      setSaveState({ status: 'error', message: error.message || 'Unable to process profile photo.' });
+    } finally {
       setPhotoUploadLoading(false);
-    };
-
-    reader.readAsDataURL(file);
+    }
   };
 
   const handlePasswordChange = async (e) => {
