@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
@@ -75,6 +75,7 @@ function ChatbotWidget() {
   const [sending, setSending] = useState(false);
   const [gender, setGender] = useState(() => localStorage.getItem('chatbot_gender') || 'neutral');
   const [showGenderSelect, setShowGenderSelect] = useState(() => !localStorage.getItem('chatbot_gender'));
+  const chatEndRef = useRef(null);
 
   if (!token || !user) return null;
 
@@ -83,6 +84,11 @@ function ChatbotWidget() {
     if (gender === 'girl') return 'Maya';
     return 'Assistant';
   };
+
+  useEffect(() => {
+    if (!open) return;
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [history, sending, open]);
 
   const saveGender = (selectedGender) => {
     setGender(selectedGender);
@@ -179,7 +185,12 @@ function ChatbotWidget() {
                 {entry.tickets?.map((ticket) => <small key={ticket.id}>#{ticket.id} · {ticket.subject} · {ticket.status}</small>)}
               </div>
             ))}
-            {sending && <div className="chat-message assistant"><span>🤔 Searching knowledge base...</span></div>}
+            {sending && (
+              <div className="chat-message assistant chatbot-typing" aria-live="polite">
+                <span>{getAssistantName()} is typing</span>
+                <span className="chatbot-typing-dots" aria-hidden="true"><i /><i /><i /></span>
+              </div>
+            )}
             {showFaqs && (
               <div className="chatbot-faqs">
                 <div className="chatbot-faq-title">Popular questions</div>
@@ -195,6 +206,7 @@ function ChatbotWidget() {
                 </div>
               </div>
             )}
+            <div ref={chatEndRef} aria-hidden="true" />
           </div>
           <form className="chatbot-input" onSubmit={sendMessage}>
             <input value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Ask a question..." aria-label="Ask AssistDesk" />
