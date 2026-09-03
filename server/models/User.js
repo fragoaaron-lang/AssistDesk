@@ -38,7 +38,7 @@ module.exports = (sequelize, DataTypes) => {
         defaultValue: 'student',
       },
       profile_picture: {
-        type: DataTypes.MEDIUMTEXT,
+        type: DataTypes.TEXT('medium'),
         allowNull: true,
         defaultValue: null,
       },

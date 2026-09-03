@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const { DataTypes } = require('sequelize');
 const sequelize = require('./config/db');
 const models = require('./models');
 const authRoutes = require('./routes/authRoutes');
@@ -108,10 +109,22 @@ async function normalizeLegacyTicketPriorities() {
 }
 
 async function ensureProfilePictureCapacity() {
-  if (sequelize.getDialect() !== 'mysql') return;
-
   try {
-    await sequelize.query('ALTER TABLE users MODIFY COLUMN profile_picture MEDIUMTEXT NULL;');
+    const queryInterface = sequelize.getQueryInterface();
+    const columns = await queryInterface.describeTable('users');
+
+    if (!columns.profile_picture) {
+      await queryInterface.addColumn('users', 'profile_picture', {
+        type: DataTypes.TEXT('medium'),
+        allowNull: true,
+        defaultValue: null,
+      });
+      return;
+    }
+
+    if (sequelize.getDialect() === 'mysql') {
+      await sequelize.query('ALTER TABLE users MODIFY COLUMN profile_picture MEDIUMTEXT NULL;');
+    }
   } catch (error) {
     console.warn('Unable to upgrade profile_picture column automatically:', error.message);
   }
@@ -128,7 +141,7 @@ sequelize
     return normalizeLegacyTicketPriorities();
   })
   .then(() => {
-    return sequelize.sync({ alter: true, force: false });
+    return sequelize.sync({ alter: false, force: false });
   })
   .then(() => ensureProfilePictureCapacity())
   .then(() => {
