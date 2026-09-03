@@ -12,6 +12,7 @@ const sanitizeUser = (user) => ({
   email: user.email,
   role: user.role,
   department_id: user.department_id || null,
+  student_number: user.student_number || null,
   profile_picture: user.profile_picture || null,
   created_at: user.created_at,
 });
@@ -35,7 +36,7 @@ const signToken = (user) =>
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role = 'student', department_id } = req.body;
+    const { name, email, password, role = 'student', department_id, student_number } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Name, email, and password are required.' });
@@ -70,6 +71,7 @@ exports.register = async (req, res) => {
       password_hash,
       role,
       department_id: null,
+      student_number: role === 'student' ? (student_number || null) : null,
     });
 
     const token = signToken(user);
@@ -227,10 +229,10 @@ exports.changePassword = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const { profile_picture } = req.body;
+    const { profile_picture, student_number } = req.body;
 
-    if (profile_picture === undefined) {
-      return res.status(400).json({ message: 'Profile picture data is required.' });
+    if (profile_picture === undefined && student_number === undefined) {
+      return res.status(400).json({ message: 'Profile updates are required.' });
     }
 
     const user = await User.findByPk(req.user.id);
@@ -238,8 +240,18 @@ exports.updateProfile = async (req, res) => {
       return res.status(404).json({ message: 'User not found.' });
     }
 
-    const nextValue = profile_picture ? String(profile_picture).trim() : null;
-    await user.update({ profile_picture: nextValue });
+    const nextValue = profile_picture === undefined
+      ? user.profile_picture
+      : profile_picture ? String(profile_picture).trim() : null;
+    const nextStudentNumber = student_number === undefined
+      ? user.student_number
+      : student_number ? String(student_number).trim() : null;
+
+    if (user.role === 'student' && !nextStudentNumber) {
+      return res.status(400).json({ message: 'Student number is required for student accounts.' });
+    }
+
+    await user.update({ profile_picture: nextValue, student_number: nextStudentNumber });
 
     return res.json({
       message: 'Profile updated successfully.',

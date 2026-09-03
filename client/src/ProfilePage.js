@@ -55,6 +55,7 @@ function ProfilePage() {
   const { user, token, updateUserProfile } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState(() => getProfilePhotoSource(user));
+  const [studentNumber, setStudentNumber] = useState(() => user?.student_number || '');
   const [prefs, setPrefs] = useState(() => {
     try {
       const key = getUserStorageKey(user, 'profile_prefs');
@@ -85,6 +86,7 @@ function ProfilePage() {
       const key = getUserStorageKey(user, 'profile_photo');
       return localStorage.getItem(key) || '';
     })(),
+    studentNumber: user?.student_number || '',
   }));
 
   useEffect(() => {
@@ -110,14 +112,17 @@ function ProfilePage() {
       storedPrefs = defaultPrefs;
     }
 
-    setSavedSnapshot({ prefs: storedPrefs, photo: storedPhoto });
+    setSavedSnapshot({ prefs: storedPrefs, photo: storedPhoto, studentNumber: user.student_number || '' });
     setProfilePhoto(storedPhoto);
+    setStudentNumber(user.student_number || '');
     setPrefs(storedPrefs);
   }, [user?.id, user?.email]);
 
   useEffect(() => {
     if (!user) return;
-    const hasChanges = JSON.stringify(prefs) !== JSON.stringify(savedSnapshot.prefs) || profilePhoto !== savedSnapshot.photo;
+    const hasChanges = JSON.stringify(prefs) !== JSON.stringify(savedSnapshot.prefs)
+      || profilePhoto !== savedSnapshot.photo
+      || studentNumber !== savedSnapshot.studentNumber;
     if (hasChanges) {
       setShowSaveDialog(true);
     } else {
@@ -136,7 +141,7 @@ function ProfilePage() {
     setPrefs((current) => ({ ...current, [key]: value }));
   };
 
-  const persistProfilePhoto = async (nextPhoto) => {
+  const persistProfilePhoto = async (nextPhoto, nextStudentNumber = studentNumber) => {
     if (!user) return;
 
     if (user && token) {
@@ -147,7 +152,7 @@ function ProfilePage() {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ profile_picture: nextPhoto || null }),
+          body: JSON.stringify({ profile_picture: nextPhoto || null, student_number: nextStudentNumber || null }),
         });
 
         const data = await response.json().catch(() => ({}));
@@ -157,13 +162,15 @@ function ProfilePage() {
         }
 
         const savedPhoto = data.user?.profile_picture || nextPhoto || null;
-        updateUserProfile(savedPhoto);
+        updateUserProfile(savedPhoto, nextStudentNumber);
         if (savedPhoto) {
           localStorage.setItem(getUserStorageKey(user, 'profile_photo'), savedPhoto);
         } else {
           localStorage.removeItem(getUserStorageKey(user, 'profile_photo'));
         }
         setSavedSnapshot((current) => ({ ...current, photo: savedPhoto }));
+        setStudentNumber(nextStudentNumber || '');
+        setSavedSnapshot((current) => ({ ...current, studentNumber: nextStudentNumber || '' }));
         return savedPhoto;
       } catch (error) {
         setSaveState({ status: 'error', message: error.message || 'Unable to save profile photo.' });
@@ -182,6 +189,12 @@ function ProfilePage() {
   };
 
   const handleSaveChanges = async () => {
+    if (user?.role === 'student' && !studentNumber.trim()) {
+      setSaveState({ status: 'error', message: 'Student number is required.' });
+      setShowSuccessDialog(true);
+      return;
+    }
+
     setSaveState({ status: 'saving', message: 'Saving profile...' });
 
     try {
@@ -189,11 +202,11 @@ function ProfilePage() {
         localStorage.setItem(getUserStorageKey(user, 'profile_prefs'), JSON.stringify(prefs));
       }
 
-      if (profilePhoto !== savedSnapshot.photo) {
-        await persistProfilePhoto(profilePhoto || null);
+      if (profilePhoto !== savedSnapshot.photo || studentNumber !== savedSnapshot.studentNumber) {
+        await persistProfilePhoto(profilePhoto || null, studentNumber.trim());
       }
 
-      setSavedSnapshot({ prefs, photo: profilePhoto });
+      setSavedSnapshot({ prefs, photo: profilePhoto, studentNumber: studentNumber.trim() });
       setShowSaveDialog(false);
       setShowSuccessDialog(true);
 
@@ -212,6 +225,7 @@ function ProfilePage() {
   const handleCancelChanges = () => {
     setPrefs(savedSnapshot.prefs);
     setProfilePhoto(savedSnapshot.photo);
+    setStudentNumber(savedSnapshot.studentNumber || '');
     setSaveState({ status: 'idle', message: '' });
     setShowSaveDialog(false);
   };
@@ -408,6 +422,9 @@ function ProfilePage() {
               <div className="profile-name">{user?.name || 'Student User'}</div>
               <div className="profile-meta">{user?.email || 'student@assistdesk.edu'}</div>
               <div className="profile-meta">Role: {user?.role || 'student'}</div>
+              {user?.role === 'student' && user?.student_number && (
+                <div className="profile-meta">Student number: {user.student_number}</div>
+              )}
               <label className={`profile-upload-button ${photoUploadLoading ? 'loading' : ''}`}>
                 <input type="file" accept="image/*" onChange={handleProfilePhotoChange} disabled={photoUploadLoading} />
                 <span>{photoUploadLoading ? 'Uploading...' : 'Upload photo'}</span>

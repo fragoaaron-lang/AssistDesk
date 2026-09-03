@@ -119,7 +119,14 @@ async function ensureProfilePictureCapacity() {
         allowNull: true,
         defaultValue: null,
       });
-      return;
+    }
+
+    if (!columns.student_number) {
+      await queryInterface.addColumn('users', 'student_number', {
+        type: DataTypes.STRING(50),
+        allowNull: true,
+        defaultValue: null,
+      });
     }
 
     if (sequelize.getDialect() === 'mysql') {

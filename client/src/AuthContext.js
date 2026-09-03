@@ -94,8 +94,12 @@ export const AuthProvider = ({ children }) => {
     window.location.assign('/');
   };
 
-  const updateUserProfile = (profilePicture) => {
-    setUser((currentUser) => (currentUser ? { ...currentUser, profile_picture: profilePicture || null } : currentUser));
+  const updateUserProfile = (profilePicture, studentNumber) => {
+    setUser((currentUser) => (currentUser ? {
+      ...currentUser,
+      profile_picture: profilePicture || null,
+      ...(studentNumber !== undefined ? { student_number: studentNumber || null } : {}),
+    } : currentUser));
   };
 
   return (

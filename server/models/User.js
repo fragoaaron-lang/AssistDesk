@@ -37,6 +37,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 'student',
       },
+      student_number: {
+        type: DataTypes.STRING(50),
+        allowNull: true,
+        defaultValue: null,
+      },
       profile_picture: {
         type: DataTypes.TEXT('medium'),
         allowNull: true,
