@@ -1567,10 +1567,68 @@ button, input, select, textarea {
 }
 
 .ticket-department-heading {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin: 0 0 10px;
-  padding-bottom: 8px;
+  padding: 12px 14px;
+  text-align: left;
+  font: inherit;
+  font-weight: 800;
   color: var(--navy);
-  border-bottom: 2px solid var(--accent);
+  background: #eef7f8;
+  border: 1px solid #b9dfe1;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.ticket-department-heading:hover {
+  background: #e3f1f2;
+}
+
+.ticket-folder-icon {
+  width: 18px;
+  height: 13px;
+  position: relative;
+  display: inline-block;
+  background: #e7b94b;
+  border-radius: 2px;
+  flex: 0 0 auto;
+}
+
+.ticket-folder-icon::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: 2px;
+  width: 8px;
+  height: 4px;
+  background: #e7b94b;
+  border-radius: 2px 2px 0 0;
+}
+
+.ticket-department-count {
+  margin-left: auto;
+  min-width: 24px;
+  padding: 2px 7px;
+  color: #176b72;
+  background: #d8edef;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.ticket-folder-chevron {
+  width: 20px;
+  color: #176b72;
+  font-size: 1.2rem;
+  line-height: 1;
+  text-align: center;
+}
+
+.ticket-department-contents {
+  padding-left: 22px;
 }
 
 .inline-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }

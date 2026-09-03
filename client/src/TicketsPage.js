@@ -14,6 +14,7 @@ function TicketsPage() {
   const [services, setServices] = useState([]);
   const [form, setForm] = useState({ subject: '', description: '', category: 'Other', priority: 'medium', department_id: '' });
   const [submissionState, setSubmissionState] = useState({ status: 'idle', message: '' });
+  const [expandedDepartments, setExpandedDepartments] = useState({});
 
   const loadTickets = async () => {
     const res = await axios.get(`${API_BASE_URL}/api/tickets`, {
@@ -65,6 +66,13 @@ function TicketsPage() {
     groups[departmentId].tickets.push(ticket);
     return groups;
   }, {})).sort((first, second) => first.name.localeCompare(second.name));
+
+  const toggleDepartment = (departmentName) => {
+    setExpandedDepartments((current) => ({
+      ...current,
+      [departmentName]: current[departmentName] === undefined ? false : !current[departmentName],
+    }));
+  };
 
   const createTicket = async (e) => {
     e.preventDefault();
@@ -224,26 +232,40 @@ function TicketsPage() {
           <div className="list-stack">
             {groupedTickets.map((departmentGroup) => (
               <section key={departmentGroup.name} className="ticket-department-group">
-                <h4 className="ticket-department-heading">Department: {departmentGroup.name}</h4>
-                {departmentGroup.tickets.map((ticket) => (
-                  <div key={ticket.id}>
-                    <h4 style={{ margin: '0 0 6px' }}>{ticket.subject}</h4>
-                    <TicketProgressBar status={ticket.status} />
-                    <div className="small-muted"><strong>Category:</strong> {ticket.category || 'Other'}</div>
-                    <div className="small-muted"><strong>Priority:</strong> {ticket.priority}</div>
-                    <div className="small-muted"><strong>Estimated completion:</strong> {ticket.estimated_completion_at ? new Date(ticket.estimated_completion_at).toLocaleString() : 'Being estimated'}</div>
-                    <p style={{ margin: '8px 0 0' }}>{ticket.description}</p>
-                    {user?.role === 'admin' && (
-                      <div className="inline-actions">
-                        <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'open')}>Open</button>
-                        <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'pending')}>Pending</button>
-                        <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'in_progress')}>In Progress</button>
-                        <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'resolved')}>Resolved</button>
-                        <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'closed')}>Closed</button>
+                <button
+                  type="button"
+                  className="ticket-department-heading"
+                  onClick={() => toggleDepartment(departmentGroup.name)}
+                  aria-expanded={expandedDepartments[departmentGroup.name] !== false}
+                >
+                  <span className="ticket-folder-icon" aria-hidden="true" />
+                  <span>{departmentGroup.name}</span>
+                  <span className="ticket-department-count">{departmentGroup.tickets.length}</span>
+                  <span className="ticket-folder-chevron" aria-hidden="true">{expandedDepartments[departmentGroup.name] === false ? '+' : '−'}</span>
+                </button>
+                {expandedDepartments[departmentGroup.name] !== false && (
+                  <div className="ticket-department-contents">
+                    {departmentGroup.tickets.map((ticket) => (
+                      <div key={ticket.id}>
+                        <h4 style={{ margin: '0 0 6px' }}>{ticket.subject}</h4>
+                        <TicketProgressBar status={ticket.status} />
+                        <div className="small-muted"><strong>Category:</strong> {ticket.category || 'Other'}</div>
+                        <div className="small-muted"><strong>Priority:</strong> {ticket.priority}</div>
+                        <div className="small-muted"><strong>Estimated completion:</strong> {ticket.estimated_completion_at ? new Date(ticket.estimated_completion_at).toLocaleString() : 'Being estimated'}</div>
+                        <p style={{ margin: '8px 0 0' }}>{ticket.description}</p>
+                        {user?.role === 'admin' && (
+                          <div className="inline-actions">
+                            <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'open')}>Open</button>
+                            <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'pending')}>Pending</button>
+                            <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'in_progress')}>In Progress</button>
+                            <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'resolved')}>Resolved</button>
+                            <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'closed')}>Closed</button>
+                          </div>
+                        )}
                       </div>
-                    )}
+                    ))}
                   </div>
-                ))}
+                )}
               </section>
             ))}
           </div>
