@@ -1,11 +1,7 @@
 {
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
-    "builder": "RAILPACK",
-    "watchPatterns": [
-      "server/**",
-      "client/**"
-    ]
+    "builder": "RAILPACK"
   },
   "deploy": {
     "startCommand": "npm install --prefix server && npm start --prefix server"
