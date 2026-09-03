@@ -110,7 +110,11 @@ async function normalizeLegacyTicketPriorities() {
 async function ensureProfilePictureCapacity() {
   if (sequelize.getDialect() !== 'mysql') return;
 
-  await sequelize.query('ALTER TABLE users MODIFY COLUMN profile_picture MEDIUMTEXT NULL;');
+  try {
+    await sequelize.query('ALTER TABLE users MODIFY COLUMN profile_picture MEDIUMTEXT NULL;');
+  } catch (error) {
+    console.warn('Unable to upgrade profile_picture column automatically:', error.message);
+  }
 }
 
 sequelize
