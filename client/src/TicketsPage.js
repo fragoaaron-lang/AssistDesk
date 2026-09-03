@@ -241,7 +241,6 @@ function TicketsPage() {
                   <span className="ticket-folder-icon" aria-hidden="true" />
                   <span>{departmentGroup.name}</span>
                   <span className="ticket-department-count">{departmentGroup.tickets.length}</span>
-                  <span className="ticket-folder-chevron" aria-hidden="true">{expandedDepartments[departmentGroup.name] === true ? '−' : '+'}</span>
                 </button>
                 {expandedDepartments[departmentGroup.name] === true && (
                   <div className="ticket-department-contents">

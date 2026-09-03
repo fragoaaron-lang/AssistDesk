@@ -1619,14 +1619,6 @@ button, input, select, textarea {
   text-align: center;
 }
 
-.ticket-folder-chevron {
-  width: 20px;
-  color: #176b72;
-  font-size: 1.2rem;
-  line-height: 1;
-  text-align: center;
-}
-
 .ticket-department-contents {
   padding-left: 22px;
 }
