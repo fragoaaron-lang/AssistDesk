@@ -12,6 +12,7 @@ function DashboardPage() {
   const [dashboard, setDashboard] = useState({ departments: [], announcements: [], stats: {} });
   const [notifications, setNotifications] = useState([]);
   const [deletingNotificationId, setDeletingNotificationId] = useState(null);
+  const [pendingNotificationDelete, setPendingNotificationDelete] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [showWelcomeSplash, setShowWelcomeSplash] = useState(() => sessionStorage.getItem('assistdesk_show_welcome_splash') === 'true');
 
@@ -78,6 +79,13 @@ function DashboardPage() {
     } finally {
       setDeletingNotificationId(null);
     }
+  };
+
+  const confirmDeleteNotification = () => {
+    if (!pendingNotificationDelete) return;
+    const notificationId = pendingNotificationDelete.id;
+    setPendingNotificationDelete(null);
+    deleteNotification(notificationId);
   };
 
   useEffect(() => {
@@ -311,7 +319,7 @@ function DashboardPage() {
                   <button
                     type="button"
                     className="notification-delete-btn"
-                    onClick={(event) => { event.stopPropagation(); deleteNotification(note.id); }}
+                    onClick={(event) => { event.stopPropagation(); setPendingNotificationDelete(note); }}
                     disabled={deletingNotificationId === note.id}
                     title="Delete notification"
                     aria-label="Delete notification"
@@ -323,6 +331,18 @@ function DashboardPage() {
             )}
           </div>
         </div>
+        {pendingNotificationDelete && (
+          <div className="notification-confirm-backdrop" role="presentation">
+            <div className="notification-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="dashboard-notification-confirm-title">
+              <strong id="dashboard-notification-confirm-title">Delete notification?</strong>
+              <p>{pendingNotificationDelete.message}</p>
+              <div className="notification-confirm-actions">
+                <button type="button" className="institutional-btn small secondary" onClick={() => setPendingNotificationDelete(null)}>Cancel</button>
+                <button type="button" className="institutional-btn small notification-confirm-delete" onClick={confirmDeleteNotification}>Delete</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

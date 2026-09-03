@@ -9,6 +9,7 @@ function NotificationBell() {
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   const loadNotifications = async () => {
     try {
@@ -37,6 +38,13 @@ function NotificationBell() {
     } finally {
       setDeletingId(null);
     }
+  };
+
+  const confirmDelete = () => {
+    if (!pendingDelete) return;
+    const notificationId = pendingDelete.id;
+    setPendingDelete(null);
+    deleteNotification(notificationId);
   };
 
   useEffect(() => {
@@ -80,7 +88,7 @@ function NotificationBell() {
               <button
                 type="button"
                 className="notification-delete-btn"
-                onClick={(event) => { event.stopPropagation(); deleteNotification(note.id); }}
+                onClick={(event) => { event.stopPropagation(); setPendingDelete(note); }}
                 disabled={deletingId === note.id}
                 title="Delete notification"
                 aria-label="Delete notification"
@@ -89,6 +97,18 @@ function NotificationBell() {
               </button>
             </div>
           ))}
+        </div>
+      )}
+      {pendingDelete && (
+        <div className="notification-confirm-backdrop" role="presentation">
+          <div className="notification-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="notification-confirm-title">
+            <strong id="notification-confirm-title">Delete notification?</strong>
+            <p>{pendingDelete.message}</p>
+            <div className="notification-confirm-actions">
+              <button type="button" className="institutional-btn small secondary" onClick={() => setPendingDelete(null)}>Cancel</button>
+              <button type="button" className="institutional-btn small notification-confirm-delete" onClick={confirmDelete}>Delete</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -1558,6 +1558,42 @@ button, input, select, textarea {
   line-height: 1.4;
 }
 
+.notification-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(8, 32, 56, 0.42);
+}
+
+.notification-confirm-dialog {
+  width: min(360px, 100%);
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 18px 45px rgba(8, 32, 56, 0.24);
+}
+
+.notification-confirm-dialog p {
+  margin: 10px 0 18px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.notification-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.notification-confirm-delete {
+  background: #b3261e;
+  color: #fff;
+}
+
 .department-pill {
   position: absolute;
   transform: translate(-50%, -50%);
