@@ -189,8 +189,8 @@ function ProfilePage() {
         localStorage.setItem(getUserStorageKey(user, 'profile_prefs'), JSON.stringify(prefs));
       }
 
-      if (profilePhoto) {
-        await persistProfilePhoto(profilePhoto);
+      if (profilePhoto !== savedSnapshot.photo) {
+        await persistProfilePhoto(profilePhoto || null);
       }
 
       setSavedSnapshot({ prefs, photo: profilePhoto });
@@ -227,10 +227,6 @@ function ProfilePage() {
       const result = await prepareProfilePhoto(file);
       setProfilePhoto(result);
 
-      const savedPhoto = await persistProfilePhoto(result);
-      if (savedPhoto) {
-        setSavedSnapshot((current) => ({ ...current, photo: savedPhoto }));
-      }
     } catch (error) {
       setSaveState({ status: 'error', message: error.message || 'Unable to process profile photo.' });
     } finally {
