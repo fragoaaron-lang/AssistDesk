@@ -20,6 +20,13 @@ const scoreText = (query, target) => {
   return score;
 };
 
+const scoreFaq = (query, faq) => {
+  const normalizedQuery = normalize(query);
+  const normalizedQuestion = normalize(faq.question);
+  if (normalizedQuery === normalizedQuestion) return 1000;
+  return scoreText(query, faq.question) * 5 + scoreText(query, `${faq.answer} ${faq.keywords || ''}`);
+};
+
 const inferDepartmentId = async (query) => {
   const [faqs, services] = await Promise.all([
     Faq.findAll(),
@@ -43,7 +50,7 @@ const buildResponse = async (query) => {
   const scoredFaqs = faqs
     .map((faq) => ({
       item: faq,
-      score: scoreText(query, `${faq.question} ${faq.answer} ${faq.keywords || ''}`),
+      score: scoreFaq(query, faq),
     }))
     .sort((a, b) => b.score - a.score);
 
