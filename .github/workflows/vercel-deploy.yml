@@ -7,6 +7,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -20,8 +22,11 @@ jobs:
         run: npm install -g vercel
 
       - name: Vercel Deploy (CLI)
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        if: ${{ env.VERCEL_TOKEN != '' }}
         run: |
           cd client
           vercel --prod --confirm --token "$VERCEL_TOKEN"
+
+      - name: Skip Vercel CLI deploy when token is not configured
+        if: ${{ env.VERCEL_TOKEN == '' }}
+        run: echo "VERCEL_TOKEN is not configured; skipping optional Vercel CLI deployment."
