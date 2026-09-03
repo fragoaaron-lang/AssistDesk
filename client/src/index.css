@@ -1629,6 +1629,50 @@ button, input, select, textarea {
   padding-left: 22px;
 }
 
+.catalog-faq-folder {
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.catalog-faq-folder summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  color: var(--navy);
+  font-weight: 800;
+  cursor: pointer;
+  list-style: none;
+}
+
+.catalog-faq-folder summary::-webkit-details-marker {
+  display: none;
+}
+
+.catalog-faq-folder summary .ticket-department-count {
+  margin-left: auto;
+}
+
+.catalog-faq-folder-content {
+  display: grid;
+  gap: 8px;
+  padding: 0 10px 10px;
+}
+
+.catalog-faq-item {
+  padding: 10px 12px;
+  border-left: 3px solid var(--teal);
+  background: #f7fbff;
+}
+
+.catalog-faq-item p {
+  margin: 5px 0 0;
+  white-space: pre-line;
+  color: var(--muted);
+}
+
 .inline-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 
 .small-muted { color: var(--muted); font-size: 0.92rem; }

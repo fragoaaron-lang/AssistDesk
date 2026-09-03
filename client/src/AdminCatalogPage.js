@@ -16,6 +16,14 @@ function AdminCatalogPage() {
   const [faqForm, setFaqForm] = useState({ department_id: '', question: '', answer: '', keywords: '' });
   const [message, setMessage] = useState('');
 
+  const groupedFaqs = Object.values(faqs.reduce((groups, faq) => {
+    const departmentId = faq.department_id || 'unassigned';
+    const departmentName = faq.Department?.name || 'Unassigned Department';
+    if (!groups[departmentId]) groups[departmentId] = { name: departmentName, faqs: [] };
+    groups[departmentId].faqs.push(faq);
+    return groups;
+  }, {})).sort((first, second) => first.name.localeCompare(second.name));
+
   const api = axios.create({
     baseURL: `${API_BASE_URL}/api/catalog`,
     headers: { Authorization: `Bearer ${token}` },
@@ -178,7 +186,23 @@ function AdminCatalogPage() {
             <button className="institutional-btn" type="submit">Save FAQ</button>
           </form>
           <div className="list-stack" style={{ marginTop: '12px' }}>
-            {faqs.map((faq) => <div key={faq.id}>{faq.question}</div>)}
+            {groupedFaqs.map((group) => (
+              <details key={group.name} className="catalog-faq-folder">
+                <summary>
+                  <span className="ticket-folder-icon" aria-hidden="true" />
+                  <span>{group.name}</span>
+                  <span className="ticket-department-count">{group.faqs.length}</span>
+                </summary>
+                <div className="catalog-faq-folder-content">
+                  {group.faqs.map((faq) => (
+                    <div key={faq.id} className="catalog-faq-item">
+                      <strong>{faq.question}</strong>
+                      <p>{faq.answer}</p>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            ))}
           </div>
         </div>
       </div>
