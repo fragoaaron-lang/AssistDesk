@@ -77,6 +77,11 @@ function ChatbotWidget() {
   const [showGenderSelect, setShowGenderSelect] = useState(() => !localStorage.getItem('chatbot_gender'));
   const chatEndRef = useRef(null);
 
+  useEffect(() => {
+    if (!open) return;
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [history, sending, open]);
+
   if (!token || !user) return null;
 
   const getAssistantName = () => {
@@ -84,11 +89,6 @@ function ChatbotWidget() {
     if (gender === 'girl') return 'Maya';
     return 'Assistant';
   };
-
-  useEffect(() => {
-    if (!open) return;
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [history, sending, open]);
 
   const saveGender = (selectedGender) => {
     setGender(selectedGender);
