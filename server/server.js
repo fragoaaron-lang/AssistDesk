@@ -107,6 +107,12 @@ async function normalizeLegacyTicketPriorities() {
   }
 }
 
+async function ensureProfilePictureCapacity() {
+  if (sequelize.getDialect() !== 'mysql') return;
+
+  await sequelize.query('ALTER TABLE users MODIFY COLUMN profile_picture MEDIUMTEXT NULL;');
+}
+
 sequelize
   .authenticate()
   .then(() => {
@@ -120,6 +126,7 @@ sequelize
   .then(() => {
     return sequelize.sync({ alter: true, force: false });
   })
+  .then(() => ensureProfilePictureCapacity())
   .then(() => {
     return backfillAdminTable();
   })
