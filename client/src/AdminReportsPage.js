@@ -5,6 +5,7 @@ import { useAuth } from './AuthContext';
 import NotificationBell from './NotificationBell';
 import LogoutButton from './LogoutButton';
 import HeaderProfile from './HeaderProfile';
+import SidebarProfile from './SidebarProfile';
 
 function AdminReportsPage() {
   const { token, user } = useAuth();
@@ -99,13 +100,7 @@ function AdminReportsPage() {
             <button type="button" className="mobile-menu-close" onClick={() => setMobileMenuOpen(false)}>×</button>
           </div>
           <div className="mobile-profile-summary">
-            <div className="brand-badge small-badge">
-              <img src="/assistdesk-logo.svg" alt="AssistDesk logo" />
-            </div>
-            <div>
-              <div className="mobile-profile-name">{user?.name || 'User'}</div>
-              <div className="mobile-profile-role">{user?.role || 'Member'}</div>
-            </div>
+            <SidebarProfile user={user} />
           </div>
           <div className="nav-links">
             <a href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</a>
