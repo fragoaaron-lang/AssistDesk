@@ -77,9 +77,16 @@ const scoreFaq = (query, faq, departmentIntent) => {
 const getLocalConversationResponse = (query) => {
   const normalizedQuery = normalize(query);
   const now = new Date();
-  if (/^(hi|hello|hey|good morning|good afternoon|good evening)\b/.test(normalizedQuery)) {
-    return 'Hello! I am your AssistDesk assistant. How can I help you today?';
+  const greetingPattern = /(?:^|\s)(hi|hii|hey|hello|good morning|good afternoon|good evening)(?:\s|$)/;
+
+  if (/\b(what is your name|who are you|what should i call you)\b/.test(normalizedQuery)) {
+    return 'I am AssistDesk, your campus support assistant. How can I help you today?';
   }
+
+  if (greetingPattern.test(normalizedQuery)) {
+    return 'Hello! I am AssistDesk, your campus support assistant. How can I help you today?';
+  }
+
   if (/\b(thank you|thanks|thx)\b/.test(normalizedQuery)) {
     return 'You are welcome! I am here whenever you need help.';
   }
@@ -92,6 +99,55 @@ const getLocalConversationResponse = (query) => {
   return null;
 };
 
+const schoolKnowledgeBase = [
+  ['Where is the Registrar Office?', 'The Registrar Office is located in the Administration Building, usually near the main campus windows.'],
+  ['How can I get my grades?', 'You may ask your adviser or check through the registrar or school portal, depending on the current school procedure.'],
+  ['Where do I pay my school fees?', 'School fees are usually paid through the accounting department and cashier windows, especially Window 6 and Window 8.'],
+  ['How do I apply for a scholarship?', 'You may ask the Guidance Office or the school administration for available scholarship programs and requirements.'],
+  ['Where can I ask about my schedule or subject load?', 'Ask your adviser or the Registrar Office for your schedule and subject load concerns.'],
+  ['Where can I get a certificate of enrollment?', 'You can request it from the Registrar Office, usually at Window 1 or 3.'],
+  ['Where can I get a medical certificate?', 'You may secure a medical certificate from the clinic or the school health office.'],
+  ['Where do I report a lost item?', 'You may report lost items to the Campus Security Office or the Office of Student Affairs.'],
+  ['Where can I get a copy of my academic record?', 'Requests for academic records may be processed through the Registrar Office.'],
+  ['Who should I ask if I have academic concerns?', 'You may consult your adviser, dean, or the Guidance Office depending on the concern.'],
+  ['How can I request for a student ID replacement?', 'Visit the school office that handles IDs or coordination with the registrar or student affairs office.'],
+  ['Where can I inquire about school announcements?', 'Check bulletin boards, school social media pages, or ask the Office of Student Affairs.'],
+  ['Where can I ask for counseling or personal concerns?', 'Go to the Guidance Office for counseling and student support concerns.'],
+  ['Where can I locate the nearest parking?', 'Parking can be located along the gates, in front of Administration building, CHARM parking, Criminology parking, and along the Education building until the SHS building.'],
+  ['Where can I get a vehicle sticker pass?', 'In Window 10. First, you must pay for the sticker fee in Window 8 (cashier).'],
+  ['Where is the canteen located?', 'Near TCC Gymnasium.'],
+  ['Where is the Office of Student Affairs located?', 'Near TCC Gymnasium.'],
+  ['Where can I get Form 137?', 'You can get these in registrar, either Window 1 or 3.'],
+  ['Where can I get Form 138?', 'From professors or advisers.'],
+  ['Who is the president of TCC?', 'The president of Tomas Claudio Colleges is Pres. Edmund C. Francisco.'],
+  ['Who is the secretary of TCC?', 'The secretary of Tomas Claudio Colleges is Ms. Reylyn R. Geron.'],
+  ['Where can I get a college school ID?', 'You can get a college school ID at Dante\'s Photo Image in Morong Proper.'],
+  ['What is the enrollment process?', 'For freshmen and transferees: 1. Guidance Office. 2. Registrar\'s Office, Window 5. For old students: 1. Registrar\'s Office, Window 4, then the Dean\'s Office for advising. 2. Window 1, 2, or 3 for subject encoding; old-student encoding may be handled at Window 5. 3. Window 6 for tuition and other-fee assessment. 4. Administration Building for SC fee payment. 5. Window 8 for cashier payment. 6. Window 7 for the yellow copy. 7. Window 3 for the white copy. 8. Dean\'s Office for the green copy.'],
+  ['Where can I get good moral?', 'You can get a Certificate of Good Moral Character at Guidance, located in the underground of the Administration Building.'],
+  ['Where can I inquire about tuition or graduation fees?', 'Inquire at the Accounting Department, Window 6.'],
+  ['Where can I ask about my current balance or tuition fee?', 'Ask at the Cashier, Window 8.'],
+  ['Where can I get a college exam permit?', 'Get it from the Accounting Department, Window 6. Your current balance must be reduced first before claiming the permit.'],
+  ['Where can I get a college PE uniform?', 'The respective professors coordinate the distribution or purchase of PE uniforms.'],
+  ['Who is the point person for Maintenance?', 'The Maintenance point person is Mr. Jerry San Luis.'],
+  ['Where is the Maintenance Department located?', 'The Maintenance Department is near the SHS Building.'],
+  ['Who is the point person for the clinic?', 'The clinic point person is Marivic B. Rayo, RN, MAN.'],
+  ['Where is the clinic located?', 'The clinic is behind the CBA Building.'],
+  ['Who is the point person of Guidance?', 'The Guidance point person is Louie ES. Dematera.'],
+  ['Who is the point person of the Library?', 'The Library point person is Julieta SJ. Belandres.'],
+  ['What is Tomas Claudio Colleges?', 'Tomas Claudio Colleges (TCC) is a pioneering, community-owned educational institution in Taghangin, Morong, Rizal, Philippines. Founded on August 15, 1950, it honors Tomas Claudio, a local native recognized as the first Filipino national hero to die during World War I. TCC is a private institution in eastern Rizal offering programs from basic education through postgraduate studies.'],
+  ['What does Tomas Claudio Colleges offer?', 'TCC offers Accountancy, Business Administration, Public Administration, Computer Science, Elementary Education, Secondary Education, Criminology, Hospitality Management, Nursing, Physical Therapy, and TESDA Caregiving courses. Basic Education includes Kindergarten, Elementary, Junior High School, Senior High School, and Special Needs Education. Graduate programs include Master in Business Administration, Master in Public Administration, and Master of Arts in Education. TCC also offers the College of Law Juris Doctor program.'],
+  ['What are the admission requirements?', 'For incoming freshmen: Grade 12 Report Card (Form 138), Certificate of Good Moral Character, photocopy of PSA birth certificate, and two 2x2 ID pictures with name tag. For transferees: original Transcript of Records, Honorable Dismissal with Scholastic Record, photocopy of PSA birth certificate, and two 2x2 ID pictures with name tag. For cross-enrollees: Permit to Cross-Enroll, Certificate of Good Moral Character, photocopy of PSA birth certificate, and two 2x2 ID pictures with name tag. For graduate studies: original Transcript of Records, photocopy of birth certificate, marriage contract if married, and two 2x2 ID pictures with name tag.'],
+  ['What is the mission and vision of TCC?', 'Vision: Tomas Claudio Colleges is the leading community-based institution of learning imbued with academic excellence, social advancement, and internationalization of education. Mission: TCC is committed to delivering affordable educational services guided by academic excellence, attaining social advancement and quality of life for all sectors of society, and actively participating in the internationalization of education.'],
+  ['What is Accountancy?', 'The Bachelor of Science in Accountancy program prepares students for careers in accounting, auditing, taxation, and financial management while developing analytical, problem-solving, and decision-making skills.'],
+  ['What is Business Administration?', 'The Bachelor of Science in Business Administration program develops skills for managing people, growing businesses, and making sound financial decisions in a dynamic business environment.'],
+  ['What is Computer Science?', 'The Bachelor of Science in Computer Science program develops knowledge in programming, software development, and computing technologies, including system design, application development, and real-world problem solving.'],
+  ['What is Education?', 'The Education program, including BSEd and BEEd, prepares effective and compassionate professional educators with the knowledge, skills, and values to teach and inspire the next generation.'],
+  ['What is Criminology?', 'The Bachelor of Science in Criminology program prepares students for careers in law enforcement, public safety, and criminal justice, with emphasis on discipline, justice, and community safety.'],
+  ['What is Hospitality Management?', 'The Bachelor of Science in Hospitality Management program prepares students for careers in hotels, restaurants, tourism, and events, developing service, management, and guest-relations skills.'],
+  ['What is Nursing?', 'The Bachelor of Science in Nursing program prepares competent, compassionate, and globally competitive healthcare professionals with knowledge and clinical skills for quality patient care.'],
+  ['What is Physical Therapy?', 'The Bachelor of Science in Physical Therapy program prepares healthcare professionals focused on rehabilitation, recovery, physical function, strength, mobility, and independence.'],
+];
+
 const getGeminiResponse = async (query, faqs, services, departments) => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || typeof fetch !== 'function') return null;
@@ -100,6 +156,7 @@ const getGeminiResponse = async (query, faqs, services, departments) => {
     ...faqs.map((faq) => `FAQ [${faq.Department?.name || 'General'}] Q: ${faq.question} A: ${faq.answer}`),
     ...services.map((service) => `Service [${service.Department?.name || 'General'}] ${service.name}: ${service.requirements || ''} ${service.processing_time || ''}`),
     ...departments.map((department) => `Department: ${department.name}; location: ${department.location || 'not listed'}; point person: ${department.point_person || 'not listed'}`),
+    ...schoolKnowledgeBase.map(([question, answer]) => `School fact Q: ${question} A: ${answer}`),
   ].join('\n');
 
   const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
