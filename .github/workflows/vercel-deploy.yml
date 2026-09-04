@@ -16,14 +16,6 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Build client
-        env:
-          CI: false
-        run: |
-          cd client
-          npm ci
-          npm run build
-
       - name: Check server syntax
         run: |
           cd server
