@@ -307,7 +307,7 @@ button, input, select, textarea {
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   padding: 20px 24px;
   background: linear-gradient(135deg, var(--navy), var(--teal));
   color: white;
@@ -394,6 +394,8 @@ button, input, select, textarea {
   display: flex;
   align-items: center;
   gap: 14px;
+  min-width: 0;
+  flex: 0 1 auto;
 }
 
 .header-brand-button {
@@ -453,6 +455,9 @@ button, input, select, textarea {
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
+  min-width: 0;
+  flex: 1 1 auto;
+  justify-content: center;
 }
 
 .mobile-menu-toggle {
@@ -634,6 +639,8 @@ button, input, select, textarea {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  flex: 0 1 auto;
+  min-width: 0;
 }
 
 .profile-summary-row {
@@ -1811,6 +1818,7 @@ button, input, select, textarea {
     flex-direction: row;
     align-items: center;
     gap: 12px;
+    flex-wrap: nowrap;
   }
   .mobile-menu-toggle { display: inline-grid; place-items: center; }
   .page-header .nav-links { display: none; }
