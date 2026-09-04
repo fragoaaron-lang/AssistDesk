@@ -17,6 +17,8 @@ jobs:
           node-version: '18'
 
       - name: Build client
+        env:
+          CI: false
         run: |
           cd client
           npm ci
