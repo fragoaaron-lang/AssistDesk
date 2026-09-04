@@ -17,6 +17,7 @@ const seedDepartmentAdmins = require('./seed-department-admins');
 const app = express();
 const { Admin, User } = models;
 const PORT = process.env.PORT || 3001;
+let databaseReady = false;
 const allowedOrigins = [
   process.env.CLIENT_URL,
   process.env.FRONTEND_URL,
@@ -51,7 +52,11 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin', adminRoutes);
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', message: 'AssistDesk API is running', release: 'profile-picture-persistence' });
+  res.status(databaseReady ? 200 : 503).json({
+    status: databaseReady ? 'ok' : 'starting',
+    message: databaseReady ? 'AssistDesk API is running' : 'AssistDesk API is waiting for the database',
+    release: 'profile-picture-persistence',
+  });
 });
 
 // Serve React static build if present (for SPA routing, keep API routes under /api)
@@ -137,6 +142,11 @@ async function ensureProfilePictureCapacity() {
   }
 }
 
+const server = app.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}.`);
+});
+createSocketServer(server);
+
 sequelize
   .authenticate()
   .then(() => {
@@ -160,12 +170,10 @@ sequelize
     return seedDepartmentAdmins({ closeConnection: false });
   })
   .then(() => {
-    const server = app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-    });
-    createSocketServer(server);
+    databaseReady = true;
+    console.log(`Server running on http://localhost:${PORT}`);
   })
   .catch((error) => {
     console.error('Unable to connect to the database:', error);
-    process.exit(1);
+    console.error('The API will remain available while the database connection is unavailable.');
   });
