@@ -4,6 +4,7 @@ import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 import NotificationBell from './NotificationBell';
 import LogoutButton from './LogoutButton';
+import HeaderProfile from './HeaderProfile';
 import TicketProgressBar from './TicketProgressBar';
 
 function TicketsPage() {
@@ -175,6 +176,7 @@ function TicketsPage() {
             )}
           </div>
           <div className="header-actions">
+            <HeaderProfile user={user} />
             <LogoutButton />
             <NotificationBell />
           </div>

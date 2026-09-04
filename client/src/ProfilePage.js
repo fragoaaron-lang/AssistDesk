@@ -3,6 +3,7 @@ import { useAuth } from './AuthContext';
 import NotificationBell from './NotificationBell';
 import LogoutButton from './LogoutButton';
 import { API_BASE_URL } from './config';
+import HeaderProfile from './HeaderProfile';
 
 const defaultPrefs = {
   compactMode: false,
@@ -356,6 +357,7 @@ function ProfilePage() {
           </div>
 
           <div className="header-actions">
+            <HeaderProfile user={user} />
             <LogoutButton />
             <NotificationBell />
           </div>

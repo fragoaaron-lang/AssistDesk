@@ -5,38 +5,16 @@ import { useAuth } from './AuthContext';
 import { getSocket } from './socket';
 import NotificationBell from './NotificationBell';
 import LogoutButton from './LogoutButton';
+import HeaderProfile from './HeaderProfile';
 
 function DashboardPage() {
   const { user, token } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dashboard, setDashboard] = useState({ departments: [], announcements: [], stats: {} });
   const [notifications, setNotifications] = useState([]);
-  const [deletingNotificationId, setDeletingNotificationId] = useState(null);
-  const [pendingNotificationDelete, setPendingNotificationDelete] = useState(null);
-  const [deleteMessage, setDeleteMessage] = useState('');
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [showWelcomeSplash, setShowWelcomeSplash] = useState(() => sessionStorage.getItem('assistdesk_show_welcome_splash') === 'true');
-
-  useEffect(() => {
-    if (!showWelcomeSplash) return;
-
-    const splashTimer = window.setTimeout(() => {
-      sessionStorage.removeItem('assistdesk_show_welcome_splash');
-      sessionStorage.removeItem('assistdesk_welcome_name');
-      setShowWelcomeSplash(false);
-    }, 1800);
-
-    return () => window.clearTimeout(splashTimer);
-  }, [showWelcomeSplash]);
-
-  const welcomeName = (sessionStorage.getItem('assistdesk_welcome_name') || user?.name || 'User').split(' ')[0];
 
   const visibleDepartments = dashboard.departments || [];
-
-  const getPriorityByIndex = (index) => {
-    const priorities = ['low', 'medium', 'urgent'];
-    return priorities[index % 3];
-  };
 
   const mapTickets = useMemo(() => {
     if (dashboard.tickets && dashboard.tickets.length > 0) return dashboard.tickets;
@@ -46,7 +24,7 @@ function DashboardPage() {
         id: `department-${department.id}-ticket-${index}`,
         department_id: department.id,
         subject: `Ticket ${index + 1} - ${department.name}`,
-        priority: getPriorityByIndex(index),
+        priority: 'medium',
         status: 'open',
       }))
     ));
@@ -63,32 +41,6 @@ function DashboardPage() {
     } catch (error) {
       console.error('Error loading dashboard:', error);
     }
-  };
-
-  const deleteNotification = async (notificationId) => {
-    if (deletingNotificationId !== null) return;
-    const previousNotifications = notifications;
-    setDeletingNotificationId(notificationId);
-    setNotifications((current) => current.filter((note) => note.id !== notificationId));
-    try {
-      await axios.delete(`${API_BASE_URL}/api/dashboard/notifications/${notificationId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setDeleteMessage('Notification deleted successfully.');
-      window.setTimeout(() => setDeleteMessage(''), 2400);
-    } catch (error) {
-      setNotifications(previousNotifications);
-      console.error('Error deleting notification:', error);
-    } finally {
-      setDeletingNotificationId(null);
-    }
-  };
-
-  const confirmDeleteNotification = () => {
-    if (!pendingNotificationDelete) return;
-    const notificationId = pendingNotificationDelete.id;
-    setPendingNotificationDelete(null);
-    deleteNotification(notificationId);
   };
 
   useEffect(() => {
@@ -112,15 +64,13 @@ function DashboardPage() {
   const getHeatStrength = (count) => Math.min(0.92, 0.2 + (Number(count) * 0.12));
 
   const getVolumeLabel = (level) => {
-    if (level === 'urgent') return 'High Volume';
-    if (level === 'medium') return 'Moderate Volume';
+    if (level === 'high') return 'High Volume';
+    if (level === 'moderate') return 'Moderate Volume';
     return 'Low Volume';
   };
 
   const getBuildingPosition = (department) => {
     const name = String(department.name || '').toLowerCase();
-    if (name.includes('admin')) return { x: 16, y: 50 };
-    if (name.includes('library') || name.includes('jb') || name.includes('angeles')) return { x: 42, y: 60 };
     if (name.includes('crim')) return { x: 64, y: 13 };
     if (name.includes('nurs')) return { x: 60, y: 75 };
     if (name.includes('clinic')) return { x: 54, y: 35 };
@@ -128,9 +78,8 @@ function DashboardPage() {
     if (name.includes('student')) return { x: 18, y: 34 };
     if (name.includes('account')) return { x: 52, y: 45 };
     if (name.includes('education')) return { x: 54, y: 22 };
-    if (name.includes('cs')) return { x: 42, y: 24 };
     if (name.includes('hm') || name.includes('charm')) return { x: 24, y: 9 };
-    if (name.includes('technology') || name.includes('information')) return { x: 42, y: 34 };
+    if (name.includes('cs') || name.includes('technology')) return { x: 42, y: 34 };
     return { x: 50, y: 50 };
   };
 
@@ -145,22 +94,6 @@ function DashboardPage() {
     };
   };
 
-
-  if (showWelcomeSplash) {
-    return (
-      <main className="splash-screen" aria-label="Loading AssistDesk">
-        <div className="splash-mark">
-          <div className="splash-logo-wrap">
-            <img src="/assistdesk-logo.svg" alt="" />
-          </div>
-          <span className="splash-pulse" />
-        </div>
-        <h1>{`Welcome back, ${welcomeName}`}</h1>
-        <p>Preparing your support workspace</p>
-        <div className="splash-progress" aria-hidden="true"><span /></div>
-      </main>
-    );
-  }
 
   return (
     <div className="app-shell">
@@ -188,7 +121,6 @@ function DashboardPage() {
           <div className="nav-links">
             <a href="/dashboard">Dashboard</a>
             <a href="/tickets">Tickets</a>
-            <a href="/profile">Profile</a>
             {user?.role === 'admin' && (
               <>
                 <a href="/admin/reports">Reports</a>
@@ -197,6 +129,7 @@ function DashboardPage() {
             )}
           </div>
           <div className="header-actions">
+            <HeaderProfile user={user} />
             <LogoutButton />
             <NotificationBell />
           </div>
@@ -204,7 +137,18 @@ function DashboardPage() {
 
         <aside className={`mobile-menu-drawer ${mobileMenuOpen ? 'open' : ''}`}>
           <div className="mobile-menu-head">
+            <strong>Menu</strong>
             <button type="button" className="mobile-menu-close" onClick={() => setMobileMenuOpen(false)}>×</button>
+          </div>
+          <div className="nav-links">
+            <a href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</a>
+            <a href="/tickets" onClick={() => setMobileMenuOpen(false)}>Tickets</a>
+            {user?.role === 'admin' && (
+              <>
+                <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Reports</a>
+                <a href="/admin/catalog" onClick={() => setMobileMenuOpen(false)}>Catalog</a>
+              </>
+            )}
           </div>
           <div className="mobile-profile-summary">
             <div className="brand-badge small-badge">
@@ -214,17 +158,6 @@ function DashboardPage() {
               <div className="mobile-profile-name">{user?.name || 'User'}</div>
               <div className="mobile-profile-role">{user?.role || 'Member'}</div>
             </div>
-          </div>
-          <div className="nav-links">
-            <a href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</a>
-            <a href="/tickets" onClick={() => setMobileMenuOpen(false)}>Tickets</a>
-            <a href="/profile" onClick={() => setMobileMenuOpen(false)}>Profile</a>
-            {user?.role === 'admin' && (
-              <>
-                <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Reports</a>
-                <a href="/admin/catalog" onClick={() => setMobileMenuOpen(false)}>Catalog</a>
-              </>
-            )}
           </div>
           <div className="mobile-menu-actions">
             <LogoutButton onBeforeLogout={() => setMobileMenuOpen(false)} />
@@ -291,21 +224,6 @@ function DashboardPage() {
                   })}
                 </div>
               </div>
-              <div className="heatmap-legend" role="region" aria-label="Map legend">
-                <strong>Priority level</strong>
-                <span>
-                  <span className="legend-swatch low" aria-hidden="true"></span>
-                  Low
-                </span>
-                <span>
-                  <span className="legend-swatch medium" aria-hidden="true"></span>
-                  Medium
-                </span>
-                <span>
-                  <span className="legend-swatch urgent" aria-hidden="true"></span>
-                  Urgent
-                </span>
-              </div>
             </div>
           </div>
         </div>
@@ -313,40 +231,11 @@ function DashboardPage() {
         <div className="institutional-card">
           <h3>Notifications</h3>
           <div className="notification-list">
-            {notifications.length === 0 ? (
-              <p className="small-muted" style={{ textAlign: 'center', padding: '16px' }}>No notifications</p>
-            ) : (
-              notifications.map((note) => (
-                <div key={note.id} className="notification-item">
-                  <span className="notification-message">{note.message}</span>
-                  <button
-                    type="button"
-                    className="notification-delete-btn"
-                    onClick={(event) => { event.stopPropagation(); setPendingNotificationDelete(note); }}
-                    disabled={deletingNotificationId === note.id}
-                    title="Delete notification"
-                    aria-label="Delete notification"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))
-            )}
+            {notifications.map((note) => (
+              <div key={note.id}>{note.message}</div>
+            ))}
           </div>
         </div>
-        {pendingNotificationDelete && (
-          <div className="notification-confirm-backdrop" role="presentation">
-            <div className="notification-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="dashboard-notification-confirm-title">
-              <strong id="dashboard-notification-confirm-title">Delete notification?</strong>
-              <p>{pendingNotificationDelete.message}</p>
-              <div className="notification-confirm-actions">
-                <button type="button" className="institutional-btn small secondary" onClick={() => setPendingNotificationDelete(null)}>Cancel</button>
-                <button type="button" className="institutional-btn small notification-confirm-delete" onClick={confirmDeleteNotification}>Delete</button>
-              </div>
-            </div>
-          </div>
-        )}
-        {deleteMessage && <div className="notification-success-popup" role="status">{deleteMessage}</div>}
       </div>
     </div>
   );

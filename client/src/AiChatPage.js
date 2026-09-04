@@ -4,6 +4,7 @@ import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 import NotificationBell from './NotificationBell';
 import LogoutButton from './LogoutButton';
+import HeaderProfile from './HeaderProfile';
 
 function AiChatPage() {
   const { token, user } = useAuth();
@@ -68,6 +69,7 @@ function AiChatPage() {
             )}
           </div>
           <div className="header-actions">
+            <HeaderProfile user={user} />
             <LogoutButton />
             <NotificationBell />
           </div>
