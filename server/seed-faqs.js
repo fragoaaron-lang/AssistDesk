@@ -49,6 +49,13 @@ const faqData = {
   library: [
     ['Who is the point person of the Library?', 'The point person of the Library is Julieta SJ. Belandres.', 'library point person julieta belandres'],
   ],
+  nursing: [
+    ['Who is the dean, secretary, or point person of the Nursing Department?', 'The dean of the Nursing Department is Dean Perlita Santiago. The secretary and point person were not provided.', 'nursing department dean secretary point person perlita santiago'],
+    ['Where can I get the modules or books in the Nursing Department?', 'You can get the modules at the Library, or avail of Nursing books at the Dean\'s Office. In some cases, professors provide the books and e-books.', 'nursing department modules books library dean office professors ebooks'],
+    ['Where can I get Nursing uniforms?', 'Nursing uniforms are available at the Nightingales Office, beside the Anatomy Room.', 'nursing uniform nightingales office anatomy room'],
+    ['Where can I get the Nursing class schedule?', 'You can wait for the class schedule or check it on the bulletin board in front of the Dean\'s Office.', 'nursing department class schedule bulletin board dean office'],
+    ['Where is the Nursing Department building?', 'The Nursing Department building is near the Administration Building on the right side. Nursing department faculty can be found on the third floor of the Administration Building.', 'nursing department building administration building faculty third floor'],
+  ],
   basic: [
     ['Who is the principal of Basic Education?', 'The principal of Basic Education is Mr. Dindo Punzalan.', 'basic education principal dindo punzalan'],
     ['Where can I get a Basic Education uniform or PE uniform?', 'Basic Education uniforms and PE uniforms are available at the Principal\'s Office.', 'basic education uniform pe uniform principal office'],
