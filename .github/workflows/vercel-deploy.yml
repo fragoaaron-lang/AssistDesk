@@ -1,14 +1,12 @@
-name: Deploy to Vercel
+name: Verify application
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  deploy:
+  verify:
     runs-on: ubuntu-latest
-    env:
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,16 +16,15 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install Vercel CLI
-        run: npm install -g vercel
-
-      - name: Vercel Deploy (CLI)
-        if: ${{ env.VERCEL_TOKEN != '' }}
-        continue-on-error: true
+      - name: Build client
         run: |
           cd client
-          vercel --prod --confirm --token "$VERCEL_TOKEN"
+          npm ci
+          npm run build
 
-      - name: Skip Vercel CLI deploy when token is not configured
-        if: ${{ env.VERCEL_TOKEN == '' }}
-        run: echo "VERCEL_TOKEN is not configured; skipping optional Vercel CLI deployment."
+      - name: Check server syntax
+        run: |
+          cd server
+          npm ci
+          node --check server.js
+          node --check controllers/authController.js
