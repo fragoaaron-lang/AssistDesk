@@ -23,6 +23,7 @@ jobs:
 
       - name: Vercel Deploy (CLI)
         if: ${{ env.VERCEL_TOKEN != '' }}
+        continue-on-error: true
         run: |
           cd client
           vercel --prod --confirm --token "$VERCEL_TOKEN"
