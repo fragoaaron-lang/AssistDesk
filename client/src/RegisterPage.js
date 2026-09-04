@@ -4,6 +4,22 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { API_BASE_URL } from './config';
 
+const fallbackDepartments = [
+  { id: 1, name: 'Basic Education Department' },
+  { id: 2, name: 'College of Nursing' },
+  { id: 3, name: 'CS', display_name: 'Computer Science Department' },
+  { id: 4, name: 'CBA', display_name: 'College of Business Administration' },
+  { id: 5, name: 'CHARM', display_name: 'College of Hospitality and Restaurant Management' },
+  { id: 6, name: 'College of Criminology' },
+  { id: 7, name: 'College of Physical Therapy' },
+  { id: 8, name: 'Maintenance Department' },
+  { id: 9, name: 'Accounting Department' },
+  { id: 10, name: 'Library' },
+  { id: 11, name: 'Guidance', display_name: 'Guidance Office' },
+  { id: 12, name: 'Office of Student Affairs' },
+  { id: 13, name: 'IT Department', display_name: 'Information Technology Department' },
+];
+
 function RegisterPage({ modal = false, onSwitch }) {
   const [firstName, setFirstName] = useState('');
   const [middleInitial, setMiddleInitial] = useState('');
@@ -23,8 +39,8 @@ function RegisterPage({ modal = false, onSwitch }) {
 
   useEffect(() => {
     axios.get(`${API_BASE_URL}/api/catalog/departments`)
-      .then((response) => setDepartments(response.data.departments || []))
-      .catch(() => setDepartments([]));
+      .then((response) => setDepartments(response.data.departments?.length ? response.data.departments : fallbackDepartments))
+      .catch(() => setDepartments(fallbackDepartments));
   }, []);
 
   const handleSubmit = async (e) => {
