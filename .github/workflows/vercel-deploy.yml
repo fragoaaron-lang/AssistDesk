@@ -1,0 +1,24 @@
+name: Verify application
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Check server syntax
+        run: |
+          cd server
+          npm ci
+          node --check server.js
+          node --check controllers/authController.js
