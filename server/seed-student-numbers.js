@@ -2,10 +2,11 @@ const { Op } = require('sequelize');
 const { sequelize, User } = require('./models');
 
 const studentNumbers = [
-  ['Aaron', '2023-00461'],
-  ['Jhezz', '2021-00038'],
-  ['Andrei', '2021-00062'],
-  ['Gerald', '2023-00555'],
+  { label: 'Aaron', studentNumber: '2023-00461', firstName: 'Aaron' },
+  { label: 'Jhezz Louise Licudan', studentNumber: '2021-00038', email: 'jhelolicudan16@gmail.com' },
+  { label: 'Jhezz G. Licudan', studentNumber: '2021-00038', email: 'jhelolicudan@gmail.com' },
+  { label: 'Andrei', studentNumber: '2021-00062', firstName: 'Andrei' },
+  { label: 'Gerald', studentNumber: '2023-00555', firstName: 'Gerald' },
 ];
 
 async function seed() {
@@ -14,22 +15,22 @@ async function seed() {
 
   try {
     const results = [];
-    for (const [firstName, studentNumber] of studentNumbers) {
+    for (const target of studentNumbers) {
       const users = await User.findAll({
         where: {
           role: 'student',
-          name: { [Op.like]: `${firstName}%` },
+          ...(target.email ? { email: target.email } : { name: { [Op.like]: `${target.firstName}%` } }),
         },
         transaction,
       });
 
       if (users.length !== 1) {
-        throw new Error(`${firstName}: expected exactly one student account, found ${users.length}.`);
+        throw new Error(`${target.label}: expected exactly one student account, found ${users.length}.`);
       }
 
       const user = users[0];
-      await user.update({ student_number: studentNumber }, { transaction });
-      results.push({ id: user.id, name: user.name, student_number: studentNumber });
+      await user.update({ student_number: target.studentNumber }, { transaction });
+      results.push({ id: user.id, name: user.name, student_number: target.studentNumber });
     }
 
     await transaction.commit();
