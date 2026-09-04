@@ -9,6 +9,7 @@
     "db:test": "node db-test.js",
     "migrate": "node db-migrate.js",
     "seed:admins": "node seed-department-admins.js",
+    "seed:student-numbers": "node seed-student-numbers.js",
     "seed:faqs": "node seed-faqs.js"
   },
   "dependencies": {
