@@ -139,14 +139,14 @@ function AiChatPage() {
                 )}
                 {entry.ticket && (
                   <div style={{ marginTop: '0.4rem', background: '#eef7ff', padding: '0.7rem', borderRadius: '10px' }}>
-                    <div><strong>Ticket:</strong> #{entry.ticket.id}</div>
+                    <div><strong>Ticket:</strong> {entry.ticket.ticket_code || `#${entry.ticket.id}`}</div>
                     <div><strong>Status:</strong> {entry.ticket.status}</div>
                     <div><strong>Estimated completion:</strong> {new Date(entry.ticket.estimated_completion_at).toLocaleString()}</div>
                   </div>
                 )}
                 {entry.tickets && entry.tickets.map((ticket) => (
                   <div key={ticket.id} style={{ marginTop: '0.4rem', background: '#f7f7f7', padding: '0.7rem', borderRadius: '10px' }}>
-                    #{ticket.id} {ticket.subject} | {ticket.status} | ETA: {ticket.estimated_completion_at ? new Date(ticket.estimated_completion_at).toLocaleString() : 'pending'}
+                    {ticket.ticket_code || `#${ticket.id}`} {ticket.subject} | {ticket.status} | ETA: {ticket.estimated_completion_at ? new Date(ticket.estimated_completion_at).toLocaleString() : 'pending'}
                   </div>
                 ))}
               </div>

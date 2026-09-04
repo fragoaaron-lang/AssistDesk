@@ -14,6 +14,7 @@ const departmentAliases = {
   accounting: ['Accounting', 'Accounting Department'],
   guidance: ['Guidance'],
   library: ['Library'],
+  cba: ['CBA', 'College of Business Administration', 'Accountancy'],
 };
 
 const faqData = {
@@ -55,6 +56,13 @@ const faqData = {
     ['Where can I get Nursing uniforms?', 'Nursing uniforms are available at the Nightingales Office, beside the Anatomy Room.', 'nursing uniform nightingales office anatomy room'],
     ['Where can I get the Nursing class schedule?', 'You can wait for the class schedule or check it on the bulletin board in front of the Dean\'s Office.', 'nursing department class schedule bulletin board dean office'],
     ['Where is the Nursing Department building?', 'The Nursing Department building is near the Administration Building on the right side. Nursing department faculty can be found on the third floor of the Administration Building.', 'nursing department building administration building faculty third floor'],
+  ],
+  cba: [
+    ['Who is the dean, secretary, or point person of the CBA Department?', 'Dean Lalaine Toriado is the dean, and Ms. Rosenel Magday is the secretary and point person.', 'cba bsa bsba accountancy business administration dean secretary point person lalaine toriado rosenel magday'],
+    ['Where can I get the modules in the CBA Department?', 'You can get the modules from the CBA Faculty.', 'cba bsa bsba modules faculty'],
+    ['Where can I get BSA or BSBA uniforms?', 'You can get BSA or BSBA uniforms from the CBA Faculty.', 'cba bsa bsba uniform faculty'],
+    ['Where can I get the CBA class schedule?', 'You can get the CBA class schedule at the corner of the CBA bulletin board.', 'cba bsa bsba class schedule bulletin board corner'],
+    ['Where is the BSA or BSBA Department building?', 'The CBA Building can be found near the Education Building, on the right side.', 'cba bsa bsba department building education building right side'],
   ],
   basic: [
     ['Who is the principal of Basic Education?', 'The principal of Basic Education is Mr. Dindo Punzalan.', 'basic education principal dindo punzalan'],

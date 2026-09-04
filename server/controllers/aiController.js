@@ -1,5 +1,6 @@
 const { Faq, Service, Department, ChatLog, Ticket, TicketUpdate, Notification } = require('../models');
 const { notifyUser, notifyAdmins, notifyDepartmentAdmins } = require('../utils/socket');
+const { addTicketNumber } = require('../utils/ticketNumber');
 
 const normalize = (text) =>
   String(text || '')
@@ -139,6 +140,11 @@ const schoolKnowledgeBase = [
   ['Where can I get Nursing uniforms?', 'Nursing uniforms are available at the Nightingales Office beside the Anatomy Room.'],
   ['Where can I get the class schedule in the Nursing Department?', 'Wait for the class schedule or check the bulletin board in front of the Dean\'s Office.'],
   ['Where is the Nursing Department building?', 'The Nursing Department building is near the Administration Building on the right side. Nursing department faculty can be found on the third floor of the Administration Building.'],
+  ['Who is the dean, secretary, or point person of the CBA Department?', 'Dean Lalaine Toriado is the dean, and Ms. Rosenel Magday is the secretary and point person.'],
+  ['Where can I get the modules in the CBA Department?', 'You can get the modules from the CBA Faculty.'],
+  ['Where can I get BSA or BSBA uniforms?', 'You can get BSA or BSBA uniforms from the CBA Faculty.'],
+  ['Where can I get the CBA class schedule?', 'You can get the CBA class schedule at the corner of the CBA bulletin board.'],
+  ['Where is the BSA or BSBA Department building?', 'The CBA Building can be found near the Education Building, on the right side.'],
   ['What is Tomas Claudio Colleges?', 'Tomas Claudio Colleges (TCC) is a pioneering, community-owned educational institution in Taghangin, Morong, Rizal, Philippines. Founded on August 15, 1950, it honors Tomas Claudio, a local native recognized as the first Filipino national hero to die during World War I. TCC is a private institution in eastern Rizal offering programs from basic education through postgraduate studies.'],
   ['What does Tomas Claudio Colleges offer?', 'TCC offers Accountancy, Business Administration, Public Administration, Computer Science, Elementary Education, Secondary Education, Criminology, Hospitality Management, Nursing, Physical Therapy, and TESDA Caregiving courses. Basic Education includes Kindergarten, Elementary, Junior High School, Senior High School, and Special Needs Education. Graduate programs include Master in Business Administration, Master in Public Administration, and Master of Arts in Education. TCC also offers the College of Law Juris Doctor program.'],
   ['What are the admission requirements?', 'For incoming freshmen: Grade 12 Report Card (Form 138), Certificate of Good Moral Character, photocopy of PSA birth certificate, and two 2x2 ID pictures with name tag. For transferees: original Transcript of Records, Honorable Dismissal with Scholastic Record, photocopy of PSA birth certificate, and two 2x2 ID pictures with name tag. For cross-enrollees: Permit to Cross-Enroll, Certificate of Good Moral Character, photocopy of PSA birth certificate, and two 2x2 ID pictures with name tag. For graduate studies: original Transcript of Records, photocopy of birth certificate, marriage contract if married, and two 2x2 ID pictures with name tag.'],
@@ -291,6 +297,7 @@ const handleTicketCommand = async (message, userId) => {
   const normalized = normalize(message);
   if (normalized.startsWith('status') || normalized.includes('my tickets') || normalized.includes('track my')) {
     const tickets = await Ticket.findAll({ where: { user_id: userId }, include: [{ model: Department }], order: [['created_at', 'DESC']], limit: 10 });
+    tickets.forEach((ticket) => addTicketNumber(ticket));
     return {
       ai_response: tickets.length ? `You have ${tickets.length} recent request${tickets.length === 1 ? '' : 's'}.` : 'You have no submitted requests yet.',
       tickets,
@@ -315,13 +322,15 @@ const handleTicketCommand = async (message, userId) => {
     status: 'open',
     estimated_completion_at: getEstimatedCompletion('medium'),
   });
+  ticket.Department = department;
+  addTicketNumber(ticket);
   await TicketUpdate.create({ ticket_id: ticket.id, message: 'Ticket created through the assistant.', updated_by: userId });
   await Notification.create({ user_id: userId, message: `Your ticket "${ticket.subject}" has been created.` });
   notifyUser(userId, 'ticketCreated', { ticket });
   notifyAdmins('ticketCreated', { ticket });
   if (departmentId) notifyDepartmentAdmins(departmentId, 'ticketCreated', { ticket });
   return {
-    ai_response: `Your request was submitted${department ? ` to ${department.name}` : ''}.`,
+    ai_response: `Your request was submitted${department ? ` to ${department.name}` : ''}. Ticket ID: ${ticket.ticket_code}.`,
     ticket,
     action: 'created',
   };

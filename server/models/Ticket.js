@@ -7,6 +7,12 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
         autoIncrement: true,
       },
+      ticket_code: {
+        type: DataTypes.VIRTUAL,
+        get() {
+          return this.getDataValue('ticket_code');
+        },
+      },
       user_id: {
         type: DataTypes.INTEGER,
         allowNull: false,

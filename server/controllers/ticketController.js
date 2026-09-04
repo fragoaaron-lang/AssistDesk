@@ -1,5 +1,6 @@
 const { Ticket, TicketUpdate, Department, User, Notification, Faq, Service } = require('../models');
 const { notifyUser, notifyAdmins, notifyDepartmentAdmins } = require('../utils/socket');
+const { addTicketNumber } = require('../utils/ticketNumber');
 
 const normalize = (text) =>
   String(text || '')
@@ -76,6 +77,8 @@ exports.createTicket = async (req, res) => {
       status: 'open',
       estimated_completion_at: estimated_completion_at || getEstimatedCompletion(databasePriority),
     });
+    ticket.Department = await Department.findByPk(ticket.department_id, { attributes: ['name'] });
+    addTicketNumber(ticket);
 
     await TicketUpdate.create({
       ticket_id: ticket.id,
@@ -127,6 +130,7 @@ exports.getTickets = async (req, res) => {
     tickets.forEach((ticket) => {
       if (!ticket.category) ticket.category = 'Other';
       if (!ticket.estimated_completion_at) ticket.estimated_completion_at = getEstimatedCompletion(ticket.priority, ticket.created_at);
+      addTicketNumber(ticket);
     });
     return res.json(tickets);
   } catch (error) {
@@ -154,6 +158,7 @@ exports.getTicketById = async (req, res) => {
     } else if (ticket.user_id !== req.user.id) {
       return res.status(403).json({ message: 'Forbidden.' });
     }
+    addTicketNumber(ticket);
     return res.json(ticket);
   } catch (error) {
     console.error(error);
@@ -186,6 +191,7 @@ exports.updateTicketStatus = async (req, res) => {
       message: `Status updated to ${status}.`,
       updated_by: req.user.id,
     });
+    addTicketNumber(ticket);
 
     await Notification.create({
       user_id: ticket.user_id,

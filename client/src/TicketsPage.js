@@ -16,7 +16,7 @@ function TicketsPage() {
   const [services, setServices] = useState([]);
   const [form, setForm] = useState({ subject: '', description: '', category: 'Other', priority: 'medium', department_id: '' });
   const [attachment, setAttachment] = useState(null);
-  const [submissionState, setSubmissionState] = useState({ status: 'idle', message: '' });
+  const [submissionState, setSubmissionState] = useState({ status: 'idle', message: '', ticketCode: '' });
   const [expandedDepartments, setExpandedDepartments] = useState({});
 
   const loadTickets = async () => {
@@ -86,10 +86,10 @@ function TicketsPage() {
 
     try {
       if (isMaintenanceDepartment && !attachment) {
-        setSubmissionState({ status: 'error', message: 'Please upload an image for a maintenance ticket.' });
+        setSubmissionState({ status: 'error', message: 'Please upload an image for a maintenance ticket.', ticketCode: '' });
         return;
       }
-      await axios.post(`${API_BASE_URL}/api/tickets`, {
+      const response = await axios.post(`${API_BASE_URL}/api/tickets`, {
         ...form,
         user_id: user?.id || 0,
         attachment_data: attachment?.data || null,
@@ -102,10 +102,11 @@ function TicketsPage() {
       setForm({ subject: '', description: '', category: 'Other', priority: 'medium', department_id: nextDepartmentId });
       setAttachment(null);
       await loadTickets();
-      setSubmissionState({ status: 'success', message: 'Ticket created successfully.' });
-      window.setTimeout(() => setSubmissionState({ status: 'idle', message: '' }), 2200);
+      const ticketCode = response.data.ticket_code || response.data.id;
+      setSubmissionState({ status: 'success', message: 'Ticket created successfully.', ticketCode });
+      window.setTimeout(() => setSubmissionState({ status: 'idle', message: '', ticketCode: '' }), 2200);
     } catch (error) {
-      setSubmissionState({ status: 'error', message: 'Unable to create ticket. Please try again.' });
+      setSubmissionState({ status: 'error', message: 'Unable to create ticket. Please try again.', ticketCode: '' });
     }
   };
 
@@ -189,6 +190,9 @@ function TicketsPage() {
               {submissionState.status === 'loading' && <span className="ticket-notice-spinner" aria-hidden="true" />}
               {submissionState.status === 'success' && <span className="ticket-success-icon" aria-hidden="true">✓</span>}
               <span>{submissionState.message}</span>
+              {submissionState.status === 'success' && (
+                <strong className="ticket-notice-id">Ticket ID: {submissionState.ticketCode}</strong>
+              )}
             </div>
           </div>
         )}
@@ -287,7 +291,7 @@ function TicketsPage() {
                   <div className="ticket-department-contents">
                     {departmentGroup.tickets.map((ticket) => (
                       <div key={ticket.id}>
-                        <h4 style={{ margin: '0 0 6px' }}>{ticket.subject}</h4>
+                        <h4 style={{ margin: '0 0 6px' }}>{ticket.ticket_code || `#${ticket.id}`} · {ticket.subject}</h4>
                         <TicketProgressBar status={ticket.status} />
                         <div className="small-muted"><strong>Category:</strong> {ticket.category || 'Other'}</div>
                         <div className="small-muted"><strong>Priority:</strong> {ticket.priority}</div>

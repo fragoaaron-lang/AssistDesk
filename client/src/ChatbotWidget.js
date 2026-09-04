@@ -184,8 +184,8 @@ function ChatbotWidget() {
                 {entry.role === 'assistant' && <span style={{ fontSize: '1.2rem', marginRight: '8px' }}>{gender === 'boy' ? '👦' : '👧'}</span>}
                 <span>{entry.text}</span>
                 {entry.details && <small>{entry.details.name} · {entry.details.office_hours || 'Contact the department for office hours.'}</small>}
-                {entry.ticket && <small>Ticket #{entry.ticket.id} · Status: {entry.ticket.status}</small>}
-                {entry.tickets?.map((ticket) => <small key={ticket.id}>#{ticket.id} · {ticket.subject} · {ticket.status}</small>)}
+                {entry.ticket && <small>Ticket {entry.ticket.ticket_code || `#${entry.ticket.id}`} · Status: {entry.ticket.status}</small>}
+                {entry.tickets?.map((ticket) => <small key={ticket.id}>{ticket.ticket_code || `#${ticket.id}`} · {ticket.subject} · {ticket.status}</small>)}
               </div>
             ))}
             {sending && (
