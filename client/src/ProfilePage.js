@@ -427,6 +427,9 @@ function ProfilePage() {
               {user?.role === 'student' && user?.student_number && (
                 <div className="profile-meta">Student number: {user.student_number}</div>
               )}
+              {user?.role === 'student' && user?.department_name && (
+                <div className="profile-meta">Department: {user.department_name}</div>
+              )}
               <label className={`profile-upload-button ${photoUploadLoading ? 'loading' : ''}`}>
                 <input type="file" accept="image/*" onChange={handleProfilePhotoChange} disabled={photoUploadLoading} />
                 <span>{photoUploadLoading ? 'Uploading...' : 'Upload photo'}</span>

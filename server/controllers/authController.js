@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const { User, PasswordResetToken } = require('../models');
+const { User, Department, PasswordResetToken } = require('../models');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'assistdesk-secret';
 const JWT_EXPIRES_IN = '8h';
@@ -12,6 +12,7 @@ const sanitizeUser = (user) => ({
   email: user.email,
   role: user.role,
   department_id: user.department_id || null,
+  department_name: user.role === 'student' ? (user.Department?.name || null) : null,
   student_number: user.student_number || null,
   profile_picture: user.profile_picture || null,
   created_at: user.created_at,
@@ -53,6 +54,17 @@ exports.register = async (req, res) => {
     if (!PUBLIC_ROLES.includes(role)) {
       return res.status(403).json({ message: 'Administrator accounts are created by the system developer.' });
     }
+    let departmentId = null;
+    if (role === 'student') {
+      departmentId = Number(department_id);
+      if (!Number.isInteger(departmentId) || departmentId <= 0) {
+        return res.status(400).json({ message: 'Please select your department.' });
+      }
+      const department = await Department.findByPk(departmentId);
+      if (!department) {
+        return res.status(400).json({ message: 'Selected department is invalid.' });
+      }
+    }
     const passwordError = validatePassword(password);
 
     if (passwordError) {
@@ -70,10 +82,11 @@ exports.register = async (req, res) => {
       email: normalizedEmail,
       password_hash,
       role,
-      department_id: null,
+      department_id: departmentId,
       student_number: role === 'student' ? (student_number || null) : null,
     });
 
+    await user.reload({ include: [{ model: Department }] });
     const token = signToken(user);
 
     return res.status(201).json({
@@ -96,7 +109,7 @@ exports.login = async (req, res) => {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-    const user = await User.findOne({ where: { email: normalizedEmail } });
+    const user = await User.findOne({ where: { email: normalizedEmail }, include: [{ model: Department }] });
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
@@ -121,7 +134,7 @@ exports.login = async (req, res) => {
 
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findByPk(req.user.id);
+    const user = await User.findByPk(req.user.id, { include: [{ model: Department }] });
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
     }

@@ -5,7 +5,7 @@ const authorize = require('../middleware/authorize');
 
 const router = express.Router();
 
-router.get('/departments', authMiddleware, catalogController.getDepartments);
+router.get('/departments', catalogController.getDepartments);
 router.post('/departments', authMiddleware, authorize('admin'), catalogController.createDepartment);
 router.put('/departments/:id', authMiddleware, authorize('admin'), catalogController.updateDepartment);
 router.delete('/departments/:id', authMiddleware, authorize('admin'), catalogController.deleteDepartment);

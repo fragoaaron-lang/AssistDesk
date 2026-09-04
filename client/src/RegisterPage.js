@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
+import { API_BASE_URL } from './config';
 
 function RegisterPage({ modal = false, onSwitch }) {
   const [firstName, setFirstName] = useState('');
@@ -13,9 +15,17 @@ function RegisterPage({ modal = false, onSwitch }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [role, setRole] = useState('student');
+  const [departmentId, setDepartmentId] = useState('');
+  const [departments, setDepartments] = useState([]);
   const [message, setMessage] = useState('');
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    axios.get(`${API_BASE_URL}/api/catalog/departments`)
+      .then((response) => setDepartments(response.data.departments || []))
+      .catch(() => setDepartments([]));
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,7 +42,7 @@ function RegisterPage({ modal = false, onSwitch }) {
 
     try {
       const name = `${firstName.trim()} ${middleInitial.toUpperCase()}. ${lastName.trim()}`;
-      await register(name, email, password, role, null, studentNumber);
+      await register(name, email, password, role, role === 'student' ? departmentId : null, studentNumber);
       navigate('/dashboard');
     } catch (error) {
       setMessage(error.response?.data?.message || 'Registration failed.');
@@ -59,7 +69,15 @@ function RegisterPage({ modal = false, onSwitch }) {
             </div>
             <input className="institutional-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" required />
             {role === 'student' && (
-              <input className="institutional-input" type="text" value={studentNumber} onChange={(e) => setStudentNumber(e.target.value)} placeholder="Student number" />
+              <>
+                <input className="institutional-input" type="text" value={studentNumber} onChange={(e) => setStudentNumber(e.target.value)} placeholder="Student number" />
+                <select className="institutional-select" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} required>
+                  <option value="">Select your department</option>
+                  {departments.map((department) => (
+                    <option key={department.id} value={department.id}>{department.display_name || department.name}</option>
+                  ))}
+                </select>
+              </>
             )}
             <div className="password-field">
               <input className="institutional-input" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
@@ -70,7 +88,7 @@ function RegisterPage({ modal = false, onSwitch }) {
               <button type="button" className={`password-visibility ${showConfirmPassword ? 'visible' : ''}`} onClick={() => setShowConfirmPassword((visible) => !visible)} aria-label={showConfirmPassword ? 'Hide confirmed password' : 'Show confirmed password'}><span className="password-eye" aria-hidden="true" /></button>
             </div>
             <p className="helper-text">Use 8+ characters with uppercase, lowercase, number, and symbol.</p>
-            <select className="institutional-select" value={role} onChange={(e) => setRole(e.target.value)}>
+            <select className="institutional-select" value={role} onChange={(e) => { setRole(e.target.value); if (e.target.value !== 'student') setDepartmentId(''); }}>
               <option value="student">Student</option>
               <option value="faculty">Faculty</option>
               <option value="staff">Staff</option>
@@ -78,7 +96,7 @@ function RegisterPage({ modal = false, onSwitch }) {
             <button className="institutional-btn" type="submit" style={{ width: '100%' }}>Register</button>
           </form>
           {message && <p style={{ color: 'red', marginTop: '0.8rem' }}>{message}</p>}
-          <p className="helper-text">{modal ? <button type="button" className="auth-switch-button" onClick={onSwitch}>Already have an account?</button> : <a href="/login">Already have an account?</a>}</p>
+          <p className="helper-text">{modal ? <button type="button" className="auth-switch-button" onClick={onSwitch}>Already have an account?</button> : <a href="/">Already have an account?</a>}</p>
         </div>
       </div>
     </div>
