@@ -963,6 +963,14 @@ button, input, select, textarea {
   margin-bottom: 12px;
 }
 
+.profile-security-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .profile-section-header h3 {
   margin: 0;
 }

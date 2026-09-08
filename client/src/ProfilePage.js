@@ -550,13 +550,18 @@ function ProfilePage() {
         <div className="institutional-card">
           <div className="profile-section-header">
             <h3>Security</h3>
-            <button
-              type="button"
-              className="institutional-btn secondary small"
-              onClick={() => setShowPasswordEditor((prev) => !prev)}
-            >
-              {showPasswordEditor ? 'Close' : 'Change password'}
-            </button>
+            <div className="profile-security-actions">
+              <button
+                type="button"
+                className="institutional-btn secondary small"
+                onClick={() => setShowPasswordEditor((prev) => !prev)}
+              >
+                {showPasswordEditor ? 'Close' : 'Change password'}
+              </button>
+              <button type="button" className="institutional-btn danger small" onClick={handleDeleteAccount}>
+                Delete your account
+              </button>
+            </div>
           </div>
 
           {showPasswordEditor && (
@@ -629,11 +634,6 @@ function ProfilePage() {
             </>
           )}
 
-          <div style={{ marginTop: '18px' }}>
-            <button type="button" className="institutional-btn danger small" onClick={handleDeleteAccount}>
-              Delete your account
-            </button>
-          </div>
         </div>
       </div>
     </div>
