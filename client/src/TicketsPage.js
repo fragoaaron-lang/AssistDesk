@@ -17,6 +17,8 @@ function TicketsPage() {
   const [attachment, setAttachment] = useState(null);
   const [submissionState, setSubmissionState] = useState({ status: 'idle', message: '', ticketCode: '' });
   const [expandedDepartments, setExpandedDepartments] = useState({});
+  const [expandedRoles, setExpandedRoles] = useState({});
+  const [selectedTicket, setSelectedTicket] = useState(null);
 
   const loadTickets = async () => {
     const res = await axios.get(`${API_BASE_URL}/api/tickets`, {
@@ -78,12 +80,34 @@ function TicketsPage() {
     return groups;
   }, {})).sort((first, second) => first.name.localeCompare(second.name));
 
+  const adminRoleGroups = ['student', 'faculty', 'staff', 'unassigned'].map((role) => {
+    const roleTickets = tickets.filter((ticket) => ticket.User?.role === role || (!ticket.User?.role && role === 'unassigned'));
+    if (role !== 'student') return { key: role, name: role[0].toUpperCase() + role.slice(1), tickets: roleTickets, departments: [] };
+    const departmentsByKey = roleTickets.reduce((groups, ticket) => {
+      const { key, name } = getDepartmentFolder(ticket.User?.Department);
+      if (!groups[key]) groups[key] = { key, name, tickets: [] };
+      groups[key].tickets.push(ticket);
+      return groups;
+    }, {});
+    return { key: role, name: 'Student', tickets: roleTickets, departments: Object.values(departmentsByKey).sort((a, b) => a.name.localeCompare(b.name)) };
+  });
+
   const toggleDepartment = (departmentName) => {
     setExpandedDepartments((current) => ({
       ...current,
       [departmentName]: current[departmentName] !== true,
     }));
   };
+
+  const toggleRole = (roleName) => {
+    setExpandedRoles((current) => ({ ...current, [roleName]: current[roleName] !== true }));
+  };
+
+  const renderAdminTicketButton = (ticket) => (
+    <button type="button" className="admin-ticket-id-button" onClick={() => setSelectedTicket(ticket)}>
+      {ticket.ticket_code || `#${ticket.id}`}
+    </button>
+  );
 
   const createTicket = async (e) => {
     e.preventDefault();
@@ -277,6 +301,33 @@ function TicketsPage() {
 
         <div className="institutional-card">
           <h3>Recent tickets</h3>
+          {user?.role === 'admin' ? (
+            <div className="list-stack admin-ticket-folders">
+              {adminRoleGroups.map((roleGroup) => (
+                <section key={roleGroup.key} className="ticket-department-group">
+                  <button type="button" className="ticket-department-heading admin-role-folder" onClick={() => toggleRole(roleGroup.key)} aria-expanded={expandedRoles[roleGroup.key] === true}>
+                    <span className="ticket-folder-icon" aria-hidden="true" />
+                    <span>{roleGroup.name}</span>
+                    <span className="ticket-department-count">{roleGroup.tickets.length}</span>
+                  </button>
+                  {expandedRoles[roleGroup.key] === true && (
+                    <div className="ticket-department-contents">
+                      {roleGroup.key === 'student' ? roleGroup.departments.map((departmentGroup) => (
+                        <section key={departmentGroup.key} className="ticket-department-group admin-nested-folder">
+                          <button type="button" className="ticket-department-heading" onClick={() => toggleDepartment(`admin-${departmentGroup.key}`)} aria-expanded={expandedDepartments[`admin-${departmentGroup.key}`] === true}>
+                            <span className="ticket-folder-icon" aria-hidden="true" />
+                            <span>{departmentGroup.name}</span>
+                            <span className="ticket-department-count">{departmentGroup.tickets.length}</span>
+                          </button>
+                          {expandedDepartments[`admin-${departmentGroup.key}`] === true && <div className="admin-ticket-id-list">{departmentGroup.tickets.map(renderAdminTicketButton)}</div>}
+                        </section>
+                      )) : <div className="admin-ticket-id-list">{roleGroup.tickets.map(renderAdminTicketButton)}</div>}
+                    </div>
+                  )}
+                </section>
+              ))}
+            </div>
+          ) : (
           <div className="list-stack">
             {groupedTickets.map((departmentGroup) => (
               <section key={departmentGroup.name} className="ticket-department-group">
@@ -319,7 +370,36 @@ function TicketsPage() {
               </section>
             ))}
           </div>
+          )}
         </div>
+        {selectedTicket && (
+          <div className="ticket-detail-modal-backdrop" role="presentation" onMouseDown={() => setSelectedTicket(null)}>
+            <div className="ticket-detail-modal" role="dialog" aria-modal="true" aria-labelledby="ticket-detail-title" onMouseDown={(event) => event.stopPropagation()}>
+              <div className="ticket-detail-modal-header">
+                <div>
+                  <p className="small-muted">Ticket ID</p>
+                  <h3 id="ticket-detail-title">{selectedTicket.ticket_code || `#${selectedTicket.id}`}</h3>
+                </div>
+                <button type="button" className="ticket-detail-close" onClick={() => setSelectedTicket(null)} aria-label="Close ticket details">×</button>
+              </div>
+              <h4>{selectedTicket.subject}</h4>
+              <TicketProgressBar status={selectedTicket.status} />
+              <p>{selectedTicket.description}</p>
+              <div className="ticket-detail-meta">
+                <div><strong>Requester:</strong> {selectedTicket.User?.name || selectedTicket.User?.email || 'Unknown'}</div>
+                <div><strong>Requester department:</strong> {selectedTicket.User?.Department?.name || 'Unassigned'}</div>
+                <div><strong>Routed department:</strong> {selectedTicket.Department?.name || 'Unassigned'}</div>
+                <div><strong>Category:</strong> {selectedTicket.category || 'Other'}</div>
+                <div><strong>Priority:</strong> {selectedTicket.priority}</div>
+                <div><strong>Estimated completion:</strong> {selectedTicket.estimated_completion_at ? new Date(selectedTicket.estimated_completion_at).toLocaleString() : 'Being estimated'}</div>
+              </div>
+              {selectedTicket.attachment_data && <img className="ticket-attachment-image" src={selectedTicket.attachment_data} alt={selectedTicket.attachment_name || 'Ticket attachment'} />}
+              <div className="inline-actions">
+                {['open', 'pending', 'in_progress', 'resolved', 'closed'].map((status) => <button key={status} type="button" className="institutional-btn small secondary" onClick={() => { updateStatus(selectedTicket.id, status); setSelectedTicket(null); }}>{status.replace('_', ' ')}</button>)}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
