@@ -2115,10 +2115,6 @@ button, input, select, textarea {
   align-items: center;
   gap: 10px;
   margin-top: 4px;
-  padding: 8px;
-  border: 1px solid #b9dfe1;
-  border-radius: 9px;
-  background: #ffffff;
 }
 
 .ticket-image-preview-button {
