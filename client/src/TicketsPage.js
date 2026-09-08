@@ -19,6 +19,7 @@ function TicketsPage() {
   const [expandedDepartments, setExpandedDepartments] = useState({});
   const [expandedRoles, setExpandedRoles] = useState({});
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const [updatingStatus, setUpdatingStatus] = useState('');
 
   const loadTickets = async () => {
     const res = await axios.get(`${API_BASE_URL}/api/tickets`, {
@@ -166,10 +167,20 @@ function TicketsPage() {
   };
 
   const updateStatus = async (id, status) => {
-    await axios.put(`${API_BASE_URL}/api/tickets/${id}/status`, { status }, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    loadTickets();
+    if (updatingStatus) return;
+
+    setUpdatingStatus(status);
+    try {
+      const response = await axios.put(`${API_BASE_URL}/api/tickets/${id}/status`, { status }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setSelectedTicket((current) => (current?.id === id ? { ...current, status: response.data.status || status } : current));
+      await loadTickets();
+    } catch (error) {
+      setSubmissionState({ status: 'error', message: error.response?.data?.message || 'Unable to update ticket status.', ticketCode: '' });
+    } finally {
+      setUpdatingStatus('');
+    }
   };
 
   const deleteTicket = async (ticket) => {
@@ -377,7 +388,12 @@ function TicketsPage() {
                 <button type="button" className="ticket-detail-close" onClick={() => setSelectedTicket(null)} aria-label="Close ticket details">×</button>
               </div>
               <h4>{selectedTicket.subject}</h4>
-              <TicketProgressBar status={selectedTicket.status} />
+              <TicketProgressBar
+                status={selectedTicket.status}
+                canUpdate={user?.role === 'admin'}
+                onStatusChange={(status) => updateStatus(selectedTicket.id, status)}
+                updatingStatus={updatingStatus}
+              />
               <p>{selectedTicket.description}</p>
               <div className="ticket-detail-meta">
                 <div><strong>Requester:</strong> {selectedTicket.User?.name || selectedTicket.User?.email || 'Unknown'}</div>
@@ -389,7 +405,6 @@ function TicketsPage() {
               </div>
               {selectedTicket.attachment_data && <img className="ticket-attachment-image" src={selectedTicket.attachment_data} alt={selectedTicket.attachment_name || 'Ticket attachment'} />}
               <div className="inline-actions">
-                {user?.role === 'admin' && ['open', 'pending', 'in_progress', 'resolved', 'closed'].map((status) => <button key={status} type="button" className="institutional-btn small secondary" onClick={() => { updateStatus(selectedTicket.id, status); setSelectedTicket(null); }}>{status.replace('_', ' ')}</button>)}
                 {user?.role !== 'admin' && <button type="button" className="institutional-btn small danger" onClick={() => { deleteTicket(selectedTicket); setSelectedTicket(null); }}>Delete ticket</button>}
               </div>
             </div>

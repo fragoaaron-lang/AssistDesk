@@ -1530,6 +1530,34 @@ button, input, select, textarea {
   position: relative;
 }
 
+.ticket-progress-step.interactive {
+  appearance: none;
+  width: 92px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ticket-progress-step.interactive:hover .ticket-progress-dot,
+.ticket-progress-step.interactive:focus-visible .ticket-progress-dot {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 4px rgba(31, 111, 120, 0.14);
+}
+
+.ticket-progress-step.interactive:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.ticket-progress-step.interactive:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
 .ticket-progress-dot {
   width: 16px;
   height: 16px;
@@ -1575,7 +1603,13 @@ button, input, select, textarea {
 .ticket-progress-status {
   display: flex;
   justify-content: flex-start;
+  align-items: center;
   gap: 8px;
+}
+
+.ticket-progress-hint {
+  color: var(--muted);
+  font-size: 0.78rem;
 }
 
 .ticket-status-badge {
