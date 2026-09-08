@@ -356,33 +356,9 @@ function TicketsPage() {
                 </button>
                 {expandedDepartments[departmentGroup.name] === true && (
                   <div className="ticket-department-contents">
-                    {departmentGroup.tickets.map((ticket) => (
-                      <div key={ticket.id}>
-                        <h4 style={{ margin: '0 0 6px' }}>{ticket.ticket_code || `#${ticket.id}`} · {ticket.subject}</h4>
-                        <TicketProgressBar status={ticket.status} />
-                        <div className="small-muted"><strong>Category:</strong> {ticket.category || 'Other'}</div>
-                        {user?.role === 'admin' && <div className="small-muted"><strong>Requester:</strong> {ticket.User?.name || ticket.User?.email || 'Unknown'}</div>}
-                        {user?.role === 'admin' && <div className="small-muted"><strong>Routed department:</strong> {ticket.Department?.name || 'Unassigned'}</div>}
-                        <div className="small-muted"><strong>Priority:</strong> {ticket.priority}</div>
-                        <div className="small-muted"><strong>Estimated completion:</strong> {ticket.estimated_completion_at ? new Date(ticket.estimated_completion_at).toLocaleString() : 'Being estimated'}</div>
-                        <p style={{ margin: '8px 0 0' }}>{ticket.description}</p>
-                        {ticket.attachment_data && <img className="ticket-attachment-image" src={ticket.attachment_data} alt={ticket.attachment_name || 'Ticket attachment'} />}
-                        {user?.role !== 'admin' && (
-                          <div className="inline-actions">
-                            <button type="button" className="institutional-btn small danger" onClick={() => deleteTicket(ticket)}>Delete ticket</button>
-                          </div>
-                        )}
-                        {user?.role === 'admin' && (
-                          <div className="inline-actions">
-                            <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'open')}>Open</button>
-                            <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'pending')}>Pending</button>
-                            <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'in_progress')}>In Progress</button>
-                            <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'resolved')}>Resolved</button>
-                            <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'closed')}>Closed</button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                    <div className="admin-ticket-id-list">
+                      {departmentGroup.tickets.map(renderAdminTicketButton)}
+                    </div>
                   </div>
                 )}
               </section>
@@ -413,7 +389,8 @@ function TicketsPage() {
               </div>
               {selectedTicket.attachment_data && <img className="ticket-attachment-image" src={selectedTicket.attachment_data} alt={selectedTicket.attachment_name || 'Ticket attachment'} />}
               <div className="inline-actions">
-                {['open', 'pending', 'in_progress', 'resolved', 'closed'].map((status) => <button key={status} type="button" className="institutional-btn small secondary" onClick={() => { updateStatus(selectedTicket.id, status); setSelectedTicket(null); }}>{status.replace('_', ' ')}</button>)}
+                {user?.role === 'admin' && ['open', 'pending', 'in_progress', 'resolved', 'closed'].map((status) => <button key={status} type="button" className="institutional-btn small secondary" onClick={() => { updateStatus(selectedTicket.id, status); setSelectedTicket(null); }}>{status.replace('_', ' ')}</button>)}
+                {user?.role !== 'admin' && <button type="button" className="institutional-btn small danger" onClick={() => { deleteTicket(selectedTicket); setSelectedTicket(null); }}>Delete ticket</button>}
               </div>
             </div>
           </div>
