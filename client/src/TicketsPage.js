@@ -20,6 +20,23 @@ function TicketsPage() {
   const [expandedRoles, setExpandedRoles] = useState({});
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [updatingStatus, setUpdatingStatus] = useState('');
+  const [etaDraft, setEtaDraft] = useState('');
+  const [updateMessage, setUpdateMessage] = useState('');
+  const [ticketActionState, setTicketActionState] = useState('idle');
+
+  const toDateTimeLocal = (value) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    const offset = date.getTimezoneOffset();
+    return new Date(date.getTime() - offset * 60000).toISOString().slice(0, 16);
+  };
+
+  const formatDateTime = (value) => {
+    if (!value) return 'Not available';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? 'Not available' : date.toLocaleString();
+  };
 
   const loadTickets = async () => {
     const res = await axios.get(`${API_BASE_URL}/api/tickets`, {
@@ -105,7 +122,12 @@ function TicketsPage() {
   };
 
   const renderAdminTicketButton = (ticket) => (
-    <button type="button" className="admin-ticket-id-button" onClick={() => setSelectedTicket(ticket)}>
+    <button type="button" className="admin-ticket-id-button" onClick={() => {
+      setSelectedTicket(ticket);
+      setEtaDraft(toDateTimeLocal(ticket.estimated_completion_at));
+      setUpdateMessage('');
+      setTicketActionState('idle');
+    }}>
       {ticket.ticket_code || `#${ticket.id}`}
     </button>
   );
@@ -180,6 +202,50 @@ function TicketsPage() {
       setSubmissionState({ status: 'error', message: error.response?.data?.message || 'Unable to update ticket status.', ticketCode: '' });
     } finally {
       setUpdatingStatus('');
+    }
+  };
+
+  const updateEta = async (event) => {
+    event.preventDefault();
+    if (!selectedTicket || !etaDraft) return;
+
+    setTicketActionState('eta');
+    try {
+      const response = await axios.put(`${API_BASE_URL}/api/tickets/${selectedTicket.id}/eta`, {
+        estimated_completion_at: new Date(etaDraft).toISOString(),
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      setSelectedTicket((current) => ({
+        ...current,
+        estimated_completion_at: response.data.ticket.estimated_completion_at,
+        TicketUpdates: [...(current.TicketUpdates || []), response.data.update],
+      }));
+      await loadTickets();
+    } catch (error) {
+      setSubmissionState({ status: 'error', message: error.response?.data?.message || 'Unable to update the ticket ETA.', ticketCode: '' });
+    } finally {
+      setTicketActionState('idle');
+    }
+  };
+
+  const addUpdate = async (event) => {
+    event.preventDefault();
+    if (!selectedTicket || !updateMessage.trim()) return;
+
+    setTicketActionState('update');
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/tickets/${selectedTicket.id}/updates`, {
+        message: updateMessage.trim(),
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      setSelectedTicket((current) => ({
+        ...current,
+        TicketUpdates: [...(current.TicketUpdates || []), response.data],
+      }));
+      setUpdateMessage('');
+      await loadTickets();
+    } catch (error) {
+      setSubmissionState({ status: 'error', message: error.response?.data?.message || 'Unable to add ticket update.', ticketCode: '' });
+    } finally {
+      setTicketActionState('idle');
     }
   };
 
@@ -401,8 +467,38 @@ function TicketsPage() {
                 <div><strong>Routed department:</strong> {selectedTicket.Department?.name || 'Unassigned'}</div>
                 <div><strong>Category:</strong> {selectedTicket.category || 'Other'}</div>
                 <div><strong>Priority:</strong> {selectedTicket.priority}</div>
-                <div><strong>Estimated completion:</strong> {selectedTicket.estimated_completion_at ? new Date(selectedTicket.estimated_completion_at).toLocaleString() : 'Being estimated'}</div>
+                <div><strong>Estimated completion:</strong> {formatDateTime(selectedTicket.estimated_completion_at)}</div>
               </div>
+              <section className="ticket-update-section" aria-labelledby="ticket-updates-title">
+                <div className="ticket-update-heading">
+                  <h5 id="ticket-updates-title">Ticket updates</h5>
+                  <span>{(selectedTicket.TicketUpdates || []).length} updates</span>
+                </div>
+                {(selectedTicket.TicketUpdates || []).length > 0 ? (
+                  <div className="ticket-update-list">
+                    {[...(selectedTicket.TicketUpdates || [])].sort((first, second) => new Date(first.created_at) - new Date(second.created_at)).map((update) => (
+                      <article key={update.id} className="ticket-update-item">
+                        <div className="ticket-update-item-meta">{formatDateTime(update.created_at)}</div>
+                        <p>{update.message}</p>
+                      </article>
+                    ))}
+                  </div>
+                ) : <p className="small-muted">No updates have been posted yet.</p>}
+              </section>
+              {user?.role === 'admin' && (
+                <div className="ticket-admin-controls">
+                  <form className="ticket-eta-form" onSubmit={updateEta}>
+                    <label htmlFor="ticket-eta"><strong>Set ETA</strong><span>Only admins can change this.</span></label>
+                    <input id="ticket-eta" className="institutional-input" type="datetime-local" value={etaDraft} onChange={(event) => setEtaDraft(event.target.value)} required />
+                    <button className="institutional-btn small" type="submit" disabled={ticketActionState !== 'idle'}>{ticketActionState === 'eta' ? 'Saving...' : 'Save ETA'}</button>
+                  </form>
+                  <form className="ticket-update-form" onSubmit={addUpdate}>
+                    <label htmlFor="ticket-update-message"><strong>Post an update</strong><span>This message will be visible to the requester.</span></label>
+                    <textarea id="ticket-update-message" className="institutional-textarea" rows="3" value={updateMessage} onChange={(event) => setUpdateMessage(event.target.value)} placeholder="Share progress or next steps" required />
+                    <button className="institutional-btn small" type="submit" disabled={ticketActionState !== 'idle'}>{ticketActionState === 'update' ? 'Posting...' : 'Post update'}</button>
+                  </form>
+                </div>
+              )}
               {selectedTicket.attachment_data && <img className="ticket-attachment-image" src={selectedTicket.attachment_data} alt={selectedTicket.attachment_name || 'Ticket attachment'} />}
               <div className="inline-actions">
                 {user?.role !== 'admin' && <button type="button" className="institutional-btn small danger" onClick={() => { deleteTicket(selectedTicket); setSelectedTicket(null); }}>Delete ticket</button>}

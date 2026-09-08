@@ -1941,6 +1941,89 @@ button, input, select, textarea {
 .ticket-detail-close { border: 0; background: transparent; color: var(--navy); font-size: 1.8rem; line-height: 1; cursor: pointer; }
 .ticket-detail-meta { display: grid; gap: 6px; margin: 14px 0; color: var(--muted); }
 
+.ticket-update-section {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.ticket-update-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.ticket-update-heading h5 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 1rem;
+}
+
+.ticket-update-heading span {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.ticket-update-list {
+  display: grid;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.ticket-update-item {
+  padding: 10px 12px;
+  border-left: 3px solid var(--teal);
+  background: var(--surface-soft);
+}
+
+.ticket-update-item-meta {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.ticket-update-item p {
+  margin: 4px 0 0;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+
+.ticket-admin-controls {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.ticket-eta-form,
+.ticket-update-form {
+  display: grid;
+  gap: 8px;
+}
+
+.ticket-eta-form label,
+.ticket-update-form label {
+  display: grid;
+  gap: 2px;
+  color: var(--navy);
+}
+
+.ticket-eta-form label span,
+.ticket-update-form label span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+.ticket-eta-form .institutional-btn,
+.ticket-update-form .institutional-btn {
+  justify-self: start;
+}
+
 .ticket-image-upload {
   display: grid;
   gap: 6px;
