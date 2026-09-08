@@ -416,10 +416,6 @@ function TicketsPage() {
                 </div>
               )}
               <select className="institutional-select" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-                <option>Broken Door</option>
-                <option>Broken Chair</option>
-                <option>Broken Window</option>
-                <option>Broken PC</option>
                 <option>Hardware</option>
                 <option>Building Maintenance</option>
                 <option>Department Concern</option>
