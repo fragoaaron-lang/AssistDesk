@@ -232,7 +232,7 @@ function TicketsPage() {
               {submissionState.status === 'success' && <span className="ticket-success-icon" aria-hidden="true">✓</span>}
               <span>{submissionState.message}</span>
               {submissionState.status === 'success' && (
-                <strong className="ticket-notice-id">Ticket ID: {submissionState.ticketCode}</strong>
+                <strong className="ticket-notice-id">{submissionState.ticketCode}</strong>
               )}
             </div>
           </div>
