@@ -188,6 +188,12 @@ function TicketsPage() {
     reader.readAsDataURL(file);
   };
 
+  const clearAttachment = () => {
+    setAttachment(null);
+    const input = document.getElementById('maintenance-photo');
+    if (input) input.value = '';
+  };
+
   const updateStatus = async (id, status) => {
     if (updatingStatus) return;
 
@@ -363,11 +369,31 @@ function TicketsPage() {
               </select>
               <textarea className="institutional-textarea" placeholder="Describe your issue" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
               {isMaintenanceDepartment && (
-                <label className="ticket-image-upload">
-                  <span>Upload an image of the maintenance issue</span>
-                  <input type="file" accept="image/*" onChange={handleAttachmentChange} required />
-                  {attachment && <small>{attachment.name}</small>}
-                </label>
+                <div className={`ticket-image-upload ${attachment ? 'has-file' : ''}`}>
+                  <div className="ticket-image-upload-heading">
+                    <span className="ticket-image-upload-icon" aria-hidden="true">+</span>
+                    <div>
+                      <strong>Attach a photo of the issue</strong>
+                      <small>Required for maintenance requests. JPG, PNG, or WEBP up to 3 MB.</small>
+                    </div>
+                  </div>
+                  {attachment ? (
+                    <div className="ticket-image-preview">
+                      <img src={attachment.data} alt="Selected maintenance issue" />
+                      <div className="ticket-image-file-info">
+                        <strong>{attachment.name}</strong>
+                        <small>Photo attached and ready to submit</small>
+                      </div>
+                      <button type="button" className="ticket-image-remove" onClick={clearAttachment}>Remove</button>
+                    </div>
+                  ) : (
+                    <label className="ticket-image-select" htmlFor="maintenance-photo">
+                      <span>Choose a photo</span>
+                      <small>or drag and drop it here</small>
+                    </label>
+                  )}
+                  <input id="maintenance-photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAttachmentChange} required={!attachment} />
+                </div>
               )}
               <select className="institutional-select" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
                 <option>Hardware</option>
