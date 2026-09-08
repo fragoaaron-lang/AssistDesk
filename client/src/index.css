@@ -965,10 +965,51 @@ button, input, select, textarea {
 
 .profile-security-actions {
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.account-deletion-panel {
+  width: min(420px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 10px;
-  flex-wrap: wrap;
+  padding: 14px 16px;
+  border: 1px solid #f0c8c8;
+  border-radius: 12px;
+  background: #fff7f7;
+}
+
+.account-deletion-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.account-deletion-title {
+  color: #8f2020;
+  font-weight: 700;
+}
+
+.account-deletion-text small {
+  color: #925b5b;
+  line-height: 1.5;
+}
+
+.account-deletion-btn {
+  border: 1px solid #dca3a3;
+  border-radius: 8px;
+  background: #fff;
+  color: #b42318;
+  padding: 8px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.account-deletion-btn:hover {
+  background: #fff1f1;
 }
 
 .profile-section-header h3 {

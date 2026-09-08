@@ -550,16 +550,24 @@ function ProfilePage() {
         <div className="institutional-card">
           <div className="profile-section-header">
             <h3>Security</h3>
-            <div className="profile-security-actions">
-              <button
-                type="button"
-                className="institutional-btn secondary small"
-                onClick={() => setShowPasswordEditor((prev) => !prev)}
-              >
-                {showPasswordEditor ? 'Close' : 'Change password'}
-              </button>
-              <button type="button" className="institutional-btn danger small" onClick={handleDeleteAccount}>
-                Delete your account
+          </div>
+
+          <div className="profile-security-actions">
+            <button
+              type="button"
+              className="institutional-btn secondary small"
+              onClick={() => setShowPasswordEditor((prev) => !prev)}
+            >
+              {showPasswordEditor ? 'Close' : 'Change password'}
+            </button>
+
+            <div className="account-deletion-panel">
+              <div className="account-deletion-text">
+                <span className="account-deletion-title">Delete your account</span>
+                <small>Permanently delete this account and remove all related data from AssistDesk.</small>
+              </div>
+              <button type="button" className="account-deletion-btn" onClick={handleDeleteAccount}>
+                Delete account
               </button>
             </div>
           </div>
