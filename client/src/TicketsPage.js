@@ -15,6 +15,7 @@ function TicketsPage() {
   const [services, setServices] = useState([]);
   const [form, setForm] = useState({ subject: '', description: '', category: 'Other', priority: 'medium', department_id: '' });
   const [attachment, setAttachment] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
   const [submissionState, setSubmissionState] = useState({ status: 'idle', message: '', ticketCode: '' });
   const [expandedDepartments, setExpandedDepartments] = useState({});
   const [expandedRoles, setExpandedRoles] = useState({});
@@ -203,6 +204,7 @@ function TicketsPage() {
 
   const clearAttachment = () => {
     setAttachment(null);
+    setPreviewImage(null);
     const input = document.getElementById('maintenance-photo');
     if (input) input.value = '';
   };
@@ -334,6 +336,15 @@ function TicketsPage() {
           </div>
         )}
 
+        {previewImage && (
+          <div className="ticket-image-lightbox" role="presentation" onClick={() => setPreviewImage(null)}>
+            <div className="ticket-image-lightbox-content" role="dialog" aria-modal="true" aria-label="Maintenance photo preview" onClick={(event) => event.stopPropagation()}>
+              <button type="button" className="ticket-image-lightbox-close" onClick={() => setPreviewImage(null)} aria-label="Close photo preview">×</button>
+              <img src={previewImage} alt="Maintenance issue preview" />
+            </div>
+          </div>
+        )}
+
         <aside className={`mobile-menu-drawer ${mobileMenuOpen ? 'open' : ''}`}>
           <div className="mobile-menu-head">
             <button type="button" className="mobile-menu-close" onClick={() => setMobileMenuOpen(false)}>×</button>
@@ -392,7 +403,9 @@ function TicketsPage() {
                   </div>
                   {attachment ? (
                     <div className="ticket-image-preview">
-                      <img src={attachment.data} alt="Selected maintenance issue" />
+                      <button type="button" className="ticket-image-preview-button" onClick={() => setPreviewImage(attachment.data)} aria-label="Open photo preview">
+                        <img src={attachment.data} alt="Selected maintenance issue" />
+                      </button>
                       <div className="ticket-image-file-info">
                         <strong>{attachment.name}</strong>
                         <small>Photo attached and ready to submit</small>
