@@ -293,8 +293,54 @@ const mapPriorityToDatabase = (priority) => {
   return priority || 'medium';
 };
 
+const getTicketReference = (message) => {
+  const codeMatch = String(message || '').match(/\b[A-Za-z]{2,6}-(\d{1,8})\b/);
+  if (codeMatch) return Number(codeMatch[1]);
+
+  const numericMatch = String(message || '').match(/(?:ticket|request|case)\s*(?:id|number|no\.?|#)?\s*#?(\d{1,8})\b/i);
+  if (numericMatch) return Number(numericMatch[1]);
+
+  const directIdMatch = String(message || '').match(/^\s*#?(\d{1,8})\s*$/);
+  return directIdMatch ? Number(directIdMatch[1]) : null;
+};
+
 const handleTicketCommand = async (message, userId) => {
   const normalized = normalize(message);
+  const ticketReference = getTicketReference(message);
+  if (ticketReference) {
+    const ticket = await Ticket.findOne({
+      where: {
+        id: ticketReference,
+        ...(userId ? { user_id: userId } : {}),
+      },
+      include: [
+        { model: Department },
+        { model: TicketUpdate, order: [['created_at', 'ASC']] },
+      ],
+    });
+
+    if (!ticket) {
+      return { ai_response: 'I could not find that ticket in your submitted requests.', action: 'ticket_lookup' };
+    }
+
+    addTicketNumber(ticket);
+    const statusLabels = {
+      open: 'Submitted',
+      pending: 'Pending',
+      in_progress: 'In Progress',
+      resolved: 'Resolved',
+      closed: 'Closed',
+    };
+    const statusLabel = statusLabels[ticket.status] || ticket.status;
+
+    return {
+      ai_response: `${ticket.ticket_code} is currently ${statusLabel}.`,
+      ticket,
+      ticket_process: Object.entries(statusLabels).map(([key, label]) => ({ key, label })),
+      action: 'ticket_lookup',
+    };
+  }
+
   if (normalized.startsWith('status') || normalized.includes('my tickets') || normalized.includes('track my')) {
     const tickets = await Ticket.findAll({ where: { user_id: userId }, include: [{ model: Department }], order: [['created_at', 'DESC']], limit: 10 });
     tickets.forEach((ticket) => addTicketNumber(ticket));

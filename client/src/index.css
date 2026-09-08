@@ -125,6 +125,10 @@ body {
 .chat-message.user { margin-left: auto; background: #dcecff; color: #12385f; border-bottom-right-radius: 4px; }
 .chat-message.assistant { background: #fff; color: var(--text); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
 .chat-message small { color: var(--muted); }
+.chatbot-ticket-process { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.chatbot-ticket-stage { padding: 3px 6px; border: 1px solid var(--border); border-radius: 5px; color: var(--muted); font-size: 0.68rem; }
+.chatbot-ticket-stage.completed { border-color: #8acacc; background: #effafa; color: var(--teal); }
+.chatbot-ticket-stage.active { font-weight: 700; }
 .chatbot-typing { flex-direction: row; align-items: center; gap: 8px; color: var(--muted); }
 .chatbot-typing-dots { display: inline-flex; gap: 3px; align-items: center; }
 .chatbot-typing-dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--teal); animation: chatbotTyping 1.1s infinite ease-in-out; }

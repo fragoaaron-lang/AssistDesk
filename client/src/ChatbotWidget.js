@@ -118,6 +118,7 @@ function ChatbotWidget() {
         text: response.data.ai_response,
         details: response.data.department_details,
         ticket: response.data.ticket,
+        ticketProcess: response.data.ticket_process,
         tickets: response.data.tickets,
       }]);
     } catch (error) {
@@ -185,6 +186,18 @@ function ChatbotWidget() {
                 <span>{entry.text}</span>
                 {entry.details && <small>{entry.details.name} · {entry.details.office_hours || 'Contact the department for office hours.'}</small>}
                 {entry.ticket && <small>Ticket {entry.ticket.ticket_code || `#${entry.ticket.id}`} · Status: {entry.ticket.status}</small>}
+                {entry.ticketProcess && entry.ticket && (
+                  <div className="chatbot-ticket-process" aria-label="Ticket process">
+                    {entry.ticketProcess.map((stage, stageIndex) => {
+                      const currentIndex = entry.ticketProcess.findIndex((item) => item.key === entry.ticket.status);
+                      return (
+                        <span key={stage.key} className={`chatbot-ticket-stage ${stageIndex <= currentIndex ? 'completed' : ''} ${stage.key === entry.ticket.status ? 'active' : ''}`}>
+                          {stage.label}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
                 {entry.tickets?.map((ticket) => <small key={ticket.id}>{ticket.ticket_code || `#${ticket.id}`} · {ticket.subject} · {ticket.status}</small>)}
               </div>
             ))}
