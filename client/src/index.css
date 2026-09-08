@@ -963,9 +963,20 @@ button, input, select, textarea {
   margin-bottom: 12px;
 }
 
+.profile-security-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+}
+
 .profile-security-actions {
   display: flex;
   align-items: flex-start;
+}
+
+.profile-security-form-wrapper {
+  width: 100%;
 }
 
 .account-deletion-card {
