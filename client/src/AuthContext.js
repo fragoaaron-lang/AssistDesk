@@ -13,6 +13,21 @@ const persistWelcomeName = (name) => {
   localStorage.removeItem('assistdesk_last_user_name');
 };
 
+const applySavedTheme = (currentUser) => {
+  if (!currentUser) {
+    document.body.classList.remove('dark-mode');
+    return;
+  }
+
+  const key = `assistdesk_profile_prefs_${currentUser.id ?? currentUser.email}`;
+  try {
+    const preferences = JSON.parse(localStorage.getItem(key) || '{}');
+    document.body.classList.toggle('dark-mode', preferences.darkMode === true);
+  } catch (error) {
+    document.body.classList.remove('dark-mode');
+  }
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('assistdesk_token'));
@@ -45,6 +60,10 @@ export const AuthProvider = ({ children }) => {
 
     loadUser();
   }, [token]);
+
+  useEffect(() => {
+    applySavedTheme(user);
+  }, [user?.id, user?.email]);
 
   const login = async (email, password) => {
     const response = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
