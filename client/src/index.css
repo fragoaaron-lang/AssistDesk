@@ -2042,6 +2042,11 @@ button, input, select, textarea {
   box-shadow: 0 0 0 3px rgba(31, 111, 120, 0.09);
 }
 
+.ticket-image-upload:focus {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
 .ticket-image-upload-heading {
   display: flex;
   align-items: center;
@@ -2079,23 +2084,22 @@ button, input, select, textarea {
 
 .ticket-image-select {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
-  gap: 6px;
-  min-height: 46px;
+  width: fit-content;
+  min-height: 32px;
   margin-top: 4px;
-  border: 1px dashed #a7d5d6;
+  padding: 6px 10px;
+  border: 1px solid #76bfc1;
   border-radius: 8px;
+  background: #ffffff;
   color: var(--teal);
   cursor: pointer;
 }
 
 .ticket-image-select span {
+  font-size: 0.82rem;
   font-weight: 800;
-}
-
-.ticket-image-select small {
-  color: var(--muted);
 }
 
 .ticket-image-upload input {

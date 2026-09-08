@@ -167,8 +167,7 @@ function TicketsPage() {
     setAttachment(null);
   };
 
-  const handleAttachmentChange = (event) => {
-    const file = event.target.files?.[0];
+  const acceptAttachment = (file) => {
     if (!file) {
       setAttachment(null);
       return;
@@ -186,6 +185,20 @@ function TicketsPage() {
     const reader = new FileReader();
     reader.onload = () => setAttachment({ data: reader.result, name: file.name, type: file.type });
     reader.readAsDataURL(file);
+  };
+
+  const handleAttachmentChange = (event) => {
+    acceptAttachment(event.target.files?.[0]);
+  };
+
+  const handleAttachmentPaste = (event) => {
+    const pastedImage = Array.from(event.clipboardData?.items || [])
+      .find((item) => item.type.startsWith('image/'));
+    if (!pastedImage) return;
+
+    event.preventDefault();
+    const file = pastedImage.getAsFile();
+    if (file) acceptAttachment(new File([file], `pasted-maintenance-photo.${file.type.split('/')[1] || 'png'}`, { type: file.type }));
   };
 
   const clearAttachment = () => {
@@ -369,7 +382,7 @@ function TicketsPage() {
               </select>
               <textarea className="institutional-textarea" placeholder="Describe your issue" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
               {isMaintenanceDepartment && (
-                <div className={`ticket-image-upload ${attachment ? 'has-file' : ''}`}>
+                <div className={`ticket-image-upload ${attachment ? 'has-file' : ''}`} onPaste={handleAttachmentPaste} tabIndex="0">
                   <div className="ticket-image-upload-heading">
                     <span className="ticket-image-upload-icon" aria-hidden="true">+</span>
                     <div>
@@ -389,7 +402,6 @@ function TicketsPage() {
                   ) : (
                     <label className="ticket-image-select" htmlFor="maintenance-photo">
                       <span>Choose a photo</span>
-                      <small>or drag and drop it here</small>
                     </label>
                   )}
                   <input id="maintenance-photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAttachmentChange} required={!attachment} />
