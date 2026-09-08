@@ -73,6 +73,9 @@ function ProfilePage() {
   const [saveState, setSaveState] = useState({ status: 'idle', message: '' });
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteState, setDeleteState] = useState({ status: 'idle', message: '' });
   const [savedSnapshot, setSavedSnapshot] = useState(() => ({
     prefs: (() => {
       try {
@@ -325,20 +328,20 @@ function ProfilePage() {
   const handleDeleteAccount = async () => {
     if (!user || !token) return;
 
-    const confirmed = window.confirm('This will permanently delete your account and all associated activity. This cannot be undone.');
-    if (!confirmed) return;
-
-    const passwordPrompt = window.prompt('To confirm, enter your current password:');
-    if (!passwordPrompt || !passwordPrompt.trim()) return;
+    if (!deletePassword.trim()) {
+      setDeleteState({ status: 'error', message: 'Enter your current password to continue.' });
+      return;
+    }
 
     try {
+      setDeleteState({ status: 'loading', message: 'Deleting account...' });
       const response = await fetch(`${API_BASE_URL}/api/auth/delete-account`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ password: passwordPrompt.trim() }),
+        body: JSON.stringify({ password: deletePassword.trim() }),
       });
 
       const data = await response.json().catch(() => ({}));
@@ -351,8 +354,20 @@ function ProfilePage() {
       localStorage.removeItem(getUserStorageKey(user, 'profile_photo'));
       window.location.assign('/');
     } catch (error) {
-      setPasswordState({ status: 'error', message: error.message || 'Unable to delete account.' });
+      setDeleteState({ status: 'error', message: error.message || 'Unable to delete account.' });
     }
+  };
+
+  const openDeleteDialog = () => {
+    setDeletePassword('');
+    setDeleteState({ status: 'idle', message: '' });
+    setShowDeleteDialog(true);
+  };
+
+  const closeDeleteDialog = () => {
+    setShowDeleteDialog(false);
+    setDeletePassword('');
+    setDeleteState({ status: 'idle', message: '' });
   };
 
   return (
@@ -504,6 +519,46 @@ function ProfilePage() {
           </div>
         )}
 
+        {showDeleteDialog && (
+          <div className="profile-save-dialog-backdrop" onClick={closeDeleteDialog}>
+            <div className="profile-save-dialog delete-dialog" onClick={(event) => event.stopPropagation()}>
+              <h4>Delete account?</h4>
+              <p>This will permanently delete your account and all associated activity. This cannot be undone.</p>
+
+              <div className="delete-account-field">
+                <input
+                  type="password"
+                  className="institutional-input"
+                  placeholder="Enter current password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  autoFocus
+                />
+              </div>
+
+              {deleteState.message && (
+                <p className={`profile-password-message ${deleteState.status === 'error' ? 'error' : ''}`}>
+                  {deleteState.message}
+                </p>
+              )}
+
+              <div className="profile-save-dialog-actions delete-dialog-actions">
+                <button type="button" className="secondary-action-button" onClick={closeDeleteDialog}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="account-deletion-btn modal-delete-btn"
+                  onClick={handleDeleteAccount}
+                  disabled={deleteState.status === 'loading'}
+                >
+                  {deleteState.status === 'loading' ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="institutional-card" style={{ marginBottom: '20px' }}>
           <h3>Personalization</h3>
 
@@ -641,7 +696,7 @@ function ProfilePage() {
               <span className="account-deletion-title">Delete your account</span>
               <small>Permanently delete this account and remove all related data from AssistDesk.</small>
             </div>
-            <button type="button" className="account-deletion-btn" onClick={handleDeleteAccount}>
+            <button type="button" className="account-deletion-btn" onClick={openDeleteDialog}>
               Delete account
             </button>
           </div>
