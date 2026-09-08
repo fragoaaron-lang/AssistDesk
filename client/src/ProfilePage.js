@@ -485,10 +485,19 @@ function ProfilePage() {
             <input type="checkbox" checked={prefs.pushAlerts} onChange={(e) => updatePreference('pushAlerts', e.target.checked)} />
           </label>
 
-          <label className="preference-row">
+          <div className="preference-row">
             <span>Dark mode</span>
-            <input type="checkbox" checked={prefs.darkMode} onChange={(e) => updatePreference('darkMode', e.target.checked)} />
-          </label>
+            <button
+              type="button"
+              className={`preference-switch ${prefs.darkMode ? 'on' : ''}`}
+              role="switch"
+              aria-checked={prefs.darkMode}
+              onClick={() => updatePreference('darkMode', !prefs.darkMode)}
+            >
+              <span className="preference-switch-track" aria-hidden="true"><span className="preference-switch-thumb" /></span>
+              <span className="preference-switch-label">{prefs.darkMode ? 'ON' : 'OFF'}</span>
+            </button>
+          </div>
 
           <label className="preference-row select-row">
             <span>Preferred accent</span>

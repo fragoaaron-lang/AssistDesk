@@ -906,6 +906,14 @@ button, input, select, textarea {
   height: 18px;
 }
 
+.preference-switch { display: inline-flex; align-items: center; gap: 8px; border: 0; padding: 0; background: transparent; color: var(--muted); font: inherit; font-weight: 800; cursor: pointer; }
+.preference-switch-track { position: relative; display: inline-flex; align-items: center; width: 44px; height: 24px; padding: 3px; border-radius: 999px; background: #aab8c2; transition: background 0.18s ease; }
+.preference-switch-thumb { width: 18px; height: 18px; border-radius: 50%; background: white; box-shadow: 0 1px 4px rgba(8, 32, 56, 0.28); transform: translateX(0); transition: transform 0.18s ease; }
+.preference-switch.on { color: var(--teal); }
+.preference-switch.on .preference-switch-track { background: var(--teal); }
+.preference-switch.on .preference-switch-thumb { transform: translateX(20px); }
+.preference-switch:focus-visible { outline: 2px solid var(--teal); outline-offset: 4px; border-radius: 4px; }
+
 .select-row select {
   width: min(220px, 50vw);
   border: 1px solid var(--border);
