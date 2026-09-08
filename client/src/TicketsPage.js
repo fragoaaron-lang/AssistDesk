@@ -291,7 +291,6 @@ function TicketsPage() {
           <button
             type="button"
             className="mobile-menu-toggle"
-            aria-label="Open navigation menu"
             aria-expanded={mobileMenuOpen}
             onClick={() => setMobileMenuOpen((prev) => !prev)}
           >
