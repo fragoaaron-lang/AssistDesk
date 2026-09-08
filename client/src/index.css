@@ -2123,9 +2123,9 @@ button, input, select, textarea {
 
 .ticket-image-preview-button {
   display: block;
-  width: 42px;
-  height: 42px;
-  flex: 0 0 42px;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
   padding: 0;
   overflow: hidden;
   border: 0;
