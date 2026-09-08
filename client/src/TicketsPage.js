@@ -61,15 +61,16 @@ function TicketsPage() {
 
   const selectedDepartment = departments.find((department) => String(department.id) === String(form.department_id));
   const isMaintenanceDepartment = selectedDepartment?.name?.toLowerCase().includes('maintenance');
+  const getDepartmentFolder = (department) => {
+    const name = department?.name || 'Unassigned Department';
+    const key = name.toLowerCase().replace(/\bdepartment\b/g, '').replace(/\s+/g, ' ').trim();
+    return { key: key || 'unassigned', name: name.toLowerCase().includes('maintenance') ? 'Maintenance Department' : name };
+  };
 
   const groupedTickets = Object.values(tickets.reduce((groups, ticket) => {
     const requesterDepartment = ticket.User?.Department;
-    const departmentId = user?.role === 'admin'
-      ? (requesterDepartment?.id || 'unassigned')
-      : (ticket.department_id || 'unassigned');
-    const departmentName = user?.role === 'admin'
-      ? (requesterDepartment?.name || 'Unassigned Department')
-      : (ticket.Department?.name || 'Unassigned Department');
+    const department = user?.role === 'admin' ? requesterDepartment : ticket.Department;
+    const { key: departmentId, name: departmentName } = getDepartmentFolder(department);
     if (!groups[departmentId]) {
       groups[departmentId] = { name: departmentName, tickets: [] };
     }

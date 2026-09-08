@@ -52,9 +52,10 @@ function AdminReportsPage() {
 
   const groupedRecentTickets = Object.values((reports?.recentTickets || []).reduce((groups, ticket) => {
     const requesterDepartment = ticket.User?.Department;
-    const departmentId = requesterDepartment?.id || 'unassigned';
     const departmentName = requesterDepartment?.name || 'Unassigned Department';
-    if (!groups[departmentId]) groups[departmentId] = { name: departmentName, tickets: [] };
+    const departmentId = departmentName.toLowerCase().replace(/\bdepartment\b/g, '').replace(/\s+/g, ' ').trim() || 'unassigned';
+    const displayName = departmentName.toLowerCase().includes('maintenance') ? 'Maintenance Department' : departmentName;
+    if (!groups[departmentId]) groups[departmentId] = { name: displayName, tickets: [] };
     groups[departmentId].tickets.push(ticket);
     return groups;
   }, {})).sort((first, second) => first.name.localeCompare(second.name));
