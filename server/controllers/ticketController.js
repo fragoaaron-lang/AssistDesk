@@ -122,7 +122,7 @@ exports.getTickets = async (req, res) => {
       where,
       include: [
         { model: Department },
-        { model: User },
+        { model: User, include: [{ model: Department }] },
         { model: TicketUpdate, order: [['created_at', 'ASC']] },
       ],
       order: [['created_at', 'DESC']],
@@ -144,7 +144,7 @@ exports.getTicketById = async (req, res) => {
     const ticket = await Ticket.findByPk(req.params.id, {
       include: [
         { model: Department },
-        { model: User },
+        { model: User, include: [{ model: Department }] },
         { model: TicketUpdate, order: [['created_at', 'ASC']] },
       ],
     });

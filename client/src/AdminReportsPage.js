@@ -11,6 +11,7 @@ function AdminReportsPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [reports, setReports] = useState(null);
   const [message, setMessage] = useState('');
+  const [expandedRequesterDepartments, setExpandedRequesterDepartments] = useState({});
 
   const loadReports = async () => {
     try {
@@ -47,6 +48,22 @@ function AdminReportsPage() {
     link.download = 'recent-tickets.csv';
     link.click();
     URL.revokeObjectURL(url);
+  };
+
+  const groupedRecentTickets = Object.values((reports?.recentTickets || []).reduce((groups, ticket) => {
+    const requesterDepartment = ticket.User?.Department;
+    const departmentId = requesterDepartment?.id || 'unassigned';
+    const departmentName = requesterDepartment?.name || 'Unassigned Department';
+    if (!groups[departmentId]) groups[departmentId] = { name: departmentName, tickets: [] };
+    groups[departmentId].tickets.push(ticket);
+    return groups;
+  }, {})).sort((first, second) => first.name.localeCompare(second.name));
+
+  const toggleRequesterDepartment = (departmentName) => {
+    setExpandedRequesterDepartments((current) => ({
+      ...current,
+      [departmentName]: current[departmentName] !== true,
+    }));
   };
 
   if (!reports) {
@@ -165,15 +182,31 @@ function AdminReportsPage() {
             ))}
           </div>
           <div className="institutional-card">
-            <h3>Recent Ticket Activity</h3>
-            {reports.recentTickets.map((ticket) => (
-              <div key={ticket.id} style={{ padding: '0.75rem 0', borderBottom: '1px solid #f0f0f0' }}>
-                <div><strong>{ticket.subject}</strong></div>
-                <div>Status: {ticket.status}</div>
-                <div>Department: {ticket.Department?.name || 'N/A'}</div>
-                <div className="small-muted">Created: {new Date(ticket.created_at).toLocaleString()}</div>
-              </div>
-            ))}
+            <h3>Recent Ticket Activity by Requester Department</h3>
+            <div className="list-stack">
+              {groupedRecentTickets.map((departmentGroup) => (
+                <section key={departmentGroup.name} className="ticket-department-group">
+                  <button type="button" className="ticket-department-heading" onClick={() => toggleRequesterDepartment(departmentGroup.name)} aria-expanded={expandedRequesterDepartments[departmentGroup.name] === true}>
+                    <span className="ticket-folder-icon" aria-hidden="true" />
+                    <span>{departmentGroup.name}</span>
+                    <span className="ticket-department-count">{departmentGroup.tickets.length}</span>
+                  </button>
+                  {expandedRequesterDepartments[departmentGroup.name] === true && (
+                    <div className="ticket-department-contents">
+                      {departmentGroup.tickets.map((ticket) => (
+                        <div key={ticket.id} style={{ padding: '0.75rem 0', borderBottom: '1px solid #f0f0f0' }}>
+                          <div><strong>{ticket.ticket_code || `#${ticket.id}`} · {ticket.subject}</strong></div>
+                          <div>Status: {ticket.status}</div>
+                          <div>Routed department: {ticket.Department?.name || 'N/A'}</div>
+                          <div>Requester: {ticket.User?.name || ticket.User?.email || 'N/A'}</div>
+                          <div className="small-muted">Created: {new Date(ticket.created_at).toLocaleString()}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              ))}
+            </div>
           </div>
         </section>
       </div>

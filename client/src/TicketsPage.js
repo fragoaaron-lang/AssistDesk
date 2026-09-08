@@ -63,8 +63,13 @@ function TicketsPage() {
   const isMaintenanceDepartment = selectedDepartment?.name?.toLowerCase().includes('maintenance');
 
   const groupedTickets = Object.values(tickets.reduce((groups, ticket) => {
-    const departmentId = ticket.department_id || 'unassigned';
-    const departmentName = ticket.Department?.name || 'Unassigned Department';
+    const requesterDepartment = ticket.User?.Department;
+    const departmentId = user?.role === 'admin'
+      ? (requesterDepartment?.id || 'unassigned')
+      : (ticket.department_id || 'unassigned');
+    const departmentName = user?.role === 'admin'
+      ? (requesterDepartment?.name || 'Unassigned Department')
+      : (ticket.Department?.name || 'Unassigned Department');
     if (!groups[departmentId]) {
       groups[departmentId] = { name: departmentName, tickets: [] };
     }
@@ -291,6 +296,8 @@ function TicketsPage() {
                         <h4 style={{ margin: '0 0 6px' }}>{ticket.ticket_code || `#${ticket.id}`} · {ticket.subject}</h4>
                         <TicketProgressBar status={ticket.status} />
                         <div className="small-muted"><strong>Category:</strong> {ticket.category || 'Other'}</div>
+                        {user?.role === 'admin' && <div className="small-muted"><strong>Requester:</strong> {ticket.User?.name || ticket.User?.email || 'Unknown'}</div>}
+                        {user?.role === 'admin' && <div className="small-muted"><strong>Routed department:</strong> {ticket.Department?.name || 'Unassigned'}</div>}
                         <div className="small-muted"><strong>Priority:</strong> {ticket.priority}</div>
                         <div className="small-muted"><strong>Estimated completion:</strong> {ticket.estimated_completion_at ? new Date(ticket.estimated_completion_at).toLocaleString() : 'Being estimated'}</div>
                         <p style={{ margin: '8px 0 0' }}>{ticket.description}</p>
