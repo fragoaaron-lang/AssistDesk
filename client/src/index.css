@@ -965,9 +965,11 @@ button, input, select, textarea {
 
 .profile-security-actions {
   display: flex;
-  flex-direction: column;
   align-items: flex-start;
-  gap: 16px;
+}
+
+.account-deletion-card {
+  margin-top: 18px;
 }
 
 .account-deletion-panel {

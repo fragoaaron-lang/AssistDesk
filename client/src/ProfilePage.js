@@ -560,16 +560,6 @@ function ProfilePage() {
             >
               {showPasswordEditor ? 'Close' : 'Change password'}
             </button>
-
-            <div className="account-deletion-panel">
-              <div className="account-deletion-text">
-                <span className="account-deletion-title">Delete your account</span>
-                <small>Permanently delete this account and remove all related data from AssistDesk.</small>
-              </div>
-              <button type="button" className="account-deletion-btn" onClick={handleDeleteAccount}>
-                Delete account
-              </button>
-            </div>
           </div>
 
           {showPasswordEditor && (
@@ -642,6 +632,18 @@ function ProfilePage() {
             </>
           )}
 
+        </div>
+
+        <div className="institutional-card account-deletion-card">
+          <div className="account-deletion-panel">
+            <div className="account-deletion-text">
+              <span className="account-deletion-title">Delete your account</span>
+              <small>Permanently delete this account and remove all related data from AssistDesk.</small>
+            </div>
+            <button type="button" className="account-deletion-btn" onClick={handleDeleteAccount}>
+              Delete account
+            </button>
+          </div>
         </div>
       </div>
     </div>
