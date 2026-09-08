@@ -322,6 +322,39 @@ function ProfilePage() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!user || !token) return;
+
+    const confirmed = window.confirm('This will permanently delete your account and all associated activity. This cannot be undone.');
+    if (!confirmed) return;
+
+    const passwordPrompt = window.prompt('To confirm, enter your current password:');
+    if (!passwordPrompt || !passwordPrompt.trim()) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/delete-account`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ password: passwordPrompt.trim() }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.message || 'Unable to delete account.');
+      }
+
+      localStorage.removeItem('assistdesk_token');
+      localStorage.removeItem(getUserStorageKey(user, 'profile_prefs'));
+      localStorage.removeItem(getUserStorageKey(user, 'profile_photo'));
+      window.location.assign('/');
+    } catch (error) {
+      setPasswordState({ status: 'error', message: error.message || 'Unable to delete account.' });
+    }
+  };
+
   return (
     <div className="app-shell">
       <div className="page-shell">
@@ -595,6 +628,12 @@ function ProfilePage() {
               )}
             </>
           )}
+
+          <div style={{ marginTop: '18px' }}>
+            <button type="button" className="institutional-btn danger small" onClick={handleDeleteAccount}>
+              Delete your account
+            </button>
+          </div>
         </div>
       </div>
     </div>

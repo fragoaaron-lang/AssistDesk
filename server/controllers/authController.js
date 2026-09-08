@@ -240,6 +240,46 @@ exports.changePassword = async (req, res) => {
   }
 };
 
+exports.deleteAccount = async (req, res) => {
+  try {
+    const { password } = req.body || {};
+
+    if (!password) {
+      return res.status(400).json({ message: 'Current password is required to delete your account.' });
+    }
+
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Current password is incorrect.' });
+    }
+
+    const tickets = await user.getTickets ? await user.getTickets() : [];
+    const ticketIds = tickets.map((ticket) => ticket.id);
+
+    if (ticketIds.length) {
+      await require('../models').TicketUpdate.destroy({ where: { ticket_id: ticketIds } });
+      await require('../models').Ticket.destroy({ where: { id: ticketIds } });
+    }
+
+    await require('../models').Notification.destroy({ where: { user_id: user.id } });
+    await require('../models').ChatLog.destroy({ where: { user_id: user.id } });
+    await require('../models').Admin.destroy({ where: { user_id: user.id } });
+    await require('../models').PasswordResetToken.destroy({ where: { email: user.email } });
+
+    await user.destroy();
+
+    return res.json({ message: 'Account deleted successfully.' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Unable to delete account.' });
+  }
+};
+
 exports.updateProfile = async (req, res) => {
   try {
     const { profile_picture, student_number } = req.body;
