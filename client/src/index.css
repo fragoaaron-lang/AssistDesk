@@ -1848,6 +1848,8 @@ button, input, select, textarea {
 }
 
 .inline-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.institutional-btn.danger { color: #8f2020; border-color: #e6a4a4; background: #fff3f3; }
+.institutional-btn.danger:hover { background: #ffe4e4; }
 
 .small-muted { color: var(--muted); font-size: 0.92rem; }
 

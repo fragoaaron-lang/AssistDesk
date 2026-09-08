@@ -219,6 +219,37 @@ exports.updateTicketStatus = async (req, res) => {
   }
 };
 
+exports.deleteTicket = async (req, res) => {
+  try {
+    if (!['student', 'faculty', 'staff'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Only student, faculty, and staff users can delete their own tickets.' });
+    }
+
+    const ticket = await Ticket.findByPk(req.params.id);
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket not found.' });
+    }
+    if (ticket.user_id !== req.user.id) {
+      return res.status(403).json({ message: 'You can only delete your own tickets.' });
+    }
+
+    const transaction = await Ticket.sequelize.transaction();
+    try {
+      await TicketUpdate.destroy({ where: { ticket_id: ticket.id }, transaction });
+      await ticket.destroy({ transaction });
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+
+    return res.json({ message: 'Ticket deleted successfully.', ticket_id: ticket.id });
+  } catch (error) {
+    console.error('Ticket deletion error:', error);
+    return res.status(500).json({ message: 'Unable to delete ticket.' });
+  }
+};
+
 exports.addTicketUpdate = async (req, res) => {
   try {
     const { message } = req.body;

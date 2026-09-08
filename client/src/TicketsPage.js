@@ -172,6 +172,19 @@ function TicketsPage() {
     loadTickets();
   };
 
+  const deleteTicket = async (ticket) => {
+    const ticketCode = ticket.ticket_code || `#${ticket.id}`;
+    if (!window.confirm(`Delete ticket ${ticketCode}? This cannot be undone.`)) return;
+    try {
+      await axios.delete(`${API_BASE_URL}/api/tickets/${ticket.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      await loadTickets();
+    } catch (error) {
+      setSubmissionState({ status: 'error', message: error.response?.data?.message || 'Unable to delete ticket.', ticketCode: '' });
+    }
+  };
+
   return (
     <div className="app-shell">
       <div className="page-shell">
@@ -354,6 +367,11 @@ function TicketsPage() {
                         <div className="small-muted"><strong>Estimated completion:</strong> {ticket.estimated_completion_at ? new Date(ticket.estimated_completion_at).toLocaleString() : 'Being estimated'}</div>
                         <p style={{ margin: '8px 0 0' }}>{ticket.description}</p>
                         {ticket.attachment_data && <img className="ticket-attachment-image" src={ticket.attachment_data} alt={ticket.attachment_name || 'Ticket attachment'} />}
+                        {user?.role !== 'admin' && (
+                          <div className="inline-actions">
+                            <button type="button" className="institutional-btn small danger" onClick={() => deleteTicket(ticket)}>Delete ticket</button>
+                          </div>
+                        )}
                         {user?.role === 'admin' && (
                           <div className="inline-actions">
                             <button className="institutional-btn small secondary" onClick={() => updateStatus(ticket.id, 'open')}>Open</button>
