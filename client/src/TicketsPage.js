@@ -405,10 +405,6 @@ function TicketsPage() {
                       <button type="button" className="ticket-image-preview-button" onClick={() => setPreviewImage(attachment.data)} aria-label="Open photo preview">
                         <img src={attachment.data} alt="Selected maintenance issue" />
                       </button>
-                      <div className="ticket-image-file-info">
-                        <strong>{attachment.name}</strong>
-                        <small>Photo attached and ready to submit</small>
-                      </div>
                       <button type="button" className="ticket-image-remove" onClick={clearAttachment}>Remove</button>
                     </div>
                   ) : (
