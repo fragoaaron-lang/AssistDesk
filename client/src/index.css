@@ -13,21 +13,21 @@
 }
 
 body.dark-mode {
-  --navy: #e8ecf1;
-  --navy-deep: #d4dce6;
-  --teal: #4db3a8;
+  --navy: #163b5c;
+  --navy-deep: #081522;
+  --teal: #55c9bd;
   --gold: #f4c540;
-  --cream: #1a1a1a;
-  --surface: #1a1a1a;
-  --surface-soft: #242424;
+  --cream: #18232d;
+  --surface: #15212b;
+  --surface-soft: #1d2b36;
   --text: #e8ecf1;
-  --muted: #a0aab5;
-  --border: #404050;
+  --muted: #aebbc6;
+  --border: #344856;
   --shadow: 0 18px 45px rgba(0, 0, 0, 0.5);
 }
 
 body.dark-mode {
-  background: linear-gradient(135deg, #1a1a1a 0%, #242424 100%);
+  background: linear-gradient(135deg, #0d1822 0%, #172531 100%);
 }
 
 * { box-sizing: border-box; }
@@ -2025,3 +2025,96 @@ button, input, select, textarea {
   .institutional-input, .institutional-textarea, .institutional-select { font-size: 16px; }
   .institutional-btn { min-height: 44px; }
 }
+
+/* Shared dark-mode surfaces and controls. */
+body.dark-mode .app-shell,
+body.dark-mode .page-shell,
+body.dark-mode .institutional-card,
+body.dark-mode .metric-card,
+body.dark-mode .department-card,
+body.dark-mode .profile-save-dialog,
+body.dark-mode .ticket-detail-modal,
+body.dark-mode .ticket-notice {
+  background: var(--surface) !important;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+body.dark-mode .page-intro p,
+body.dark-mode .small-muted,
+body.dark-mode .profile-meta,
+body.dark-mode .helper-text,
+body.dark-mode .profile-detail-label {
+  color: var(--muted) !important;
+}
+
+body.dark-mode input,
+body.dark-mode textarea,
+body.dark-mode select,
+body.dark-mode .institutional-input,
+body.dark-mode .institutional-textarea,
+body.dark-mode .institutional-select {
+  background: #101b24 !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder { color: #8293a0; }
+body.dark-mode option { background: #15212b; color: var(--text); }
+
+body.dark-mode .ticket-department-heading,
+body.dark-mode .admin-ticket-id-button,
+body.dark-mode .catalog-faq-folder summary {
+  background: #1d3442 !important;
+  color: var(--text) !important;
+  border-color: #376171 !important;
+}
+
+body.dark-mode .ticket-department-heading:hover,
+body.dark-mode .admin-ticket-id-button:hover { background: #264653 !important; }
+body.dark-mode .ticket-department-count { background: #285563; color: #b8f1e8; }
+body.dark-mode .ticket-folder-icon,
+body.dark-mode .ticket-folder-icon::before { background: #e7b94b; }
+
+body.dark-mode .chatbot-panel,
+body.dark-mode .chatbot-body,
+body.dark-mode .chatbot-input,
+body.dark-mode .chatbot-faq-group,
+body.dark-mode .chatbot-faq-list button,
+body.dark-mode .chatbot-faq-toggle,
+body.dark-mode .chat-message.assistant {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--border);
+}
+body.dark-mode .chatbot-body { background: #0f1b24 !important; }
+body.dark-mode .chat-message.user { background: #214d68; color: #e5f5ff; }
+body.dark-mode .chatbot-faq-list button:hover { background: #1d3d47 !important; }
+
+body.dark-mode .ticket-detail-modal-backdrop,
+body.dark-mode .ticket-modal-backdrop,
+body.dark-mode .profile-save-dialog-backdrop { background: rgba(2, 8, 13, 0.78); }
+body.dark-mode .ticket-notice.success { background: #153c2a !important; color: #a9ebbd; border-color: #2e7650; }
+body.dark-mode .ticket-notice.error { background: #482124 !important; color: #ffc1c1; border-color: #98505a; }
+body.dark-mode .ticket-notice.success .ticket-notice-id { color: #e8fff0; }
+body.dark-mode .ticket-image-upload { background: #142b30; color: var(--text); }
+body.dark-mode .institutional-btn.danger { background: #482124 !important; color: #ffc1c1; border-color: #98505a; }
+body.dark-mode .institutional-btn.danger:hover { background: #5c292e !important; }
+
+body.dark-mode .list-stack > div,
+body.dark-mode .notification-list > div,
+body.dark-mode .catalog-faq-item,
+body.dark-mode .catalog-faq-folder-content,
+body.dark-mode .profile-section,
+body.dark-mode [style*="background: '#fbfdff'"] {
+  background: var(--surface-soft) !important;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+body.dark-mode [style*="background: '#f7f7f7'"] { background: #1d2b36 !important; color: var(--text); }
+body.dark-mode [style*="background: '#eef7ff'"] { background: #19364b !important; color: var(--text); }
+body.dark-mode [style*="background: '#f0f7ff'"] { background: #19364b !important; color: var(--text); }
+body.dark-mode [style*="background: '#e8f1f5'"] { background: #203743 !important; color: var(--text) !important; border-color: var(--border) !important; }
+body.dark-mode .landing-page { background: #0d1822; }
