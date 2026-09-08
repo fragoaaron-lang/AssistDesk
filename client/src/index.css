@@ -26,6 +26,27 @@ body.dark-mode {
   --shadow: 0 18px 45px rgba(0, 0, 0, 0.5);
 }
 
+body[data-accent='teal'] {
+  --navy: #0f2d52;
+  --navy-deep: #082038;
+  --teal: #1f6f78;
+  --gold: #d4a017;
+}
+
+body[data-accent='navy'] {
+  --navy: #163b5c;
+  --navy-deep: #0b223f;
+  --teal: #2b6e9a;
+  --gold: #d4a017;
+}
+
+body[data-accent='gold'] {
+  --navy: #2a3d5c;
+  --navy-deep: #1b2d45;
+  --teal: #c88d2d;
+  --gold: #d4a017;
+}
+
 body.dark-mode {
   background: linear-gradient(135deg, #0d1822 0%, #172531 100%);
 }

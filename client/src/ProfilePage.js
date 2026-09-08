@@ -98,6 +98,10 @@ function ProfilePage() {
   }, [prefs.darkMode]);
 
   useEffect(() => {
+    document.body.dataset.accent = prefs.accent;
+  }, [prefs.accent]);
+
+  useEffect(() => {
     if (!user) return;
 
     const keyPhoto = getUserStorageKey(user, 'profile_photo');
