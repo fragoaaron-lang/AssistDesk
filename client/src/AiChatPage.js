@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
-import NotificationBell from './NotificationBell';
 import LogoutButton from './LogoutButton';
 import HeaderProfile from './HeaderProfile';
 import SidebarProfile from './SidebarProfile';
@@ -72,7 +71,6 @@ function AiChatPage() {
           <div className="header-actions">
             <HeaderProfile user={user} />
             <LogoutButton />
-            <NotificationBell />
           </div>
         </header>
 
@@ -96,7 +94,6 @@ function AiChatPage() {
           </div>
           <div className="mobile-menu-actions">
             <LogoutButton onBeforeLogout={() => setMobileMenuOpen(false)} />
-            <div className="mobile-menu-bell"><NotificationBell /></div>
           </div>
         </aside>
 

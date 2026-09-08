@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
-import NotificationBell from './NotificationBell';
 import LogoutButton from './LogoutButton';
 import { API_BASE_URL } from './config';
 import HeaderProfile from './HeaderProfile';
@@ -359,7 +358,6 @@ function ProfilePage() {
           <div className="header-actions">
             <HeaderProfile user={user} />
             <LogoutButton />
-            <NotificationBell />
           </div>
         </header>
 
@@ -398,7 +396,6 @@ function ProfilePage() {
           </div>
           <div className="mobile-menu-actions">
             <LogoutButton onBeforeLogout={() => setMobileMenuOpen(false)} />
-            <div className="mobile-menu-bell"><NotificationBell /></div>
           </div>
         </aside>
 
