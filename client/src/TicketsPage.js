@@ -344,7 +344,7 @@ function TicketsPage() {
       setFaceVerificationOpen(false);
       setPendingAttachment(null);
       stopCameraStream();
-      setSubmissionState({ status: 'success', message: 'Automatic verification complete. You may now upload the issue photo.', ticketCode: '' });
+      setSubmissionState({ status: 'success', message: 'Verification complete. You may now upload the issue photo.', ticketCode: '' });
       window.setTimeout(() => setSubmissionState({ status: 'idle', message: '', ticketCode: '' }), 2200);
       return;
     }
@@ -568,7 +568,7 @@ function TicketsPage() {
               )}
               <div className="face-verification-actions">
                 <button type="button" className="institutional-btn ticket-submit-button" onClick={autoVerifyFace} disabled={!cameraReady}>
-                  {cameraReady ? 'Automatic verification' : 'Starting camera...'}
+                  {cameraReady ? 'Verify' : 'Starting camera...'}
                 </button>
                 <button type="button" className="ticket-image-remove" onClick={() => { setFaceVerificationOpen(false); setPendingAttachment(null); stopCameraStream(); }}>
                   Cancel
