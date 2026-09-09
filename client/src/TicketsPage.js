@@ -278,11 +278,10 @@ function TicketsPage() {
       return;
     }
 
-    setAttachment({ data: capturedImage, name: file.name, type: file.type });
     setFaceVerificationOpen(false);
     setPendingAttachment(null);
     stopCameraStream();
-    setSubmissionState({ status: 'success', message: 'Face verification passed. Maintenance photo accepted.', ticketCode: '' });
+    setSubmissionState({ status: 'success', message: 'Face verification passed. You may now upload the issue photo.', ticketCode: '' });
     window.setTimeout(() => setSubmissionState({ status: 'idle', message: '', ticketCode: '' }), 2200);
   };
 
@@ -302,11 +301,10 @@ function TicketsPage() {
     const result = await validateFaceInImage(file, getProfileFaceReference() || undefined);
 
     if (result.isFaceLike) {
-      setAttachment({ data: capturedImage, name: file.name, type: file.type });
       setFaceVerificationOpen(false);
       setPendingAttachment(null);
       stopCameraStream();
-      setSubmissionState({ status: 'success', message: 'Face verification passed automatically. Maintenance photo accepted.', ticketCode: '' });
+      setSubmissionState({ status: 'success', message: 'Automatic verification complete. You may now upload the issue photo.', ticketCode: '' });
       window.setTimeout(() => setSubmissionState({ status: 'idle', message: '', ticketCode: '' }), 2200);
       return;
     }
@@ -510,7 +508,7 @@ function TicketsPage() {
               {faceVerificationError && <div className="ticket-notice error" role="alert" aria-live="polite">{faceVerificationError}</div>}
               <div className="face-verification-actions">
                 <button type="button" className="institutional-btn ticket-submit-button" onClick={autoVerifyFace} disabled={!cameraReady}>
-                  {cameraReady ? 'Verify face automatically' : 'Starting camera...'}
+                  {cameraReady ? 'Automatic verification' : 'Starting camera...'}
                 </button>
                 <button type="button" className="ticket-image-remove" onClick={() => { setFaceVerificationOpen(false); setPendingAttachment(null); stopCameraStream(); }}>
                   Cancel
