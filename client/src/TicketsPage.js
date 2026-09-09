@@ -243,12 +243,14 @@ function TicketsPage() {
       return;
     }
 
-    const profileFace = getProfileFaceReference();
-    const result = await validateFaceInImage(file, profileFace || undefined);
-    if (!result.isFaceLike) {
-      setSubmissionState({ status: 'error', message: result.reason || 'Face verification failed. Please upload a clear photo showing your face before submitting maintenance proof.' });
-      clearAttachment();
-      return;
+    if (!faceVerified) {
+      const profileFace = getProfileFaceReference();
+      const result = await validateFaceInImage(file, profileFace || undefined);
+      if (!result.isFaceLike) {
+        setSubmissionState({ status: 'error', message: result.reason || 'Face verification failed. Please upload a clear photo showing your face before submitting maintenance proof.' });
+        clearAttachment();
+        return;
+      }
     }
 
     const reader = new FileReader();
@@ -318,6 +320,12 @@ function TicketsPage() {
   const handleAttachmentChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    if (faceVerified) {
+      await acceptAttachment(file);
+      event.target.value = '';
+      return;
+    }
 
     const profileFace = getProfileFaceReference();
     if (!profileFace) {
