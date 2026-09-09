@@ -1,3 +1,59 @@
+const getImageMetrics = (imageSource) => new Promise((resolve, reject) => {
+  const img = new Image();
+
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    const maxDimension = 240;
+    const scale = Math.min(1, maxDimension / Math.max(img.width, img.height));
+    canvas.width = Math.max(1, Math.round(img.width * scale));
+    canvas.height = Math.max(1, Math.round(img.height * scale));
+    const context = canvas.getContext('2d');
+    context.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    const metrics = analyzeFacePixels(pixels, canvas.width, canvas.height);
+
+    if (!metrics.boundingBox) {
+      resolve({ ...metrics, averageRgb: { r: 0, g: 0, b: 0 }, faceCenter: null });
+      return;
+    }
+
+    const { x, y, width, height } = metrics.boundingBox;
+    let totalR = 0;
+    let totalG = 0;
+    let totalB = 0;
+    let totalSamples = 0;
+
+    for (let py = y; py < y + height; py += 1) {
+      for (let px = x; px < x + width; px += 1) {
+        const offset = (py * canvas.width + px) * 4;
+        totalR += pixels[offset];
+        totalG += pixels[offset + 1];
+        totalB += pixels[offset + 2];
+        totalSamples += 1;
+      }
+    }
+
+    const averageRgb = totalSamples ? {
+      r: totalR / totalSamples,
+      g: totalG / totalSamples,
+      b: totalB / totalSamples,
+    } : { r: 0, g: 0, b: 0 };
+
+    resolve({
+      ...metrics,
+      averageRgb,
+      faceCenter: {
+        x: (x + width / 2) / canvas.width,
+        y: (y + height / 2) / canvas.height,
+      },
+    });
+  };
+
+  img.onerror = () => reject(new Error('Unable to read the selected image.'));
+  img.src = imageSource;
+});
+
 export function analyzeFacePixels(pixels, width, height) {
   if (!pixels || width <= 0 || height <= 0) {
     return {
@@ -73,7 +129,7 @@ export function analyzeFacePixels(pixels, width, height) {
   };
 }
 
-export function validateFaceInImage(file) {
+export function validateFaceInImage(file, referenceSource = '') {
   if (!file || !file.type || !file.type.startsWith('image/')) {
     return Promise.resolve({ isFaceLike: false, reason: 'Please select an image file.' });
   }
@@ -81,34 +137,65 @@ export function validateFaceInImage(file) {
   return new Promise((resolve) => {
     const reader = new FileReader();
 
-    reader.onload = () => {
-      const img = new Image();
+    reader.onload = async () => {
+      try {
+        const imageSource = reader.result;
+        const uploadMetrics = await getImageMetrics(imageSource);
 
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const maxDimension = 240;
-        const scale = Math.min(1, maxDimension / Math.max(img.width, img.height));
+        if (!uploadMetrics.isFaceLike) {
+          resolve({
+            isFaceLike: false,
+            reason: 'Face verification failed. Please upload a clear photo showing your face before submitting maintenance proof.',
+          });
+          return;
+        }
 
-        canvas.width = Math.max(1, Math.round(img.width * scale));
-        canvas.height = Math.max(1, Math.round(img.height * scale));
+        if (!referenceSource) {
+          resolve({
+            ...uploadMetrics,
+            isFaceLike: true,
+            reason: 'Face verification passed.',
+          });
+          return;
+        }
 
-        const context = canvas.getContext('2d');
-        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const referenceMetrics = await getImageMetrics(referenceSource);
+        if (!referenceMetrics.isFaceLike) {
+          resolve({
+            isFaceLike: false,
+            reason: 'Your profile face could not be verified. Please update your profile photo and try again.',
+          });
+          return;
+        }
 
-        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-        const result = analyzeFacePixels(imageData.data, canvas.width, canvas.height);
+        const colorDistance = Math.sqrt(
+          Math.pow(uploadMetrics.averageRgb.r - referenceMetrics.averageRgb.r, 2)
+          + Math.pow(uploadMetrics.averageRgb.g - referenceMetrics.averageRgb.g, 2)
+          + Math.pow(uploadMetrics.averageRgb.b - referenceMetrics.averageRgb.b, 2),
+        );
+        const faceCenterDistance = uploadMetrics.faceCenter && referenceMetrics.faceCenter
+          ? Math.hypot(
+              uploadMetrics.faceCenter.x - referenceMetrics.faceCenter.x,
+              uploadMetrics.faceCenter.y - referenceMetrics.faceCenter.y,
+            )
+          : 1;
+        const aspectDifference = Math.abs(uploadMetrics.aspectRatio - referenceMetrics.aspectRatio);
+        const skinDifference = Math.abs(uploadMetrics.skinPixels - referenceMetrics.skinPixels) / Math.max(referenceMetrics.skinPixels, 1);
+        const score = 1 - (colorDistance / 510) * 0.4 - (faceCenterDistance * 0.6) - (aspectDifference * 0.3) - (skinDifference * 0.5);
+
+        const matchesProfile = score > 0.48;
 
         resolve({
-          ...result,
-          reason: result.isFaceLike ? 'Face verification passed.' : 'Face verification failed. Please upload a clear photo showing your face before submitting maintenance proof.',
+          ...uploadMetrics,
+          isFaceLike: matchesProfile,
+          reason: matchesProfile
+            ? 'Face verification passed.'
+            : 'Face recognition did not match your profile photo. Please upload a photo that matches the face on your profile.',
+          score,
         });
-      };
-
-      img.onerror = () => {
-        resolve({ isFaceLike: false, reason: 'Unable to read the selected image.' });
-      };
-
-      img.src = reader.result;
+      } catch (error) {
+        resolve({ isFaceLike: false, reason: error.message || 'Unable to verify the selected image.' });
+      }
     };
 
     reader.onerror = () => {

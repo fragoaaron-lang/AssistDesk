@@ -169,6 +169,13 @@ function TicketsPage() {
     setAttachment(null);
   };
 
+  const getProfileFaceReference = () => {
+    if (user?.profile_picture) return user.profile_picture;
+    const identifier = user?.id ?? user?.email ?? 'guest';
+    const key = `assistdesk_profile_photo_${identifier}`;
+    return localStorage.getItem(key) || '';
+  };
+
   const acceptAttachment = async (file) => {
     if (!file) {
       setAttachment(null);
@@ -183,7 +190,8 @@ function TicketsPage() {
       return;
     }
 
-    const result = await validateFaceInImage(file);
+    const profileFace = getProfileFaceReference();
+    const result = await validateFaceInImage(file, profileFace || undefined);
     if (!result.isFaceLike) {
       setSubmissionState({ status: 'error', message: result.reason || 'Face verification failed. Please upload a clear photo showing your face before submitting maintenance proof.' });
       clearAttachment();
