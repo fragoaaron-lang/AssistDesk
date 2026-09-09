@@ -570,7 +570,7 @@ function TicketsPage() {
               </select>
               <textarea className="institutional-textarea" placeholder="Describe your issue" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
               {isMaintenanceDepartment && (
-                <div className={`ticket-image-upload ${attachment ? 'has-file' : ''}`} onPaste={handleAttachmentPaste} tabIndex="0">
+                <div className={`ticket-image-upload ${attachment ? 'has-file' : ''} ${faceVerified ? 'is-verified' : ''}`} onPaste={handleAttachmentPaste} tabIndex="0">
                   <div className="ticket-image-upload-heading">
                     <span className="ticket-image-upload-icon" aria-hidden="true">+</span>
                     <div>
@@ -587,13 +587,13 @@ function TicketsPage() {
                     </div>
                   ) : faceVerified ? (
                     <>
-                      <label className="ticket-image-select" htmlFor="maintenance-photo">
+                      <label className="ticket-image-select ticket-image-select--full" htmlFor="maintenance-photo">
                         <span>Upload proof photo</span>
                       </label>
                       <input id="maintenance-photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAttachmentChange} required={!attachment} />
                     </>
                   ) : (
-                    <button type="button" className="ticket-image-select" onClick={openFaceVerificationCamera}>
+                    <button type="button" className="ticket-image-select ticket-image-select--full" onClick={openFaceVerificationCamera}>
                       <span>Use camera verification</span>
                     </button>
                   )}
