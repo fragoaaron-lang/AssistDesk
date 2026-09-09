@@ -185,7 +185,11 @@ function ChatbotWidget() {
                 {entry.role === 'assistant' && <span style={{ fontSize: '1.2rem', marginRight: '8px' }}>{gender === 'boy' ? '👦' : '👧'}</span>}
                 <span>{entry.text}</span>
                 {entry.details && <small>{entry.details.name} · {entry.details.office_hours || 'Contact the department for office hours.'}</small>}
-                {entry.ticket && <small>Ticket {entry.ticket.ticket_code || `#${entry.ticket.id}`} · Status: {entry.ticket.status}</small>}
+                {entry.ticket && (
+                  <small>
+                    Ticket {entry.ticket.ticket_code || `#${entry.ticket.id}`} · {entry.ticket.subject} · {entry.ticket.description} · Status: {entry.ticket.status} · ETA: {entry.ticket.estimated_completion_at ? new Date(entry.ticket.estimated_completion_at).toLocaleString() : 'pending'}
+                  </small>
+                )}
                 {entry.ticketProcess && entry.ticket && (
                   <div className="chatbot-ticket-process" aria-label="Ticket process">
                     {entry.ticketProcess.map((stage, stageIndex) => {
@@ -198,7 +202,7 @@ function ChatbotWidget() {
                     })}
                   </div>
                 )}
-                {entry.tickets?.map((ticket) => <small key={ticket.id}>{ticket.ticket_code || `#${ticket.id}`} · {ticket.subject} · {ticket.status}</small>)}
+                {entry.tickets?.map((ticket) => <small key={ticket.id}>{ticket.ticket_code || `#${ticket.id}`} · {ticket.subject} · {ticket.status} · ETA: {ticket.estimated_completion_at ? new Date(ticket.estimated_completion_at).toLocaleString() : 'pending'}</small>)}
               </div>
             ))}
             {sending && (

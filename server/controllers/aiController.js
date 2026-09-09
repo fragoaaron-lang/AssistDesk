@@ -334,7 +334,7 @@ const handleTicketCommand = async (message, userId) => {
     const statusLabel = statusLabels[ticket.status] || ticket.status;
 
     return {
-      ai_response: `${ticket.ticket_code} is currently ${statusLabel}.`,
+      ai_response: `${ticket.ticket_code} is currently ${statusLabel}. Request: ${ticket.subject}. Brief description: ${ticket.description}`,
       ticket,
       ticket_process: Object.entries(statusLabels).map(([key, label]) => ({ key, label })),
       action: 'ticket_lookup',

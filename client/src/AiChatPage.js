@@ -26,7 +26,7 @@ function AiChatPage() {
       setHistory((prev) => [
         ...prev,
         { role: 'user', text: message },
-        { role: 'assistant', text: res.data.ai_response, details: res.data.department_details, service: res.data.service_details },
+        { role: 'assistant', text: res.data.ai_response, details: res.data.department_details, service: res.data.service_details, ticket: res.data.ticket, tickets: res.data.tickets },
       ]);
       setMessage('');
     } catch (error) {
@@ -137,7 +137,11 @@ function AiChatPage() {
                 {entry.ticket && (
                   <div style={{ marginTop: '0.4rem', background: '#eef7ff', padding: '0.7rem', borderRadius: '10px' }}>
                     <div><strong>Ticket:</strong> {entry.ticket.ticket_code || `#${entry.ticket.id}`}</div>
+                    <div><strong>Request:</strong> {entry.ticket.subject}</div>
+                    <div><strong>Description:</strong> {entry.ticket.description}</div>
+                    <div><strong>Department:</strong> {entry.ticket.Department?.name || 'Unassigned'}</div>
                     <div><strong>Status:</strong> {entry.ticket.status}</div>
+                    <div><strong>Priority:</strong> {entry.ticket.priority}</div>
                     <div><strong>Estimated completion:</strong> {new Date(entry.ticket.estimated_completion_at).toLocaleString()}</div>
                   </div>
                 )}
