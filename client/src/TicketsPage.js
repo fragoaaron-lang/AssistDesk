@@ -601,7 +601,7 @@ function TicketsPage() {
                       <input id="maintenance-photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAttachmentChange} required={!attachment} />
                     </>
                   ) : (
-                    <button type="button" className="ticket-image-select ticket-image-select--full" onClick={openFaceVerificationCamera}>
+                    <button type="button" className="ticket-image-select ticket-image-select--verification" onClick={openFaceVerificationCamera}>
                       <span>Use camera verification</span>
                     </button>
                   )}
