@@ -193,6 +193,12 @@ function TicketsPage() {
     setCameraReady(false);
   };
 
+  const openFaceVerificationCamera = () => {
+    setPendingAttachment(null);
+    setFaceVerificationError('');
+    setFaceVerificationOpen(true);
+  };
+
   const startCameraVerification = async () => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       setFaceVerificationError('Camera access is not available in this browser.');
@@ -547,11 +553,11 @@ function TicketsPage() {
                       <button type="button" className="ticket-image-remove" onClick={clearAttachment}>Remove</button>
                     </div>
                   ) : (
-                    <label className="ticket-image-select" htmlFor="maintenance-photo">
-                      <span>Choose a photo</span>
-                    </label>
+                    <button type="button" className="ticket-image-select" onClick={openFaceVerificationCamera}>
+                      <span>Use camera verification</span>
+                    </button>
                   )}
-                  <input id="maintenance-photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAttachmentChange} required={!attachment} />
+                  <input id="maintenance-photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAttachmentChange} required={!attachment} style={{ display: 'none' }} />
                 </div>
               )}
               <select className="institutional-select" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
