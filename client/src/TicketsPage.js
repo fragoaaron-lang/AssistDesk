@@ -6,6 +6,7 @@ import LogoutButton from './LogoutButton';
 import HeaderProfile from './HeaderProfile';
 import SidebarProfile from './SidebarProfile';
 import TicketProgressBar from './TicketProgressBar';
+import { validateFaceInImage } from './faceVerification';
 
 function TicketsPage() {
   const { token, user } = useAuth();
@@ -168,28 +169,35 @@ function TicketsPage() {
     setAttachment(null);
   };
 
-  const acceptAttachment = (file) => {
+  const acceptAttachment = async (file) => {
     if (!file) {
       setAttachment(null);
       return;
     }
     if (!file.type.startsWith('image/')) {
       setSubmissionState({ status: 'error', message: 'Please select an image file.' });
-      event.target.value = '';
       return;
     }
     if (file.size > 3 * 1024 * 1024) {
       setSubmissionState({ status: 'error', message: 'Please select an image smaller than 3 MB.' });
-      event.target.value = '';
       return;
     }
+
+    const result = await validateFaceInImage(file);
+    if (!result.isFaceLike) {
+      setSubmissionState({ status: 'error', message: result.reason || 'Face verification failed. Please upload a clear photo showing your face before submitting maintenance proof.' });
+      clearAttachment();
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => setAttachment({ data: reader.result, name: file.name, type: file.type });
     reader.readAsDataURL(file);
   };
 
   const handleAttachmentChange = (event) => {
-    acceptAttachment(event.target.files?.[0]);
+    const file = event.target.files?.[0];
+    acceptAttachment(file);
   };
 
   const handleAttachmentPaste = (event) => {
@@ -397,7 +405,7 @@ function TicketsPage() {
                     <span className="ticket-image-upload-icon" aria-hidden="true">+</span>
                     <div>
                       <strong>Attach a photo of the issue</strong>
-                      <small>Required for maintenance requests. Photo verification is required (e.g., facial recognition). JPG, PNG, or WEBP up to 3 MB.</small>
+                      <small>Required for maintenance requests. Face recognition verification is required before the photo can be uploaded. JPG, PNG, or WEBP up to 3 MB.</small>
                     </div>
                   </div>
                   {attachment ? (
