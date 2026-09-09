@@ -27,11 +27,14 @@ function TicketsPage() {
   const [ticketActionState, setTicketActionState] = useState('idle');
   const [faceVerificationOpen, setFaceVerificationOpen] = useState(false);
   const [faceVerificationError, setFaceVerificationError] = useState('');
+  const [faceVerificationErrorDismissed, setFaceVerificationErrorDismissed] = useState(false);
+  const [faceVerificationErrorOffset, setFaceVerificationErrorOffset] = useState(0);
   const [pendingAttachment, setPendingAttachment] = useState(null);
   const [faceVerified, setFaceVerified] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
   const cameraVideoRef = useRef(null);
   const cameraStreamRef = useRef(null);
+  const faceVerificationErrorDragRef = useRef(null);
 
   const toDateTimeLocal = (value) => {
     if (!value) return '';
@@ -194,15 +197,47 @@ function TicketsPage() {
     setCameraReady(false);
   };
 
+  const setFaceVerificationFailure = (message) => {
+    setFaceVerificationError(message);
+    setFaceVerificationErrorDismissed(false);
+    setFaceVerificationErrorOffset(0);
+  };
+
   const openFaceVerificationCamera = () => {
     setPendingAttachment(null);
     setFaceVerificationError('');
+    setFaceVerificationErrorDismissed(false);
+    setFaceVerificationErrorOffset(0);
     setFaceVerificationOpen(true);
+  };
+
+  const handleFaceVerificationErrorPointerDown = (event) => {
+    faceVerificationErrorDragRef.current = { startX: event.clientX, pointerId: event.pointerId };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handleFaceVerificationErrorPointerMove = (event) => {
+    const drag = faceVerificationErrorDragRef.current;
+    if (!drag) return;
+    setFaceVerificationErrorOffset(event.clientX - drag.startX);
+  };
+
+  const handleFaceVerificationErrorPointerUp = (event) => {
+    const drag = faceVerificationErrorDragRef.current;
+    if (!drag) return;
+    const offset = event.clientX - drag.startX;
+    faceVerificationErrorDragRef.current = null;
+    if (Math.abs(offset) >= 80) {
+      setFaceVerificationErrorDismissed(true);
+      setFaceVerificationErrorOffset(offset > 0 ? 420 : -420);
+      return;
+    }
+    setFaceVerificationErrorOffset(0);
   };
 
   const startCameraVerification = async () => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setFaceVerificationError('Camera access is not available in this browser.');
+      setFaceVerificationFailure('Camera access is not available in this browser.');
       return;
     }
 
@@ -225,7 +260,7 @@ function TicketsPage() {
       setFaceVerificationError('');
     } catch (error) {
       setCameraReady(false);
-      setFaceVerificationError('Unable to access the camera. Please allow camera access and try again.');
+      setFaceVerificationFailure('Unable to access the camera. Please allow camera access and try again.');
     }
   };
 
@@ -261,7 +296,7 @@ function TicketsPage() {
   const captureFaceVerification = async () => {
     const video = cameraVideoRef.current;
     if (!video || !video.videoWidth || !video.videoHeight) {
-      setFaceVerificationError('The camera is still starting. Please wait a moment and try again.');
+      setFaceVerificationFailure('The camera is still starting. Please wait a moment and try again.');
       return;
     }
 
@@ -277,7 +312,7 @@ function TicketsPage() {
 
     const result = await validateFaceInImage(file, getProfileFaceReference() || undefined);
     if (!result.isFaceLike) {
-      setFaceVerificationError(result.reason || 'Face recognition did not match your profile photo. Please try again.');
+      setFaceVerificationFailure(result.reason || 'Face recognition did not match your profile photo. Please try again.');
       return;
     }
 
@@ -314,7 +349,7 @@ function TicketsPage() {
       return;
     }
 
-    setFaceVerificationError(result.reason || 'Unable to verify your face. Please align your face in the camera frame and try again.');
+    setFaceVerificationFailure(result.reason || 'Unable to verify your face. Please align your face in the camera frame and try again.');
   };
 
   const handleAttachmentChange = async (event) => {
@@ -517,7 +552,20 @@ function TicketsPage() {
                 </div>
                 <video ref={cameraVideoRef} autoPlay muted playsInline className="face-verification-video" onLoadedData={autoVerifyFace} />
               </div>
-              {faceVerificationError && <div className="ticket-notice error" role="alert" aria-live="polite">{faceVerificationError}</div>}
+              {faceVerificationError && !faceVerificationErrorDismissed && (
+                <div
+                  className="ticket-notice error face-verification-error-notice"
+                  role="alert"
+                  aria-live="polite"
+                  style={{ transform: `translateX(${faceVerificationErrorOffset}px)` }}
+                  onPointerDown={handleFaceVerificationErrorPointerDown}
+                  onPointerMove={handleFaceVerificationErrorPointerMove}
+                  onPointerUp={handleFaceVerificationErrorPointerUp}
+                  onPointerCancel={handleFaceVerificationErrorPointerUp}
+                >
+                  {faceVerificationError}
+                </div>
+              )}
               <div className="face-verification-actions">
                 <button type="button" className="institutional-btn ticket-submit-button" onClick={autoVerifyFace} disabled={!cameraReady}>
                   {cameraReady ? 'Automatic verification' : 'Starting camera...'}
