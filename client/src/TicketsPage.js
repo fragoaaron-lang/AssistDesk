@@ -286,6 +286,34 @@ function TicketsPage() {
     window.setTimeout(() => setSubmissionState({ status: 'idle', message: '', ticketCode: '' }), 2200);
   };
 
+  const autoVerifyFace = async () => {
+    const video = cameraVideoRef.current;
+    if (!video || !video.videoWidth || !video.videoHeight || !cameraReady) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const capturedImage = canvas.toDataURL('image/jpeg');
+    const dataBlob = await fetch(capturedImage).then((response) => response.blob());
+    const file = new File([dataBlob], 'maintenance-face-verification.jpg', { type: 'image/jpeg' });
+    const result = await validateFaceInImage(file, getProfileFaceReference() || undefined);
+
+    if (result.isFaceLike) {
+      setAttachment({ data: capturedImage, name: file.name, type: file.type });
+      setFaceVerificationOpen(false);
+      setPendingAttachment(null);
+      stopCameraStream();
+      setSubmissionState({ status: 'success', message: 'Face verification passed automatically. Maintenance photo accepted.', ticketCode: '' });
+      window.setTimeout(() => setSubmissionState({ status: 'idle', message: '', ticketCode: '' }), 2200);
+      return;
+    }
+
+    setFaceVerificationError(result.reason || 'Unable to verify your face. Please align your face in the camera frame and try again.');
+  };
+
   const handleAttachmentChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -474,12 +502,15 @@ function TicketsPage() {
                 <p>Please look at the camera and match your profile face before continuing.</p>
               </div>
               <div className="face-verification-video-wrap">
-                <video ref={cameraVideoRef} autoPlay muted playsInline className="face-verification-video" />
+                <div className="face-verification-frame" aria-hidden="true">
+                  <span className="face-verification-outline" />
+                </div>
+                <video ref={cameraVideoRef} autoPlay muted playsInline className="face-verification-video" onLoadedData={autoVerifyFace} />
               </div>
               {faceVerificationError && <div className="ticket-notice error" role="alert" aria-live="polite">{faceVerificationError}</div>}
               <div className="face-verification-actions">
-                <button type="button" className="institutional-btn ticket-submit-button" onClick={captureFaceVerification} disabled={!cameraReady}>
-                  {cameraReady ? 'Capture and verify face' : 'Starting camera...'}
+                <button type="button" className="institutional-btn ticket-submit-button" onClick={autoVerifyFace} disabled={!cameraReady}>
+                  {cameraReady ? 'Verify face automatically' : 'Starting camera...'}
                 </button>
                 <button type="button" className="ticket-image-remove" onClick={() => { setFaceVerificationOpen(false); setPendingAttachment(null); stopCameraStream(); }}>
                   Cancel
