@@ -397,7 +397,7 @@ function TicketsPage() {
                     <span className="ticket-image-upload-icon" aria-hidden="true">+</span>
                     <div>
                       <strong>Attach a photo of the issue</strong>
-                      <small>Required for maintenance requests. JPG, PNG, or WEBP up to 3 MB.</small>
+                      <small>Required for maintenance requests. Photo verification is required (e.g., facial recognition). JPG, PNG, or WEBP up to 3 MB.</small>
                     </div>
                   </div>
                   {attachment ? (
