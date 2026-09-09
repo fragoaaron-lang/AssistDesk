@@ -34,6 +34,7 @@ function TicketsPage() {
   const [cameraReady, setCameraReady] = useState(false);
   const cameraVideoRef = useRef(null);
   const cameraStreamRef = useRef(null);
+  const uploadErrorTimeoutRef = useRef(null);
   const faceVerificationErrorDragRef = useRef(null);
 
   const toDateTimeLocal = (value) => {
@@ -197,6 +198,15 @@ function TicketsPage() {
     setCameraReady(false);
   };
 
+  const showUploadError = (message) => {
+    setSubmissionState({ status: 'error', message, ticketCode: '' });
+    if (uploadErrorTimeoutRef.current) window.clearTimeout(uploadErrorTimeoutRef.current);
+    uploadErrorTimeoutRef.current = window.setTimeout(() => {
+      setSubmissionState({ status: 'idle', message: '', ticketCode: '' });
+      uploadErrorTimeoutRef.current = null;
+    }, 1000);
+  };
+
   const setFaceVerificationFailure = (message) => {
     setFaceVerificationError(message);
     setFaceVerificationErrorDismissed(false);
@@ -270,11 +280,11 @@ function TicketsPage() {
       return;
     }
     if (!file.type.startsWith('image/')) {
-      setSubmissionState({ status: 'error', message: 'Please select an image file.' });
+      showUploadError('Please select an image file.');
       return;
     }
     if (file.size > 3 * 1024 * 1024) {
-      setSubmissionState({ status: 'error', message: 'Please select an image smaller than 3 MB.' });
+      showUploadError('Please select an image smaller than 3 MB.');
       return;
     }
 
@@ -282,7 +292,7 @@ function TicketsPage() {
       const profileFace = getProfileFaceReference();
       const result = await validateFaceInImage(file, profileFace || undefined);
       if (!result.isFaceLike) {
-        setSubmissionState({ status: 'error', message: result.reason || 'Face verification failed. Please upload a clear photo showing your face before submitting maintenance proof.' });
+        showUploadError(result.reason || 'Face verification failed. Please upload a clear photo showing your face before submitting maintenance proof.');
         clearAttachment();
         return;
       }
@@ -364,7 +374,7 @@ function TicketsPage() {
 
     const profileFace = getProfileFaceReference();
     if (!profileFace) {
-      setSubmissionState({ status: 'error', message: 'Please upload or save a profile photo before submitting maintenance proof.' });
+      showUploadError('Please upload or save a profile photo before submitting maintenance proof.');
       event.target.value = '';
       return;
     }
