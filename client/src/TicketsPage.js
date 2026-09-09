@@ -28,6 +28,7 @@ function TicketsPage() {
   const [faceVerificationOpen, setFaceVerificationOpen] = useState(false);
   const [faceVerificationError, setFaceVerificationError] = useState('');
   const [pendingAttachment, setPendingAttachment] = useState(null);
+  const [faceVerified, setFaceVerified] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
   const cameraVideoRef = useRef(null);
   const cameraStreamRef = useRef(null);
@@ -278,6 +279,7 @@ function TicketsPage() {
       return;
     }
 
+    setFaceVerified(true);
     setFaceVerificationOpen(false);
     setPendingAttachment(null);
     stopCameraStream();
@@ -301,6 +303,7 @@ function TicketsPage() {
     const result = await validateFaceInImage(file, getProfileFaceReference() || undefined);
 
     if (result.isFaceLike) {
+      setFaceVerified(true);
       setFaceVerificationOpen(false);
       setPendingAttachment(null);
       stopCameraStream();
@@ -352,6 +355,7 @@ function TicketsPage() {
   const clearAttachment = () => {
     setAttachment(null);
     setPreviewImage(null);
+    setFaceVerified(false);
     const input = document.getElementById('maintenance-photo');
     if (input) input.value = '';
   };
@@ -581,12 +585,18 @@ function TicketsPage() {
                       </button>
                       <button type="button" className="ticket-image-remove" onClick={clearAttachment}>Remove</button>
                     </div>
+                  ) : faceVerified ? (
+                    <>
+                      <label className="ticket-image-select" htmlFor="maintenance-photo">
+                        <span>Upload proof photo</span>
+                      </label>
+                      <input id="maintenance-photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAttachmentChange} required={!attachment} />
+                    </>
                   ) : (
                     <button type="button" className="ticket-image-select" onClick={openFaceVerificationCamera}>
                       <span>Use camera verification</span>
                     </button>
                   )}
-                  <input id="maintenance-photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAttachmentChange} required={!attachment} style={{ display: 'none' }} />
                 </div>
               )}
               <select className="institutional-select" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
