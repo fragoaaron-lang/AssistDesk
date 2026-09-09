@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
@@ -25,6 +25,12 @@ function TicketsPage() {
   const [etaDraft, setEtaDraft] = useState('');
   const [updateMessage, setUpdateMessage] = useState('');
   const [ticketActionState, setTicketActionState] = useState('idle');
+  const [faceVerificationOpen, setFaceVerificationOpen] = useState(false);
+  const [faceVerificationError, setFaceVerificationError] = useState('');
+  const [pendingAttachment, setPendingAttachment] = useState(null);
+  const [cameraReady, setCameraReady] = useState(false);
+  const cameraVideoRef = useRef(null);
+  const cameraStreamRef = useRef(null);
 
   const toDateTimeLocal = (value) => {
     if (!value) return '';
@@ -176,6 +182,46 @@ function TicketsPage() {
     return localStorage.getItem(key) || '';
   };
 
+  const stopCameraStream = () => {
+    if (cameraStreamRef.current) {
+      cameraStreamRef.current.getTracks().forEach((track) => track.stop());
+      cameraStreamRef.current = null;
+    }
+    if (cameraVideoRef.current) {
+      cameraVideoRef.current.srcObject = null;
+    }
+    setCameraReady(false);
+  };
+
+  const startCameraVerification = async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setFaceVerificationError('Camera access is not available in this browser.');
+      return;
+    }
+
+    try {
+      stopCameraStream();
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: 'user',
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+        },
+        audio: false,
+      });
+      cameraStreamRef.current = stream;
+      if (cameraVideoRef.current) {
+        cameraVideoRef.current.srcObject = stream;
+        await cameraVideoRef.current.play();
+      }
+      setCameraReady(true);
+      setFaceVerificationError('');
+    } catch (error) {
+      setCameraReady(false);
+      setFaceVerificationError('Unable to access the camera. Please allow camera access and try again.');
+    }
+  };
+
   const acceptAttachment = async (file) => {
     if (!file) {
       setAttachment(null);
@@ -203,10 +249,63 @@ function TicketsPage() {
     reader.readAsDataURL(file);
   };
 
-  const handleAttachmentChange = (event) => {
-    const file = event.target.files?.[0];
-    acceptAttachment(file);
+  const captureFaceVerification = async () => {
+    const video = cameraVideoRef.current;
+    if (!video || !video.videoWidth || !video.videoHeight) {
+      setFaceVerificationError('The camera is still starting. Please wait a moment and try again.');
+      return;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const capturedImage = canvas.toDataURL('image/jpeg');
+    const dataBlob = await fetch(capturedImage).then((response) => response.blob());
+    const file = new File([dataBlob], pendingAttachment?.name || 'maintenance-face-verification.jpg', { type: 'image/jpeg' });
+
+    const result = await validateFaceInImage(file, getProfileFaceReference() || undefined);
+    if (!result.isFaceLike) {
+      setFaceVerificationError(result.reason || 'Face recognition did not match your profile photo. Please try again.');
+      return;
+    }
+
+    setAttachment({ data: capturedImage, name: file.name, type: file.type });
+    setFaceVerificationOpen(false);
+    setPendingAttachment(null);
+    stopCameraStream();
+    setSubmissionState({ status: 'success', message: 'Face verification passed. Maintenance photo accepted.', ticketCode: '' });
+    window.setTimeout(() => setSubmissionState({ status: 'idle', message: '', ticketCode: '' }), 2200);
   };
+
+  const handleAttachmentChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const profileFace = getProfileFaceReference();
+    if (!profileFace) {
+      setSubmissionState({ status: 'error', message: 'Please upload or save a profile photo before submitting maintenance proof.' });
+      event.target.value = '';
+      return;
+    }
+
+    setPendingAttachment(file);
+    setFaceVerificationError('');
+    setFaceVerificationOpen(true);
+    event.target.value = '';
+  };
+
+  useEffect(() => {
+    if (!faceVerificationOpen) {
+      stopCameraStream();
+      return undefined;
+    }
+
+    startCameraVerification();
+    return () => stopCameraStream();
+  }, [faceVerificationOpen]);
 
   const handleAttachmentPaste = (event) => {
     const pastedImage = Array.from(event.clipboardData?.items || [])
@@ -356,6 +455,30 @@ function TicketsPage() {
             <div className="ticket-image-lightbox-content" role="dialog" aria-modal="true" aria-label="Maintenance photo preview" onClick={(event) => event.stopPropagation()}>
               <button type="button" className="ticket-image-lightbox-close" onClick={() => setPreviewImage(null)} aria-label="Close photo preview">×</button>
               <img src={previewImage} alt="Maintenance issue preview" />
+            </div>
+          </div>
+        )}
+
+        {faceVerificationOpen && (
+          <div className="ticket-image-lightbox" role="presentation" onClick={() => { setFaceVerificationOpen(false); setPendingAttachment(null); stopCameraStream(); }}>
+            <div className="ticket-image-lightbox-content face-verification-modal" role="dialog" aria-modal="true" aria-label="Face verification" onClick={(event) => event.stopPropagation()}>
+              <button type="button" className="ticket-image-lightbox-close" onClick={() => { setFaceVerificationOpen(false); setPendingAttachment(null); stopCameraStream(); }} aria-label="Close face verification">×</button>
+              <div className="face-verification-header">
+                <h3>Face verification</h3>
+                <p>Please look at the camera and match your profile face before continuing.</p>
+              </div>
+              <div className="face-verification-video-wrap">
+                <video ref={cameraVideoRef} autoPlay muted playsInline className="face-verification-video" />
+              </div>
+              {faceVerificationError && <div className="ticket-notice error" role="alert" aria-live="polite">{faceVerificationError}</div>}
+              <div className="face-verification-actions">
+                <button type="button" className="institutional-btn ticket-submit-button" onClick={captureFaceVerification} disabled={!cameraReady}>
+                  {cameraReady ? 'Capture and verify face' : 'Starting camera...'}
+                </button>
+                <button type="button" className="ticket-image-remove" onClick={() => { setFaceVerificationOpen(false); setPendingAttachment(null); stopCameraStream(); }}>
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         )}
