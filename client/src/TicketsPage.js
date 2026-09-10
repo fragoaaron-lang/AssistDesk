@@ -8,13 +8,90 @@ import SidebarProfile from './SidebarProfile';
 import TicketProgressBar from './TicketProgressBar';
 import { validateFaceInImage } from './faceVerification';
 
+const generalIssueOptions = {
+  'IT and Technology': [
+    'Wi-Fi or internet access',
+    'Computer or laptop problem',
+    'Printer or scanner problem',
+    'Software or system access',
+    'Password or account access',
+  ],
+  'Facilities and Maintenance': [
+    'Electrical or lighting problem',
+    'Plumbing or water problem',
+    'Air conditioning or ventilation',
+    'Furniture or fixture damage',
+    'Building or room damage',
+  ],
+  'Classroom Concerns': [
+    'Classroom equipment',
+    'Classroom cleanliness',
+    'Missing classroom supplies',
+    'Room temperature or comfort',
+  ],
+  'Academic Support': [
+    'Class schedule concern',
+    'Learning materials request',
+    'Assignment or course concern',
+    'Tutoring or academic assistance',
+  ],
+  'Student Services': [
+    'Enrollment or registration',
+    'Student records request',
+    'Student ID concern',
+    'Transportation concern',
+    'Uniform or school requirement',
+  ],
+  'Safety and Security': [
+    'Safety hazard',
+    'Security equipment problem',
+    'Unsafe area or incident',
+    'Lost and found item',
+  ],
+  'Health and Wellness': [
+    'Nurse or medical assistance',
+    'Counseling referral',
+    'Accessibility concern',
+    'Wellness concern',
+  ],
+  'Library and Resources': [
+    'Book or resource request',
+    'Library computer access',
+    'Study area concern',
+    'Database or research access',
+  ],
+  'Clubs, Sports, and Events': [
+    'Club or organization concern',
+    'Sports equipment or facility',
+    'Event setup request',
+    'Room reservation request',
+  ],
+  'Administrative Requests': [
+    'Form or document request',
+    'Permit or approval request',
+    'School announcement request',
+    'General administrative inquiry',
+  ],
+  'Cleaning and Sanitation': [
+    'Restroom concern',
+    'Trash or waste collection',
+    'Pest concern',
+    'Sanitation supplies',
+  ],
+  'Food Services': [
+    'Cafeteria concern',
+    'Meal quality or availability',
+    'Food safety concern',
+    'Vending machine problem',
+  ],
+};
+
 function TicketsPage() {
   const { token, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [tickets, setTickets] = useState([]);
   const [departments, setDepartments] = useState([]);
-  const [services, setServices] = useState([]);
-  const [form, setForm] = useState({ subject: '', description: '', category: 'Other', priority: 'medium', department_id: '' });
+  const [form, setForm] = useState({ subject: '', description: '', category: '', priority: 'medium', department_id: '' });
   const [attachment, setAttachment] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
   const [submissionState, setSubmissionState] = useState({ status: 'idle', message: '', ticketCode: '' });
@@ -69,28 +146,14 @@ function TicketsPage() {
     }
   };
 
-  const loadServices = async () => {
-    const res = await axios.get(`${API_BASE_URL}/api/catalog/services`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    setServices(res.data.services || []);
-  };
-
   useEffect(() => {
     if (token) {
       loadTickets();
       loadDepartments();
-      loadServices();
     }
   }, [token]);
 
-  const availableSubjects = services
-    .filter((service) => String(service.department_id) === String(form.department_id))
-    .map((service) => service.name);
-
-  const subjectOptions = availableSubjects.length > 0
-    ? availableSubjects
-    : ['General Request', 'Support Request', 'Department Inquiry'];
+  const specificIssueOptions = generalIssueOptions[form.category] || [];
 
   const selectedDepartment = departments.find((department) => String(department.id) === String(form.department_id));
   const isMaintenanceDepartment = selectedDepartment?.name?.toLowerCase().includes('maintenance');
@@ -164,7 +227,7 @@ function TicketsPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const nextDepartmentId = departments[0]?.id ? String(departments[0].id) : '';
-      setForm({ subject: '', description: '', category: 'Other', priority: 'medium', department_id: nextDepartmentId });
+      setForm({ subject: '', description: '', category: '', priority: 'medium', department_id: nextDepartmentId });
       setAttachment(null);
       await loadTickets();
       const ticketCode = response.data.ticket_code || response.data.id;
@@ -176,8 +239,12 @@ function TicketsPage() {
   };
 
   const handleDepartmentChange = (departmentId) => {
-    setForm((current) => ({ ...current, department_id: departmentId, subject: '' }));
+    setForm((current) => ({ ...current, department_id: departmentId, category: '', subject: '' }));
     setAttachment(null);
+  };
+
+  const handleGeneralIssueChange = (category) => {
+    setForm((current) => ({ ...current, category, subject: '' }));
   };
 
   const getProfileFaceReference = () => {
@@ -628,9 +695,15 @@ function TicketsPage() {
                   <option key={department.id} value={department.id}>{department.display_name || department.name}</option>
                 ))}
               </select>
-              <select className="institutional-select" value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} required>
-                <option value="">Select a subject</option>
-                {subjectOptions.map((subject) => (
+              <select className="institutional-select" value={form.category} onChange={(e) => handleGeneralIssueChange(e.target.value)} required>
+                <option value="">Select a general issue</option>
+                {Object.keys(generalIssueOptions).map((category) => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+              <select className="institutional-select" value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} required disabled={!form.category}>
+                <option value="">Select a specific issue</option>
+                {specificIssueOptions.map((subject) => (
                   <option key={subject} value={subject}>{subject}</option>
                 ))}
               </select>
@@ -665,13 +738,6 @@ function TicketsPage() {
                   )}
                 </div>
               )}
-              <select className="institutional-select" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-                <option>Hardware</option>
-                <option>Building Maintenance</option>
-                <option>Department Concern</option>
-                <option>Account or Records</option>
-                <option>Other</option>
-              </select>
               <select className="institutional-select" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
