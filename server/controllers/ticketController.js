@@ -26,6 +26,24 @@ const getEstimatedCompletion = (priority, requestedAt = new Date()) => {
   return estimated;
 };
 
+const collegeDepartmentNames = new Set([
+  'college of nursing',
+  'cs',
+  'cba',
+  'charm',
+  'college of criminology',
+  'college of physical therapy',
+]);
+
+const isCsStudent = (user) => user?.role === 'student'
+  && ['cs', 'computer science department', 'college of computer studies'].includes(normalize(user.Department?.name));
+
+const canAccessSelectedDepartment = (user, department) => {
+  if (!isCsStudent(user)) return true;
+  const selectedName = normalize(department?.name);
+  return !collegeDepartmentNames.has(selectedName) || selectedName === 'cs';
+};
+
 const inferDepartmentId = async (subject, description) => {
   const faqs = await Faq.findAll({ include: [{ model: Department }] });
   const services = await Service.findAll({ include: [{ model: Department }] });
@@ -57,9 +75,22 @@ exports.createTicket = async (req, res) => {
       return res.status(400).json({ message: 'Subject and description are required.' });
     }
 
+    const requester = await User.findByPk(req.user.id, { include: [{ model: Department }] });
+    const selectedDepartment = selectedDepartmentId ? await Department.findByPk(selectedDepartmentId) : null;
+    if (selectedDepartmentId && !selectedDepartment) {
+      return res.status(400).json({ message: 'Selected department is invalid.' });
+    }
+    if (selectedDepartment && !canAccessSelectedDepartment(requester, selectedDepartment)) {
+      return res.status(403).json({ message: 'CS students cannot submit tickets to another college department.' });
+    }
+
     const resolvedDepartmentId = selectedDepartmentId
       ? Number(selectedDepartmentId)
       : await inferDepartmentId(subject, description);
+    const resolvedDepartment = selectedDepartment || (resolvedDepartmentId ? await Department.findByPk(resolvedDepartmentId) : null);
+    if (resolvedDepartment && !canAccessSelectedDepartment(requester, resolvedDepartment)) {
+      return res.status(403).json({ message: 'CS students cannot submit tickets to another college department.' });
+    }
 
     // Map new priority names to old database values temporarily
     const databasePriority = mapPriorityToDatabase(priority);

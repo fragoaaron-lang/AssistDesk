@@ -7,9 +7,9 @@ import { API_BASE_URL } from './config';
 const fallbackDepartments = [
   { id: 1, name: 'Basic Education Department' },
   { id: 2, name: 'College of Nursing' },
-  { id: 3, name: 'CS', display_name: 'Computer Science Department' },
+  { id: 3, name: 'CS', display_name: 'College of Computer Studies' },
   { id: 4, name: 'CBA', display_name: 'College of Business Administration' },
-  { id: 5, name: 'CHARM', display_name: 'College of Hospitality and Restaurant Management' },
+  { id: 5, name: 'CHARM', display_name: 'College of Hospitality Management' },
   { id: 6, name: 'College of Criminology' },
   { id: 7, name: 'College of Physical Therapy' },
   { id: 8, name: 'Maintenance Department' },

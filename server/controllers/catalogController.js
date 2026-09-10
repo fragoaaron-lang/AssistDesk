@@ -3,9 +3,9 @@ const { Department, Service, Faq } = require('../models');
 const canonicalDepartments = [
   ['Basic Education Department', 'Basic Education Department'],
   ['College of Nursing', 'College of Nursing'],
-  ['CS', 'Computer Science Department'],
+  ['CS', 'College of Computer Studies'],
   ['CBA', 'College of Business Administration'],
-  ['CHARM', 'College of Hospitality and Restaurant Management'],
+  ['CHARM', 'College of Hospitality Management'],
   ['College of Criminology', 'College of Criminology'],
   ['College of Physical Therapy', 'College of Physical Therapy'],
   ['Maintenance Department', 'Maintenance Department'],

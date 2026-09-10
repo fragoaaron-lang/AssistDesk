@@ -86,6 +86,11 @@ const generalIssueOptions = {
   ],
 };
 
+const collegeDepartmentNames = ['College of Nursing', 'CS', 'CBA', 'CHARM', 'College of Criminology', 'College of Physical Therapy'];
+
+const isCsStudent = (currentUser) => currentUser?.role === 'student'
+  && ['cs', 'computer science department', 'college of computer studies'].includes(String(currentUser.department_name || '').toLowerCase());
+
 function TicketsPage() {
   const { token, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -154,6 +159,9 @@ function TicketsPage() {
   }, [token]);
 
   const specificIssueOptions = generalIssueOptions[form.category] || [];
+  const availableDepartments = isCsStudent(user)
+    ? departments.filter((department) => !collegeDepartmentNames.includes(department.name) || department.name === 'CS')
+    : departments;
 
   const selectedDepartment = departments.find((department) => String(department.id) === String(form.department_id));
   const isMaintenanceDepartment = selectedDepartment?.name?.toLowerCase().includes('maintenance');
@@ -691,7 +699,7 @@ function TicketsPage() {
             <form onSubmit={createTicket} aria-busy={submissionState.status === 'loading'}>
               <select className="institutional-select" value={form.department_id} onChange={(e) => handleDepartmentChange(e.target.value)} required>
                 <option value="">Select a department</option>
-                {departments.map((department) => (
+                {availableDepartments.map((department) => (
                   <option key={department.id} value={department.id}>{department.display_name || department.name}</option>
                 ))}
               </select>
