@@ -33,15 +33,25 @@ const collegeDepartmentNames = new Set([
   'charm',
   'college of criminology',
   'college of physical therapy',
+  'education department',
+  'college of education',
 ]);
 
-const isCsStudent = (user) => user?.role === 'student'
-  && ['cs', 'computer science department', 'college of computer studies'].includes(normalize(user.Department?.name));
+const getCollegeDepartmentKey = (department) => {
+  const name = normalize(department?.name || department);
+  if (['cs', 'computer science department', 'college of computer studies'].includes(name)) return 'cs';
+  if (['cba', 'college of business administration', 'college of business and accountancy'].includes(name)) return 'cba';
+  if (['charm', 'college of hospitality and restaurant management', 'college of hospitality management'].includes(name)) return 'charm';
+  if (['education department', 'college of education'].includes(name)) return 'education';
+  if (collegeDepartmentNames.has(name)) return name;
+  return null;
+};
 
 const canAccessSelectedDepartment = (user, department) => {
-  if (!isCsStudent(user)) return true;
-  const selectedName = normalize(department?.name);
-  return !collegeDepartmentNames.has(selectedName) || selectedName === 'cs';
+  const requesterCollegeKey = user?.role === 'student' ? getCollegeDepartmentKey(user.Department) : null;
+  if (!requesterCollegeKey) return true;
+  const selectedCollegeKey = getCollegeDepartmentKey(department);
+  return !selectedCollegeKey || selectedCollegeKey === requesterCollegeKey;
 };
 
 const inferDepartmentId = async (subject, description) => {
@@ -81,7 +91,7 @@ exports.createTicket = async (req, res) => {
       return res.status(400).json({ message: 'Selected department is invalid.' });
     }
     if (selectedDepartment && !canAccessSelectedDepartment(requester, selectedDepartment)) {
-      return res.status(403).json({ message: 'CS students cannot submit tickets to another college department.' });
+      return res.status(403).json({ message: 'Students cannot submit tickets to another college department.' });
     }
 
     const resolvedDepartmentId = selectedDepartmentId
@@ -89,7 +99,7 @@ exports.createTicket = async (req, res) => {
       : await inferDepartmentId(subject, description);
     const resolvedDepartment = selectedDepartment || (resolvedDepartmentId ? await Department.findByPk(resolvedDepartmentId) : null);
     if (resolvedDepartment && !canAccessSelectedDepartment(requester, resolvedDepartment)) {
-      return res.status(403).json({ message: 'CS students cannot submit tickets to another college department.' });
+      return res.status(403).json({ message: 'Students cannot submit tickets to another college department.' });
     }
 
     // Map new priority names to old database values temporarily

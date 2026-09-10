@@ -86,10 +86,31 @@ const generalIssueOptions = {
   ],
 };
 
-const collegeDepartmentNames = ['College of Nursing', 'CS', 'CBA', 'CHARM', 'College of Criminology', 'College of Physical Therapy'];
+const collegeDepartmentNames = [
+  'college of nursing',
+  'cs',
+  'cba',
+  'charm',
+  'college of criminology',
+  'college of physical therapy',
+  'education department',
+  'college of education',
+];
 
-const isCsStudent = (currentUser) => currentUser?.role === 'student'
-  && ['cs', 'computer science department', 'college of computer studies'].includes(String(currentUser.department_name || '').toLowerCase());
+const normalizeDepartmentName = (department) => String(department?.name || department || '').toLowerCase().trim();
+
+const getCollegeDepartmentKey = (department) => {
+  const name = normalizeDepartmentName(department);
+  if (['cs', 'computer science department', 'college of computer studies'].includes(name)) return 'cs';
+  if (['cba', 'college of business administration', 'college of business and accountancy'].includes(name)) return 'cba';
+  if (['charm', 'college of hospitality and restaurant management', 'college of hospitality management'].includes(name)) return 'charm';
+  if (['education department', 'college of education'].includes(name)) return 'education';
+  if (collegeDepartmentNames.includes(name)) return name;
+  return null;
+};
+
+const isCollegeStudent = (currentUser) => currentUser?.role === 'student'
+  && Boolean(getCollegeDepartmentKey(currentUser.department_name));
 
 const getDepartmentDisplayName = (department) => {
   const normalizedName = String(department?.name || '').toLowerCase();
@@ -98,6 +119,12 @@ const getDepartmentDisplayName = (department) => {
   }
   if (['charm', 'college of hospitality and restaurant management', 'college of hospitality management'].includes(normalizedName)) {
     return 'College of Hospitality Management';
+  }
+  if (['cba', 'college of business administration', 'college of business and accountancy'].includes(normalizedName)) {
+    return 'College of Business and Accountancy';
+  }
+  if (['education department', 'college of education'].includes(normalizedName)) {
+    return 'College of Education';
   }
   return department?.display_name || department?.name;
 };
@@ -170,8 +197,9 @@ function TicketsPage() {
   }, [token]);
 
   const specificIssueOptions = generalIssueOptions[form.category] || [];
-  const availableDepartments = isCsStudent(user)
-    ? departments.filter((department) => !collegeDepartmentNames.includes(department.name) || department.name === 'CS')
+  const studentCollegeKey = getCollegeDepartmentKey(user?.department_name);
+  const availableDepartments = isCollegeStudent(user)
+    ? departments.filter((department) => !getCollegeDepartmentKey(department) || getCollegeDepartmentKey(department) === studentCollegeKey)
     : departments;
 
   const selectedDepartment = departments.find((department) => String(department.id) === String(form.department_id));

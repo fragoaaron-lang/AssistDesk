@@ -2,9 +2,10 @@ const { Department, Service, Faq } = require('../models');
 
 const canonicalDepartments = [
   ['Basic Education Department', 'Basic Education Department'],
+  ['Education Department', 'College of Education'],
   ['College of Nursing', 'College of Nursing'],
   ['CS', 'College of Computer Studies'],
-  ['CBA', 'College of Business Administration'],
+  ['CBA', 'College of Business and Accountancy'],
   ['CHARM', 'College of Hospitality Management'],
   ['College of Criminology', 'College of Criminology'],
   ['College of Physical Therapy', 'College of Physical Therapy'],
@@ -27,6 +28,10 @@ exports.getDepartments = async (req, res) => {
   try {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || canonicalDepartments.length;
+    await Department.findOrCreate({
+      where: { name: 'Education Department' },
+      defaults: { name: 'Education Department', description: 'Handles education-related concerns and academic coordination.' },
+    });
     const departmentRecords = await Department.findAll({
       where: { name: canonicalDepartments.map(([name]) => name) },
       order: [['name', 'ASC']],

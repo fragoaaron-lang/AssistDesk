@@ -8,7 +8,7 @@ const fallbackDepartments = [
   { id: 1, name: 'Basic Education Department' },
   { id: 2, name: 'College of Nursing' },
   { id: 3, name: 'CS', display_name: 'College of Computer Studies' },
-  { id: 4, name: 'CBA', display_name: 'College of Business Administration' },
+  { id: 4, name: 'CBA', display_name: 'College of Business and Accountancy' },
   { id: 5, name: 'CHARM', display_name: 'College of Hospitality Management' },
   { id: 6, name: 'College of Criminology' },
   { id: 7, name: 'College of Physical Therapy' },
@@ -18,6 +18,7 @@ const fallbackDepartments = [
   { id: 11, name: 'Guidance', display_name: 'Guidance Office' },
   { id: 12, name: 'Office of Student Affairs' },
   { id: 13, name: 'IT Department', display_name: 'Information Technology Department' },
+  { id: 14, name: 'Education Department', display_name: 'College of Education' },
 ];
 
 const getDepartmentDisplayName = (department) => {
@@ -27,6 +28,12 @@ const getDepartmentDisplayName = (department) => {
   }
   if (['charm', 'college of hospitality and restaurant management', 'college of hospitality management'].includes(normalizedName)) {
     return 'College of Hospitality Management';
+  }
+  if (['cba', 'college of business administration', 'college of business and accountancy'].includes(normalizedName)) {
+    return 'College of Business and Accountancy';
+  }
+  if (['education department', 'college of education'].includes(normalizedName)) {
+    return 'College of Education';
   }
   return department?.display_name || department?.name;
 };
