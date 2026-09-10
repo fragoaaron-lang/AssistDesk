@@ -199,7 +199,7 @@ function TicketsPage() {
   const specificIssueOptions = generalIssueOptions[form.category] || [];
   const studentCollegeKey = getCollegeDepartmentKey(user?.department_name);
   const availableDepartments = isCollegeStudent(user)
-    ? departments.filter((department) => !getCollegeDepartmentKey(department) || getCollegeDepartmentKey(department) === studentCollegeKey)
+    ? departments.filter((department) => getCollegeDepartmentKey(department) === studentCollegeKey)
     : departments;
 
   const selectedDepartment = departments.find((department) => String(department.id) === String(form.department_id));

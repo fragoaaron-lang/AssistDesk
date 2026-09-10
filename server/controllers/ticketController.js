@@ -51,7 +51,7 @@ const canAccessSelectedDepartment = (user, department) => {
   const requesterCollegeKey = user?.role === 'student' ? getCollegeDepartmentKey(user.Department) : null;
   if (!requesterCollegeKey) return true;
   const selectedCollegeKey = getCollegeDepartmentKey(department);
-  return !selectedCollegeKey || selectedCollegeKey === requesterCollegeKey;
+  return selectedCollegeKey === requesterCollegeKey;
 };
 
 const inferDepartmentId = async (subject, description) => {
@@ -91,7 +91,7 @@ exports.createTicket = async (req, res) => {
       return res.status(400).json({ message: 'Selected department is invalid.' });
     }
     if (selectedDepartment && !canAccessSelectedDepartment(requester, selectedDepartment)) {
-      return res.status(403).json({ message: 'Students cannot submit tickets to another college department.' });
+      return res.status(403).json({ message: 'Students can only submit tickets to their own college department.' });
     }
 
     const resolvedDepartmentId = selectedDepartmentId
@@ -99,7 +99,7 @@ exports.createTicket = async (req, res) => {
       : await inferDepartmentId(subject, description);
     const resolvedDepartment = selectedDepartment || (resolvedDepartmentId ? await Department.findByPk(resolvedDepartmentId) : null);
     if (resolvedDepartment && !canAccessSelectedDepartment(requester, resolvedDepartment)) {
-      return res.status(403).json({ message: 'Students cannot submit tickets to another college department.' });
+      return res.status(403).json({ message: 'Students can only submit tickets to their own college department.' });
     }
 
     // Map new priority names to old database values temporarily
