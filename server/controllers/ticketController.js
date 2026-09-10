@@ -51,7 +51,7 @@ const canAccessSelectedDepartment = (user, department) => {
   const requesterCollegeKey = user?.role === 'student' ? getCollegeDepartmentKey(user.Department) : null;
   if (!requesterCollegeKey) return true;
   const selectedCollegeKey = getCollegeDepartmentKey(department);
-  return selectedCollegeKey === requesterCollegeKey;
+  return !selectedCollegeKey || selectedCollegeKey === requesterCollegeKey;
 };
 
 const inferDepartmentId = async (subject, description) => {
@@ -158,10 +158,6 @@ exports.getTickets = async (req, res) => {
     const where = req.user.role === 'admin'
       ? (req.user.department_id ? { department_id: req.user.department_id } : {})
       : { user_id: req.user.id };
-    const requester = req.user.role === 'student'
-      ? await User.findByPk(req.user.id, { include: [{ model: Department }] })
-      : null;
-
     const tickets = await Ticket.findAll({
       where,
       include: [
@@ -172,7 +168,6 @@ exports.getTickets = async (req, res) => {
       order: [['created_at', 'DESC']],
     });
     tickets.forEach((ticket) => {
-      if (requester?.Department) ticket.Department = requester.Department;
       if (!ticket.category) ticket.category = 'Other';
       if (!ticket.estimated_completion_at) ticket.estimated_completion_at = getEstimatedCompletion(ticket.priority, ticket.created_at);
       addTicketNumber(ticket);

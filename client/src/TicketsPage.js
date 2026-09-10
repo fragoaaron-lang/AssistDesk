@@ -199,7 +199,10 @@ function TicketsPage() {
   const specificIssueOptions = generalIssueOptions[form.category] || [];
   const studentCollegeKey = getCollegeDepartmentKey(user?.department_name);
   const availableDepartments = isCollegeStudent(user)
-    ? departments.filter((department) => getCollegeDepartmentKey(department) === studentCollegeKey)
+    ? departments.filter((department) => {
+      const collegeKey = getCollegeDepartmentKey(department);
+      return !collegeKey || collegeKey === studentCollegeKey;
+    })
     : departments;
 
   const selectedDepartment = departments.find((department) => String(department.id) === String(form.department_id));
@@ -214,7 +217,11 @@ function TicketsPage() {
     const requesterDepartment = ticket.User?.Department;
     const department = user?.role === 'admin'
       ? requesterDepartment
-      : { name: user?.department_name || requesterDepartment?.name };
+      : ticket.Department;
+    if (user?.role === 'student' && studentCollegeKey) {
+      const ticketCollegeKey = getCollegeDepartmentKey(department);
+      if (ticketCollegeKey && ticketCollegeKey !== studentCollegeKey) return groups;
+    }
     const { key: departmentId, name: departmentName } = getDepartmentFolder(department);
     if (!groups[departmentId]) {
       groups[departmentId] = { name: departmentName, tickets: [] };
