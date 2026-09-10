@@ -20,6 +20,17 @@ const fallbackDepartments = [
   { id: 13, name: 'IT Department', display_name: 'Information Technology Department' },
 ];
 
+const getDepartmentDisplayName = (department) => {
+  const normalizedName = String(department?.name || '').toLowerCase();
+  if (['cs', 'computer science department', 'college of computer studies'].includes(normalizedName)) {
+    return 'College of Computer Studies';
+  }
+  if (['charm', 'college of hospitality and restaurant management', 'college of hospitality management'].includes(normalizedName)) {
+    return 'College of Hospitality Management';
+  }
+  return department?.display_name || department?.name;
+};
+
 function RegisterPage({ modal = false, onSwitch }) {
   const [firstName, setFirstName] = useState('');
   const [middleInitial, setMiddleInitial] = useState('');
@@ -90,7 +101,7 @@ function RegisterPage({ modal = false, onSwitch }) {
                 <select className="institutional-select" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} required>
                   <option value="">Select your department</option>
                   {departments.map((department) => (
-                    <option key={department.id} value={department.id}>{department.display_name || department.name}</option>
+                    <option key={department.id} value={department.id}>{getDepartmentDisplayName(department)}</option>
                   ))}
                 </select>
               </>

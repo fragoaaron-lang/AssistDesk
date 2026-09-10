@@ -91,6 +91,17 @@ const collegeDepartmentNames = ['College of Nursing', 'CS', 'CBA', 'CHARM', 'Col
 const isCsStudent = (currentUser) => currentUser?.role === 'student'
   && ['cs', 'computer science department', 'college of computer studies'].includes(String(currentUser.department_name || '').toLowerCase());
 
+const getDepartmentDisplayName = (department) => {
+  const normalizedName = String(department?.name || '').toLowerCase();
+  if (['cs', 'computer science department', 'college of computer studies'].includes(normalizedName)) {
+    return 'College of Computer Studies';
+  }
+  if (['charm', 'college of hospitality and restaurant management', 'college of hospitality management'].includes(normalizedName)) {
+    return 'College of Hospitality Management';
+  }
+  return department?.display_name || department?.name;
+};
+
 function TicketsPage() {
   const { token, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -700,7 +711,7 @@ function TicketsPage() {
               <select className="institutional-select" value={form.department_id} onChange={(e) => handleDepartmentChange(e.target.value)} required>
                 <option value="">Select a department</option>
                 {availableDepartments.map((department) => (
-                  <option key={department.id} value={department.id}>{department.display_name || department.name}</option>
+                  <option key={department.id} value={department.id}>{getDepartmentDisplayName(department)}</option>
                 ))}
               </select>
               <select className="institutional-select" value={form.category} onChange={(e) => handleGeneralIssueChange(e.target.value)} required>
