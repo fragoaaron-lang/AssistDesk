@@ -320,8 +320,8 @@ function DashboardPage() {
               <p className="small-muted">Ticket summary</p>
               <h3 id="map-ticket-detail-title">{selectedMapTicket.subject}</h3>
               <div className="map-ticket-detail-meta">
+                <span>ID: #{selectedMapTicket.id}</span>
                 <span>Status: {selectedMapTicket.status || 'open'}</span>
-                <span>Priority: {selectedMapTicket.priority || 'medium'}</span>
               </div>
               <p>{selectedMapTicket.description || 'No description provided.'}</p>
             </div>

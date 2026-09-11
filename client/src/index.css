@@ -1477,8 +1477,8 @@ button, input, select, textarea {
 
 .map-ticket-detail {
   position: relative;
-  width: min(460px, 100%);
-  padding: 24px;
+  width: min(360px, 100%);
+  padding: 18px;
   border: 1px solid var(--border);
   border-radius: 16px;
   background: var(--surface);
@@ -1487,13 +1487,14 @@ button, input, select, textarea {
 }
 
 .map-ticket-detail h3 {
-  margin: 4px 36px 12px 0;
+  margin: 4px 32px 8px 0;
+  font-size: 1.05rem;
   color: var(--navy);
 }
 
 .map-ticket-detail p:last-child {
-  margin: 16px 0 0;
-  line-height: 1.6;
+  margin: 12px 0 0;
+  line-height: 1.45;
   white-space: pre-line;
 }
 
