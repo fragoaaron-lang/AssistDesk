@@ -1,4 +1,5 @@
 const { Department, Announcement, Ticket, Notification, sequelize, User } = require('../models');
+const { formatTicketNumber } = require('../utils/ticketNumber');
 
 const defaultDepartments = [
   { name: 'CS Department', description: 'Supports computer science academic and student service needs.', point_person: 'Mr. Adrian Cruz', contact_number: '02-1234-5681', location: 'Computer Science Building, Room 210', office_hours: '8:00 AM - 5:00 PM' },
@@ -40,6 +41,13 @@ exports.getDashboard = async (req, res) => {
       order: [['created_at', 'DESC']],
       raw: true,
     });
+    const ticketsWithCodes = tickets.map((ticket) => ({
+      ...ticket,
+      ticket_code: formatTicketNumber(
+        ticket.id,
+        departments.find((department) => Number(department.id) === Number(ticket.department_id))?.name,
+      ),
+    }));
 
     const departmentsWithStats = departments.map((department) => {
       const ticketCount = ticketCountMap[String(department.id)] || 0;
@@ -63,7 +71,7 @@ exports.getDashboard = async (req, res) => {
       openTickets: await Ticket.count({ where: { status: 'open' } }),
     };
 
-    return res.json({ departments: departmentsWithStats, announcements, stats, topConcernDepartments, tickets });
+    return res.json({ departments: departmentsWithStats, announcements, stats, topConcernDepartments, tickets: ticketsWithCodes });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Unable to load dashboard.' });
