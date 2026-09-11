@@ -167,12 +167,20 @@ exports.getTickets = async (req, res) => {
       ],
       order: [['created_at', 'DESC']],
     });
-    tickets.forEach((ticket) => {
+    const visibleTickets = req.user.role === 'student'
+      ? (await User.findByPk(req.user.id, { include: [{ model: Department }] }))
+        ? tickets.filter((ticket) => canAccessSelectedDepartment(
+          { ...req.user, Department: ticket.User?.Department || null },
+          ticket.Department,
+        ))
+        : []
+      : tickets;
+    visibleTickets.forEach((ticket) => {
       if (!ticket.category) ticket.category = 'Other';
       if (!ticket.estimated_completion_at) ticket.estimated_completion_at = getEstimatedCompletion(ticket.priority, ticket.created_at);
       addTicketNumber(ticket);
     });
-    return res.json(tickets);
+    return res.json(visibleTickets);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Unable to fetch tickets.' });
@@ -197,6 +205,9 @@ exports.getTicketById = async (req, res) => {
       }
     } else if (ticket.user_id !== req.user.id) {
       return res.status(403).json({ message: 'Forbidden.' });
+    }
+    if (req.user.role === 'student' && !canAccessSelectedDepartment(ticket.User, ticket.Department)) {
+      return res.status(403).json({ message: 'Students can only view tickets for their own college or non-college departments.' });
     }
     addTicketNumber(ticket);
     return res.json(ticket);
