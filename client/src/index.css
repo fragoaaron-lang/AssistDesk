@@ -1479,11 +1479,11 @@ button, input, select, textarea {
   position: relative;
   width: min(280px, 100%);
   padding: 12px;
-  border: 1px solid transparent;
+  border: 1px solid rgba(220, 230, 238, 0.9);
   border-radius: 8px;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.94);
   color: var(--text);
-  box-shadow: none;
+  box-shadow: 0 8px 24px rgba(5, 18, 28, 0.2);
 }
 
 .map-ticket-detail h3 {
@@ -1526,6 +1526,12 @@ button, input, select, textarea {
   font-size: 1.2rem;
   line-height: 1;
   cursor: pointer;
+}
+
+body.dark-mode .map-ticket-detail {
+  border-color: rgba(52, 72, 86, 0.95);
+  background: rgba(21, 33, 43, 0.94);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
 .ticket-pin::after {
