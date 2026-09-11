@@ -1479,17 +1479,18 @@ button, input, select, textarea {
   position: relative;
   width: min(280px, 100%);
   padding: 12px;
-  border: 1px solid var(--border);
+  border: 1px solid transparent;
   border-radius: 8px;
-  background: var(--surface);
+  background: transparent;
   color: var(--text);
-  box-shadow: 0 24px 60px rgba(5, 18, 28, 0.3);
+  box-shadow: none;
 }
 
 .map-ticket-detail h3 {
   margin: 2px 28px 6px 0;
   font-size: 0.98rem;
   color: var(--navy);
+  text-shadow: 0 1px 4px rgba(255, 255, 255, 0.9);
 }
 
 .map-ticket-detail p:last-child {
@@ -1509,6 +1510,7 @@ button, input, select, textarea {
   font-size: 0.78rem;
   font-weight: 700;
   text-transform: capitalize;
+  text-shadow: 0 1px 4px rgba(255, 255, 255, 0.9);
 }
 
 .map-ticket-detail-close {
@@ -2037,6 +2039,7 @@ button, input, select, textarea {
   gap: 8px;
   max-height: 220px;
   overflow-y: auto;
+  text-shadow: 0 1px 4px rgba(255, 255, 255, 0.9);
 }
 
 .ticket-update-item {

@@ -323,7 +323,7 @@ function DashboardPage() {
                 <span>ID: {selectedMapTicket.ticket_code || `#${selectedMapTicket.id}`}</span>
                 <span>Status: {selectedMapTicket.status || 'open'}</span>
               </div>
-              <p>{selectedMapTicket.description || 'No description provided.'}</p>
+              {selectedMapTicket.description && <p>{selectedMapTicket.description}</p>}
             </div>
           </div>
         )}
