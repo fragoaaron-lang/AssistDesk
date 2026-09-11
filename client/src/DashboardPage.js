@@ -146,6 +146,13 @@ function DashboardPage() {
     };
   };
 
+  const getTicketHoverDescription = (ticket) => {
+    const description = String(ticket.description || '').replace(/\s+/g, ' ').trim();
+    if (!description) return `${ticket.subject} (${ticket.status})`;
+    const briefDescription = description.length > 140 ? `${description.slice(0, 137)}...` : description;
+    return `${ticket.subject} (${ticket.status}) - ${briefDescription}`;
+  };
+
 
   if (showWelcomeSplash) {
     return (
@@ -277,9 +284,9 @@ function DashboardPage() {
                         key={`ticket-pin-${ticket.id}`}
                         className={`ticket-pin ${ticket.priority || 'medium'}`}
                         style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-                        title={`${ticket.subject} (${ticket.status})`}
+                        title={getTicketHoverDescription(ticket)}
                         role="img"
-                        aria-label={`${ticket.subject}, ${ticket.status}`}
+                        aria-label={getTicketHoverDescription(ticket)}
                       />
                     );
                   })}
