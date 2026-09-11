@@ -6,7 +6,6 @@ import LogoutButton from './LogoutButton';
 import HeaderProfile from './HeaderProfile';
 import SidebarProfile from './SidebarProfile';
 import TicketProgressBar from './TicketProgressBar';
-import { validateFaceInImage } from './faceVerification';
 
 const generalIssueOptions = {
   'IT and Technology': [
@@ -145,17 +144,7 @@ function TicketsPage() {
   const [etaDraft, setEtaDraft] = useState('');
   const [updateMessage, setUpdateMessage] = useState('');
   const [ticketActionState, setTicketActionState] = useState('idle');
-  const [faceVerificationOpen, setFaceVerificationOpen] = useState(false);
-  const [faceVerificationError, setFaceVerificationError] = useState('');
-  const [faceVerificationErrorDismissed, setFaceVerificationErrorDismissed] = useState(false);
-  const [faceVerificationErrorOffset, setFaceVerificationErrorOffset] = useState(0);
-  const [pendingAttachment, setPendingAttachment] = useState(null);
-  const [faceVerified, setFaceVerified] = useState(false);
-  const [cameraReady, setCameraReady] = useState(false);
-  const cameraVideoRef = useRef(null);
-  const cameraStreamRef = useRef(null);
   const uploadErrorTimeoutRef = useRef(null);
-  const faceVerificationErrorDragRef = useRef(null);
 
   const toDateTimeLocal = (value) => {
     if (!value) return '';
@@ -303,24 +292,6 @@ function TicketsPage() {
     setForm((current) => ({ ...current, category, subject: '' }));
   };
 
-  const getProfileFaceReference = () => {
-    if (user?.profile_picture) return user.profile_picture;
-    const identifier = user?.id ?? user?.email ?? 'guest';
-    const key = `assistdesk_profile_photo_${identifier}`;
-    return localStorage.getItem(key) || '';
-  };
-
-  const stopCameraStream = () => {
-    if (cameraStreamRef.current) {
-      cameraStreamRef.current.getTracks().forEach((track) => track.stop());
-      cameraStreamRef.current = null;
-    }
-    if (cameraVideoRef.current) {
-      cameraVideoRef.current.srcObject = null;
-    }
-    setCameraReady(false);
-  };
-
   const showUploadError = (message) => {
     setSubmissionState({ status: 'error', message, ticketCode: '' });
     if (uploadErrorTimeoutRef.current) window.clearTimeout(uploadErrorTimeoutRef.current);
@@ -330,74 +301,7 @@ function TicketsPage() {
     }, 1000);
   };
 
-  const setFaceVerificationFailure = (message) => {
-    setFaceVerificationError(message);
-    setFaceVerificationErrorDismissed(false);
-    setFaceVerificationErrorOffset(0);
-  };
-
-  const openFaceVerificationCamera = () => {
-    setPendingAttachment(null);
-    setFaceVerificationError('');
-    setFaceVerificationErrorDismissed(false);
-    setFaceVerificationErrorOffset(0);
-    setFaceVerificationOpen(true);
-  };
-
-  const handleFaceVerificationErrorPointerDown = (event) => {
-    faceVerificationErrorDragRef.current = { startX: event.clientX, pointerId: event.pointerId };
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
-
-  const handleFaceVerificationErrorPointerMove = (event) => {
-    const drag = faceVerificationErrorDragRef.current;
-    if (!drag) return;
-    setFaceVerificationErrorOffset(event.clientX - drag.startX);
-  };
-
-  const handleFaceVerificationErrorPointerUp = (event) => {
-    const drag = faceVerificationErrorDragRef.current;
-    if (!drag) return;
-    const offset = event.clientX - drag.startX;
-    faceVerificationErrorDragRef.current = null;
-    if (Math.abs(offset) >= 80) {
-      setFaceVerificationErrorDismissed(true);
-      setFaceVerificationErrorOffset(offset > 0 ? 420 : -420);
-      return;
-    }
-    setFaceVerificationErrorOffset(0);
-  };
-
-  const startCameraVerification = async () => {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      setFaceVerificationFailure('Camera access is not available in this browser.');
-      return;
-    }
-
-    try {
-      stopCameraStream();
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: 'user',
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-        },
-        audio: false,
-      });
-      cameraStreamRef.current = stream;
-      if (cameraVideoRef.current) {
-        cameraVideoRef.current.srcObject = stream;
-        await cameraVideoRef.current.play();
-      }
-      setCameraReady(true);
-      setFaceVerificationError('');
-    } catch (error) {
-      setCameraReady(false);
-      setFaceVerificationFailure('Unable to access the camera. Please allow camera access and try again.');
-    }
-  };
-
-  const acceptAttachment = async (file) => {
+  const acceptAttachment = (file) => {
     if (!file) {
       setAttachment(null);
       return;
@@ -411,112 +315,16 @@ function TicketsPage() {
       return;
     }
 
-    if (!faceVerified) {
-      const profileFace = getProfileFaceReference();
-      const result = await validateFaceInImage(file, profileFace || undefined);
-      if (!result.isFaceLike) {
-        showUploadError(result.reason || 'Face verification failed. Please upload a clear photo showing your face before submitting maintenance proof.');
-        clearAttachment();
-        return;
-      }
-    }
-
     const reader = new FileReader();
     reader.onload = () => setAttachment({ data: reader.result, name: file.name, type: file.type });
     reader.readAsDataURL(file);
   };
-
-  const captureFaceVerification = async () => {
-    const video = cameraVideoRef.current;
-    if (!video || !video.videoWidth || !video.videoHeight) {
-      setFaceVerificationFailure('The camera is still starting. Please wait a moment and try again.');
-      return;
-    }
-
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const context = canvas.getContext('2d');
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    const capturedImage = canvas.toDataURL('image/jpeg');
-    const dataBlob = await fetch(capturedImage).then((response) => response.blob());
-    const file = new File([dataBlob], pendingAttachment?.name || 'maintenance-face-verification.jpg', { type: 'image/jpeg' });
-
-    const result = await validateFaceInImage(file, getProfileFaceReference() || undefined);
-    if (!result.isFaceLike) {
-      setFaceVerificationFailure(result.reason || 'Face recognition did not match your profile photo. Please try again.');
-      return;
-    }
-
-    setFaceVerified(true);
-    setFaceVerificationOpen(false);
-    setPendingAttachment(null);
-    stopCameraStream();
-    setSubmissionState({ status: 'success', message: 'Face verification passed. You may now upload the issue photo.', ticketCode: '' });
-    window.setTimeout(() => setSubmissionState({ status: 'idle', message: '', ticketCode: '' }), 2200);
-  };
-
-  const autoVerifyFace = async () => {
-    const video = cameraVideoRef.current;
-    if (!video || !video.videoWidth || !video.videoHeight || !cameraReady) return;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const context = canvas.getContext('2d');
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    const capturedImage = canvas.toDataURL('image/jpeg');
-    const dataBlob = await fetch(capturedImage).then((response) => response.blob());
-    const file = new File([dataBlob], 'maintenance-face-verification.jpg', { type: 'image/jpeg' });
-    const result = await validateFaceInImage(file, getProfileFaceReference() || undefined);
-
-    if (result.isFaceLike) {
-      setFaceVerified(true);
-      setFaceVerificationOpen(false);
-      setPendingAttachment(null);
-      stopCameraStream();
-      setSubmissionState({ status: 'success', message: 'Verification complete. You may now upload the issue photo.', ticketCode: '' });
-      window.setTimeout(() => setSubmissionState({ status: 'idle', message: '', ticketCode: '' }), 2200);
-      return;
-    }
-
-    setFaceVerificationFailure(result.reason || 'Unable to verify your face. Please align your face in the camera frame and try again.');
-  };
-
-  const handleAttachmentChange = async (event) => {
+  const handleAttachmentChange = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    if (faceVerified) {
-      await acceptAttachment(file);
-      event.target.value = '';
-      return;
-    }
-
-    const profileFace = getProfileFaceReference();
-    if (!profileFace) {
-      showUploadError('Please upload or save a profile photo before submitting maintenance proof.');
-      event.target.value = '';
-      return;
-    }
-
-    setPendingAttachment(file);
-    setFaceVerificationError('');
-    setFaceVerificationOpen(true);
+    acceptAttachment(file);
     event.target.value = '';
   };
-
-  useEffect(() => {
-    if (!faceVerificationOpen) {
-      stopCameraStream();
-      return undefined;
-    }
-
-    startCameraVerification();
-    return () => stopCameraStream();
-  }, [faceVerificationOpen]);
 
   const handleAttachmentPaste = (event) => {
     const pastedImage = Array.from(event.clipboardData?.items || [])
@@ -531,7 +339,6 @@ function TicketsPage() {
   const clearAttachment = () => {
     setAttachment(null);
     setPreviewImage(null);
-    setFaceVerified(false);
     const input = document.getElementById('maintenance-photo');
     if (input) input.value = '';
   };
@@ -671,46 +478,6 @@ function TicketsPage() {
           </div>
         )}
 
-        {faceVerificationOpen && (
-          <div className="ticket-image-lightbox" role="presentation" onClick={() => { setFaceVerificationOpen(false); setPendingAttachment(null); stopCameraStream(); }}>
-            <div className="ticket-image-lightbox-content face-verification-modal" role="dialog" aria-modal="true" aria-label="Face verification" onClick={(event) => event.stopPropagation()}>
-              <button type="button" className="ticket-image-lightbox-close" onClick={() => { setFaceVerificationOpen(false); setPendingAttachment(null); stopCameraStream(); }} aria-label="Close face verification">×</button>
-              <div className="face-verification-header">
-                <h3>Face verification</h3>
-                <p>Please look at the camera and match your profile face before continuing.</p>
-              </div>
-              <div className="face-verification-video-wrap">
-                <div className="face-verification-frame" aria-hidden="true">
-                  <span className="face-verification-outline" />
-                </div>
-                <video ref={cameraVideoRef} autoPlay muted playsInline className="face-verification-video" onLoadedData={autoVerifyFace} />
-              </div>
-              {faceVerificationError && !faceVerificationErrorDismissed && (
-                <div
-                  className="ticket-notice error face-verification-error-notice"
-                  role="alert"
-                  aria-live="polite"
-                  style={{ transform: `translateX(${faceVerificationErrorOffset}px)` }}
-                  onPointerDown={handleFaceVerificationErrorPointerDown}
-                  onPointerMove={handleFaceVerificationErrorPointerMove}
-                  onPointerUp={handleFaceVerificationErrorPointerUp}
-                  onPointerCancel={handleFaceVerificationErrorPointerUp}
-                >
-                  {faceVerificationError}
-                </div>
-              )}
-              <div className="face-verification-actions">
-                <button type="button" className="institutional-btn ticket-submit-button" onClick={autoVerifyFace} disabled={!cameraReady}>
-                  {cameraReady ? 'Verify' : 'Starting camera...'}
-                </button>
-                <button type="button" className="ticket-image-remove" onClick={() => { setFaceVerificationOpen(false); setPendingAttachment(null); stopCameraStream(); }}>
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         <aside className={`mobile-menu-drawer ${mobileMenuOpen ? 'open' : ''}`}>
           <div className="mobile-menu-head">
             <button type="button" className="mobile-menu-close" onClick={() => setMobileMenuOpen(false)}>×</button>
@@ -765,12 +532,12 @@ function TicketsPage() {
               </select>
               <textarea className="institutional-textarea" placeholder="Describe your issue" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
               {isMaintenanceDepartment && (
-                <div className={`ticket-image-upload ${attachment ? 'has-file' : ''} ${faceVerified ? 'is-verified' : ''}`} onPaste={handleAttachmentPaste} tabIndex="0">
+                <div className={`ticket-image-upload ${attachment ? 'has-file' : ''}`} onPaste={handleAttachmentPaste} tabIndex="0">
                   <div className="ticket-image-upload-heading">
                     <span className="ticket-image-upload-icon" aria-hidden="true">+</span>
                     <div>
                       <strong>Attach a photo of the issue</strong>
-                      <small>Required for maintenance requests. Face recognition verification is required before the photo can be uploaded. JPG, PNG, or WEBP up to 3 MB.</small>
+                      <small>Required for maintenance requests. JPG, PNG, or WEBP up to 3 MB.</small>
                     </div>
                   </div>
                   {attachment ? (
@@ -780,17 +547,13 @@ function TicketsPage() {
                       </button>
                       <button type="button" className="ticket-image-remove" onClick={clearAttachment}>Remove</button>
                     </div>
-                  ) : faceVerified ? (
+                  ) : (
                     <>
                       <label className="ticket-image-select ticket-image-select--full" htmlFor="maintenance-photo">
-                        <span>Upload proof photo</span>
+                        <span>Choose a photo</span>
                       </label>
                       <input id="maintenance-photo" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleAttachmentChange} required={!attachment} />
                     </>
-                  ) : (
-                    <button type="button" className="ticket-image-select ticket-image-select--verification" onClick={openFaceVerificationCamera}>
-                      <span>Use camera verification</span>
-                    </button>
                   )}
                 </div>
               )}
