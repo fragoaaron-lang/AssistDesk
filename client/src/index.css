@@ -1452,6 +1452,7 @@ button, input, select, textarea {
 .ticket-pin {
   position: absolute;
   display: block;
+  padding: 0;
   width: 24px;
   height: 32px;
   transform: translate(-50%, -100%);
@@ -1462,6 +1463,63 @@ button, input, select, textarea {
   pointer-events: auto;
   cursor: help;
   z-index: 5;
+}
+
+.map-ticket-detail-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(5, 18, 28, 0.58);
+}
+
+.map-ticket-detail {
+  position: relative;
+  width: min(460px, 100%);
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 24px 60px rgba(5, 18, 28, 0.3);
+}
+
+.map-ticket-detail h3 {
+  margin: 4px 36px 12px 0;
+  color: var(--navy);
+}
+
+.map-ticket-detail p:last-child {
+  margin: 16px 0 0;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.map-ticket-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.map-ticket-detail-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-soft);
+  color: var(--navy);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
 }
 
 .ticket-pin::after {

@@ -16,6 +16,7 @@ function DashboardPage() {
   const [pendingNotificationDelete, setPendingNotificationDelete] = useState(null);
   const [deleteMessage, setDeleteMessage] = useState('');
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [selectedMapTicket, setSelectedMapTicket] = useState(null);
   const [showWelcomeSplash, setShowWelcomeSplash] = useState(() => sessionStorage.getItem('assistdesk_show_welcome_splash') === 'true');
 
   useEffect(() => {
@@ -280,13 +281,14 @@ function DashboardPage() {
                       .length;
                     const pos = getTicketPosition(ticket, departmentTicketIndex);
                     return (
-                      <span
+                      <button
+                        type="button"
                         key={`ticket-pin-${ticket.id}`}
                         className={`ticket-pin ${ticket.priority || 'medium'}`}
                         style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
                         title={getTicketHoverDescription(ticket)}
-                        role="img"
                         aria-label={getTicketHoverDescription(ticket)}
+                        onClick={() => setSelectedMapTicket(ticket)}
                       />
                     );
                   })}
@@ -310,6 +312,21 @@ function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {selectedMapTicket && (
+          <div className="map-ticket-detail-backdrop" role="presentation" onClick={() => setSelectedMapTicket(null)}>
+            <div className="map-ticket-detail" role="dialog" aria-modal="true" aria-labelledby="map-ticket-detail-title" onClick={(event) => event.stopPropagation()}>
+              <button type="button" className="map-ticket-detail-close" onClick={() => setSelectedMapTicket(null)} aria-label="Close ticket summary">×</button>
+              <p className="small-muted">Ticket summary</p>
+              <h3 id="map-ticket-detail-title">{selectedMapTicket.subject}</h3>
+              <div className="map-ticket-detail-meta">
+                <span>Status: {selectedMapTicket.status || 'open'}</span>
+                <span>Priority: {selectedMapTicket.priority || 'medium'}</span>
+              </div>
+              <p>{selectedMapTicket.description || 'No description provided.'}</p>
+            </div>
+          </div>
+        )}
 
         <div className="institutional-card">
           <h3>Notifications</h3>
