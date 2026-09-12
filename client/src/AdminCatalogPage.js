@@ -97,8 +97,7 @@ function AdminCatalogPage() {
             <a href="/profile">Profile</a>
             {user?.role === 'admin' && (
               <>
-                <a href="/admin/reports">Reports</a>
-                <a href="/admin/catalog">Catalog</a>
+                <a href="/admin/reports">Data Analytics</a>
               </>
             )}
           </div>
@@ -121,8 +120,7 @@ function AdminCatalogPage() {
             <a href="/profile" onClick={() => setMobileMenuOpen(false)}>Profile</a>
             {user?.role === 'admin' && (
               <>
-                <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Reports</a>
-                <a href="/admin/catalog" onClick={() => setMobileMenuOpen(false)}>Catalog</a>
+                <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Data Analytics</a>
               </>
             )}
           </div>

@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './AuthContext';
 import ProtectedRoute from './ProtectedRoute';
 import DashboardPage from './DashboardPage';
-import AdminCatalogPage from './AdminCatalogPage';
 import AdminReportsPage from './AdminReportsPage';
 import AiChatPage from './AiChatPage';
 import TicketsPage from './TicketsPage';
@@ -44,14 +43,6 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/catalog"
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <AdminCatalogPage />
               </ProtectedRoute>
             }
           />
