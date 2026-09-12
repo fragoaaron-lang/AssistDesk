@@ -151,7 +151,7 @@ function DashboardPage() {
   const getTicketHoverDescription = (ticket) => {
     const description = String(ticket.description || '').replace(/\s+/g, ' ').trim();
     const briefDescription = description.length > 110 ? `${description.slice(0, 107)}...` : description;
-    return briefDescription || 'No details added';
+    return briefDescription || 'Current general issue';
   };
 
   const getTicketCode = (ticket) => ticket.ticket_code || `#${ticket.id}`;
