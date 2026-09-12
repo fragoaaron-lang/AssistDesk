@@ -1605,6 +1605,33 @@ body.dark-mode .map-ticket-hover-card::after {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.42);
 }
 
+body.dark-mode .map-ticket-summary-topline,
+body.dark-mode .map-ticket-summary-subject,
+body.dark-mode .map-ticket-detail h3 {
+  color: #f1f6f8;
+}
+
+body.dark-mode .map-ticket-summary-description,
+body.dark-mode .map-ticket-detail-meta,
+body.dark-mode .map-ticket-detail p:last-child {
+  color: #b9c8d0;
+}
+
+body.dark-mode .map-ticket-detail h3,
+body.dark-mode .map-ticket-detail-meta {
+  text-shadow: none;
+}
+
+body.dark-mode .map-ticket-status {
+  background: rgba(85, 201, 189, 0.16);
+  color: #78e0d2;
+}
+
+body.dark-mode .map-ticket-detail-close {
+  background: #263946;
+  color: #e8f0f3;
+}
+
 .ticket-pin::after {
   content: '';
   position: absolute;
