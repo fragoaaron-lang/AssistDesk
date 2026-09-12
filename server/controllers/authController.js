@@ -60,7 +60,7 @@ exports.register = async (req, res) => {
       const normalizedStudentNumber = String(student_number || '').trim();
       const studentNumberMatch = normalizedStudentNumber.match(STUDENT_NUMBER_PATTERN);
       if (!studentNumberMatch || Number(studentNumberMatch[1]) > new Date().getFullYear()) {
-        return res.status(400).json({ message: `Student number must use YYYY-NNNNN format and cannot be from a future academic year.` });
+        return res.status(400).json({ message: 'Student number must use a valid academic year. It should follow the format 2026-XXXXX.' });
       }
       departmentId = Number(department_id);
       if (!Number.isInteger(departmentId) || departmentId <= 0) {

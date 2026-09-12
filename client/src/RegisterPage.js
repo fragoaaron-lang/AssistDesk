@@ -85,7 +85,7 @@ function RegisterPage({ modal = false, onSwitch }) {
     if (role === 'student') {
       const studentNumberMatch = studentNumber.trim().match(/^(\d{4})-\d{5}$/);
       if (!studentNumberMatch || Number(studentNumberMatch[1]) > new Date().getFullYear()) {
-        setMessage('Student number must use YYYY-NNNNN format and cannot be from a future academic year.');
+        setMessage('Student number must use a valid academic year. It should follow the format 2026-XXXXX.');
         return;
       }
     }
