@@ -58,8 +58,15 @@ function RegisterPage({ modal = false, onSwitch }) {
 
   useEffect(() => {
     axios.get(`${API_BASE_URL}/api/catalog/departments`)
-      .then((response) => setDepartments(response.data.departments?.length ? response.data.departments : fallbackDepartments))
-      .catch(() => setDepartments(fallbackDepartments));
+      .then((response) => {
+        const options = response.data.departments?.length ? response.data.departments : fallbackDepartments;
+        setDepartments([...options].sort((first, second) => (
+          getDepartmentDisplayName(first).localeCompare(getDepartmentDisplayName(second))
+        )));
+      })
+      .catch(() => setDepartments([...fallbackDepartments].sort((first, second) => (
+        getDepartmentDisplayName(first).localeCompare(getDepartmentDisplayName(second))
+      ))));
   }, []);
 
   const handleSubmit = async (e) => {

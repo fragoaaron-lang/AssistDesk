@@ -173,7 +173,9 @@ function TicketsPage() {
     const res = await axios.get(`${API_BASE_URL}/api/catalog/departments`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    const options = res.data.departments || [];
+    const options = (res.data.departments || []).sort((first, second) => (
+      getDepartmentDisplayName(first).localeCompare(getDepartmentDisplayName(second))
+    ));
     setDepartments(options);
     if (!form.department_id && options.length > 0) {
       setForm((current) => ({ ...current, department_id: String(options[0].id), subject: '' }));
