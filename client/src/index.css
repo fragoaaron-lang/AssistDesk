@@ -1169,6 +1169,7 @@ button, input, select, textarea {
 .report-chart-bar { display: block; height: 100%; min-width: 4%; border-radius: inherit; }
 .report-chart-bar.department { background: var(--teal); }
 .report-chart-bar.status { background: var(--gold); }
+.report-chart-bar.requester { background: var(--navy); }
 .report-trend-chart {
   display: flex;
   align-items: end;
@@ -1201,6 +1202,36 @@ button, input, select, textarea {
   font-size: 0.62rem;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.report-table-card { margin-bottom: 1.5rem; }
+.report-table-scroll { overflow-x: auto; }
+.report-table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+.report-table th,
+.report-table td {
+  padding: 0.75rem 0.65rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+.report-table th {
+  color: var(--navy);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.report-status {
+  display: inline-block;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: var(--border);
+  font-size: 0.72rem;
+  text-transform: capitalize;
 }
 
 .institutional-btn {

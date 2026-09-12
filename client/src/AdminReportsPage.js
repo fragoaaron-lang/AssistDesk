@@ -196,6 +196,15 @@ function AdminReportsPage() {
                 </div>
               ))}
             </div>
+            <div className="report-chart" aria-label="Tickets by requester">
+              <strong className="report-chart-title">Tickets by requester</strong>
+              {(reports.ticketCountsByRequester || []).length === 0 ? <p className="small-muted">No requester activity</p> : reports.ticketCountsByRequester.slice(0, 8).map((row) => (
+                <div key={row.requester_id} className="report-chart-row">
+                  <div className="report-chart-label"><span>{row.requester_name}</span><strong>{row.count}</strong></div>
+                  <div className="report-chart-track"><span className="report-chart-bar requester" style={{ width: getChartWidth(row.count, reports.ticketCountsByRequester) }} /></div>
+                </div>
+              ))}
+            </div>
           </div>
           <div className="institutional-card">
             <h3>Trend analytics</h3>
@@ -237,6 +246,35 @@ function AdminReportsPage() {
                 </section>
               ))}
             </div>
+          </div>
+        </section>
+        <section className="institutional-card report-table-card">
+          <h3>Ticket detail table</h3>
+          <div className="report-table-scroll">
+            <table className="report-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Department</th>
+                  <th>Requester</th>
+                  <th>Issue</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reports.recentTickets.length === 0 ? (
+                  <tr><td colSpan="5" className="small-muted">No ticket activity</td></tr>
+                ) : reports.recentTickets.map((ticket) => (
+                  <tr key={ticket.id}>
+                    <td>{new Date(ticket.created_at).toLocaleDateString()}</td>
+                    <td><span className={`report-status ${ticket.status}`}>{ticket.status}</span></td>
+                    <td>{ticket.Department?.name || 'Unassigned'}</td>
+                    <td>{ticket.User?.name || ticket.User?.email || 'Unknown'}</td>
+                    <td>{ticket.subject}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
       </div>

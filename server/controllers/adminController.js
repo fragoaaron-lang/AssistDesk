@@ -32,6 +32,23 @@ exports.getReports = async (req, res) => {
       raw: true,
     });
 
+    const requesterCounts = await Ticket.findAll({
+      attributes: [
+        'user_id',
+        [Ticket.sequelize.fn('COUNT', Ticket.sequelize.col('Ticket.id')), 'count'],
+      ],
+      include: [{ model: User, attributes: ['id', 'name', 'email'] }],
+      group: ['user_id', 'User.id', 'User.name', 'User.email'],
+      order: [[Ticket.sequelize.literal('count'), 'DESC']],
+      raw: true,
+    });
+
+    const ticketCountsByRequester = requesterCounts.map((row) => ({
+      requester_id: row.user_id,
+      requester_name: row['User.name'] || row['User.email'] || 'Unknown requester',
+      count: row.count,
+    }));
+
     const recentTickets = await Ticket.findAll({
       order: [['created_at', 'DESC']],
       limit: 10,
@@ -59,6 +76,7 @@ exports.getReports = async (req, res) => {
       ticketCountsByDepartment,
       ticketCountsByStatus,
       usersByRole,
+      ticketCountsByRequester,
       recentTickets,
       monthlyTicketCounts,
     });
