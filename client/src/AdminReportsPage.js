@@ -231,6 +231,7 @@ function AdminReportsPage() {
             <table className="report-table">
               <thead>
                 <tr>
+                  <th>Ticket ID</th>
                   <th>Date</th>
                   <th>Status</th>
                   <th>Department</th>
@@ -240,9 +241,10 @@ function AdminReportsPage() {
               </thead>
               <tbody>
                 {reports.recentTickets.length === 0 ? (
-                  <tr><td colSpan="5" className="small-muted">No ticket activity</td></tr>
+                  <tr><td colSpan="6" className="small-muted">No ticket activity</td></tr>
                 ) : reports.recentTickets.map((ticket) => (
                   <tr key={ticket.id}>
+                    <td>{ticket.ticket_code || `#${ticket.id}`}</td>
                     <td>{new Date(ticket.created_at).toLocaleDateString()}</td>
                     <td><span className={`report-status ${ticket.status}`}>{ticket.status}</span></td>
                     <td>{ticket.Department?.name || 'Unassigned'}</td>
