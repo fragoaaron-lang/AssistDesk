@@ -11,6 +11,7 @@ const canonicalDepartments = [
   ['College of Physical Therapy', 'College of Physical Therapy'],
   ['Maintenance Department', 'Maintenance Department'],
   ['Accounting Department', 'Accounting Department'],
+  ['Registrar Department', 'Registrar Department'],
   ['Library', 'Library'],
   ['Guidance', 'Guidance Office'],
   ['Office of Student Affairs', 'Office of Student Affairs'],
@@ -31,6 +32,10 @@ exports.getDepartments = async (req, res) => {
     await Department.findOrCreate({
       where: { name: 'Education Department' },
       defaults: { name: 'Education Department', description: 'Handles education-related concerns and academic coordination.' },
+    });
+    await Department.findOrCreate({
+      where: { name: 'Registrar Department' },
+      defaults: { name: 'Registrar Department', description: 'Handles student records, enrollment, and official document requests.' },
     });
     const departmentRecords = await Department.findAll({
       where: { name: canonicalDepartments.map(([name]) => name) },

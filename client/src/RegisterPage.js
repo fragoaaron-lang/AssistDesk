@@ -14,6 +14,7 @@ const fallbackDepartments = [
   { id: 7, name: 'College of Physical Therapy' },
   { id: 8, name: 'Maintenance Department' },
   { id: 9, name: 'Accounting Department' },
+  { id: 15, name: 'Registrar Department' },
   { id: 10, name: 'Library' },
   { id: 11, name: 'Guidance', display_name: 'Guidance Office' },
   { id: 12, name: 'Office of Student Affairs' },
