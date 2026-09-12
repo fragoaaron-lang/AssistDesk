@@ -255,19 +255,14 @@ const buildResponse = async (query) => {
 
   const topFaq = scoredFaqs[0];
   const topService = scoredServices[0];
-  const best = topFaq && topService ? (topFaq.score >= topService.score ? topFaq : topService) : (topFaq || topService);
+  const rankedMatches = [topFaq, topService].filter(Boolean).sort((first, second) => second.score - first.score);
+  const best = rankedMatches[0];
+  const secondBest = rankedMatches[1];
+  const isConfidentMatch = best && best.score >= 5 && (!secondBest || best.score - secondBest.score >= 2);
 
-  if (!best || best.score < 5) {
-    try {
-      const conversationalResponse = await getGeminiResponse(query, faqs, services, await Department.findAll());
-      if (conversationalResponse) {
-        return { ai_response: conversationalResponse, matched_department: null, department_details: null, service_details: null };
-      }
-    } catch (error) {
-      console.error('Conversational AI fallback error:', error.message);
-    }
+  if (!isConfidentMatch) {
     return {
-      ai_response: 'I can help with basic campus information, departments, services, ticket status, and request submission. Try asking “Where is the Registrar?”, “How do I submit a request?”, or “What is the status of my tickets?”',
+      ai_response: 'I want to make sure I give you the right information. Please mention the department, service, or ticket number, such as “Where is the Registrar?”, “How do I submit a request?”, or “What is the status of my tickets?”',
       matched_department: null,
       department_details: null,
       service_details: null,
