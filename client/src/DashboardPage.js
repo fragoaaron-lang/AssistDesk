@@ -154,6 +154,12 @@ function DashboardPage() {
     return briefDescription || 'Current general issue';
   };
 
+  const getTicketMapSubject = (ticket) => (
+    String(ticket.subject || '').trim().toLowerCase() === 'general request'
+      ? 'Current general issue'
+      : ticket.subject
+  );
+
   const getTicketCode = (ticket) => ticket.ticket_code || `#${ticket.id}`;
 
   const renderMapTicketSummary = (ticket, compact = false) => (
@@ -162,7 +168,7 @@ function DashboardPage() {
         <strong>{getTicketCode(ticket)}</strong>
         <span className={`map-ticket-status ${ticket.status || 'open'}`}>{ticket.status || 'open'}</span>
       </div>
-      <strong className="map-ticket-summary-subject">{ticket.subject}</strong>
+      <strong className="map-ticket-summary-subject">{getTicketMapSubject(ticket)}</strong>
       <span className="map-ticket-summary-description">{getTicketHoverDescription(ticket)}</span>
       {!compact && ticket.description && <p>{ticket.description}</p>}
     </>
@@ -300,7 +306,7 @@ function DashboardPage() {
                         key={`ticket-pin-${ticket.id}`}
                         className={`ticket-pin ${ticket.priority || 'medium'}`}
                         style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-                        aria-label={`${getTicketCode(ticket)}: ${ticket.subject}. ${getTicketHoverDescription(ticket)} Status: ${ticket.status || 'open'}`}
+                        aria-label={`${getTicketCode(ticket)}: ${getTicketMapSubject(ticket)}. ${getTicketHoverDescription(ticket)} Status: ${ticket.status || 'open'}`}
                         onMouseEnter={() => setHoveredMapTicket(ticket)}
                         onMouseLeave={() => setHoveredMapTicket(null)}
                         onFocus={() => setHoveredMapTicket(ticket)}
@@ -352,7 +358,7 @@ function DashboardPage() {
             <div className="map-ticket-detail" role="dialog" aria-modal="true" aria-labelledby="map-ticket-detail-title" onClick={(event) => event.stopPropagation()}>
               <button type="button" className="map-ticket-detail-close" onClick={() => setSelectedMapTicket(null)} aria-label="Close ticket summary">×</button>
               <p className="small-muted">Ticket details</p>
-              <h3 id="map-ticket-detail-title">{selectedMapTicket.subject}</h3>
+              <h3 id="map-ticket-detail-title">{getTicketMapSubject(selectedMapTicket)}</h3>
               <div className="map-ticket-detail-meta">
                 <span>ID: {getTicketCode(selectedMapTicket)}</span>
                 <span>Status: {selectedMapTicket.status || 'open'}</span>
