@@ -91,6 +91,24 @@ const getLocalConversationResponse = (query) => {
   if (/\b(thank you|thanks|thx)\b/.test(normalizedQuery)) {
     return 'You are welcome! I am here whenever you need help.';
   }
+  if (/\b(help|what can you do|how can you help|assist me)\b/.test(normalizedQuery)) {
+    return 'I can answer basic campus questions, help you find departments and services, explain school processes, submit a request, and check your ticket status.';
+  }
+  if (/\b(what is assistdesk|what is this|what is this app|what is this for)\b/.test(normalizedQuery)) {
+    return 'AssistDesk is the campus support portal for finding information, contacting the right department, submitting requests, and tracking ticket progress.';
+  }
+  if (/\b(submit|create|file|make)\b.*\b(request|ticket|complaint|concern|report)\b/.test(normalizedQuery)) {
+    return 'To submit a request, open Tickets, choose a department and issue, describe the concern, then select Create ticket. You can also say “submit request:” followed by your concern.';
+  }
+  if (/\b(ticket|request)\b.*\b(status|track|progress|follow up)\b|\b(status|track|progress)\b.*\b(ticket|request)\b/.test(normalizedQuery)) {
+    return 'To check your request, say “status of my tickets” or provide a ticket number. I can show the current status and request details.';
+  }
+  if (/\b(department|office|service|help desk)\b.*\b(find|locate|where|contact)\b|\b(find|locate|where|contact)\b.*\b(department|office|service|help desk)\b/.test(normalizedQuery)) {
+    return 'Tell me the department or service you need, such as Registrar, Accounting, Guidance, Clinic, Library, Maintenance, or Student Affairs, and I will provide the available details.';
+  }
+  if (/\b(hello|hi)\b.*\b(how are you|how is it going)\b|\bhow are you\b/.test(normalizedQuery)) {
+    return 'I am ready to help with campus information and support requests. What would you like to know?';
+  }
   if (/\b(what time|current time|time is it)\b/.test(normalizedQuery)) {
     return `The current time is ${now.toLocaleTimeString()}.`;
   }
@@ -239,7 +257,7 @@ const buildResponse = async (query) => {
   const topService = scoredServices[0];
   const best = topFaq && topService ? (topFaq.score >= topService.score ? topFaq : topService) : (topFaq || topService);
 
-  if (!best || best.score <= 0) {
+  if (!best || best.score < 5) {
     try {
       const conversationalResponse = await getGeminiResponse(query, faqs, services, await Department.findAll());
       if (conversationalResponse) {
@@ -249,7 +267,7 @@ const buildResponse = async (query) => {
       console.error('Conversational AI fallback error:', error.message);
     }
     return {
-      ai_response: 'I can help with everyday questions and AssistDesk services. Please ask me something specific, or choose one of the FAQ questions below.',
+      ai_response: 'I can help with basic campus information, departments, services, ticket status, and request submission. Try asking “Where is the Registrar?”, “How do I submit a request?”, or “What is the status of my tickets?”',
       matched_department: null,
       department_details: null,
       service_details: null,
