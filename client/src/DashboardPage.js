@@ -156,7 +156,7 @@ function DashboardPage() {
 
   const getTicketMapSubject = (ticket) => {
     const subject = String(ticket.subject || '').trim().toLowerCase();
-    return ['general request', 'administrative request', 'administrative requests'].includes(subject)
+    return subject === 'general request' || subject.includes('administrative')
       ? 'Current general issue'
       : ticket.subject;
   };

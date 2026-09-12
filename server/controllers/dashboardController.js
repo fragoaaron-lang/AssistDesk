@@ -37,7 +37,7 @@ exports.getDashboard = async (req, res) => {
     );
 
     const tickets = await Ticket.findAll({
-      attributes: ['id', 'department_id', 'subject', 'priority', 'status', 'created_at'],
+      attributes: ['id', 'department_id', 'subject', 'description', 'priority', 'status', 'created_at'],
       order: [['created_at', 'DESC']],
       raw: true,
     });
