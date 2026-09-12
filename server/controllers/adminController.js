@@ -63,7 +63,7 @@ exports.getReports = async (req, res) => {
 
     const recentTickets = await Ticket.findAll({
       order: [['created_at', 'DESC']],
-      limit: 10,
+      limit: 100,
       include: [{ model: Department }, { model: User, include: [{ model: Department }] }],
     });
 
