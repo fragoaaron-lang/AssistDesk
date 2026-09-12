@@ -100,7 +100,7 @@ function AdminReportsPage() {
             <a href="/profile">Profile</a>
             {user?.role === 'admin' && (
               <>
-                <a href="/admin/reports">Data Analytics</a>
+                <a href="/admin/reports">Reports</a>
               </>
             )}
           </div>
@@ -123,7 +123,7 @@ function AdminReportsPage() {
             <a href="/profile" onClick={() => setMobileMenuOpen(false)}>Profile</a>
             {user?.role === 'admin' && (
               <>
-                <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Data Analytics</a>
+                <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Reports</a>
               </>
             )}
           </div>
@@ -134,7 +134,7 @@ function AdminReportsPage() {
 
         <div className="page-intro">
           <div>
-            <h2>Data analytics</h2>
+            <h2>Institutional reports</h2>
             <p>Monitor service trends, support demand, and operational activity.</p>
           </div>
           <button className="institutional-btn" onClick={downloadCsv}>Export Recent Tickets</button>
