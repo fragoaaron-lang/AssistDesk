@@ -182,6 +182,15 @@ function AdminReportsPage() {
                 </div>
               ))}
             </div>
+            <div className="report-chart" aria-label="Concerns summarized by category">
+              <strong className="report-chart-title">Concerns by category</strong>
+              {(reports.ticketCountsByConcern || []).length === 0 ? <p className="small-muted">No concerns recorded</p> : reports.ticketCountsByConcern.map((row) => (
+                <div key={row.concern} className="report-chart-row">
+                  <div className="report-chart-label"><span>{row.concern}</span><strong>{row.count}</strong></div>
+                  <div className="report-chart-track"><span className="report-chart-bar concern" style={{ width: getChartWidth(row.count, reports.ticketCountsByConcern) }} /></div>
+                </div>
+              ))}
+            </div>
           </div>
           <div className="institutional-card">
             <h3>Trend analytics</h3>

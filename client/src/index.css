@@ -1170,6 +1170,7 @@ button, input, select, textarea {
 .report-chart-bar.department { background: var(--teal); }
 .report-chart-bar.status { background: var(--gold); }
 .report-chart-bar.requester { background: var(--navy); }
+.report-chart-bar.concern { background: #d97745; }
 .report-trend-chart {
   display: flex;
   align-items: end;

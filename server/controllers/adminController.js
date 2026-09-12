@@ -26,6 +26,18 @@ exports.getReports = async (req, res) => {
       raw: true,
     });
 
+    const concernCounts = await Ticket.findAll({
+      attributes: ['category', [Ticket.sequelize.fn('COUNT', Ticket.sequelize.col('id')), 'count']],
+      group: ['category'],
+      order: [[Ticket.sequelize.literal('count'), 'DESC']],
+      raw: true,
+    });
+
+    const ticketCountsByConcern = concernCounts.map((row) => ({
+      concern: row.category || 'Uncategorized',
+      count: row.count,
+    }));
+
     const usersByRole = await User.findAll({
       attributes: ['role', [User.sequelize.fn('COUNT', User.sequelize.col('id')), 'count']],
       group: ['role'],
@@ -75,6 +87,7 @@ exports.getReports = async (req, res) => {
     return res.json({
       ticketCountsByDepartment,
       ticketCountsByStatus,
+      ticketCountsByConcern,
       usersByRole,
       ticketCountsByRequester,
       recentTickets,
