@@ -82,6 +82,14 @@ function RegisterPage({ modal = false, onSwitch }) {
       return;
     }
 
+    if (role === 'student') {
+      const studentNumberMatch = studentNumber.trim().match(/^(\d{4})-\d{5}$/);
+      if (!studentNumberMatch || Number(studentNumberMatch[1]) > new Date().getFullYear()) {
+        setMessage('Student number must use YYYY-NNNNN format and cannot be from a future academic year.');
+        return;
+      }
+    }
+
     try {
       const name = `${firstName.trim()} ${middleInitial.toUpperCase()}. ${lastName.trim()}`;
       await register(name, email, password, role, role === 'student' ? departmentId : null, studentNumber);
@@ -112,7 +120,7 @@ function RegisterPage({ modal = false, onSwitch }) {
             <input className="institutional-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" required />
             {role === 'student' && (
               <>
-                <input className="institutional-input" type="text" value={studentNumber} onChange={(e) => setStudentNumber(e.target.value)} placeholder="Student number" />
+                <input className="institutional-input" type="text" value={studentNumber} onChange={(e) => setStudentNumber(e.target.value)} placeholder="Student number (YYYY-NNNNN)" pattern="[0-9]{4}-[0-9]{5}" maxLength="10" required />
                 <select className="institutional-select" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} required>
                   <option value="">Select your department</option>
                   {departments.map((department) => (

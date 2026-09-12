@@ -20,6 +20,7 @@ const sanitizeUser = (user) => ({
 
 const PASSWORD_POLICY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const STUDENT_NUMBER_PATTERN = /^(\d{4})-\d{5}$/;
 const PUBLIC_ROLES = ['student', 'faculty', 'staff'];
 
 const validatePassword = (password) => {
@@ -56,6 +57,11 @@ exports.register = async (req, res) => {
     }
     let departmentId = null;
     if (role === 'student') {
+      const normalizedStudentNumber = String(student_number || '').trim();
+      const studentNumberMatch = normalizedStudentNumber.match(STUDENT_NUMBER_PATTERN);
+      if (!studentNumberMatch || Number(studentNumberMatch[1]) > new Date().getFullYear()) {
+        return res.status(400).json({ message: `Student number must use YYYY-NNNNN format and cannot be from a future academic year.` });
+      }
       departmentId = Number(department_id);
       if (!Number.isInteger(departmentId) || departmentId <= 0) {
         return res.status(400).json({ message: 'Please select your department.' });
@@ -83,7 +89,7 @@ exports.register = async (req, res) => {
       password_hash,
       role,
       department_id: departmentId,
-      student_number: role === 'student' ? (student_number || null) : null,
+      student_number: role === 'student' ? student_number.trim() : null,
     });
 
     await user.reload({ include: [{ model: Department }] });
