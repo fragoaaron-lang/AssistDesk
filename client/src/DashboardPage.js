@@ -154,11 +154,12 @@ function DashboardPage() {
     return briefDescription || 'Current general issue';
   };
 
-  const getTicketMapSubject = (ticket) => (
-    String(ticket.subject || '').trim().toLowerCase() === 'general request'
+  const getTicketMapSubject = (ticket) => {
+    const subject = String(ticket.subject || '').trim().toLowerCase();
+    return ['general request', 'administrative request', 'administrative requests'].includes(subject)
       ? 'Current general issue'
-      : ticket.subject
-  );
+      : ticket.subject;
+  };
 
   const getTicketCode = (ticket) => ticket.ticket_code || `#${ticket.id}`;
 
