@@ -67,6 +67,11 @@ function AdminReportsPage() {
     }));
   };
 
+  const getChartWidth = (value, rows) => {
+    const maximum = Math.max(...rows.map((row) => Number(row.count) || 0), 1);
+    return `${Math.max(4, ((Number(value) || 0) / maximum) * 100)}%`;
+  };
+
   if (!reports) {
     return <div style={{ padding: '2rem', fontFamily: 'Arial' }}>Loading reports...</div>;
   }
@@ -172,15 +177,41 @@ function AdminReportsPage() {
 
         <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '16px', marginBottom: '1.5rem' }}>
           <div className="institutional-card">
-            <h3>Tickets by Department</h3>
-            {reports.ticketCountsByDepartment.map((row) => (
-              <div key={row.department_id} style={{ padding: '0.5rem 0', borderBottom: '1px solid #f0f0f0' }}>
-                <strong>{row.department_name}</strong>
-                <div>{row.count} ticket(s)</div>
-              </div>
-            ))}
+            <h3>Ticket analytics</h3>
+            <div className="report-chart" aria-label="Tickets by department">
+              <strong className="report-chart-title">Tickets by department</strong>
+              {reports.ticketCountsByDepartment.length === 0 ? <p className="small-muted">No department activity</p> : reports.ticketCountsByDepartment.map((row) => (
+                <div key={row.department_id} className="report-chart-row">
+                  <div className="report-chart-label"><span>{row.department_name}</span><strong>{row.count}</strong></div>
+                  <div className="report-chart-track"><span className="report-chart-bar department" style={{ width: getChartWidth(row.count, reports.ticketCountsByDepartment) }} /></div>
+                </div>
+              ))}
+            </div>
+            <div className="report-chart" aria-label="Tickets by status">
+              <strong className="report-chart-title">Tickets by status</strong>
+              {reports.ticketCountsByStatus.map((row) => (
+                <div key={row.status} className="report-chart-row">
+                  <div className="report-chart-label"><span>{row.status}</span><strong>{row.count}</strong></div>
+                  <div className="report-chart-track"><span className="report-chart-bar status" style={{ width: getChartWidth(row.count, reports.ticketCountsByStatus) }} /></div>
+                </div>
+              ))}
+            </div>
           </div>
           <div className="institutional-card">
+            <h3>Trend analytics</h3>
+            <div className="report-chart" aria-label="Tickets created over the last 30 days">
+              <strong className="report-chart-title">30-day ticket trend</strong>
+              {reports.monthlyTicketCounts.length === 0 ? <p className="small-muted">No recent activity</p> : (
+                <div className="report-trend-chart">
+                  {reports.monthlyTicketCounts.map((row) => (
+                    <div key={row.date} className="report-trend-column" title={`${row.date}: ${row.count} ticket(s)`}>
+                      <span className="report-trend-bar" style={{ height: getChartWidth(row.count, reports.monthlyTicketCounts) }} />
+                      <small>{String(row.date).slice(5)}</small>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
             <h3>Recent Ticket Activity by Requester Department</h3>
             <div className="list-stack">
               {groupedRecentTickets.map((departmentGroup) => (
