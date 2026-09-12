@@ -1465,6 +1465,65 @@ button, input, select, textarea {
   z-index: 5;
 }
 
+.map-ticket-hover-card {
+  position: absolute;
+  z-index: 8;
+  width: 210px;
+  transform: translate(-50%, calc(-100% - 18px));
+  display: grid;
+  gap: 4px;
+  padding: 9px 11px;
+  border: 1px solid rgba(220, 230, 238, 0.95);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--text);
+  box-shadow: 0 8px 20px rgba(8, 32, 56, 0.18);
+  pointer-events: none;
+  font-size: 0.75rem;
+}
+
+.map-ticket-hover-card::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  width: 10px;
+  height: 10px;
+  transform: translateX(-50%) rotate(45deg);
+  border-right: 1px solid rgba(220, 230, 238, 0.95);
+  border-bottom: 1px solid rgba(220, 230, 238, 0.95);
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.map-ticket-summary-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--navy);
+  font-size: 0.7rem;
+}
+
+.map-ticket-status {
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--teal);
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.map-ticket-summary-subject,
+.map-ticket-summary-description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.map-ticket-summary-subject { color: var(--navy); }
+.map-ticket-summary-description { color: var(--muted); }
+
 .map-ticket-detail-backdrop {
   position: fixed;
   inset: 0;
@@ -1513,6 +1572,11 @@ button, input, select, textarea {
   text-shadow: 0 1px 4px rgba(255, 255, 255, 0.9);
 }
 
+.map-ticket-detail-meta span:last-child {
+  color: var(--teal);
+  text-transform: capitalize;
+}
+
 .map-ticket-detail-close {
   position: absolute;
   top: 8px;
@@ -1532,6 +1596,13 @@ body.dark-mode .map-ticket-detail {
   border-color: rgba(52, 72, 86, 0.95);
   background: rgba(21, 33, 43, 0.94);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+body.dark-mode .map-ticket-hover-card,
+body.dark-mode .map-ticket-hover-card::after {
+  border-color: rgba(52, 72, 86, 0.95);
+  background: rgba(21, 33, 43, 0.96);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.42);
 }
 
 .ticket-pin::after {
