@@ -51,7 +51,7 @@ function AdminReportsPage() {
   };
 
   if (!reports) {
-    return <div style={{ padding: '2rem', fontFamily: 'Arial' }}>Loading reports...</div>;
+    return <div style={{ padding: '2rem', fontFamily: 'Arial' }}>Loading Data Analytics...</div>;
   }
 
   return (
@@ -83,7 +83,7 @@ function AdminReportsPage() {
             <a href="/profile">Profile</a>
             {user?.role === 'admin' && (
               <>
-                <a href="/admin/reports">Reports</a>
+                <a href="/admin/reports">Data Analytics</a>
               </>
             )}
           </div>
@@ -106,7 +106,7 @@ function AdminReportsPage() {
             <a href="/profile" onClick={() => setMobileMenuOpen(false)}>Profile</a>
             {user?.role === 'admin' && (
               <>
-                <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Reports</a>
+                <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Data Analytics</a>
               </>
             )}
           </div>
@@ -117,7 +117,7 @@ function AdminReportsPage() {
 
         <div className="page-intro">
           <div>
-            <h2>Institutional reports</h2>
+            <h2>Data Analytics</h2>
             <p>Monitor service trends, support demand, and operational activity.</p>
           </div>
         </div>
