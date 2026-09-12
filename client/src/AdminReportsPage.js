@@ -28,28 +28,6 @@ function AdminReportsPage() {
     if (token) loadReports();
   }, [token]);
 
-  const downloadCsv = () => {
-    if (!reports) return;
-    const rows = [
-      ['Subject', 'Status', 'Department', 'User', 'Created At'],
-      ...reports.recentTickets.map((ticket) => [
-        ticket.subject,
-        ticket.status,
-        ticket.Department?.name || 'N/A',
-        ticket.User?.email || 'N/A',
-        new Date(ticket.created_at).toLocaleString(),
-      ]),
-    ];
-    const csv = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'recent-tickets.csv';
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
   const groupedRecentTickets = Object.values((reports?.recentTickets || []).reduce((groups, ticket) => {
     const requesterDepartment = ticket.User?.Department;
     const departmentName = requesterDepartment?.name || 'Unassigned Department';
@@ -142,7 +120,6 @@ function AdminReportsPage() {
             <h2>Institutional reports</h2>
             <p>Monitor service trends, support demand, and operational activity.</p>
           </div>
-          <button className="institutional-btn" onClick={downloadCsv}>Export Recent Tickets</button>
         </div>
         {message && <p>{message}</p>}
 
