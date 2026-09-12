@@ -27,6 +27,7 @@ const getEstimatedCompletion = (priority, requestedAt = new Date()) => {
 };
 
 const collegeDepartmentNames = new Set([
+  'basic education department',
   'college of nursing',
   'cs',
   'cba',
@@ -39,6 +40,7 @@ const collegeDepartmentNames = new Set([
 
 const getCollegeDepartmentKey = (department) => {
   const name = normalize(department?.name || department);
+  if (name === 'basic education department') return 'basic-education';
   if (['cs', 'computer science department', 'college of computer studies'].includes(name)) return 'cs';
   if (['cba', 'college of business administration', 'college of business and accountancy'].includes(name)) return 'cba';
   if (['charm', 'college of hospitality and restaurant management', 'college of hospitality management'].includes(name)) return 'charm';

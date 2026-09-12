@@ -86,6 +86,7 @@ const generalIssueOptions = {
 };
 
 const collegeDepartmentNames = [
+  'basic education department',
   'college of nursing',
   'cs',
   'cba',
@@ -100,6 +101,7 @@ const normalizeDepartmentName = (department) => String(department?.name || depar
 
 const getCollegeDepartmentKey = (department) => {
   const name = normalizeDepartmentName(department);
+  if (name === 'basic education department') return 'basic-education';
   if (['cs', 'computer science department', 'college of computer studies'].includes(name)) return 'cs';
   if (['cba', 'college of business administration', 'college of business and accountancy'].includes(name)) return 'cba';
   if (['charm', 'college of hospitality and restaurant management', 'college of hospitality management'].includes(name)) return 'charm';
