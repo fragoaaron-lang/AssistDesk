@@ -97,6 +97,9 @@ const getLocalConversationResponse = (query) => {
   if (/\b(what is assistdesk|what is this|what is this app|what is this for)\b/.test(normalizedQuery)) {
     return 'AssistDesk is the campus support portal for finding information, contacting the right department, submitting requests, and tracking ticket progress.';
   }
+    if (/\b(enroll|enrollment|admission|admissions)\b/.test(normalizedQuery) && /\b(college|school|tcc|course|program|freshman|transferee)\b/.test(normalizedQuery)) {
+      return 'For college enrollment: freshmen and transferees should start at the Guidance Office, then proceed to the Registrar Office at Window 5. Old students should visit the Registrar Office at Window 4 and the Dean\'s Office for advising, then complete subject encoding at Windows 1, 2, or 3. Continue to Accounting at Window 6 for assessment and finish payment at the Cashier at Window 8.';
+    }
   if (/\b(submit|create|file|make)\b.*\b(request|ticket|complaint|concern|report)\b/.test(normalizedQuery)) {
     return 'To submit a request, open Tickets, choose a department and issue, describe the concern, then select Create ticket. You can also say “submit request:” followed by your concern.';
   }
