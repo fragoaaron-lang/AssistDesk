@@ -50,6 +50,20 @@ function AdminReportsPage() {
     return `${Math.max(4, ((Number(value) || 0) / maximum) * 100)}%`;
   };
 
+  const getTotalCount = (rows) => rows.reduce((total, row) => total + (Number(row.count) || 0), 0);
+
+  const getDonutStyle = (rows) => {
+    const total = getTotalCount(rows) || 1;
+    let offset = 0;
+    const colors = ['#1687c9', '#55b9e8', '#f0b44d', '#e47b54', '#7a91a8'];
+    const stops = rows.map((row, index) => {
+      const start = offset;
+      offset += ((Number(row.count) || 0) / total) * 360;
+      return `${colors[index % colors.length]} ${start}deg ${offset}deg`;
+    });
+    return { background: `conic-gradient(${stops.join(', ') || '#d9e6ef 0deg 360deg'})` };
+  };
+
   if (!reports) {
     return <div style={{ padding: '2rem', fontFamily: 'Arial' }}>Loading Data Analytics...</div>;
   }
@@ -152,61 +166,53 @@ function AdminReportsPage() {
           </div>
         </section>
 
-        <section style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '16px', marginBottom: '1.5rem' }}>
-          <div className="institutional-card">
-            <h3>Ticket analytics</h3>
+        <section className="report-visual-grid">
+          <div className="institutional-card report-trend-card">
+            <div className="report-card-heading"><div><h3>Income</h3><span>Ticket volume by date</span></div><strong>{getTotalCount(reports.monthlyTicketCounts)} tickets</strong></div>
+            {reports.monthlyTicketCounts.length === 0 ? <p className="small-muted">No recent activity</p> : (
+              <div className="report-area-chart" aria-label="Tickets created over the last 30 days">
+                {reports.monthlyTicketCounts.map((row) => (
+                  <div key={row.date} className="report-trend-column" title={`${row.date}: ${row.count} ticket(s)`}>
+                    <span className="report-trend-bar" style={{ height: getChartWidth(row.count, reports.monthlyTicketCounts) }} />
+                    <small>{String(row.date).slice(5)}</small>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="institutional-card report-donut-card">
+            <div className="report-card-heading"><div><h3>Status</h3><span>Ticket distribution</span></div><strong>{getTotalCount(reports.ticketCountsByStatus)}</strong></div>
+            <div className="report-donut" style={getDonutStyle(reports.ticketCountsByStatus)}><span>{getTotalCount(reports.ticketCountsByStatus)}</span></div>
+            <div className="report-legend">{reports.ticketCountsByStatus.map((row, index) => <span key={row.status}><i className={`legend-dot legend-dot-${index % 5}`} />{row.status} <strong>{row.count}</strong></span>)}</div>
+          </div>
+          <div className="institutional-card report-donut-card">
+            <div className="report-card-heading"><div><h3>Concerns</h3><span>Categories</span></div><strong>{getTotalCount(reports.ticketCountsByConcern || [])}</strong></div>
+            <div className="report-donut" style={getDonutStyle(reports.ticketCountsByConcern || [])}><span>{getTotalCount(reports.ticketCountsByConcern || [])}</span></div>
+            <div className="report-legend">{(reports.ticketCountsByConcern || []).slice(0, 5).map((row, index) => <span key={row.concern}><i className={`legend-dot legend-dot-${index % 5}`} />{row.concern} <strong>{row.count}</strong></span>)}</div>
+          </div>
+          <div className="institutional-card report-bars-card">
+            <h3>Department growth</h3>
             <div className="report-chart" aria-label="Tickets by department">
-              <strong className="report-chart-title">Tickets by department</strong>
               {reports.ticketCountsByDepartment.length === 0 ? <p className="small-muted">No department activity</p> : reports.ticketCountsByDepartment.map((row) => (
-                <div key={row.department_id} className="report-chart-row">
-                  <div className="report-chart-label"><span>{row.department_name}</span><strong>{row.count}</strong></div>
-                  <div className="report-chart-track"><span className="report-chart-bar department" style={{ width: getChartWidth(row.count, reports.ticketCountsByDepartment) }} /></div>
-                </div>
-              ))}
-            </div>
-            <div className="report-chart" aria-label="Tickets by status">
-              <strong className="report-chart-title">Tickets by status</strong>
-              {reports.ticketCountsByStatus.map((row) => (
-                <div key={row.status} className="report-chart-row">
-                  <div className="report-chart-label"><span>{row.status}</span><strong>{row.count}</strong></div>
-                  <div className="report-chart-track"><span className="report-chart-bar status" style={{ width: getChartWidth(row.count, reports.ticketCountsByStatus) }} /></div>
-                </div>
-              ))}
-            </div>
-            <div className="report-chart" aria-label="Tickets by requester">
-              <strong className="report-chart-title">Tickets by requester</strong>
-              {(reports.ticketCountsByRequester || []).length === 0 ? <p className="small-muted">No requester activity</p> : reports.ticketCountsByRequester.slice(0, 8).map((row) => (
-                <div key={row.requester_id} className="report-chart-row">
-                  <div className="report-chart-label"><span>{row.requester_name}</span><strong>{row.count}</strong></div>
-                  <div className="report-chart-track"><span className="report-chart-bar requester" style={{ width: getChartWidth(row.count, reports.ticketCountsByRequester) }} /></div>
-                </div>
-              ))}
-            </div>
-            <div className="report-chart" aria-label="Concerns summarized by category">
-              <strong className="report-chart-title">Concerns by category</strong>
-              {(reports.ticketCountsByConcern || []).length === 0 ? <p className="small-muted">No concerns recorded</p> : reports.ticketCountsByConcern.map((row) => (
-                <div key={row.concern} className="report-chart-row">
-                  <div className="report-chart-label"><span>{row.concern}</span><strong>{row.count}</strong></div>
-                  <div className="report-chart-track"><span className="report-chart-bar concern" style={{ width: getChartWidth(row.count, reports.ticketCountsByConcern) }} /></div>
-                </div>
+                <div key={row.department_id} className="report-chart-row"><div className="report-chart-label"><span>{row.department_name}</span><strong>{row.count}</strong></div><div className="report-chart-track"><span className="report-chart-bar department" style={{ width: getChartWidth(row.count, reports.ticketCountsByDepartment) }} /></div></div>
               ))}
             </div>
           </div>
-          <div className="institutional-card">
-            <h3>Trend analytics</h3>
-            <div className="report-chart" aria-label="Tickets created over the last 30 days">
-              <strong className="report-chart-title">30-day ticket trend</strong>
-              {reports.monthlyTicketCounts.length === 0 ? <p className="small-muted">No recent activity</p> : (
-                <div className="report-trend-chart">
-                  {reports.monthlyTicketCounts.map((row) => (
-                    <div key={row.date} className="report-trend-column" title={`${row.date}: ${row.count} ticket(s)`}>
-                      <span className="report-trend-bar" style={{ height: getChartWidth(row.count, reports.monthlyTicketCounts) }} />
-                      <small>{String(row.date).slice(5)}</small>
-                    </div>
-                  ))}
-                </div>
-              )}
+          <div className="institutional-card report-bars-card">
+            <h3>Requester activity</h3>
+            <div className="report-chart" aria-label="Tickets by requester">
+              {(reports.ticketCountsByRequester || []).length === 0 ? <p className="small-muted">No requester activity</p> : reports.ticketCountsByRequester.slice(0, 8).map((row) => (
+                <div key={row.requester_id} className="report-chart-row"><div className="report-chart-label"><span>{row.requester_name}</span><strong>{row.count}</strong></div><div className="report-chart-track"><span className="report-chart-bar requester" style={{ width: getChartWidth(row.count, reports.ticketCountsByRequester) }} /></div></div>
+              ))}
             </div>
+          </div>
+          <div className="institutional-card report-bars-card">
+            <h3>Status bars</h3>
+            <div className="report-chart" aria-label="Tickets by status">
+              {reports.ticketCountsByStatus.map((row) => <div key={row.status} className="report-chart-row"><div className="report-chart-label"><span>{row.status}</span><strong>{row.count}</strong></div><div className="report-chart-track"><span className="report-chart-bar status" style={{ width: getChartWidth(row.count, reports.ticketCountsByStatus) }} /></div></div>)}
+            </div>
+          </div>
+          <div className="institutional-card report-activity-card">
             <h3>Recent Ticket Activity by Requester Department</h3>
             <div className="list-stack">
               {groupedRecentTickets.map((departmentGroup) => (
