@@ -149,9 +149,12 @@ function DashboardPage() {
   };
 
   const getTicketHoverDescription = (ticket) => {
-    const description = String(ticket.description || '').replace(/\s+/g, ' ').trim();
-    const briefDescription = description.length > 110 ? `${description.slice(0, 107)}...` : description;
-    return briefDescription || 'Current general issue';
+    const subject = String(ticket.subject || '').replace(/\s+/g, ' ').trim();
+    const normalizedSubject = subject.toLowerCase();
+    if (normalizedSubject === 'general request' || normalizedSubject.includes('administrative')) {
+      return 'Current general issue';
+    }
+    return subject || 'Current general issue';
   };
 
   const getTicketMapSubject = (ticket) => {
