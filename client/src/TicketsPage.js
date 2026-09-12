@@ -534,7 +534,7 @@ function TicketsPage() {
                   <option key={subject} value={subject}>{subject}</option>
                 ))}
               </select>
-              <textarea className="institutional-textarea" placeholder="Updated general issue" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
+              <textarea className="institutional-textarea" placeholder="Current general issue" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
               {isMaintenanceDepartment && (
                 <div className={`ticket-image-upload ${attachment ? 'has-file' : ''}`} onPaste={handleAttachmentPaste} tabIndex="0">
                   <div className="ticket-image-upload-heading">
