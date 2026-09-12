@@ -357,7 +357,7 @@ function DashboardPage() {
                 <span>ID: {getTicketCode(selectedMapTicket)}</span>
                 <span>Status: {selectedMapTicket.status || 'open'}</span>
               </div>
-              {selectedMapTicket.description && <p>{selectedMapTicket.description}</p>}
+              <p>{getTicketHoverDescription(selectedMapTicket)}</p>
             </div>
           </div>
         )}
