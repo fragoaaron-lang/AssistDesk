@@ -69,7 +69,7 @@ const generalIssueOptions = {
     'Form or document request',
     'Permit or approval request',
     'School announcement request',
-    'General administrative inquiry',
+    'Current general issue',
   ],
   'Cleaning and Sanitation': [
     'Restroom concern',
