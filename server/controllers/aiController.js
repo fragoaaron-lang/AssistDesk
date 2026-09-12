@@ -402,13 +402,17 @@ const handleTicketCommand = async (message, userId) => {
 
 exports.askAssistant = async (req, res) => {
   try {
-    const { message, user_id } = req.body;
+    const { message, user_id, assistant_name: requestedAssistantName } = req.body;
     if (!message) {
       return res.status(400).json({ message: 'A message is required.' });
     }
 
     const commandResult = await handleTicketCommand(message, req.user.id);
     const result = commandResult || await buildResponse(message);
+    const assistantName = ['Alex', 'Maya'].includes(requestedAssistantName) ? requestedAssistantName : 'Assistant';
+    result.ai_response = result.ai_response
+      .replace('I am AssistDesk, your campus support assistant', `I am ${assistantName}, your AssistDesk campus support assistant`)
+      .replace('Hello! I am AssistDesk, your campus support assistant', `Hello! I am ${assistantName}, your AssistDesk campus support assistant`);
     const chatLog = await ChatLog.create({
       user_id: user_id || 0,
       message,

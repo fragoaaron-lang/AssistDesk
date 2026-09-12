@@ -110,7 +110,11 @@ function ChatbotWidget() {
     setSending(true);
     try {
       const [response] = await Promise.all([
-        axios.post(`${API_BASE_URL}/api/ai/ask`, { message: text, user_id: user.id }, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.post(`${API_BASE_URL}/api/ai/ask`, {
+          message: text,
+          user_id: user.id,
+          assistant_name: getAssistantName(),
+        }, { headers: { Authorization: `Bearer ${token}` } }),
         new Promise((resolve) => window.setTimeout(resolve, 1400)),
       ]);
       setHistory((current) => [...current, {
