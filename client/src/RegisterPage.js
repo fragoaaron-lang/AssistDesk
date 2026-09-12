@@ -120,7 +120,7 @@ function RegisterPage({ modal = false, onSwitch }) {
             <input className="institutional-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" required />
             {role === 'student' && (
               <>
-                <input className="institutional-input" type="text" value={studentNumber} onChange={(e) => setStudentNumber(e.target.value)} placeholder="Student number (YYYY-NNNNN)" pattern="[0-9]{4}-[0-9]{5}" maxLength="10" required />
+                <input className="institutional-input" type="text" value={studentNumber} onChange={(e) => setStudentNumber(e.target.value)} placeholder="Student number (2026-XXXXX)" pattern="[0-9]{4}-[0-9]{5}" maxLength="10" required />
                 <select className="institutional-select" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} required>
                   <option value="">Select your department</option>
                   {departments.map((department) => (
