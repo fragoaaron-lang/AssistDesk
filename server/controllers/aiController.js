@@ -322,6 +322,44 @@ const getTicketReference = (message) => {
 
 const handleTicketCommand = async (message, userId) => {
   const normalized = normalize(message);
+
+  const ticketCodeMatch = String(message).match(/\b([A-Z]{2,5}-\d{1,6})\b/i);
+  if (ticketCodeMatch) {
+    const requestedCode = ticketCodeMatch[1].toUpperCase();
+    const tickets = await Ticket.findAll({
+      where: { user_id: userId },
+      include: [{ model: Department }],
+      order: [['created_at', 'DESC']],
+    });
+    const ticket = tickets.find((candidate) => {
+      addTicketNumber(candidate);
+      return candidate.ticket_code === requestedCode;
+    });
+
+    if (!ticket) {
+      return {
+        ai_response: `I could not find ticket ${requestedCode} in your requests. Please check the ticket ID and try again.`,
+        action: 'ticket_not_found',
+      };
+    }
+
+    const statusLabels = {
+      open: 'Submitted',
+      pending: 'Pending',
+      in_progress: 'In Progress',
+      resolved: 'Resolved',
+      closed: 'Closed',
+    };
+    const statusLabel = statusLabels[ticket.status] || ticket.status;
+
+    return {
+      ai_response: `Here is a brief summary of ${requestedCode}: ${ticket.subject}. ${ticket.description}. It is currently ${statusLabel}.`,
+      ticket,
+      ticket_process: Object.entries(statusLabels).map(([key, label]) => ({ key, label })),
+      action: 'ticket_details',
+    };
+  }
+
   const ticketReference = getTicketReference(message);
   if (ticketReference) {
     const ticket = await Ticket.findOne({
@@ -350,7 +388,7 @@ const handleTicketCommand = async (message, userId) => {
     const statusLabel = statusLabels[ticket.status] || ticket.status;
 
     return {
-      ai_response: `${ticket.ticket_code} is currently ${statusLabel}. Request: ${ticket.subject}. Brief description: ${ticket.description}`,
+      ai_response: `${ticket.ticket_code} is currently ${statusLabel}.`,
       ticket,
       ticket_process: Object.entries(statusLabels).map(([key, label]) => ({ key, label })),
       action: 'ticket_lookup',

@@ -9,6 +9,7 @@ import TicketsPage from './TicketsPage';
 import ProfilePage from './ProfilePage';
 import ChatbotWidget from './ChatbotWidget';
 import LandingPage from './LandingPage';
+import ResetPasswordPage from './ResetPasswordPage';
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -80,6 +81,7 @@ function App() {
           />
           <Route path="/login" element={<Navigate to="/" replace />} />
           <Route path="/register" element={<Navigate to="/" replace />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/" element={<LandingPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

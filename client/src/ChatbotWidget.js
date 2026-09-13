@@ -190,23 +190,27 @@ function ChatbotWidget() {
                 <span>{entry.text}</span>
                 {entry.details && <small>{entry.details.name} · {entry.details.office_hours || 'Contact the department for office hours.'}</small>}
                 {entry.ticket && (
-                  <small>
-                    Ticket {entry.ticket.ticket_code || `#${entry.ticket.id}`} · {entry.ticket.subject} · {entry.ticket.description} · Status: {entry.ticket.status} · ETA: {entry.ticket.estimated_completion_at ? new Date(entry.ticket.estimated_completion_at).toLocaleString() : 'pending'}
-                  </small>
+                  <>
+                    <small>
+                      Ticket {entry.ticket.ticket_code || `#${entry.ticket.id}`} · {entry.ticket.subject} · Status: {entry.ticket.status} · ETA: {entry.ticket.estimated_completion_at ? new Date(entry.ticket.estimated_completion_at).toLocaleString() : 'pending'}
+                    </small>
+                    {entry.ticketProcess && entry.ticket && (
+                      <div className="chatbot-ticket-process" aria-label="Ticket process">
+                        {entry.ticketProcess.map((stage, stageIndex) => {
+                          const currentIndex = entry.ticketProcess.findIndex((item) => item.key === entry.ticket.status);
+                          return (
+                            <span key={stage.key} className={`chatbot-ticket-stage ${stageIndex <= currentIndex ? 'completed' : ''} ${stage.key === entry.ticket.status ? 'active' : ''}`}>
+                              {stage.label}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
                 )}
-                {entry.ticketProcess && entry.ticket && (
-                  <div className="chatbot-ticket-process" aria-label="Ticket process">
-                    {entry.ticketProcess.map((stage, stageIndex) => {
-                      const currentIndex = entry.ticketProcess.findIndex((item) => item.key === entry.ticket.status);
-                      return (
-                        <span key={stage.key} className={`chatbot-ticket-stage ${stageIndex <= currentIndex ? 'completed' : ''} ${stage.key === entry.ticket.status ? 'active' : ''}`}>
-                          {stage.label}
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
-                {entry.tickets?.map((ticket) => <small key={ticket.id}>{ticket.ticket_code || `#${ticket.id}`} · {ticket.subject} · {ticket.status} · ETA: {ticket.estimated_completion_at ? new Date(ticket.estimated_completion_at).toLocaleString() : 'pending'}</small>)}
+                {entry.tickets?.map((ticket) => (
+                  <small key={ticket.id}>{ticket.ticket_code || `#${ticket.id}`} · {ticket.subject} · {ticket.status} · ETA: {ticket.estimated_completion_at ? new Date(ticket.estimated_completion_at).toLocaleString() : 'pending'}</small>
+                ))}
               </div>
             ))}
             {sending && (

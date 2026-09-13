@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { User, Department, PasswordResetToken } = require('../models');
+const { sendPasswordResetEmail } = require('../utils/email');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'assistdesk-secret';
 const JWT_EXPIRES_IN = '8h';
@@ -159,7 +160,8 @@ exports.forgotPassword = async (req, res) => {
       return res.status(400).json({ message: 'Email is required.' });
     }
 
-    const user = await User.findOne({ where: { email } });
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const user = await User.findOne({ where: { email: normalizedEmail } });
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
     }
@@ -167,11 +169,17 @@ exports.forgotPassword = async (req, res) => {
     const token = crypto.randomBytes(32).toString('hex');
     const expires_at = new Date(Date.now() + 60 * 60 * 1000);
 
-    await PasswordResetToken.destroy({ where: { email } });
-    await PasswordResetToken.create({ email, token, expires_at });
+    await PasswordResetToken.destroy({ where: { email: normalizedEmail } });
+    await PasswordResetToken.create({ email: normalizedEmail, token, expires_at });
+
+    await sendPasswordResetEmail({
+      to: normalizedEmail,
+      token,
+      userName: user.name,
+    });
 
     return res.json({
-      message: 'Password reset token created.',
+      message: 'Password reset instructions have been sent to your email.',
       resetToken: token,
     });
   } catch (error) {
