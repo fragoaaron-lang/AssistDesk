@@ -83,7 +83,7 @@ function FacialIdCapture({ value, onChange }) {
           setCaptureStatus('Capturing facial ID...');
           capture();
         }
-      }, 3900));
+      }, 4500));
     };
     if (!detector) {
       scheduleBlinkFallback();
