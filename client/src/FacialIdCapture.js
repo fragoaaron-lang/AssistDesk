@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 function FacialIdCapture({ value, onChange }) {
+  const cursorBounds = { left: 0.21, right: 0.79, top: 0.10, bottom: 0.90 };
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -64,12 +65,9 @@ function FacialIdCapture({ value, onChange }) {
     } catch (error) {
       detector = null;
     }
-    const fallbackTimer = window.setTimeout(() => {
-      if (!cancelled) {
-        setCaptureStatus('Capturing facial ID...');
-        capture();
-      }
-    }, 4500);
+    if (!detector) {
+      setCaptureStatus('Precise face tracking is unavailable in this browser.');
+    }
 
     const detectFace = async () => {
       const video = videoRef.current;
@@ -83,33 +81,52 @@ function FacialIdCapture({ value, onChange }) {
       try {
         const faces = await detector.detect(video);
         const face = faces[0]?.boundingBox;
-        const faceCenterX = face ? (face.x + face.width / 2) / video.videoWidth : 0;
-        const faceCenterY = face ? (face.y + face.height / 2) / video.videoHeight : 0;
-        const isCentered = Boolean(face)
-          && faceCenterX > 0.3 && faceCenterX < 0.7
-          && faceCenterY > 0.25 && faceCenterY < 0.75;
+        const faceLeft = face ? face.x / video.videoWidth : 0;
+        const faceRight = face ? (face.x + face.width) / video.videoWidth : 0;
+        const faceTop = face ? face.y / video.videoHeight : 0;
+        const faceBottom = face ? (face.y + face.height) / video.videoHeight : 0;
+        const faceWidth = face ? face.width / video.videoWidth : 0;
+        const faceHeight = face ? face.height / video.videoHeight : 0;
+        const cursorWidth = cursorBounds.right - cursorBounds.left;
+        const cursorHeight = cursorBounds.bottom - cursorBounds.top;
+        const faceRatio = faceWidth / Math.max(faceHeight, 0.001);
+        const cursorRatio = cursorWidth / cursorHeight;
+        const isInsideCursor = Boolean(face)
+          && faceLeft >= cursorBounds.left + 0.04
+          && faceRight <= cursorBounds.right - 0.04
+          && faceTop >= cursorBounds.top + 0.04
+          && faceBottom <= cursorBounds.bottom - 0.04;
+        const hasCursorProportions = faceRatio >= cursorRatio * 0.62
+          && faceRatio <= cursorRatio * 1.38
+          && faceWidth >= cursorWidth * 0.42
+          && faceWidth <= cursorWidth * 0.92
+          && faceHeight >= cursorHeight * 0.42
+          && faceHeight <= cursorHeight * 0.92;
+        const faceCenterX = face ? (faceLeft + faceRight) / 2 : 0;
+        const faceCenterY = face ? (faceTop + faceBottom) / 2 : 0;
+        const isCentered = isInsideCursor && hasCursorProportions
+          && Math.abs(faceCenterX - 0.5) <= 0.07
+          && Math.abs(faceCenterY - 0.5) <= 0.09;
 
         if (isCentered) {
           stableFaceFrames += 1;
           setCaptureStatus(stableFaceFrames >= 3 ? 'Face detected. Capturing facial ID...' : 'Hold still...');
           if (stableFaceFrames >= 3) {
             cancelled = true;
-            window.clearTimeout(fallbackTimer);
             capture();
           }
         } else {
           stableFaceFrames = 0;
-          setCaptureStatus('Center your face in the guide');
+          setCaptureStatus(face ? 'Fit your entire face inside the guide' : 'Center your face in the guide');
         }
       } catch (error) {
-        setCaptureStatus('Camera ready. Capturing facial ID...');
+        setCaptureStatus('Precise face tracking is unavailable in this browser.');
       }
     };
 
     const detectionTimer = window.setInterval(detectFace, 250);
     return () => {
       cancelled = true;
-      window.clearTimeout(fallbackTimer);
       window.clearInterval(detectionTimer);
     };
   }, [cameraOpen]);
