@@ -16,6 +16,7 @@ const sanitizeUser = (user) => ({
   department_name: user.role === 'student' ? (user.Department?.name || null) : null,
   student_number: user.student_number || null,
   profile_picture: user.profile_picture || null,
+  facial_id: user.facial_id || null,
   created_at: user.created_at,
 });
 
@@ -39,7 +40,7 @@ const signToken = (user) =>
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role = 'student', department_id, student_number } = req.body;
+    const { name, email, password, role = 'student', department_id, student_number, facial_id } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Name, email, and password are required.' });
@@ -91,6 +92,7 @@ exports.register = async (req, res) => {
       role,
       department_id: departmentId,
       student_number: role === 'student' ? student_number.trim() : null,
+      facial_id: facial_id ? String(facial_id).trim() : null,
     });
 
     await user.reload({ include: [{ model: Department }] });
@@ -296,9 +298,9 @@ exports.deleteAccount = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const { profile_picture, student_number } = req.body;
+    const { profile_picture, student_number, facial_id } = req.body;
 
-    if (profile_picture === undefined && student_number === undefined) {
+    if (profile_picture === undefined && student_number === undefined && facial_id === undefined) {
       return res.status(400).json({ message: 'Profile updates are required.' });
     }
 
@@ -313,12 +315,15 @@ exports.updateProfile = async (req, res) => {
     const nextStudentNumber = student_number === undefined
       ? user.student_number
       : student_number ? String(student_number).trim() : null;
+    const nextFacialId = facial_id === undefined
+      ? user.facial_id
+      : facial_id ? String(facial_id).trim() : null;
 
     if (user.role === 'student' && !nextStudentNumber) {
       return res.status(400).json({ message: 'Student number is required for student accounts.' });
     }
 
-    await user.update({ profile_picture: nextValue, student_number: nextStudentNumber });
+    await user.update({ profile_picture: nextValue, student_number: nextStudentNumber, facial_id: nextFacialId });
 
     return res.json({
       message: 'Profile updated successfully.',

@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }) => {
     return { user, token: newToken };
   };
 
-  const register = async (name, email, password, role, departmentId = null, studentNumber = '') => {
+  const register = async (name, email, password, role, departmentId = null, studentNumber = '', facialId = '') => {
     const response = await axios.post(`${API_BASE_URL}/api/auth/register`, {
       name,
       email,
@@ -86,6 +86,7 @@ export const AuthProvider = ({ children }) => {
       role,
       department_id: departmentId,
       student_number: studentNumber,
+      facial_id: facialId || null,
     });
 
     const { user, token: newToken } = response.data;
@@ -113,11 +114,12 @@ export const AuthProvider = ({ children }) => {
     window.location.assign('/');
   };
 
-  const updateUserProfile = (profilePicture, studentNumber) => {
+  const updateUserProfile = (profilePicture, studentNumber, facialId) => {
     setUser((currentUser) => (currentUser ? {
       ...currentUser,
       profile_picture: profilePicture || null,
       ...(studentNumber !== undefined ? { student_number: studentNumber || null } : {}),
+      ...(facialId !== undefined ? { facial_id: facialId || null } : {}),
     } : currentUser));
   };
 

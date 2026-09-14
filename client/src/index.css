@@ -1025,6 +1025,61 @@ button, input, select, textarea {
   width: 100%;
 }
 
+.facial-id-capture {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #c7e1e1;
+  border-radius: 12px;
+  background: #f7fcfc;
+}
+
+.facial-id-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.facial-id-copy small,
+.facial-id-error {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.facial-id-error {
+  color: #a12626;
+}
+
+.facial-id-camera,
+.facial-id-preview {
+  display: grid;
+  gap: 10px;
+  max-width: 420px;
+}
+
+.facial-id-camera video,
+.facial-id-preview img {
+  display: block;
+  width: min(100%, 360px);
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 10px;
+  background: #102c35;
+}
+
+.facial-id-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.facial-id-status {
+  color: #1d6b54;
+  font-weight: 700;
+  margin-right: auto;
+}
+
 .account-deletion-card {
   margin-top: 18px;
 }

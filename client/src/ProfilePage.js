@@ -3,6 +3,7 @@ import { useAuth } from './AuthContext';
 import LogoutButton from './LogoutButton';
 import { API_BASE_URL } from './config';
 import HeaderProfile from './HeaderProfile';
+import FacialIdCapture from './FacialIdCapture';
 
 const defaultPrefs = {
   compactMode: false,
@@ -68,6 +69,7 @@ function ProfilePage() {
   const [passwordForm, setPasswordForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
   const [passwordState, setPasswordState] = useState({ status: 'idle', message: '' });
   const [showPasswordEditor, setShowPasswordEditor] = useState(false);
+  const [facialId, setFacialId] = useState(() => user?.facial_id || '');
   const [showPasswordFields, setShowPasswordFields] = useState({ oldPassword: false, newPassword: false, confirmPassword: false });
   const [photoUploadLoading, setPhotoUploadLoading] = useState(false);
   const [saveState, setSaveState] = useState({ status: 'idle', message: '' });
@@ -90,6 +92,7 @@ function ProfilePage() {
       return localStorage.getItem(key) || '';
     })(),
     studentNumber: user?.student_number || '',
+    facialId: user?.facial_id || '',
   }));
 
   useEffect(() => {
@@ -119,9 +122,10 @@ function ProfilePage() {
       storedPrefs = defaultPrefs;
     }
 
-    setSavedSnapshot({ prefs: storedPrefs, photo: storedPhoto, studentNumber: user.student_number || '' });
+    setSavedSnapshot({ prefs: storedPrefs, photo: storedPhoto, studentNumber: user.student_number || '', facialId: user.facial_id || '' });
     setProfilePhoto(storedPhoto);
     setStudentNumber(user.student_number || '');
+    setFacialId(user.facial_id || '');
     setPrefs(storedPrefs);
   }, [user?.id, user?.email]);
 
@@ -129,7 +133,8 @@ function ProfilePage() {
     if (!user) return;
     const hasChanges = JSON.stringify(prefs) !== JSON.stringify(savedSnapshot.prefs)
       || profilePhoto !== savedSnapshot.photo
-      || studentNumber !== savedSnapshot.studentNumber;
+      || studentNumber !== savedSnapshot.studentNumber
+      || facialId !== savedSnapshot.facialId;
     if (hasChanges) {
       setShowSaveDialog(true);
     } else {
@@ -159,7 +164,7 @@ function ProfilePage() {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ profile_picture: nextPhoto || null, student_number: nextStudentNumber || null }),
+            body: JSON.stringify({ profile_picture: nextPhoto || null, student_number: nextStudentNumber || null, facial_id: facialId || null }),
         });
 
         const data = await response.json().catch(() => ({}));
@@ -169,7 +174,7 @@ function ProfilePage() {
         }
 
         const savedPhoto = data.user?.profile_picture || nextPhoto || null;
-        updateUserProfile(savedPhoto, nextStudentNumber);
+        updateUserProfile(savedPhoto, nextStudentNumber, facialId);
         if (savedPhoto) {
           localStorage.setItem(getUserStorageKey(user, 'profile_photo'), savedPhoto);
         } else {
@@ -209,11 +214,11 @@ function ProfilePage() {
         localStorage.setItem(getUserStorageKey(user, 'profile_prefs'), JSON.stringify(prefs));
       }
 
-      if (profilePhoto !== savedSnapshot.photo || studentNumber !== savedSnapshot.studentNumber) {
+      if (profilePhoto !== savedSnapshot.photo || studentNumber !== savedSnapshot.studentNumber || facialId !== savedSnapshot.facialId) {
         await persistProfilePhoto(profilePhoto || null, studentNumber.trim());
       }
 
-      setSavedSnapshot({ prefs, photo: profilePhoto, studentNumber: studentNumber.trim() });
+      setSavedSnapshot({ prefs, photo: profilePhoto, studentNumber: studentNumber.trim(), facialId });
       setShowSaveDialog(false);
       setShowSuccessDialog(true);
 
@@ -233,6 +238,7 @@ function ProfilePage() {
     setPrefs(savedSnapshot.prefs);
     setProfilePhoto(savedSnapshot.photo);
     setStudentNumber(savedSnapshot.studentNumber || '');
+    setFacialId(savedSnapshot.facialId || '');
     setSaveState({ status: 'idle', message: '' });
     setShowSaveDialog(false);
   };
@@ -606,6 +612,7 @@ function ProfilePage() {
           </div>
 
           <div className="profile-security-body">
+            <FacialIdCapture value={facialId} onChange={setFacialId} />
             <div className="profile-security-actions">
               <button
                 type="button"

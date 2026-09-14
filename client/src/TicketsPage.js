@@ -266,6 +266,10 @@ function TicketsPage() {
         setSubmissionState({ status: 'error', message: 'Please upload an image for a maintenance ticket.', ticketCode: '' });
         return;
       }
+      if (isMaintenanceDepartment && attachment && !user?.facial_id) {
+        setSubmissionState({ status: 'error', message: 'Please capture a Facial ID in Profile > Security before sending maintenance photos.', ticketCode: '' });
+        return;
+      }
       const response = await axios.post(`${API_BASE_URL}/api/tickets`, {
         ...form,
         user_id: user?.id || 0,

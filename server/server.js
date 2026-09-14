@@ -134,6 +134,14 @@ async function ensureProfilePictureCapacity() {
       });
     }
 
+    if (!columns.facial_id) {
+      await queryInterface.addColumn('users', 'facial_id', {
+        type: DataTypes.TEXT('medium'),
+        allowNull: true,
+        defaultValue: null,
+      });
+    }
+
     if (sequelize.getDialect() === 'mysql') {
       await sequelize.query('ALTER TABLE users MODIFY COLUMN profile_picture MEDIUMTEXT NULL;');
     }

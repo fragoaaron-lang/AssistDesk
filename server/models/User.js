@@ -47,6 +47,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
         defaultValue: null,
       },
+      facial_id: {
+        type: DataTypes.TEXT('medium'),
+        allowNull: true,
+        defaultValue: null,
+      },
       marker_positions: {
         type: DataTypes.JSON,
         allowNull: true,
