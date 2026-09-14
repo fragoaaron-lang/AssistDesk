@@ -66,21 +66,15 @@ function FacialIdCapture({ value, onChange }) {
       detector = null;
     }
     if (!detector) {
-      setCaptureStatus('Face guide ready. Hold your full face inside it...');
+      setCaptureStatus('Face detection is unavailable in this browser. No capture made.');
     }
-    const fallbackTimer = window.setTimeout(() => {
-      if (!cancelled && !detector) {
-        setCaptureStatus('Capturing facial ID...');
-        capture();
-      }
-    }, 3500);
 
     const detectFace = async () => {
       const video = videoRef.current;
       if (cancelled || !video || video.readyState < 2 || video.videoWidth === 0) return;
 
       if (!detector) {
-        setCaptureStatus('Face guide ready. Hold your full face inside it...');
+        setCaptureStatus('Face detection is unavailable in this browser. No capture made.');
         return;
       }
 
@@ -124,18 +118,17 @@ function FacialIdCapture({ value, onChange }) {
           }
         } else {
           stableFaceFrames = 0;
-          setCaptureStatus(face ? 'Fit your entire face inside the guide' : 'Center your face in the guide');
+          setCaptureStatus(face ? 'Entire face not inside cursor' : 'Face not detected');
         }
       } catch (error) {
         detector = null;
-        setCaptureStatus('Face guide ready. Hold your full face inside it...');
+        setCaptureStatus('Face detection failed. No capture made.');
       }
     };
 
     const detectionTimer = window.setInterval(detectFace, 250);
     return () => {
       cancelled = true;
-      window.clearTimeout(fallbackTimer);
       window.clearInterval(detectionTimer);
     };
   }, [cameraOpen]);
@@ -167,7 +160,7 @@ function FacialIdCapture({ value, onChange }) {
             </div>
           </div>
           <div className="facial-id-actions">
-            <span className="facial-id-live-status">{captureStatus || 'Starting automatic face capture...'}</span>
+            <span className="facial-id-live-status" aria-live="polite">{captureStatus || 'Detecting face...'}</span>
             <button type="button" className="secondary-action-button" onClick={closeCamera}>Cancel</button>
           </div>
         </div>
