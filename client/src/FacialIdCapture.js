@@ -78,27 +78,8 @@ function FacialIdCapture({ value, onChange, onSave }) {
     } catch (error) {
       detector = null;
     }
-    const fallbackTimers = [];
-    let fallbackStarted = false;
-    const scheduleBlinkFallback = () => {
-      if (fallbackStarted) return;
-      fallbackStarted = true;
-      setCaptureStatus('Position your entire face inside the guide.');
-      fallbackTimers.push(window.setTimeout(() => {
-        if (!cancelled) setCaptureStatus('Get ready to blink...');
-      }, 1800));
-      fallbackTimers.push(window.setTimeout(() => {
-        if (!cancelled) setCaptureStatus('Blink now...');
-      }, 3000));
-      fallbackTimers.push(window.setTimeout(() => {
-        if (!cancelled) {
-          setCaptureStatus('Capturing facial ID...');
-          capture();
-        }
-      }, 4500));
-    };
     if (!detector) {
-      scheduleBlinkFallback();
+      setCaptureStatus('Face not detected. Automatic face detection is unavailable in this browser.');
     } else {
       setCaptureStatus('Face detection active. Hold still...');
     }
@@ -155,7 +136,7 @@ function FacialIdCapture({ value, onChange, onSave }) {
         }
       } catch (error) {
         detector = null;
-        scheduleBlinkFallback();
+        setCaptureStatus('Face not detected. Automatic face detection failed.');
       } finally {
         detectionInFlight = false;
       }
@@ -164,7 +145,6 @@ function FacialIdCapture({ value, onChange, onSave }) {
     const detectionTimer = window.setInterval(detectFace, 250);
     return () => {
       cancelled = true;
-      fallbackTimers.forEach((timer) => window.clearTimeout(timer));
       window.clearInterval(detectionTimer);
     };
   }, [cameraOpen]);
