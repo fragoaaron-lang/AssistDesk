@@ -7,6 +7,7 @@ function FacialIdCapture({ value, onChange }) {
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState('');
   const [captureStatus, setCaptureStatus] = useState('');
+  const [detectorAvailable, setDetectorAvailable] = useState(null);
 
   useEffect(() => () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -14,6 +15,7 @@ function FacialIdCapture({ value, onChange }) {
 
   const openCamera = async () => {
     setCameraError('');
+    setDetectorAvailable(null);
     if (!navigator.mediaDevices?.getUserMedia) {
       setCameraError('Live camera capture is not available in this browser.');
       return;
@@ -67,7 +69,10 @@ function FacialIdCapture({ value, onChange }) {
       detector = null;
     }
     if (!detector) {
+      setDetectorAvailable(false);
       setCaptureStatus('Position your entire face inside the guide.');
+    } else {
+      setDetectorAvailable(true);
     }
 
     const detectFace = async () => {
@@ -123,6 +128,7 @@ function FacialIdCapture({ value, onChange }) {
         }
       } catch (error) {
         detector = null;
+        setDetectorAvailable(false);
         setCaptureStatus('Face detection failed. No capture made.');
       } finally {
         detectionInFlight = false;
@@ -164,6 +170,11 @@ function FacialIdCapture({ value, onChange }) {
           </div>
           <div className="facial-id-actions">
             <span className="facial-id-live-status" aria-live="polite">{captureStatus || 'Detecting face...'}</span>
+            {detectorAvailable === false && (
+              <button type="button" className="institutional-btn small" onClick={capture}>
+                Capture aligned face
+              </button>
+            )}
             <button type="button" className="secondary-action-button" onClick={closeCamera}>Cancel</button>
           </div>
         </div>
