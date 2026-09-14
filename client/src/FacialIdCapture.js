@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { FaceDetector, FilesetResolver } from '@mediapipe/tasks-vision';
 
 function FacialIdCapture({ value, onChange, onSave }) {
   const cursorBounds = { left: 0.28, right: 0.72, top: 0.16, bottom: 0.84 };
@@ -71,35 +72,47 @@ function FacialIdCapture({ value, onChange, onSave }) {
     let cancelled = false;
     let stableFaceFrames = 0;
     let detectionInFlight = false;
-    const FaceDetectorConstructor = window.FaceDetector;
     let detector = null;
-    try {
-      detector = FaceDetectorConstructor ? new FaceDetectorConstructor({ fastMode: true, maxDetectedFaces: 1 }) : null;
-    } catch (error) {
-      detector = null;
-    }
-    if (!detector) {
-      setCaptureStatus('Face not detected. Automatic face detection is unavailable in this browser.');
-    } else {
-      setCaptureStatus('Face detection active. Hold still...');
-    }
+    let detectionTimer = null;
+    let initializationCancelled = false;
+
+    const initializeDetector = async () => {
+      try {
+        setCaptureStatus('Starting face detection...');
+        const vision = await FilesetResolver.forVisionTasks(
+          'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm'
+        );
+        detector = await FaceDetector.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite',
+          },
+          runningMode: 'VIDEO',
+          minDetectionConfidence: 0.6,
+        });
+        if (initializationCancelled) {
+          detector.close();
+          return;
+        }
+        setCaptureStatus('Face detection active. Hold still...');
+        detectionTimer = window.setInterval(detectFace, 250);
+      } catch (error) {
+        setCaptureStatus('Face not detected. Face detection could not start.');
+      }
+    };
 
     const detectFace = async () => {
       const video = videoRef.current;
       if (cancelled || detectionInFlight || !video || video.readyState < 2 || video.videoWidth === 0) return;
-
-      if (!detector) {
-        return;
-      }
+      if (!detector) return;
 
       detectionInFlight = true;
       try {
-        const faces = await detector.detect(video);
-        const face = faces[0]?.boundingBox;
-        const faceLeft = face ? face.x / video.videoWidth : 0;
-        const faceRight = face ? (face.x + face.width) / video.videoWidth : 0;
-        const faceTop = face ? face.y / video.videoHeight : 0;
-        const faceBottom = face ? (face.y + face.height) / video.videoHeight : 0;
+        const result = detector.detectForVideo(video, performance.now());
+        const face = result.detections[0]?.boundingBox;
+        const faceLeft = face ? face.originX / video.videoWidth : 0;
+        const faceRight = face ? (face.originX + face.width) / video.videoWidth : 0;
+        const faceTop = face ? face.originY / video.videoHeight : 0;
+        const faceBottom = face ? (face.originY + face.height) / video.videoHeight : 0;
         const faceWidth = face ? face.width / video.videoWidth : 0;
         const faceHeight = face ? face.height / video.videoHeight : 0;
         const cursorWidth = cursorBounds.right - cursorBounds.left;
@@ -135,17 +148,18 @@ function FacialIdCapture({ value, onChange, onSave }) {
           setCaptureStatus(face ? 'Entire face not inside cursor' : 'Face not detected');
         }
       } catch (error) {
-        detector = null;
-        setCaptureStatus('Face not detected. Automatic face detection failed.');
+        setCaptureStatus('Face not detected. Face detection failed.');
       } finally {
         detectionInFlight = false;
       }
     };
 
-    const detectionTimer = window.setInterval(detectFace, 250);
+    initializeDetector();
     return () => {
       cancelled = true;
-      window.clearInterval(detectionTimer);
+      initializationCancelled = true;
+      if (detectionTimer) window.clearInterval(detectionTimer);
+      detector?.close();
     };
   }, [cameraOpen]);
 
