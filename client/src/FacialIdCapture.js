@@ -66,15 +66,21 @@ function FacialIdCapture({ value, onChange }) {
       detector = null;
     }
     if (!detector) {
-      setCaptureStatus('Precise face tracking is unavailable in this browser.');
+      setCaptureStatus('Face guide ready. Hold your full face inside it...');
     }
+    const fallbackTimer = window.setTimeout(() => {
+      if (!cancelled && !detector) {
+        setCaptureStatus('Capturing facial ID...');
+        capture();
+      }
+    }, 3500);
 
     const detectFace = async () => {
       const video = videoRef.current;
       if (cancelled || !video || video.readyState < 2 || video.videoWidth === 0) return;
 
       if (!detector) {
-        setCaptureStatus('Camera ready. Capturing facial ID...');
+        setCaptureStatus('Face guide ready. Hold your full face inside it...');
         return;
       }
 
@@ -113,6 +119,7 @@ function FacialIdCapture({ value, onChange }) {
           setCaptureStatus(stableFaceFrames >= 3 ? 'Face detected. Capturing facial ID...' : 'Hold still...');
           if (stableFaceFrames >= 3) {
             cancelled = true;
+            window.clearTimeout(fallbackTimer);
             capture();
           }
         } else {
@@ -120,13 +127,15 @@ function FacialIdCapture({ value, onChange }) {
           setCaptureStatus(face ? 'Fit your entire face inside the guide' : 'Center your face in the guide');
         }
       } catch (error) {
-        setCaptureStatus('Precise face tracking is unavailable in this browser.');
+        detector = null;
+        setCaptureStatus('Face guide ready. Hold your full face inside it...');
       }
     };
 
     const detectionTimer = window.setInterval(detectFace, 250);
     return () => {
       cancelled = true;
+      window.clearTimeout(fallbackTimer);
       window.clearInterval(detectionTimer);
     };
   }, [cameraOpen]);
