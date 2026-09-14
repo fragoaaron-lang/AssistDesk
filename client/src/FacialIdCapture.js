@@ -7,7 +7,6 @@ function FacialIdCapture({ value, onChange }) {
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState('');
   const [captureStatus, setCaptureStatus] = useState('');
-  const [detectorAvailable, setDetectorAvailable] = useState(null);
 
   useEffect(() => () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -15,7 +14,6 @@ function FacialIdCapture({ value, onChange }) {
 
   const openCamera = async () => {
     setCameraError('');
-    setDetectorAvailable(null);
     if (!navigator.mediaDevices?.getUserMedia) {
       setCameraError('Live camera capture is not available in this browser.');
       return;
@@ -68,11 +66,29 @@ function FacialIdCapture({ value, onChange }) {
     } catch (error) {
       detector = null;
     }
-    if (!detector) {
-      setDetectorAvailable(false);
+    const fallbackTimers = [];
+    let fallbackStarted = false;
+    const scheduleBlinkFallback = () => {
+      if (fallbackStarted) return;
+      fallbackStarted = true;
       setCaptureStatus('Position your entire face inside the guide.');
+      fallbackTimers.push(window.setTimeout(() => {
+        if (!cancelled) setCaptureStatus('Get ready to blink...');
+      }, 1800));
+      fallbackTimers.push(window.setTimeout(() => {
+        if (!cancelled) setCaptureStatus('Blink now...');
+      }, 3000));
+      fallbackTimers.push(window.setTimeout(() => {
+        if (!cancelled) {
+          setCaptureStatus('Capturing facial ID...');
+          capture();
+        }
+      }, 3900));
+    };
+    if (!detector) {
+      scheduleBlinkFallback();
     } else {
-      setDetectorAvailable(true);
+      setCaptureStatus('Face detection active. Hold still...');
     }
 
     const detectFace = async () => {
@@ -80,7 +96,6 @@ function FacialIdCapture({ value, onChange }) {
       if (cancelled || detectionInFlight || !video || video.readyState < 2 || video.videoWidth === 0) return;
 
       if (!detector) {
-        setCaptureStatus('Position your entire face inside the guide.');
         return;
       }
 
@@ -128,8 +143,7 @@ function FacialIdCapture({ value, onChange }) {
         }
       } catch (error) {
         detector = null;
-        setDetectorAvailable(false);
-        setCaptureStatus('Face detection failed. No capture made.');
+        scheduleBlinkFallback();
       } finally {
         detectionInFlight = false;
       }
@@ -138,6 +152,7 @@ function FacialIdCapture({ value, onChange }) {
     const detectionTimer = window.setInterval(detectFace, 250);
     return () => {
       cancelled = true;
+      fallbackTimers.forEach((timer) => window.clearTimeout(timer));
       window.clearInterval(detectionTimer);
     };
   }, [cameraOpen]);
@@ -170,11 +185,6 @@ function FacialIdCapture({ value, onChange }) {
           </div>
           <div className="facial-id-actions">
             <span className="facial-id-live-status" aria-live="polite">{captureStatus || 'Detecting face...'}</span>
-            {detectorAvailable === false && (
-              <button type="button" className="institutional-btn small" onClick={capture}>
-                Capture aligned face
-              </button>
-            )}
             <button type="button" className="secondary-action-button" onClick={closeCamera}>Cancel</button>
           </div>
         </div>
