@@ -126,7 +126,6 @@ function FacialIdCapture({ value, onChange }) {
           <div className="facial-id-actions">
             <span className="facial-id-status">Facial ID captured</span>
             <button type="button" className="secondary-action-button" onClick={() => { onChange(''); openCamera(); }}>Retake</button>
-            <button type="button" className="secondary-action-button" onClick={() => onChange('')}>Remove</button>
           </div>
         </div>
       ) : cameraOpen ? (
