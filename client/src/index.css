@@ -1025,6 +1025,36 @@ button, input, select, textarea {
   width: 100%;
 }
 
+.facial-id-reminder {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 13px 16px;
+  border: 1px solid #e5c982;
+  border-radius: 10px;
+  background: #fff9e8;
+  color: #5c4815;
+}
+
+.facial-id-reminder > div {
+  display: grid;
+  gap: 3px;
+}
+
+.facial-id-reminder span {
+  color: #78652e;
+  font-size: 0.9rem;
+}
+
+.facial-id-reminder a {
+  flex: 0 0 auto;
+  color: #176b70;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
 .facial-id-capture {
   display: grid;
   gap: 12px;

@@ -514,6 +514,16 @@ function TicketsPage() {
           </div>
         </div>
 
+        {!user?.facial_id && (
+          <div className="facial-id-reminder" role="status">
+            <div>
+              <strong>Facial ID reminder</strong>
+              <span>Maintenance photo requests require a Facial ID before they can be sent.</span>
+            </div>
+            <a href="/profile#security">Open Profile Security</a>
+          </div>
+        )}
+
         {user?.role !== 'admin' && (
           <div className={`institutional-card ticket-form-card ${submissionState.status === 'loading' ? 'is-submitting' : ''}`} style={{ marginBottom: '20px' }}>
             <h3>Create a new request</h3>

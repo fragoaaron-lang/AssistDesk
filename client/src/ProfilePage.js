@@ -606,7 +606,7 @@ function ProfilePage() {
 
         </div>
 
-        <div className="institutional-card">
+        <div className="institutional-card" id="security">
           <div className="profile-section-header">
             <h3>Security</h3>
           </div>

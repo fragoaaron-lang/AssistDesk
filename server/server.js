@@ -113,40 +113,36 @@ async function normalizeLegacyTicketPriorities() {
   }
 }
 
-async function ensureProfilePictureCapacity() {
-  try {
-    const queryInterface = sequelize.getQueryInterface();
-    const columns = await queryInterface.describeTable('users');
+async function ensureUserProfileColumns() {
+  const queryInterface = sequelize.getQueryInterface();
+  const columns = await queryInterface.describeTable('users');
 
-    if (!columns.profile_picture) {
-      await queryInterface.addColumn('users', 'profile_picture', {
-        type: DataTypes.TEXT('medium'),
-        allowNull: true,
-        defaultValue: null,
-      });
-    }
+  if (!columns.profile_picture) {
+    await queryInterface.addColumn('users', 'profile_picture', {
+      type: DataTypes.TEXT('medium'),
+      allowNull: true,
+      defaultValue: null,
+    });
+  }
 
-    if (!columns.student_number) {
-      await queryInterface.addColumn('users', 'student_number', {
-        type: DataTypes.STRING(50),
-        allowNull: true,
-        defaultValue: null,
-      });
-    }
+  if (!columns.student_number) {
+    await queryInterface.addColumn('users', 'student_number', {
+      type: DataTypes.STRING(50),
+      allowNull: true,
+      defaultValue: null,
+    });
+  }
 
-    if (!columns.facial_id) {
-      await queryInterface.addColumn('users', 'facial_id', {
-        type: DataTypes.TEXT('medium'),
-        allowNull: true,
-        defaultValue: null,
-      });
-    }
-
+  if (!columns.facial_id) {
     if (sequelize.getDialect() === 'mysql') {
-      await sequelize.query('ALTER TABLE users MODIFY COLUMN profile_picture MEDIUMTEXT NULL;');
+      await sequelize.query('ALTER TABLE users ADD COLUMN facial_id MEDIUMTEXT NULL;');
+    } else {
+      await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS facial_id TEXT NULL;');
     }
-  } catch (error) {
-    console.warn('Unable to upgrade profile_picture column automatically:', error.message);
+  }
+
+  if (sequelize.getDialect() === 'mysql') {
+    await sequelize.query('ALTER TABLE users MODIFY COLUMN profile_picture MEDIUMTEXT NULL;');
   }
 }
 
@@ -168,7 +164,7 @@ sequelize
   .then(() => {
     return sequelize.sync({ alter: false, force: false });
   })
-  .then(() => ensureProfilePictureCapacity())
+  .then(() => ensureUserProfileColumns())
   .then(() => {
     return backfillAdminTable();
   })
