@@ -1188,6 +1188,13 @@ button, input, select, textarea {
   margin-right: auto;
 }
 
+.facial-id-live-status {
+  color: #176b70;
+  font-size: 0.88rem;
+  font-weight: 700;
+  margin-right: auto;
+}
+
 .account-deletion-card {
   margin-top: 18px;
 }

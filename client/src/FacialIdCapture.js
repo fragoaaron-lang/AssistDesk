@@ -5,6 +5,7 @@ function FacialIdCapture({ value, onChange }) {
   const streamRef = useRef(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState('');
+  const [captureStatus, setCaptureStatus] = useState('');
 
   useEffect(() => () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -51,6 +52,68 @@ function FacialIdCapture({ value, onChange }) {
     closeCamera();
   };
 
+  useEffect(() => {
+    if (!cameraOpen) return undefined;
+
+    let cancelled = false;
+    let stableFaceFrames = 0;
+    const FaceDetectorConstructor = window.FaceDetector;
+    let detector = null;
+    try {
+      detector = FaceDetectorConstructor ? new FaceDetectorConstructor({ fastMode: true, maxDetectedFaces: 1 }) : null;
+    } catch (error) {
+      detector = null;
+    }
+    const fallbackTimer = window.setTimeout(() => {
+      if (!cancelled) {
+        setCaptureStatus('Capturing facial ID...');
+        capture();
+      }
+    }, 4500);
+
+    const detectFace = async () => {
+      const video = videoRef.current;
+      if (cancelled || !video || video.readyState < 2 || video.videoWidth === 0) return;
+
+      if (!detector) {
+        setCaptureStatus('Camera ready. Capturing facial ID...');
+        return;
+      }
+
+      try {
+        const faces = await detector.detect(video);
+        const face = faces[0]?.boundingBox;
+        const faceCenterX = face ? (face.x + face.width / 2) / video.videoWidth : 0;
+        const faceCenterY = face ? (face.y + face.height / 2) / video.videoHeight : 0;
+        const isCentered = Boolean(face)
+          && faceCenterX > 0.3 && faceCenterX < 0.7
+          && faceCenterY > 0.25 && faceCenterY < 0.75;
+
+        if (isCentered) {
+          stableFaceFrames += 1;
+          setCaptureStatus(stableFaceFrames >= 3 ? 'Face detected. Capturing facial ID...' : 'Hold still...');
+          if (stableFaceFrames >= 3) {
+            cancelled = true;
+            window.clearTimeout(fallbackTimer);
+            capture();
+          }
+        } else {
+          stableFaceFrames = 0;
+          setCaptureStatus('Center your face in the guide');
+        }
+      } catch (error) {
+        setCaptureStatus('Camera ready. Capturing facial ID...');
+      }
+    };
+
+    const detectionTimer = window.setInterval(detectFace, 250);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(fallbackTimer);
+      window.clearInterval(detectionTimer);
+    };
+  }, [cameraOpen]);
+
   return (
     <div className="facial-id-capture">
       <div className="facial-id-copy">
@@ -79,7 +142,7 @@ function FacialIdCapture({ value, onChange }) {
             </div>
           </div>
           <div className="facial-id-actions">
-            <button type="button" className="institutional-btn small" onClick={capture}>Capture facial ID</button>
+            <span className="facial-id-live-status">{captureStatus || 'Starting automatic face capture...'}</span>
             <button type="button" className="secondary-action-button" onClick={closeCamera}>Cancel</button>
           </div>
         </div>
