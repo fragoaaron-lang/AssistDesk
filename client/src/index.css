@@ -1066,7 +1066,7 @@ button, input, select, textarea {
   background: #102c35;
 }
 
-.facial-id-camera video,
+.facial-id-camera-video,
 .facial-id-preview img {
   display: block;
   width: min(100%, 360px);
@@ -1074,6 +1074,10 @@ button, input, select, textarea {
   object-fit: cover;
   border-radius: 10px;
   background: #102c35;
+}
+
+.facial-id-camera-video {
+  transform: none;
 }
 
 .facial-id-face-cursor {

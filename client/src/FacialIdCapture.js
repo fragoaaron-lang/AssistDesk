@@ -66,7 +66,7 @@ function FacialIdCapture({ value, onChange }) {
       ) : cameraOpen ? (
         <div className="facial-id-camera">
           <div className="facial-id-camera-frame">
-            <video ref={videoRef} autoPlay muted playsInline aria-label="Live facial ID camera" />
+            <video className="facial-id-camera-video" ref={videoRef} autoPlay muted playsInline aria-label="Live facial ID camera" />
             <div className="facial-id-face-cursor" aria-hidden="true">
               <span className="facial-id-face-cursor-corner top-left" />
               <span className="facial-id-face-cursor-corner top-right" />
