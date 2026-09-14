@@ -65,7 +65,16 @@ function FacialIdCapture({ value, onChange }) {
         </div>
       ) : cameraOpen ? (
         <div className="facial-id-camera">
-          <video ref={videoRef} autoPlay muted playsInline aria-label="Live facial ID camera" />
+          <div className="facial-id-camera-frame">
+            <video ref={videoRef} autoPlay muted playsInline aria-label="Live facial ID camera" />
+            <div className="facial-id-face-cursor" aria-hidden="true">
+              <span className="facial-id-face-cursor-corner top-left" />
+              <span className="facial-id-face-cursor-corner top-right" />
+              <span className="facial-id-face-cursor-corner bottom-left" />
+              <span className="facial-id-face-cursor-corner bottom-right" />
+              <span className="facial-id-face-cursor-label">Center your face</span>
+            </div>
+          </div>
           <div className="facial-id-actions">
             <button type="button" className="institutional-btn small" onClick={capture}>Capture facial ID</button>
             <button type="button" className="secondary-action-button" onClick={closeCamera}>Cancel</button>
