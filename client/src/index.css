@@ -1077,7 +1077,7 @@ button, input, select, textarea {
 }
 
 .facial-id-camera-video {
-  transform: none;
+  transform: scaleX(-1);
 }
 
 .facial-id-face-cursor {

@@ -43,7 +43,10 @@ function FacialIdCapture({ value, onChange }) {
     const scale = Math.min(1, maxDimension / Math.max(video.videoWidth, video.videoHeight));
     canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
     canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
-    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    const context = canvas.getContext('2d');
+    context.translate(canvas.width, 0);
+    context.scale(-1, 1);
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
     onChange(canvas.toDataURL('image/jpeg', 0.86));
     closeCamera();
   };
