@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-function FacialIdCapture({ value, onChange }) {
+function FacialIdCapture({ value, onChange, onSave }) {
   const cursorBounds = { left: 0.28, right: 0.72, top: 0.16, bottom: 0.84 };
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraError, setCameraError] = useState('');
   const [captureStatus, setCaptureStatus] = useState('');
+  const [saveStatus, setSaveStatus] = useState('idle');
 
   useEffect(() => () => {
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -35,6 +36,17 @@ function FacialIdCapture({ value, onChange }) {
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
     setCameraOpen(false);
+  };
+
+  const saveFacialId = async () => {
+    if (!value || !onSave) return;
+    setSaveStatus('saving');
+    try {
+      await onSave(value);
+      setSaveStatus('saved');
+    } catch (error) {
+      setSaveStatus('error');
+    }
   };
 
   const capture = () => {
@@ -168,7 +180,12 @@ function FacialIdCapture({ value, onChange }) {
           <img src={value} alt="Captured facial ID" />
           <div className="facial-id-actions">
             <span className="facial-id-status">Facial ID captured</span>
-            <button type="button" className="secondary-action-button" onClick={() => { onChange(''); openCamera(); }}>Retake</button>
+            <button type="button" className="secondary-action-button" onClick={() => { setSaveStatus('idle'); onChange(''); openCamera(); }}>Retake</button>
+            {onSave && (
+              <button type="button" className="institutional-btn small" onClick={saveFacialId} disabled={saveStatus === 'saving' || saveStatus === 'saved'}>
+                {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Facial ID saved' : 'Save facial ID'}
+              </button>
+            )}
           </div>
         </div>
       ) : cameraOpen ? (

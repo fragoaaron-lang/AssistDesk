@@ -200,6 +200,30 @@ function ProfilePage() {
     return nextPhoto;
   };
 
+  const handleFacialIdSave = async (nextFacialId) => {
+    if (!user || !token || !nextFacialId) return;
+
+    const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        profile_picture: profilePhoto || null,
+        student_number: studentNumber.trim() || null,
+        facial_id: nextFacialId,
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || 'Unable to save Facial ID.');
+
+    setFacialId(nextFacialId);
+    updateUserProfile(data.user?.profile_picture || profilePhoto || null, studentNumber, nextFacialId);
+    setSavedSnapshot((current) => ({ ...current, facialId: nextFacialId }));
+    setSaveState({ status: 'success', message: 'Facial ID saved successfully.' });
+  };
+
   const handleSaveChanges = async () => {
     if (user?.role === 'student' && !studentNumber.trim()) {
       setSaveState({ status: 'error', message: 'Student number is required.' });
@@ -612,7 +636,7 @@ function ProfilePage() {
           </div>
 
           <div className="profile-security-body">
-            <FacialIdCapture value={facialId} onChange={setFacialId} />
+            <FacialIdCapture value={facialId} onChange={setFacialId} onSave={handleFacialIdSave} />
             <div className="profile-security-actions">
               <button
                 type="button"

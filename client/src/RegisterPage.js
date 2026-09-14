@@ -145,7 +145,11 @@ function RegisterPage({ modal = false, onSwitch }) {
               <option value="faculty">Faculty</option>
               <option value="staff">Staff</option>
             </select>
-            <FacialIdCapture value={facialId} onChange={setFacialId} />
+            <FacialIdCapture
+              value={facialId}
+              onChange={setFacialId}
+              onSave={() => setMessage('Facial ID saved and ready for registration.')}
+            />
             <button className="institutional-btn" type="submit" style={{ width: '100%' }}>Register</button>
           </form>
           {message && <p style={{ color: 'red', marginTop: '0.8rem' }}>{message}</p>}
