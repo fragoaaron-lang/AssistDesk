@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 function FacialIdCapture({ value, onChange }) {
-  const cursorBounds = { left: 0.21, right: 0.79, top: 0.10, bottom: 0.90 };
+  const cursorBounds = { left: 0.28, right: 0.72, top: 0.16, bottom: 0.84 };
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -58,6 +58,7 @@ function FacialIdCapture({ value, onChange }) {
 
     let cancelled = false;
     let stableFaceFrames = 0;
+    let detectionInFlight = false;
     const FaceDetectorConstructor = window.FaceDetector;
     let detector = null;
     try {
@@ -71,13 +72,14 @@ function FacialIdCapture({ value, onChange }) {
 
     const detectFace = async () => {
       const video = videoRef.current;
-      if (cancelled || !video || video.readyState < 2 || video.videoWidth === 0) return;
+      if (cancelled || detectionInFlight || !video || video.readyState < 2 || video.videoWidth === 0) return;
 
       if (!detector) {
         setCaptureStatus('Position your entire face inside the guide.');
         return;
       }
 
+      detectionInFlight = true;
       try {
         const faces = await detector.detect(video);
         const face = faces[0]?.boundingBox;
@@ -92,10 +94,10 @@ function FacialIdCapture({ value, onChange }) {
         const faceRatio = faceWidth / Math.max(faceHeight, 0.001);
         const cursorRatio = cursorWidth / cursorHeight;
         const isInsideCursor = Boolean(face)
-          && faceLeft >= cursorBounds.left + 0.04
-          && faceRight <= cursorBounds.right - 0.04
-          && faceTop >= cursorBounds.top + 0.04
-          && faceBottom <= cursorBounds.bottom - 0.04;
+          && faceLeft >= cursorBounds.left
+          && faceRight <= cursorBounds.right
+          && faceTop >= cursorBounds.top
+          && faceBottom <= cursorBounds.bottom;
         const hasCursorProportions = faceRatio >= cursorRatio * 0.62
           && faceRatio <= cursorRatio * 1.38
           && faceWidth >= cursorWidth * 0.42
@@ -105,8 +107,8 @@ function FacialIdCapture({ value, onChange }) {
         const faceCenterX = face ? (faceLeft + faceRight) / 2 : 0;
         const faceCenterY = face ? (faceTop + faceBottom) / 2 : 0;
         const isCentered = isInsideCursor && hasCursorProportions
-          && Math.abs(faceCenterX - 0.5) <= 0.07
-          && Math.abs(faceCenterY - 0.5) <= 0.09;
+          && Math.abs(faceCenterX - 0.5) <= 0.10
+          && Math.abs(faceCenterY - 0.5) <= 0.12;
 
         if (isCentered) {
           stableFaceFrames += 1;
@@ -122,6 +124,8 @@ function FacialIdCapture({ value, onChange }) {
       } catch (error) {
         detector = null;
         setCaptureStatus('Face detection failed. No capture made.');
+      } finally {
+        detectionInFlight = false;
       }
     };
 

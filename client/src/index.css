@@ -1112,7 +1112,7 @@ button, input, select, textarea {
 
 .facial-id-face-cursor {
   position: absolute;
-  inset: 10% 21%;
+  inset: 16% 28%;
   border: 2px solid rgba(155, 243, 218, 0.9);
   border-radius: 48% 48% 44% 44%;
   box-shadow: 0 0 0 999px rgba(5, 25, 31, 0.16), 0 0 18px rgba(155, 243, 218, 0.25);
