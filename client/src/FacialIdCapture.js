@@ -66,7 +66,7 @@ function FacialIdCapture({ value, onChange }) {
       detector = null;
     }
     if (!detector) {
-      setCaptureStatus('Face detection is unavailable in this browser. No capture made.');
+      setCaptureStatus('Position your entire face inside the guide.');
     }
 
     const detectFace = async () => {
@@ -74,7 +74,7 @@ function FacialIdCapture({ value, onChange }) {
       if (cancelled || !video || video.readyState < 2 || video.videoWidth === 0) return;
 
       if (!detector) {
-        setCaptureStatus('Face detection is unavailable in this browser. No capture made.');
+        setCaptureStatus('Position your entire face inside the guide.');
         return;
       }
 
@@ -113,7 +113,6 @@ function FacialIdCapture({ value, onChange }) {
           setCaptureStatus(stableFaceFrames >= 3 ? 'Face detected. Capturing facial ID...' : 'Hold still...');
           if (stableFaceFrames >= 3) {
             cancelled = true;
-            window.clearTimeout(fallbackTimer);
             capture();
           }
         } else {
