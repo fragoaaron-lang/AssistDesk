@@ -170,35 +170,6 @@ function AdminReportsPage() {
         </div>
         {message && <p>{message}</p>}
 
-        <section className="stat-grid" style={{ marginBottom: '20px' }}>
-          <div className="metric-card">
-            <h4>Total Departments</h4>
-            <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{reports.ticketCountsByDepartment.length}</div>
-          </div>
-          <div className="metric-card">
-            <h4>Ticket Status Breakout</h4>
-            {reports.ticketCountsByStatus.map((row) => (
-              <div key={row.status}>{row.status}: {row.count}</div>
-            ))}
-          </div>
-          <div className="metric-card">
-            <h4>User Roles</h4>
-            {reports.usersByRole.map((row) => (
-              <div key={row.role}>{row.role}: {row.count}</div>
-            ))}
-          </div>
-          <div className="metric-card">
-            <h4>30-day Ticket Trend</h4>
-            {reports.monthlyTicketCounts.length === 0 ? (
-              <div>No recent activity</div>
-            ) : (
-              reports.monthlyTicketCounts.slice(-5).map((row) => (
-                <div key={row.date}>{row.date}: {row.count}</div>
-              ))
-            )}
-          </div>
-        </section>
-
         <section className="report-visual-grid">
           <div className="institutional-card report-trend-card">
             <div className="report-card-heading"><div><h3>Income</h3><span>Ticket volume by date</span></div><strong>{getTotalCount(reports.monthlyTicketCounts)} tickets</strong></div>
