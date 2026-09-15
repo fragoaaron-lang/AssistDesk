@@ -1,43 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { FaceDetector, FilesetResolver } from '@mediapipe/tasks-vision';
+import React, { useState } from 'react';
 
 function FacialIdCapture({ value, onChange, onSave }) {
-  const cursorBounds = { left: 0.28, right: 0.72, top: 0.16, bottom: 0.84 };
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
-  const [cameraOpen, setCameraOpen] = useState(false);
-  const [cameraError, setCameraError] = useState('');
-  const [captureStatus, setCaptureStatus] = useState('');
   const [saveStatus, setSaveStatus] = useState('idle');
-
-  useEffect(() => () => {
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-  }, []);
-
-  const openCamera = async () => {
-    setCameraError('');
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setCameraError('Live camera capture is not available in this browser.');
-      return;
-    }
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
-      streamRef.current = stream;
-      setCameraOpen(true);
-      window.setTimeout(() => {
-        if (videoRef.current) videoRef.current.srcObject = stream;
-      }, 0);
-    } catch (error) {
-      setCameraError('Camera access was not granted. You can try again later from Profile.');
-    }
-  };
-
-  const closeCamera = () => {
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
-    setCameraOpen(false);
-  };
+  const [uploadError, setUploadError] = useState('');
 
   const saveFacialId = async () => {
     if (!value || !onSave) return;
@@ -50,131 +15,43 @@ function FacialIdCapture({ value, onChange, onSave }) {
     }
   };
 
-  const capture = () => {
-    const video = videoRef.current;
-    if (!video || video.videoWidth === 0) return;
-    const canvas = document.createElement('canvas');
-    const maxDimension = 800;
-    const scale = Math.min(1, maxDimension / Math.max(video.videoWidth, video.videoHeight));
-    canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
-    canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
-    const context = canvas.getContext('2d');
-    context.translate(canvas.width, 0);
-    context.scale(-1, 1);
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    onChange(canvas.toDataURL('image/jpeg', 0.86));
-    closeCamera();
+  const handleFileChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      setUploadError('Please choose an image file for your Facial ID.');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setUploadError('The Facial ID must be an image file.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      onChange(String(reader.result || ''));
+      setUploadError('');
+      setSaveStatus('idle');
+    };
+    reader.readAsDataURL(file);
   };
-
-  useEffect(() => {
-    if (!cameraOpen) return undefined;
-
-    let cancelled = false;
-    let stableFaceFrames = 0;
-    let detectionInFlight = false;
-    let detector = null;
-    let detectionTimer = null;
-    let initializationCancelled = false;
-
-    const initializeDetector = async () => {
-      try {
-        setCaptureStatus('Starting face detection...');
-        const vision = await FilesetResolver.forVisionTasks(
-          'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm'
-        );
-        detector = await FaceDetector.createFromOptions(vision, {
-          baseOptions: {
-            modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite',
-          },
-          runningMode: 'VIDEO',
-          minDetectionConfidence: 0.6,
-        });
-        if (initializationCancelled) {
-          detector.close();
-          return;
-        }
-        setCaptureStatus('Face detection active. Hold still...');
-        detectionTimer = window.setInterval(detectFace, 250);
-      } catch (error) {
-        setCaptureStatus('Face not detected. Face detection could not start.');
-      }
-    };
-
-    const detectFace = async () => {
-      const video = videoRef.current;
-      if (cancelled || detectionInFlight || !video || video.readyState < 2 || video.videoWidth === 0) return;
-      if (!detector) return;
-
-      detectionInFlight = true;
-      try {
-        const result = detector.detectForVideo(video, performance.now());
-        const face = result.detections[0]?.boundingBox;
-        const faceLeft = face ? face.originX / video.videoWidth : 0;
-        const faceRight = face ? (face.originX + face.width) / video.videoWidth : 0;
-        const faceTop = face ? face.originY / video.videoHeight : 0;
-        const faceBottom = face ? (face.originY + face.height) / video.videoHeight : 0;
-        const faceWidth = face ? face.width / video.videoWidth : 0;
-        const faceHeight = face ? face.height / video.videoHeight : 0;
-        const cursorWidth = cursorBounds.right - cursorBounds.left;
-        const cursorHeight = cursorBounds.bottom - cursorBounds.top;
-        const faceRatio = faceWidth / Math.max(faceHeight, 0.001);
-        const cursorRatio = cursorWidth / cursorHeight;
-        const isInsideCursor = Boolean(face)
-          && faceLeft >= cursorBounds.left
-          && faceRight <= cursorBounds.right
-          && faceTop >= cursorBounds.top
-          && faceBottom <= cursorBounds.bottom;
-        const hasCursorProportions = faceRatio >= cursorRatio * 0.62
-          && faceRatio <= cursorRatio * 1.38
-          && faceWidth >= cursorWidth * 0.42
-          && faceWidth <= cursorWidth * 0.92
-          && faceHeight >= cursorHeight * 0.42
-          && faceHeight <= cursorHeight * 0.92;
-        const faceCenterX = face ? (faceLeft + faceRight) / 2 : 0;
-        const faceCenterY = face ? (faceTop + faceBottom) / 2 : 0;
-        const isCentered = isInsideCursor && hasCursorProportions
-          && Math.abs(faceCenterX - 0.5) <= 0.10
-          && Math.abs(faceCenterY - 0.5) <= 0.12;
-
-        if (isCentered) {
-          stableFaceFrames += 1;
-          setCaptureStatus(stableFaceFrames >= 3 ? 'Face detected. Capturing facial ID...' : 'Hold still...');
-          if (stableFaceFrames >= 3) {
-            cancelled = true;
-            capture();
-          }
-        } else {
-          stableFaceFrames = 0;
-          setCaptureStatus(face ? 'Entire face not inside cursor' : 'Face not detected');
-        }
-      } catch (error) {
-        setCaptureStatus('Face not detected. Face detection failed.');
-      } finally {
-        detectionInFlight = false;
-      }
-    };
-
-    initializeDetector();
-    return () => {
-      cancelled = true;
-      initializationCancelled = true;
-      if (detectionTimer) window.clearInterval(detectionTimer);
-      detector?.close();
-    };
-  }, [cameraOpen]);
 
   return (
     <div className="facial-id-capture">
       <div className="facial-id-copy">
         <strong>Facial ID (optional)</strong>
-        <small>Capture a live face snapshot for future verification. It is not required to create your account.</small>
+        <small>Upload a clear face image for future verification. Live camera capture has been removed from this implementation.</small>
       </div>
+
       {value ? (
         <div className="facial-id-preview">
           <img src={value} alt="Captured facial ID" />
           <div className="facial-id-actions">
             <span className="facial-id-status">Facial ID captured</span>
-            <button type="button" className="secondary-action-button" onClick={() => { setSaveStatus('idle'); onChange(''); openCamera(); }}>Retake</button>
+            <label className="secondary-action-button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              Replace image
+              <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
+            </label>
             {onSave && (
               <button type="button" className="institutional-btn small" onClick={saveFacialId} disabled={saveStatus === 'saving' || saveStatus === 'saved'}>
                 {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Facial ID saved' : 'Save facial ID'}
@@ -182,27 +59,16 @@ function FacialIdCapture({ value, onChange, onSave }) {
             )}
           </div>
         </div>
-      ) : cameraOpen ? (
-        <div className="facial-id-camera">
-          <div className="facial-id-camera-frame">
-            <video className="facial-id-camera-video" ref={videoRef} autoPlay muted playsInline aria-label="Live facial ID camera" />
-            <div className="facial-id-face-cursor" aria-hidden="true">
-              <span className="facial-id-face-cursor-corner top-left" />
-              <span className="facial-id-face-cursor-corner top-right" />
-              <span className="facial-id-face-cursor-corner bottom-left" />
-              <span className="facial-id-face-cursor-corner bottom-right" />
-              <span className="facial-id-face-cursor-label">Center your face</span>
-            </div>
-          </div>
-          <div className="facial-id-actions">
-            <span className="facial-id-live-status" aria-live="polite">{captureStatus || 'Detecting face...'}</span>
-            <button type="button" className="secondary-action-button" onClick={closeCamera}>Cancel</button>
-          </div>
-        </div>
       ) : (
-        <button type="button" className="secondary-action-button" onClick={openCamera}>Open live camera</button>
+        <div className="facial-id-camera">
+          <label className="secondary-action-button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', width: 'fit-content' }}>
+            Upload facial ID photo
+            <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
+          </label>
+        </div>
       )}
-      {cameraError && <small className="facial-id-error">{cameraError}</small>}
+
+      {uploadError && <small className="facial-id-error">{uploadError}</small>}
     </div>
   );
 }
