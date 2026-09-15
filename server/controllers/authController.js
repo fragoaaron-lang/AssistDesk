@@ -180,10 +180,7 @@ exports.forgotPassword = async (req, res) => {
       userName: user.name,
     });
 
-    return res.json({
-      message: 'Password reset instructions have been sent to your email.',
-      resetToken: token,
-    });
+    return res.json({ message: 'Password reset instructions have been sent to your email.' });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Unable to process password reset.' });

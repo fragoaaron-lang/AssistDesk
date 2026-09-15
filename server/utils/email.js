@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 
 const buildResetLink = (token) => {
-  const baseUrl = (process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:3005').replace(/\/$/, '');
+  const baseUrl = (process.env.FRONTEND_URL || process.env.CLIENT_URL || 'https://assist-desk-ebon.vercel.app').replace(/\/$/, '');
   return `${baseUrl}/reset-password?token=${encodeURIComponent(token)}`;
 };
 
@@ -12,9 +12,7 @@ const sendPasswordResetEmail = async ({ to, token, userName }) => {
   const password = process.env.MAIL_PASS;
 
   if (!host || !username || !password) {
-    console.log(`[Password reset] Email not configured. To: ${to}`);
-    console.log(`[Password reset] Reset link: ${resetLink}`);
-    return { success: true, devMode: true, resetLink };
+    throw new Error('Password reset email is not configured. Set MAIL_HOST, MAIL_USER, and MAIL_PASS.');
   }
 
   const transporter = nodemailer.createTransport({
