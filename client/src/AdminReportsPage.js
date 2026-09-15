@@ -180,21 +180,26 @@ function AdminReportsPage() {
         {message && <p>{message}</p>}
 
         {showUserDirectory && (
-          <section className="institutional-card user-directory-card">
+          <section className={`institutional-card user-directory-card ${showTerminatedUsers ? 'user-directory-archive-modal' : ''}`}>
             <div className="report-card-heading">
               <div>
                 <h3>{showTerminatedUsers ? 'Terminated accounts' : 'User directory'}</h3>
                 <span>{showTerminatedUsers ? 'Archived accounts organized by role.' : 'Open a role folder to view its users.'}</span>
               </div>
-              <button
-                type="button"
-                className={`user-directory-archive-button ${showTerminatedUsers ? 'is-active' : ''}`}
-                onClick={() => setShowTerminatedUsers((current) => !current)}
-                aria-label={showTerminatedUsers ? 'Return to active users' : 'Open terminated accounts archive'}
-                title={showTerminatedUsers ? 'Return to active users' : 'Open terminated accounts archive'}
-              >
-                🗑
-              </button>
+              <div className="user-directory-header-actions">
+                <button
+                  type="button"
+                  className={`user-directory-archive-button ${showTerminatedUsers ? 'is-active' : ''}`}
+                  onClick={() => setShowTerminatedUsers((current) => !current)}
+                  aria-label={showTerminatedUsers ? 'Return to active users' : 'Open terminated accounts archive'}
+                  title={showTerminatedUsers ? 'Return to active users' : 'Open terminated accounts archive'}
+                >
+                  🗑
+                </button>
+                {showTerminatedUsers && (
+                  <button type="button" className="user-directory-close-button" onClick={() => setShowTerminatedUsers(false)} aria-label="Close terminated accounts">×</button>
+                )}
+              </div>
             </div>
             <div className="list-stack">
               {userRoleGroups.map((roleGroup) => (

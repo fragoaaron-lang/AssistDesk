@@ -1048,6 +1048,35 @@ button, input, select, textarea {
 .user-directory-archive-button.is-active {
   background: #fbe1e1;
 }
+.user-directory-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.user-directory-close-button {
+  display: inline-grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--navy);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.user-directory-archive-modal {
+  position: fixed;
+  z-index: 80;
+  top: 50%;
+  left: 50%;
+  width: min(1100px, calc(100vw - 32px));
+  max-height: min(88vh, 900px);
+  overflow-y: auto;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 100vmax rgba(8, 32, 56, 0.62), 0 24px 70px rgba(8, 32, 56, 0.28);
+}
 .profile-section-header {
   display: flex;
   align-items: center;
