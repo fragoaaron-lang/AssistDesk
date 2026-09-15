@@ -55,9 +55,8 @@ const generalIssueOptions = {
   ],
   'Library and Resources': [
     'Book or resource request',
-    'Library computer access',
-    'Study area concern',
-    'Database or research access',
+    'Library student ID',
+    'Previous research access',
   ],
   'Clubs, Sports, and Events': [
     'Club or organization concern',
