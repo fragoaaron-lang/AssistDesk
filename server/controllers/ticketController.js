@@ -104,10 +104,6 @@ exports.createTicket = async (req, res) => {
       return res.status(403).json({ message: 'Students can only submit tickets to their own college department.' });
     }
     const isMaintenanceDepartment = resolvedDepartment?.name?.toLowerCase().includes('maintenance');
-    if (isMaintenanceDepartment && attachment_data && !requester.facial_id) {
-      return res.status(400).json({ message: 'A facial ID is required before submitting maintenance photo uploads.' });
-    }
-
     // Map new priority names to old database values temporarily
     const databasePriority = mapPriorityToDatabase(priority);
 

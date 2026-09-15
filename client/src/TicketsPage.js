@@ -265,10 +265,6 @@ function TicketsPage() {
         setSubmissionState({ status: 'error', message: 'Please upload an image for a maintenance ticket.', ticketCode: '' });
         return;
       }
-      if (isMaintenanceDepartment && attachment && !user?.facial_id) {
-        setSubmissionState({ status: 'error', message: 'Please capture a Facial ID in Profile > Security before sending maintenance photos.', ticketCode: '' });
-        return;
-      }
       const response = await axios.post(`${API_BASE_URL}/api/tickets`, {
         ...form,
         user_id: user?.id || 0,
@@ -512,16 +508,6 @@ function TicketsPage() {
             <p>Submit a request and monitor progress through clearly organized service channels.</p>
           </div>
         </div>
-
-        {!user?.facial_id && (
-          <div className="facial-id-reminder" role="status">
-            <div>
-              <strong>Facial ID reminder</strong>
-              <span>Maintenance photo requests require a Facial ID before they can be sent.</span>
-            </div>
-            <a href="/profile#security">Open Profile Security</a>
-          </div>
-        )}
 
         {user?.role !== 'admin' && (
           <div className={`institutional-card ticket-form-card ${submissionState.status === 'loading' ? 'is-submitting' : ''}`} style={{ marginBottom: '20px' }}>
