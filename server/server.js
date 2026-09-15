@@ -133,6 +133,14 @@ async function ensureUserProfileColumns() {
     });
   }
 
+  if (!columns.account_status) {
+    await queryInterface.addColumn('users', 'account_status', {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      defaultValue: 'active',
+    });
+  }
+
   if (!columns.facial_id) {
     if (sequelize.getDialect() === 'mysql') {
       await sequelize.query('ALTER TABLE users ADD COLUMN facial_id MEDIUMTEXT NULL;');

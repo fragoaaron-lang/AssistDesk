@@ -12,6 +12,7 @@ const sanitizeUser = (user) => ({
   name: user.name,
   email: user.email,
   role: user.role,
+  account_status: user.account_status || 'active',
   department_id: user.department_id || null,
   department_name: user.role === 'student' ? (user.Department?.name || null) : null,
   student_number: user.student_number || null,
@@ -126,6 +127,10 @@ exports.login = async (req, res) => {
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
     if (!passwordMatch) {
       return res.status(401).json({ message: 'Invalid email or password.' });
+    }
+
+    if (user.account_status === 'terminated') {
+      return res.status(403).json({ message: 'This account has been terminated. Please contact an administrator for assistance.' });
     }
 
     const token = signToken(user);

@@ -46,7 +46,7 @@ exports.getReports = async (req, res) => {
     });
 
     const users = await User.findAll({
-      attributes: ['id', 'name', 'email', 'role', 'student_number'],
+      attributes: ['id', 'name', 'email', 'role', 'student_number', 'account_status'],
       where: { role: { [Op.in]: ['student', 'faculty', 'staff'] } },
       include: [{ model: Department, attributes: ['name'] }],
       order: [['role', 'ASC'], ['name', 'ASC']],
@@ -146,7 +146,7 @@ exports.deleteUser = async (req, res) => {
     await ChatLog.destroy({ where: { user_id: user.id } });
     await Admin.destroy({ where: { user_id: user.id } });
     await PasswordResetToken.destroy({ where: { email: user.email } });
-    await user.destroy();
+    await user.update({ account_status: 'terminated' });
 
     return res.json({ message: 'User account terminated successfully.' });
   } catch (error) {

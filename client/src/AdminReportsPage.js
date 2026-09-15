@@ -233,21 +233,23 @@ function AdminReportsPage() {
                             <th>Email</th>
                             <th>Department</th>
                             {roleGroup.name === 'student' && <th>Student Number</th>}
+                            <th>Status</th>
                             <th>Actions</th>
                           </tr>
                         </thead>
                         <tbody>
                           {roleGroup.users.length === 0 ? (
-                            <tr><td colSpan={roleGroup.name === 'student' ? 5 : 4} className="small-muted">No users in this group</td></tr>
+                            <tr><td colSpan={roleGroup.name === 'student' ? 6 : 5} className="small-muted">No users in this group</td></tr>
                           ) : roleGroup.users.map((directoryUser) => (
                             <tr key={directoryUser.id}>
                               <td>{directoryUser.name || 'Unknown'}</td>
                               <td>{directoryUser.email}</td>
                               <td>{directoryUser.Department?.name || 'Unassigned'}</td>
                               {roleGroup.name === 'student' && <td>{directoryUser.student_number || 'N/A'}</td>}
+                              <td>{directoryUser.account_status || 'active'}</td>
                               <td>
-                                <button type="button" className="user-terminate-button" onClick={() => terminateUser(directoryUser)} disabled={deletingUserId === directoryUser.id}>
-                                  {deletingUserId === directoryUser.id ? 'Terminating...' : 'Terminate'}
+                                <button type="button" className="user-terminate-button" onClick={() => terminateUser(directoryUser)} disabled={deletingUserId === directoryUser.id || directoryUser.account_status === 'terminated'}>
+                                  {directoryUser.account_status === 'terminated' ? 'Terminated' : deletingUserId === directoryUser.id ? 'Terminating...' : 'Terminate'}
                                 </button>
                               </td>
                             </tr>
