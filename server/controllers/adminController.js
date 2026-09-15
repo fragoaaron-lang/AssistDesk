@@ -1,4 +1,4 @@
-const { User, Department, Ticket, Announcement } = require('../models');
+const { User, Department, Ticket, TicketUpdate, Notification, ChatLog, Admin, PasswordResetToken, Announcement } = require('../models');
 const { notifyAdmins } = require('../utils/socket');
 const { addTicketNumber } = require('../utils/ticketNumber');
 const { Op } = require('sequelize');
@@ -122,5 +122,35 @@ exports.createAnnouncement = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Unable to create announcement.' });
+  }
+};
+
+exports.deleteUser = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+    if (user.id === req.user.id || user.role === 'admin') {
+      return res.status(403).json({ message: 'Administrator accounts cannot be terminated here.' });
+    }
+
+    const tickets = await user.getTickets ? await user.getTickets() : [];
+    const ticketIds = tickets.map((ticket) => ticket.id);
+    if (ticketIds.length) {
+      await TicketUpdate.destroy({ where: { ticket_id: ticketIds } });
+      await Ticket.destroy({ where: { id: ticketIds } });
+    }
+
+    await Notification.destroy({ where: { user_id: user.id } });
+    await ChatLog.destroy({ where: { user_id: user.id } });
+    await Admin.destroy({ where: { user_id: user.id } });
+    await PasswordResetToken.destroy({ where: { email: user.email } });
+    await user.destroy();
+
+    return res.json({ message: 'User account terminated successfully.' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Unable to terminate user account.' });
   }
 };

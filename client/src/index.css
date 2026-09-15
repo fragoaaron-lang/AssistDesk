@@ -1015,6 +1015,23 @@ button, input, select, textarea {
 .header-nav-button[aria-expanded="true"] {
   background: rgba(255,255,255,0.16);
 }
+.user-terminate-button {
+  padding: 5px 9px;
+  border: 1px solid #d58b8b;
+  border-radius: 6px;
+  background: #fff5f5;
+  color: #a33232;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.user-terminate-button:hover:not(:disabled) {
+  background: #fbe1e1;
+}
+.user-terminate-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
 .profile-section-header {
   display: flex;
   align-items: center;

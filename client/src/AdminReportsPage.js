@@ -47,6 +47,7 @@ function AdminReportsPage() {
   const [expandedRequesterDepartments, setExpandedRequesterDepartments] = useState({});
   const [showUserDirectory, setShowUserDirectory] = useState(false);
   const [expandedUserRoles, setExpandedUserRoles] = useState({});
+  const [deletingUserId, setDeletingUserId] = useState(null);
 
   const loadReports = async () => {
     try {
@@ -85,6 +86,22 @@ function AdminReportsPage() {
       ...current,
       [roleName]: current[roleName] !== true,
     }));
+  };
+
+  const terminateUser = async (directoryUser) => {
+    if (!window.confirm(`Terminate ${directoryUser.name || directoryUser.email}'s account? This cannot be undone.`)) return;
+    setDeletingUserId(directoryUser.id);
+    try {
+      await axios.delete(`${API_BASE_URL}/api/admin/users/${directoryUser.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setMessage('User account terminated successfully.');
+      await loadReports();
+    } catch (error) {
+      setMessage(error.response?.data?.message || 'Unable to terminate user account.');
+    } finally {
+      setDeletingUserId(null);
+    }
   };
 
   const userRoleGroups = ['student', 'faculty', 'staff'].map((roleName) => ({
@@ -216,17 +233,23 @@ function AdminReportsPage() {
                             <th>Email</th>
                             <th>Department</th>
                             {roleGroup.name === 'student' && <th>Student Number</th>}
+                            <th>Actions</th>
                           </tr>
                         </thead>
                         <tbody>
                           {roleGroup.users.length === 0 ? (
-                            <tr><td colSpan={roleGroup.name === 'student' ? 4 : 3} className="small-muted">No users in this group</td></tr>
+                            <tr><td colSpan={roleGroup.name === 'student' ? 5 : 4} className="small-muted">No users in this group</td></tr>
                           ) : roleGroup.users.map((directoryUser) => (
                             <tr key={directoryUser.id}>
                               <td>{directoryUser.name || 'Unknown'}</td>
                               <td>{directoryUser.email}</td>
                               <td>{directoryUser.Department?.name || 'Unassigned'}</td>
                               {roleGroup.name === 'student' && <td>{directoryUser.student_number || 'N/A'}</td>}
+                              <td>
+                                <button type="button" className="user-terminate-button" onClick={() => terminateUser(directoryUser)} disabled={deletingUserId === directoryUser.id}>
+                                  {deletingUserId === directoryUser.id ? 'Terminating...' : 'Terminate'}
+                                </button>
+                              </td>
                             </tr>
                           ))}
                         </tbody>

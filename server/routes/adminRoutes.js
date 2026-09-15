@@ -6,6 +6,7 @@ const authorize = require('../middleware/authorize');
 const router = express.Router();
 
 router.get('/reports', authMiddleware, authorize('admin'), adminController.getReports);
+router.delete('/users/:id', authMiddleware, authorize('admin'), adminController.deleteUser);
 router.post('/announcements', authMiddleware, authorize('admin'), adminController.createAnnouncement);
 
 module.exports = router;
