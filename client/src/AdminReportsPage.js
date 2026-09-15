@@ -177,8 +177,8 @@ function AdminReportsPage() {
 
         <div className="page-intro">
           <div>
-            <h2>Data Analytics</h2>
-            <p>Monitor service trends, support demand, and operational activity.</p>
+            <h2>{showUserDirectory ? 'Users' : 'Data Analytics'}</h2>
+            <p>{showUserDirectory ? 'Manage active and terminated user accounts.' : 'Monitor service trends, support demand, and operational activity.'}</p>
           </div>
         </div>
         {message && <p>{message}</p>}
