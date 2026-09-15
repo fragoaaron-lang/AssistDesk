@@ -239,7 +239,9 @@ function AdminReportsPage() {
           </section>
         )}
 
-        <section className="report-visual-grid">
+        {!showUserDirectory && (
+          <>
+            <section className="report-visual-grid">
           <div className="institutional-card report-trend-card">
             <div className="report-card-heading"><div><h3>Income</h3><span>Ticket volume by date</span></div><strong>{getTotalCount(reports.monthlyTicketCounts)} tickets</strong></div>
             {reports.monthlyTicketCounts.length === 0 ? <p className="small-muted">No recent activity</p> : (
@@ -312,8 +314,8 @@ function AdminReportsPage() {
               ))}
             </div>
           </div>
-        </section>
-        <section className="institutional-card report-table-card">
+          </section>
+          <section className="institutional-card report-table-card">
           <h3>Ticket detail table</h3>
           <div className="report-table-scroll">
             <table className="report-table">
@@ -343,7 +345,9 @@ function AdminReportsPage() {
               </tbody>
             </table>
           </div>
-        </section>
+            </section>
+          </>
+        )}
       </div>
     </div>
   );
