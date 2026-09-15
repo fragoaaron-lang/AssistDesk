@@ -44,7 +44,7 @@ function AdminReportsPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [reports, setReports] = useState(null);
   const [message, setMessage] = useState('');
-  const [showUserDirectory, setShowUserDirectory] = useState(false);
+  const [showUserDirectory, setShowUserDirectory] = useState(() => new URLSearchParams(window.location.search).get('view') === 'users');
   const [expandedUserRoles, setExpandedUserRoles] = useState({});
   const [deletingUserId, setDeletingUserId] = useState(null);
 

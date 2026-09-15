@@ -98,6 +98,7 @@ function AdminCatalogPage() {
             {user?.role === 'admin' && (
               <>
                 <a href="/admin/reports">Data Analytics</a>
+                <a href="/admin/reports?view=users" className="header-nav-button">Users</a>
               </>
             )}
           </div>
@@ -121,6 +122,7 @@ function AdminCatalogPage() {
             {user?.role === 'admin' && (
               <>
                 <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Data Analytics</a>
+                <a href="/admin/reports?view=users" className="header-nav-button" onClick={() => setMobileMenuOpen(false)}>Users</a>
               </>
             )}
           </div>
