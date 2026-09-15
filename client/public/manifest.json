@@ -1,0 +1,19 @@
+{
+  "short_name": "AssistDesk",
+  "name": "AssistDesk Support Portal",
+  "icons": [
+    {
+      "src": "/assistdesk-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#2563eb",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary"
+}
