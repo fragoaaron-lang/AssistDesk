@@ -1032,6 +1032,22 @@ button, input, select, textarea {
   cursor: wait;
   opacity: 0.65;
 }
+.user-directory-archive-button {
+  display: inline-grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid #d58b8b;
+  border-radius: 8px;
+  background: #fff5f5;
+  color: #a33232;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.user-directory-archive-button:hover,
+.user-directory-archive-button.is-active {
+  background: #fbe1e1;
+}
 .profile-section-header {
   display: flex;
   align-items: center;

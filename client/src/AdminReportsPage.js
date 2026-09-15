@@ -45,6 +45,7 @@ function AdminReportsPage() {
   const [reports, setReports] = useState(null);
   const [message, setMessage] = useState('');
   const [showUserDirectory, setShowUserDirectory] = useState(() => new URLSearchParams(window.location.search).get('view') === 'users');
+  const [showTerminatedUsers, setShowTerminatedUsers] = useState(false);
   const [expandedUserRoles, setExpandedUserRoles] = useState({});
   const [deletingUserId, setDeletingUserId] = useState(null);
 
@@ -89,7 +90,9 @@ function AdminReportsPage() {
   const userRoleGroups = ['student', 'faculty', 'staff'].map((roleName) => ({
     name: roleName,
     label: roleName.charAt(0).toUpperCase() + roleName.slice(1),
-    users: (reports?.users || []).filter((directoryUser) => directoryUser.role === roleName),
+    users: (reports?.users || []).filter((directoryUser) => directoryUser.role === roleName && (showTerminatedUsers
+      ? directoryUser.account_status === 'terminated'
+      : directoryUser.account_status !== 'terminated')),
   }));
 
   const getChartWidth = (value, rows) => {
@@ -180,9 +183,18 @@ function AdminReportsPage() {
           <section className="institutional-card user-directory-card">
             <div className="report-card-heading">
               <div>
-                <h3>User directory</h3>
-                <span>Open a role folder to view its users.</span>
+                <h3>{showTerminatedUsers ? 'Terminated accounts' : 'User directory'}</h3>
+                <span>{showTerminatedUsers ? 'Archived accounts organized by role.' : 'Open a role folder to view its users.'}</span>
               </div>
+              <button
+                type="button"
+                className={`user-directory-archive-button ${showTerminatedUsers ? 'is-active' : ''}`}
+                onClick={() => setShowTerminatedUsers((current) => !current)}
+                aria-label={showTerminatedUsers ? 'Return to active users' : 'Open terminated accounts archive'}
+                title={showTerminatedUsers ? 'Return to active users' : 'Open terminated accounts archive'}
+              >
+                🗑
+              </button>
             </div>
             <div className="list-stack">
               {userRoleGroups.map((roleGroup) => (
@@ -215,11 +227,11 @@ function AdminReportsPage() {
                               <td>{directoryUser.Department?.name || 'Unassigned'}</td>
                               {roleGroup.name === 'student' && <td>{directoryUser.student_number || 'N/A'}</td>}
                               <td>{directoryUser.account_status || 'active'}</td>
-                              <td>
-                                <button type="button" className="user-terminate-button" onClick={() => terminateUser(directoryUser)} disabled={deletingUserId === directoryUser.id || directoryUser.account_status === 'terminated'}>
-                                  {directoryUser.account_status === 'terminated' ? 'Terminated' : deletingUserId === directoryUser.id ? 'Terminating...' : 'Terminate'}
+                              <td>{showTerminatedUsers ? 'Archived' : (
+                                <button type="button" className="user-terminate-button" onClick={() => terminateUser(directoryUser)} disabled={deletingUserId === directoryUser.id}>
+                                  {deletingUserId === directoryUser.id ? 'Terminating...' : 'Terminate'}
                                 </button>
-                              </td>
+                              )}</td>
                             </tr>
                           ))}
                         </tbody>
