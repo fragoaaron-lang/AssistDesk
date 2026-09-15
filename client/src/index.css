@@ -1241,6 +1241,107 @@ button, input, select, textarea {
   margin-right: auto;
 }
 
+.verification-card {
+  max-width: 860px;
+}
+
+.verification-form {
+  display: grid;
+  gap: 18px;
+}
+
+.verification-step {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid #d7e5e5;
+  border-radius: 12px;
+  background: #fbfefe;
+}
+
+.verification-step > span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #dceceb;
+  color: #174e55;
+  font-weight: 800;
+}
+
+.verification-step.active > span {
+  background: #1f6f78;
+  color: #fff;
+}
+
+.verification-step.complete {
+  border-color: #b9ded1;
+  background: #f5fcf8;
+}
+
+.verification-step small {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.verification-upload {
+  width: fit-content;
+}
+
+.verification-upload input {
+  display: none;
+}
+
+.verification-camera-frame {
+  position: relative;
+  width: min(100%, 420px);
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #102c35;
+}
+
+.verification-camera {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.verification-face-cursor {
+  position: absolute;
+  inset: 14% 28%;
+  border: 2px solid #9bf3da;
+  border-radius: 48% 48% 44% 44%;
+  box-shadow: 0 0 0 999px rgba(5, 25, 31, 0.18), 0 0 22px rgba(155, 243, 218, 0.35);
+  pointer-events: none;
+}
+
+.verification-face-cursor i {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-color: #fff;
+  border-style: solid;
+}
+
+.verification-face-cursor i:nth-child(1) { inset: -2px auto auto -2px; border-width: 3px 0 0 3px; border-radius: 8px 0 0; }
+.verification-face-cursor i:nth-child(2) { inset: -2px -2px auto auto; border-width: 3px 3px 0 0; border-radius: 0 8px 0 0; }
+.verification-face-cursor i:nth-child(3) { inset: auto auto -2px -2px; border-width: 0 0 3px 3px; border-radius: 0 0 0 8px; }
+.verification-face-cursor i:nth-child(4) { inset: auto -2px -2px auto; border-width: 0 3px 3px 0; border-radius: 0 0 8px; }
+
+.verification-failure {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid #e7b6b6;
+  border-radius: 12px;
+  background: #fff6f6;
+  color: #8f2020;
+}
+
 .account-deletion-card {
   margin-top: 18px;
 }

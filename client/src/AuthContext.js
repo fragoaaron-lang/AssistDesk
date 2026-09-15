@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }) => {
     return { user, token: newToken };
   };
 
-  const register = async (name, email, password, role, departmentId = null, studentNumber = '', facialId = '') => {
+  const register = async (name, email, password, role, departmentId = null, studentNumber = '') => {
     const response = await axios.post(`${API_BASE_URL}/api/auth/register`, {
       name,
       email,
@@ -86,15 +86,22 @@ export const AuthProvider = ({ children }) => {
       role,
       department_id: departmentId,
       student_number: studentNumber,
-      facial_id: facialId || null,
+    });
+
+    return response.data;
+  };
+
+  const completeRegistration = async (verificationToken, idDocument, selfie) => {
+    const response = await axios.post(`${API_BASE_URL}/api/auth/verify-registration`, {
+      verification_token: verificationToken,
+      id_document: idDocument,
+      selfie,
     });
 
     const { user, token: newToken } = response.data;
 
-    if (newToken) {
-      localStorage.setItem('assistdesk_token', newToken);
-      setToken(newToken);
-    }
+    localStorage.setItem('assistdesk_token', newToken);
+    setToken(newToken);
 
     setUser(user);
     return { user, token: newToken || null };
@@ -124,7 +131,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout, updateUserProfile }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, completeRegistration, logout, updateUserProfile }}>
       {children}
     </AuthContext.Provider>
   );

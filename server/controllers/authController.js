@@ -59,9 +59,32 @@ const signToken = (user) =>
     expiresIn: JWT_EXPIRES_IN,
   });
 
+const verifyIdentity = async ({ idDocument, selfie }) => {
+  const verificationUrl = process.env.FACE_VERIFICATION_URL;
+  if (!verificationUrl) {
+    return { available: false, matched: false };
+  }
+
+  const response = await fetch(verificationUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id_document: idDocument, selfie }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Identity provider returned ${response.status}`);
+  }
+
+  const result = await response.json();
+  return {
+    available: true,
+    matched: result.match === true && Number(result.confidence || 0) >= 0.8,
+  };
+};
+
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role = 'student', department_id, student_number, facial_id } = req.body;
+    const { name, email, password, role = 'student', department_id, student_number } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Name, email, and password are required.' });
@@ -122,20 +145,60 @@ exports.register = async (req, res) => {
       role,
       department_id: departmentId,
       student_number: role === 'student' ? student_number.trim() : null,
-      facial_id: facial_id ? String(facial_id).trim() : null,
+      account_status: 'pending_verification',
+      verification_token: crypto.randomBytes(32).toString('hex'),
     });
 
-    await user.reload({ include: [{ model: Department }] });
-    const token = signToken(user);
-
     return res.status(201).json({
-      message: 'Registration successful.',
-      token,
-      user: sanitizeUser(user),
+      message: 'Registration details saved. Identity verification is required.',
+      verification_token: user.verification_token,
     });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Registration failed.' });
+  }
+};
+
+exports.verifyRegistration = async (req, res) => {
+  try {
+    const { verification_token, id_document, selfie } = req.body || {};
+    if (!verification_token || !id_document || !selfie) {
+      return res.status(400).json({ message: 'ID document and facial verification are required.' });
+    }
+
+    const user = await User.findOne({
+      where: { verification_token, account_status: 'pending_verification' },
+      include: [{ model: Department }],
+    });
+    if (!user) {
+      return res.status(400).json({ message: 'This registration session is invalid or has expired.' });
+    }
+
+    let verificationResult;
+    try {
+      verificationResult = await verifyIdentity({ idDocument: id_document, selfie });
+    } catch (error) {
+      console.error('Identity provider error:', error.message);
+      return res.status(502).json({ message: 'Identity verification is temporarily unavailable. Please try again.' });
+    }
+
+    if (!verificationResult.available) {
+      return res.status(503).json({ message: 'Identity verification is not configured. Registration cannot be completed.' });
+    }
+
+    if (!verificationResult.matched) {
+      await user.update({ account_status: 'verification_failed', facial_id: null, verification_token: null });
+      return res.status(422).json({ message: 'The ID and facial image do not appear to belong to the same person. Registration was not completed.' });
+    }
+
+    await user.update({ account_status: 'active', facial_id: selfie, verification_token: null });
+    await user.reload({ include: [{ model: Department }] });
+    const token = signToken(user);
+
+    return res.status(200).json({ message: 'Identity verified. Registration complete.', token, user: sanitizeUser(user) });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Unable to complete identity verification.' });
   }
 };
 
@@ -160,6 +223,10 @@ exports.login = async (req, res) => {
 
     if (user.account_status === 'terminated') {
       return res.status(403).json({ message: 'This account has been terminated. Please contact an administrator for assistance.' });
+    }
+
+    if (user.account_status !== 'active') {
+      return res.status(403).json({ message: 'This account has not completed identity verification.' });
     }
 
     const token = signToken(user);

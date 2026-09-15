@@ -57,6 +57,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
         defaultValue: null,
       },
+      verification_token: {
+        type: DataTypes.STRING(128),
+        allowNull: true,
+        defaultValue: null,
+      },
       marker_positions: {
         type: DataTypes.JSON,
         allowNull: true,

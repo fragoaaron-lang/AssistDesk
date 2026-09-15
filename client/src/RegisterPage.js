@@ -3,7 +3,6 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { API_BASE_URL } from './config';
-import FacialIdCapture from './FacialIdCapture';
 
 const fallbackDepartments = [
   { id: 1, name: 'Basic Education Department' },
@@ -80,7 +79,6 @@ function RegisterPage({ modal = false, onSwitch }) {
   const [studentNumber, setStudentNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [facialId, setFacialId] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [role, setRole] = useState('student');
@@ -132,8 +130,8 @@ function RegisterPage({ modal = false, onSwitch }) {
 
     try {
       const name = `${firstName.trim()} ${middleInitial.toUpperCase()}. ${lastName.trim()}`;
-      await register(name, email, password, role, departmentId, studentNumber, facialId);
-      navigate('/dashboard');
+      const result = await register(name, email, password, role, departmentId, studentNumber);
+      navigate(`/verify-registration/${result.verification_token}`);
     } catch (error) {
       setMessage(error.response?.data?.message || 'Registration failed.');
     }
@@ -183,11 +181,6 @@ function RegisterPage({ modal = false, onSwitch }) {
               <option value="faculty">Faculty</option>
               <option value="staff">Staff</option>
             </select>
-            <FacialIdCapture
-              value={facialId}
-              onChange={setFacialId}
-              onSave={() => setMessage('Facial ID saved and ready for registration.')}
-            />
             <button className="institutional-btn" type="submit" style={{ width: '100%' }}>Register</button>
           </form>
           {message && <p style={{ color: 'red', marginTop: '0.8rem' }}>{message}</p>}

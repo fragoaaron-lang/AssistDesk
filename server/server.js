@@ -149,6 +149,14 @@ async function ensureUserProfileColumns() {
     }
   }
 
+  if (!columns.verification_token) {
+    await queryInterface.addColumn('users', 'verification_token', {
+      type: DataTypes.STRING(128),
+      allowNull: true,
+      defaultValue: null,
+    });
+  }
+
   if (sequelize.getDialect() === 'mysql') {
     await sequelize.query('ALTER TABLE users MODIFY COLUMN profile_picture MEDIUMTEXT NULL;');
   }
