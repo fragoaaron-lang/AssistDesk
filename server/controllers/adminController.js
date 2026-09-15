@@ -1,4 +1,4 @@
-const { User, Department, Ticket, TicketUpdate, Notification, ChatLog, Admin, PasswordResetToken, Announcement } = require('../models');
+const { User, Department, Ticket, TicketUpdate, Notification, ChatLog, Admin, PasswordResetToken, Announcement, Faq } = require('../models');
 const { notifyAdmins } = require('../utils/socket');
 const { addTicketNumber } = require('../utils/ticketNumber');
 const { Op } = require('sequelize');
@@ -26,6 +26,47 @@ exports.getReports = async (req, res) => {
       group: ['status'],
       raw: true,
     });
+
+    const ticketCountsByPriority = await Ticket.findAll({
+      attributes: ['priority', [Ticket.sequelize.fn('COUNT', Ticket.sequelize.col('id')), 'count']],
+      group: ['priority'],
+      order: [['priority', 'ASC']],
+      raw: true,
+    });
+
+    const departmentStatusRows = await Ticket.findAll({
+      attributes: ['department_id', 'status', [Ticket.sequelize.fn('COUNT', Ticket.sequelize.col('Ticket.id')), 'count']],
+      include: [{ model: Department, attributes: ['name'] }],
+      group: ['department_id', 'status', 'Department.id', 'Department.name'],
+      raw: true,
+    });
+    const ticketsByDepartmentStatus = {};
+    departmentStatusRows.forEach((row) => {
+      const departmentId = row.department_id || 'unassigned';
+      if (!ticketsByDepartmentStatus[departmentId]) {
+        ticketsByDepartmentStatus[departmentId] = {
+          department_id: row.department_id,
+          department_name: row['Department.name'] || 'Unassigned',
+          resolved: 0,
+          unresolved: 0,
+        };
+      }
+      const count = Number(row.count) || 0;
+      if (['closed', 'resolved'].includes(row.status)) ticketsByDepartmentStatus[departmentId].resolved += count;
+      else ticketsByDepartmentStatus[departmentId].unresolved += count;
+    });
+
+    const faqs = await Faq.findAll({ attributes: ['id', 'question', 'keywords'] });
+    const chatMessages = await ChatLog.findAll({ attributes: ['message'] });
+    const normalizeText = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ');
+    const mostAskedFaq = faqs.map((faq) => {
+      const terms = `${faq.question} ${faq.keywords || ''}`.split(/\s+/).map(normalizeText).filter((term) => term.length > 3);
+      const count = chatMessages.filter((chat) => {
+        const message = normalizeText(chat.message);
+        return terms.length > 0 && terms.filter((term) => message.includes(term)).length >= Math.min(2, terms.length);
+      }).length;
+      return { id: faq.id, question: faq.question, count };
+    }).sort((first, second) => second.count - first.count)[0] || null;
 
     const concernCounts = await Ticket.findAll({
       attributes: ['category', [Ticket.sequelize.fn('COUNT', Ticket.sequelize.col('id')), 'count']],
@@ -96,12 +137,15 @@ exports.getReports = async (req, res) => {
     return res.json({
       ticketCountsByDepartment,
       ticketCountsByStatus,
+      ticketCountsByPriority,
+      ticketsByDepartmentStatus: Object.values(ticketsByDepartmentStatus).sort((first, second) => second.unresolved - first.unresolved),
       ticketCountsByConcern,
       usersByRole,
       users,
       ticketCountsByRequester,
       recentTickets,
       monthlyTicketCounts,
+      mostAskedFaq,
     });
   } catch (error) {
     console.error(error);

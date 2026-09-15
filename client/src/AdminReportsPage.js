@@ -44,7 +44,6 @@ function AdminReportsPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [reports, setReports] = useState(null);
   const [message, setMessage] = useState('');
-  const [expandedRequesterDepartments, setExpandedRequesterDepartments] = useState({});
   const [showUserDirectory, setShowUserDirectory] = useState(false);
   const [expandedUserRoles, setExpandedUserRoles] = useState({});
   const [deletingUserId, setDeletingUserId] = useState(null);
@@ -63,23 +62,6 @@ function AdminReportsPage() {
   useEffect(() => {
     if (token) loadReports();
   }, [token]);
-
-  const groupedRecentTickets = Object.values((reports?.recentTickets || []).reduce((groups, ticket) => {
-    const requesterDepartment = ticket.User?.Department;
-    const departmentName = requesterDepartment?.name || 'Unassigned Department';
-    const departmentId = departmentName.toLowerCase().replace(/\bdepartment\b/g, '').replace(/\s+/g, ' ').trim() || 'unassigned';
-    const displayName = departmentName.toLowerCase().includes('maintenance') ? 'Maintenance Department' : departmentName;
-    if (!groups[departmentId]) groups[departmentId] = { name: displayName, tickets: [] };
-    groups[departmentId].tickets.push(ticket);
-    return groups;
-  }, {})).sort((first, second) => first.name.localeCompare(second.name));
-
-  const toggleRequesterDepartment = (departmentName) => {
-    setExpandedRequesterDepartments((current) => ({
-      ...current,
-      [departmentName]: current[departmentName] !== true,
-    }));
-  };
 
   const toggleUserRole = (roleName) => {
     setExpandedUserRoles((current) => ({
@@ -113,20 +95,6 @@ function AdminReportsPage() {
   const getChartWidth = (value, rows) => {
     const maximum = Math.max(...rows.map((row) => Number(row.count) || 0), 1);
     return `${Math.max(4, ((Number(value) || 0) / maximum) * 100)}%`;
-  };
-
-  const getTotalCount = (rows) => rows.reduce((total, row) => total + (Number(row.count) || 0), 0);
-
-  const getDonutStyle = (rows) => {
-    const total = getTotalCount(rows) || 1;
-    let offset = 0;
-    const colors = ['#1687c9', '#55b9e8', '#f0b44d', '#e47b54', '#7a91a8'];
-    const stops = rows.map((row, index) => {
-      const start = offset;
-      offset += ((Number(row.count) || 0) / total) * 360;
-      return `${colors[index % colors.length]} ${start}deg ${offset}deg`;
-    });
-    return { background: `conic-gradient(${stops.join(', ') || '#d9e6ef 0deg 360deg'})` };
   };
 
   if (!reports) {
@@ -267,75 +235,30 @@ function AdminReportsPage() {
         {!showUserDirectory && (
           <>
             <section className="report-visual-grid">
-          <div className="institutional-card report-trend-card">
-            <div className="report-card-heading"><div><h3>Income</h3><span>Ticket volume by date</span></div><strong>{getTotalCount(reports.monthlyTicketCounts)} tickets</strong></div>
-            {reports.monthlyTicketCounts.length === 0 ? <p className="small-muted">No recent activity</p> : (
-              <div className="report-area-chart" aria-label="Tickets created over the last 30 days">
-                {reports.monthlyTicketCounts.map((row) => (
-                  <div key={row.date} className="report-trend-column" title={`${row.date}: ${row.count} ticket(s)`}>
-                    <span className="report-trend-bar" style={{ height: getChartWidth(row.count, reports.monthlyTicketCounts) }} />
-                    <small>{String(row.date).slice(5)}</small>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="institutional-card report-donut-card">
-            <div className="report-card-heading"><div><h3>Status</h3><span>Ticket distribution</span></div><strong>{getTotalCount(reports.ticketCountsByStatus)}</strong></div>
-            <div className="report-donut" style={getDonutStyle(reports.ticketCountsByStatus)}><span>{getTotalCount(reports.ticketCountsByStatus)}</span></div>
-            <div className="report-legend">{reports.ticketCountsByStatus.map((row, index) => <span key={row.status}><i className={`legend-dot legend-dot-${index % 5}`} />{row.status} <strong>{row.count}</strong></span>)}</div>
-          </div>
-          <div className="institutional-card report-donut-card">
-            <div className="report-card-heading"><div><h3>Concerns</h3><span>Categories</span></div><strong>{getTotalCount(reports.ticketCountsByConcern || [])}</strong></div>
-            <div className="report-donut" style={getDonutStyle(reports.ticketCountsByConcern || [])}><span>{getTotalCount(reports.ticketCountsByConcern || [])}</span></div>
-            <div className="report-legend">{(reports.ticketCountsByConcern || []).slice(0, 5).map((row, index) => <span key={row.concern}><i className={`legend-dot legend-dot-${index % 5}`} />{row.concern} <strong>{row.count}</strong></span>)}</div>
-          </div>
           <div className="institutional-card report-bars-card">
-            <h3>Department growth</h3>
-            <div className="report-chart" aria-label="Tickets by department">
-              {reports.ticketCountsByDepartment.length === 0 ? <p className="small-muted">No department activity</p> : reports.ticketCountsByDepartment.map((row) => (
+            <h3>Tickets per department</h3>
+            <div className="report-chart" aria-label="Tickets per department">
+              {reports.ticketCountsByDepartment.map((row) => (
                 <div key={row.department_id} className="report-chart-row"><div className="report-chart-label"><span>{row.department_name}</span><strong>{row.count}</strong></div><div className="report-chart-track"><span className="report-chart-bar department" style={{ width: getChartWidth(row.count, reports.ticketCountsByDepartment) }} /></div></div>
               ))}
             </div>
           </div>
-          <div className="institutional-card report-bars-card">
-            <h3>Requester activity</h3>
-            <div className="report-chart" aria-label="Tickets by requester">
-              {(reports.ticketCountsByRequester || []).length === 0 ? <p className="small-muted">No requester activity</p> : reports.ticketCountsByRequester.slice(0, 8).map((row) => (
-                <div key={row.requester_id} className="report-chart-row"><div className="report-chart-label"><span>{row.requester_name}</span><strong>{row.count}</strong></div><div className="report-chart-track"><span className="report-chart-bar requester" style={{ width: getChartWidth(row.count, reports.ticketCountsByRequester) }} /></div></div>
-              ))}
-            </div>
+          <div className="institutional-card report-donut-card">
+            <div className="report-card-heading"><div><h3>Ticket priorities</h3><span>Low, medium, and urgent</span></div></div>
+            <div className="report-legend report-priority-list">{['low', 'medium', 'urgent'].map((priority) => {
+              const row = reports.ticketCountsByPriority.find((item) => item.priority === priority);
+              return <span key={priority}><i className="legend-dot legend-dot-0" />{priority} <strong>{row?.count || 0}</strong></span>;
+            })}</div>
+          </div>
+          <div className="institutional-card report-donut-card">
+            <div className="report-card-heading"><div><h3>Most asked FAQ</h3><span>Based on assistant questions</span></div></div>
+            {reports.mostAskedFaq ? <div className="report-faq-highlight"><strong>{reports.mostAskedFaq.question}</strong><span>{reports.mostAskedFaq.count} matching question(s)</span></div> : <p className="small-muted">No FAQ activity yet</p>}
           </div>
           <div className="institutional-card report-bars-card">
-            <h3>Status bars</h3>
-            <div className="report-chart" aria-label="Tickets by status">
-              {reports.ticketCountsByStatus.map((row) => <div key={row.status} className="report-chart-row"><div className="report-chart-label"><span>{row.status}</span><strong>{row.count}</strong></div><div className="report-chart-track"><span className="report-chart-bar status" style={{ width: getChartWidth(row.count, reports.ticketCountsByStatus) }} /></div></div>)}
-            </div>
-          </div>
-          <div className="institutional-card report-activity-card">
-            <h3>Recent Ticket Activity by Requester Department</h3>
-            <div className="list-stack">
-              {groupedRecentTickets.map((departmentGroup) => (
-                <section key={departmentGroup.name} className="ticket-department-group">
-                  <button type="button" className="ticket-department-heading" onClick={() => toggleRequesterDepartment(departmentGroup.name)} aria-expanded={expandedRequesterDepartments[departmentGroup.name] === true}>
-                    <span className="ticket-folder-icon" aria-hidden="true" />
-                    <span>{departmentGroup.name}</span>
-                    <span className="ticket-department-count">{departmentGroup.tickets.length}</span>
-                  </button>
-                  {expandedRequesterDepartments[departmentGroup.name] === true && (
-                    <div className="ticket-department-contents">
-                      {departmentGroup.tickets.map((ticket) => (
-                        <div key={ticket.id} style={{ padding: '0.75rem 0', borderBottom: '1px solid #f0f0f0' }}>
-                          <div><strong>{getCompleteTicketCode(ticket)} · {ticket.subject}</strong></div>
-                          <div>Status: {ticket.status}</div>
-                          <div>Routed department: {ticket.Department?.name || 'N/A'}</div>
-                          <div>Requester: {ticket.User?.name || ticket.User?.email || 'N/A'}</div>
-                          <div className="small-muted">Created: {new Date(ticket.created_at).toLocaleString()}</div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </section>
+            <h3>Resolved vs unresolved by department</h3>
+            <div className="report-chart" aria-label="Tickets by department">
+              {reports.ticketsByDepartmentStatus.map((row) => (
+                <div key={row.department_id || 'unassigned'} className="report-department-status-row"><div className="report-chart-label"><span>{row.department_name}</span><strong>{row.resolved} resolved / {row.unresolved} unresolved</strong></div><small>Closed or resolved: {row.resolved} · Open or pending: {row.unresolved}</small></div>
               ))}
             </div>
           </div>
