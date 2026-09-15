@@ -6,6 +6,39 @@ import LogoutButton from './LogoutButton';
 import HeaderProfile from './HeaderProfile';
 import SidebarProfile from './SidebarProfile';
 
+const getTicketPrefix = (departmentName) => {
+  const normalizedName = String(departmentName || '').toLowerCase();
+  const prefixes = [
+    ['computer science', 'CS'],
+    ['cs department', 'CS'],
+    ['college of nursing', 'NU'],
+    ['nursing', 'NU'],
+    ['college of criminology', 'CR'],
+    ['criminology', 'CR'],
+    ['basic education', 'BE'],
+    ['business administration', 'CBA'],
+    ['accountancy', 'CBA'],
+    ['hospitality management', 'HM'],
+    ['physical therapy', 'PT'],
+    ['education', 'ED'],
+    ['maintenance', 'MT'],
+    ['clinic', 'CL'],
+    ['accounting', 'AC'],
+    ['guidance', 'GU'],
+    ['library', 'LI'],
+    ['student affairs', 'OSA'],
+    ['information technology', 'IT'],
+  ];
+  return prefixes.find(([name]) => normalizedName.includes(name))?.[1]
+    || normalizedName.replace(/[^a-z]/g, '').slice(0, 3).toUpperCase()
+    || 'GEN';
+};
+
+const getCompleteTicketCode = (ticket) => {
+  if (/^[A-Z]+-\d{4}$/.test(ticket.ticket_code || '')) return ticket.ticket_code;
+  return `${getTicketPrefix(ticket.Department?.name)}-${String(ticket.id).padStart(4, '0')}`;
+};
+
 function AdminReportsPage() {
   const { token, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -226,7 +259,7 @@ function AdminReportsPage() {
                     <div className="ticket-department-contents">
                       {departmentGroup.tickets.map((ticket) => (
                         <div key={ticket.id} style={{ padding: '0.75rem 0', borderBottom: '1px solid #f0f0f0' }}>
-                          <div><strong>{ticket.ticket_code || `#${ticket.id}`} · {ticket.subject}</strong></div>
+                          <div><strong>{getCompleteTicketCode(ticket)} · {ticket.subject}</strong></div>
                           <div>Status: {ticket.status}</div>
                           <div>Routed department: {ticket.Department?.name || 'N/A'}</div>
                           <div>Requester: {ticket.User?.name || ticket.User?.email || 'N/A'}</div>
@@ -259,7 +292,7 @@ function AdminReportsPage() {
                   <tr><td colSpan="6" className="small-muted">No ticket activity</td></tr>
                 ) : reports.recentTickets.map((ticket) => (
                   <tr key={ticket.id}>
-                    <td>{ticket.ticket_code || `#${ticket.id}`}</td>
+                    <td>{getCompleteTicketCode(ticket)}</td>
                     <td>{new Date(ticket.created_at).toLocaleDateString()}</td>
                     <td><span className={`report-status ${ticket.status}`}>{ticket.status}</span></td>
                     <td>{ticket.Department?.name || 'Unassigned'}</td>
