@@ -1001,6 +1001,20 @@ button, input, select, textarea {
   background: rgba(255,255,255,0.16);
   text-decoration: none;
 }
+.header-nav-button {
+  color: white;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.header-nav-button:hover,
+.header-nav-button[aria-expanded="true"] {
+  background: rgba(255,255,255,0.16);
+}
 .profile-section-header {
   display: flex;
   align-items: center;

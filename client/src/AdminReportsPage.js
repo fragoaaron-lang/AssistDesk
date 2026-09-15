@@ -45,6 +45,8 @@ function AdminReportsPage() {
   const [reports, setReports] = useState(null);
   const [message, setMessage] = useState('');
   const [expandedRequesterDepartments, setExpandedRequesterDepartments] = useState({});
+  const [showUserDirectory, setShowUserDirectory] = useState(false);
+  const [expandedUserRoles, setExpandedUserRoles] = useState({});
 
   const loadReports = async () => {
     try {
@@ -77,6 +79,19 @@ function AdminReportsPage() {
       [departmentName]: current[departmentName] !== true,
     }));
   };
+
+  const toggleUserRole = (roleName) => {
+    setExpandedUserRoles((current) => ({
+      ...current,
+      [roleName]: current[roleName] !== true,
+    }));
+  };
+
+  const userRoleGroups = ['student', 'faculty', 'staff'].map((roleName) => ({
+    name: roleName,
+    label: roleName.charAt(0).toUpperCase() + roleName.slice(1),
+    users: (reports?.users || []).filter((directoryUser) => directoryUser.role === roleName),
+  }));
 
   const getChartWidth = (value, rows) => {
     const maximum = Math.max(...rows.map((row) => Number(row.count) || 0), 1);
@@ -131,6 +146,9 @@ function AdminReportsPage() {
             {user?.role === 'admin' && (
               <>
                 <a href="/admin/reports">Data Analytics</a>
+                <button type="button" className="header-nav-button" onClick={() => setShowUserDirectory((current) => !current)} aria-expanded={showUserDirectory}>
+                  Users
+                </button>
               </>
             )}
           </div>
@@ -154,6 +172,9 @@ function AdminReportsPage() {
             {user?.role === 'admin' && (
               <>
                 <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Data Analytics</a>
+                <button type="button" className="header-nav-button" onClick={() => { setShowUserDirectory((current) => !current); setMobileMenuOpen(false); }} aria-expanded={showUserDirectory}>
+                  Users
+                </button>
               </>
             )}
           </div>
@@ -169,6 +190,54 @@ function AdminReportsPage() {
           </div>
         </div>
         {message && <p>{message}</p>}
+
+        {showUserDirectory && (
+          <section className="institutional-card user-directory-card">
+            <div className="report-card-heading">
+              <div>
+                <h3>User directory</h3>
+                <span>Open a role folder to view its users.</span>
+              </div>
+            </div>
+            <div className="list-stack">
+              {userRoleGroups.map((roleGroup) => (
+                <section key={roleGroup.name} className="ticket-department-group">
+                  <button type="button" className="ticket-department-heading" onClick={() => toggleUserRole(roleGroup.name)} aria-expanded={expandedUserRoles[roleGroup.name] === true}>
+                    <span className="ticket-folder-icon" aria-hidden="true" />
+                    <span>{roleGroup.label}</span>
+                    <span className="ticket-department-count">{roleGroup.users.length}</span>
+                  </button>
+                  {expandedUserRoles[roleGroup.name] === true && (
+                    <div className="report-table-scroll">
+                      <table className="report-table">
+                        <thead>
+                          <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Department</th>
+                            {roleGroup.name === 'student' && <th>Student Number</th>}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {roleGroup.users.length === 0 ? (
+                            <tr><td colSpan={roleGroup.name === 'student' ? 4 : 3} className="small-muted">No users in this group</td></tr>
+                          ) : roleGroup.users.map((directoryUser) => (
+                            <tr key={directoryUser.id}>
+                              <td>{directoryUser.name || 'Unknown'}</td>
+                              <td>{directoryUser.email}</td>
+                              <td>{directoryUser.Department?.name || 'Unassigned'}</td>
+                              {roleGroup.name === 'student' && <td>{directoryUser.student_number || 'N/A'}</td>}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </section>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="report-visual-grid">
           <div className="institutional-card report-trend-card">

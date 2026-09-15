@@ -45,6 +45,13 @@ exports.getReports = async (req, res) => {
       raw: true,
     });
 
+    const users = await User.findAll({
+      attributes: ['id', 'name', 'email', 'role', 'student_number'],
+      where: { role: { [Op.in]: ['student', 'faculty', 'staff'] } },
+      include: [{ model: Department, attributes: ['name'] }],
+      order: [['role', 'ASC'], ['name', 'ASC']],
+    });
+
     const requesterCounts = await Ticket.findAll({
       attributes: [
         'user_id',
@@ -91,6 +98,7 @@ exports.getReports = async (req, res) => {
       ticketCountsByStatus,
       ticketCountsByConcern,
       usersByRole,
+      users,
       ticketCountsByRequester,
       recentTickets,
       monthlyTicketCounts,
