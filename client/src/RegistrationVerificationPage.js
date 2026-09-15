@@ -123,7 +123,7 @@ function RegistrationVerificationPage() {
           </div>
           <p className="auth-kicker">Secure registration</p>
           <h2>Verify your identity</h2>
-          <p>Upload a valid Tomas Claudio Colleges (TCC) school ID first, then center your face in the guide. Registration completes only when the ID is valid and both images match.</p>
+          <p>Upload a valid Tomas Claudio Colleges (TCC) school ID first. The name and student number must match your registration form, then center your face in the guide.</p>
         </div>
         <div className="auth-form verification-form">
           <div className={`verification-step ${step === 'id' ? 'active' : 'complete'}`}>

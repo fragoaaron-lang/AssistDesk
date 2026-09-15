@@ -47,6 +47,16 @@ const STAFF_DEPARTMENTS = [
 ];
 const TCC_INSTITUTION_NAMES = ['tcc', 'tomas claudio colleges'];
 
+const normalizeIdentityName = (value) => String(value || '')
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, ' ')
+  .trim()
+  .replace(/\s+/g, ' ');
+
+const normalizeStudentNumber = (value) => String(value || '')
+  .toUpperCase()
+  .replace(/[^A-Z0-9]/g, '');
+
 const validatePassword = (password) => {
   if (!PASSWORD_POLICY.test(password)) {
     return 'Password must be at least 8 characters long and include an uppercase letter, lowercase letter, number, and special character.';
@@ -60,7 +70,7 @@ const signToken = (user) =>
     expiresIn: JWT_EXPIRES_IN,
   });
 
-const verifyIdentity = async ({ idDocument, selfie }) => {
+const verifyIdentity = async ({ idDocument, selfie, expectedName, expectedStudentNumber }) => {
   const verificationUrl = process.env.FACE_VERIFICATION_URL;
   if (!verificationUrl) {
     return { available: false, matched: false };
@@ -69,7 +79,12 @@ const verifyIdentity = async ({ idDocument, selfie }) => {
   const response = await fetch(verificationUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id_document: idDocument, selfie }),
+    body: JSON.stringify({
+      id_document: idDocument,
+      selfie,
+      expected_name: expectedName,
+      expected_student_number: expectedStudentNumber || null,
+    }),
   });
 
   if (!response.ok) {
@@ -78,9 +93,15 @@ const verifyIdentity = async ({ idDocument, selfie }) => {
 
   const result = await response.json();
   const institution = String(result.institution || result.school || '').trim().toLowerCase();
+  const nameMatches = normalizeIdentityName(result.id_name || result.document_name)
+    === normalizeIdentityName(expectedName);
+  const studentNumberMatches = !expectedStudentNumber
+    || normalizeStudentNumber(result.id_student_number || result.document_student_number)
+      === normalizeStudentNumber(expectedStudentNumber);
   return {
     available: true,
     schoolIdValid: result.id_valid === true && TCC_INSTITUTION_NAMES.includes(institution),
+    registrationDetailsMatch: nameMatches && studentNumberMatches,
     matched: result.match === true && Number(result.confidence || 0) >= 0.8,
   };
 };
@@ -179,7 +200,12 @@ exports.verifyRegistration = async (req, res) => {
 
     let verificationResult;
     try {
-      verificationResult = await verifyIdentity({ idDocument: id_document, selfie });
+      verificationResult = await verifyIdentity({
+        idDocument: id_document,
+        selfie,
+        expectedName: user.name,
+        expectedStudentNumber: user.student_number,
+      });
     } catch (error) {
       console.error('Identity provider error:', error.message);
       return res.status(502).json({ message: 'Identity verification is temporarily unavailable. Please try again.' });
@@ -192,6 +218,11 @@ exports.verifyRegistration = async (req, res) => {
     if (!verificationResult.schoolIdValid) {
       await user.update({ account_status: 'verification_failed', facial_id: null, verification_token: null });
       return res.status(422).json({ message: 'Only a valid Tomas Claudio Colleges (TCC) school ID is accepted. Registration was not completed.' });
+    }
+
+    if (!verificationResult.registrationDetailsMatch) {
+      await user.update({ account_status: 'verification_failed', facial_id: null, verification_token: null });
+      return res.status(422).json({ message: 'The name and student number on the TCC ID must exactly match the registration details. Registration was not completed.' });
     }
 
     if (!verificationResult.matched) {
