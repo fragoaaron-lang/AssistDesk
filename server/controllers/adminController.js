@@ -1,5 +1,6 @@
 const { User, Department, Ticket, Announcement } = require('../models');
 const { notifyAdmins } = require('../utils/socket');
+const { addTicketNumber } = require('../utils/ticketNumber');
 const { Op } = require('sequelize');
 
 exports.getReports = async (req, res) => {
@@ -66,6 +67,7 @@ exports.getReports = async (req, res) => {
       limit: 100,
       include: [{ model: Department }, { model: User, include: [{ model: Department }] }],
     });
+    recentTickets.forEach((ticket) => addTicketNumber(ticket));
 
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
