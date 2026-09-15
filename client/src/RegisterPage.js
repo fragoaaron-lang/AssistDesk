@@ -162,7 +162,7 @@ function RegisterPage({ modal = false, onSwitch }) {
               <>
                 {role === 'student' && <input className="institutional-input" type="text" value={studentNumber} onChange={(e) => setStudentNumber(e.target.value)} placeholder="Student number (2026-XXXXX)" pattern="[0-9]{4}-[0-9]{5}" maxLength="10" required />}
                 <select className="institutional-select" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} required>
-                  <option value="">{role === 'faculty' ? 'Select your college or Basic Education department' : role === 'staff' ? 'Select your working department' : 'Select your department'}</option>
+                  <option value="">Select a department</option>
                   {availableDepartments.map((department) => (
                     <option key={department.id} value={department.id}>{getDepartmentDisplayName(department)}</option>
                   ))}
