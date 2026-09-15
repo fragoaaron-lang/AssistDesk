@@ -2578,27 +2578,27 @@ body.dark-mode .map-ticket-detail-close {
   justify-content: center;
   align-items: center;
   width: fit-content;
-  min-height: 32px;
-  margin-top: 4px;
-  padding: 6px 10px;
-  border: 1px solid #76bfc1;
-  border-radius: 8px;
-  background: #ffffff;
-  color: var(--teal);
+  min-height: 26px;
+  margin-top: 2px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: var(--teal);
+  color: #ffffff;
   cursor: pointer;
 }
 
 .ticket-image-select--full {
-  width: 100%;
-  min-height: 42px;
-  margin-top: 8px;
-  border-radius: 10px;
+  width: fit-content;
+  min-height: 26px;
+  margin-top: 4px;
+  border-radius: 7px;
   justify-content: center;
   text-align: center;
 }
 
 .ticket-image-select span {
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   font-weight: 800;
 }
 
