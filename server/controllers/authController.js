@@ -25,6 +25,26 @@ const PASSWORD_POLICY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const STUDENT_NUMBER_PATTERN = /^(\d{4})-\d{5}$/;
 const PUBLIC_ROLES = ['student', 'faculty', 'staff'];
+const FACULTY_DEPARTMENTS = [
+  'Basic Education Department',
+  'College of Nursing',
+  'CS',
+  'CBA',
+  'CHARM',
+  'College of Criminology',
+  'College of Physical Therapy',
+  'Education Department',
+];
+const STAFF_DEPARTMENTS = [
+  'Maintenance Department',
+  'Accounting Department',
+  'Registrar Department',
+  'Library',
+  'Guidance',
+  'Office of Student Affairs',
+  'Clinic',
+  'IT Department',
+];
 
 const validatePassword = (password) => {
   if (!PASSWORD_POLICY.test(password)) {
@@ -59,12 +79,7 @@ exports.register = async (req, res) => {
       return res.status(403).json({ message: 'Administrator accounts are created by the system developer.' });
     }
     let departmentId = null;
-    if (role === 'student') {
-      const normalizedStudentNumber = String(student_number || '').trim();
-      const studentNumberMatch = normalizedStudentNumber.match(STUDENT_NUMBER_PATTERN);
-      if (!studentNumberMatch || Number(studentNumberMatch[1]) > new Date().getFullYear()) {
-        return res.status(400).json({ message: 'Student number must use a valid academic year. It should follow the format 2026-XXXXX.' });
-      }
+    if (role === 'student' || role === 'faculty' || role === 'staff') {
       departmentId = Number(department_id);
       if (!Number.isInteger(departmentId) || departmentId <= 0) {
         return res.status(400).json({ message: 'Please select your department.' });
@@ -72,6 +87,20 @@ exports.register = async (req, res) => {
       const department = await Department.findByPk(departmentId);
       if (!department) {
         return res.status(400).json({ message: 'Selected department is invalid.' });
+      }
+      if (role === 'faculty' && !FACULTY_DEPARTMENTS.includes(department.name)) {
+        return res.status(400).json({ message: 'Faculty must select a college or Basic Education department.' });
+      }
+      if (role === 'staff' && !STAFF_DEPARTMENTS.includes(department.name)) {
+        return res.status(400).json({ message: 'Staff must select a working department.' });
+      }
+    }
+
+    if (role === 'student') {
+      const normalizedStudentNumber = String(student_number || '').trim();
+      const studentNumberMatch = normalizedStudentNumber.match(STUDENT_NUMBER_PATTERN);
+      if (!studentNumberMatch || Number(studentNumberMatch[1]) > new Date().getFullYear()) {
+        return res.status(400).json({ message: 'Student number must use a valid academic year. It should follow the format 2026-XXXXX.' });
       }
     }
     const passwordError = validatePassword(password);

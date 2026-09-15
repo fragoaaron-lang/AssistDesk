@@ -23,6 +23,28 @@ const fallbackDepartments = [
   { id: 14, name: 'Education Department', display_name: 'College of Education' },
 ];
 
+const facultyDepartmentNames = [
+  'basic education department',
+  'college of nursing',
+  'cs',
+  'cba',
+  'charm',
+  'college of criminology',
+  'college of physical therapy',
+  'education department',
+];
+
+const staffDepartmentNames = [
+  'maintenance department',
+  'accounting department',
+  'registrar department',
+  'library',
+  'guidance',
+  'office of student affairs',
+  'clinic',
+  'it department',
+];
+
 const getDepartmentDisplayName = (department) => {
   const normalizedName = String(department?.name || '').toLowerCase();
   if (['cs', 'computer science department', 'college of computer studies'].includes(normalizedName)) {
@@ -38,6 +60,16 @@ const getDepartmentDisplayName = (department) => {
     return 'College of Education';
   }
   return department?.display_name || department?.name;
+};
+
+const getDepartmentsForRole = (allDepartments, selectedRole) => {
+  if (selectedRole === 'faculty') {
+    return allDepartments.filter((department) => facultyDepartmentNames.includes(String(department.name || '').toLowerCase()));
+  }
+  if (selectedRole === 'staff') {
+    return allDepartments.filter((department) => staffDepartmentNames.includes(String(department.name || '').toLowerCase()));
+  }
+  return allDepartments;
 };
 
 function RegisterPage({ modal = false, onSwitch }) {
@@ -57,6 +89,7 @@ function RegisterPage({ modal = false, onSwitch }) {
   const [message, setMessage] = useState('');
   const { register } = useAuth();
   const navigate = useNavigate();
+  const availableDepartments = getDepartmentsForRole(departments, role);
 
   useEffect(() => {
     axios.get(`${API_BASE_URL}/api/catalog/departments`)
@@ -92,9 +125,14 @@ function RegisterPage({ modal = false, onSwitch }) {
       }
     }
 
+    if (role !== 'student' && !departmentId) {
+      setMessage('Please select your department.');
+      return;
+    }
+
     try {
       const name = `${firstName.trim()} ${middleInitial.toUpperCase()}. ${lastName.trim()}`;
-      await register(name, email, password, role, role === 'student' ? departmentId : null, studentNumber, facialId);
+      await register(name, email, password, role, departmentId, studentNumber, facialId);
       navigate('/dashboard');
     } catch (error) {
       setMessage(error.response?.data?.message || 'Registration failed.');
@@ -120,12 +158,12 @@ function RegisterPage({ modal = false, onSwitch }) {
               <input className="institutional-input" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" required />
             </div>
             <input className="institutional-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" required />
-            {role === 'student' && (
+            {role !== 'admin' && (
               <>
-                <input className="institutional-input" type="text" value={studentNumber} onChange={(e) => setStudentNumber(e.target.value)} placeholder="Student number (2026-XXXXX)" pattern="[0-9]{4}-[0-9]{5}" maxLength="10" required />
+                {role === 'student' && <input className="institutional-input" type="text" value={studentNumber} onChange={(e) => setStudentNumber(e.target.value)} placeholder="Student number (2026-XXXXX)" pattern="[0-9]{4}-[0-9]{5}" maxLength="10" required />}
                 <select className="institutional-select" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} required>
-                  <option value="">Select your department</option>
-                  {departments.map((department) => (
+                  <option value="">{role === 'faculty' ? 'Select your college or Basic Education department' : role === 'staff' ? 'Select your working department' : 'Select your department'}</option>
+                  {availableDepartments.map((department) => (
                     <option key={department.id} value={department.id}>{getDepartmentDisplayName(department)}</option>
                   ))}
                 </select>
@@ -140,7 +178,7 @@ function RegisterPage({ modal = false, onSwitch }) {
               <button type="button" className={`password-visibility ${showConfirmPassword ? 'visible' : ''}`} onClick={() => setShowConfirmPassword((visible) => !visible)} aria-label={showConfirmPassword ? 'Hide confirmed password' : 'Show confirmed password'}><span className="password-eye" aria-hidden="true" /></button>
             </div>
             <p className="helper-text">Use 8+ characters with uppercase, lowercase, number, and symbol.</p>
-            <select className="institutional-select" value={role} onChange={(e) => { setRole(e.target.value); if (e.target.value !== 'student') setDepartmentId(''); }}>
+            <select className="institutional-select" value={role} onChange={(e) => { setRole(e.target.value); setDepartmentId(''); }}>
               <option value="student">Student</option>
               <option value="faculty">Faculty</option>
               <option value="staff">Staff</option>
