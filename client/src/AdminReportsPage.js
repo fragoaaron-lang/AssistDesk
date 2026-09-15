@@ -90,9 +90,13 @@ function AdminReportsPage() {
   const userRoleGroups = ['student', 'faculty', 'staff'].map((roleName) => ({
     name: roleName,
     label: roleName.charAt(0).toUpperCase() + roleName.slice(1),
-    users: (reports?.users || []).filter((directoryUser) => directoryUser.role === roleName && (showTerminatedUsers
-      ? directoryUser.account_status === 'terminated'
-      : directoryUser.account_status !== 'terminated')),
+    users: (reports?.users || []).filter((directoryUser) => directoryUser.role === roleName && directoryUser.account_status !== 'terminated'),
+  }));
+
+  const terminatedRoleGroups = ['student', 'faculty', 'staff'].map((roleName) => ({
+    name: roleName,
+    label: roleName.charAt(0).toUpperCase() + roleName.slice(1),
+    users: (reports?.users || []).filter((directoryUser) => directoryUser.role === roleName && directoryUser.account_status === 'terminated'),
   }));
 
   const getChartWidth = (value, rows) => {
@@ -180,25 +184,22 @@ function AdminReportsPage() {
         {message && <p>{message}</p>}
 
         {showUserDirectory && (
-          <section className={`institutional-card user-directory-card ${showTerminatedUsers ? 'user-directory-archive-modal' : ''}`}>
+          <section className="institutional-card user-directory-card">
             <div className="report-card-heading">
               <div>
-                <h3>{showTerminatedUsers ? 'Terminated accounts' : 'User directory'}</h3>
-                <span>{showTerminatedUsers ? 'Archived accounts organized by role.' : 'Open a role folder to view its users.'}</span>
+                <h3>User directory</h3>
+                <span>Open a role folder to view its active users.</span>
               </div>
               <div className="user-directory-header-actions">
                 <button
                   type="button"
                   className={`user-directory-archive-button ${showTerminatedUsers ? 'is-active' : ''}`}
                   onClick={() => setShowTerminatedUsers((current) => !current)}
-                  aria-label={showTerminatedUsers ? 'Return to active users' : 'Open terminated accounts archive'}
-                  title={showTerminatedUsers ? 'Return to active users' : 'Open terminated accounts archive'}
+                  aria-label="Open terminated accounts archive"
+                  title="Open terminated accounts archive"
                 >
                   🗑
                 </button>
-                {showTerminatedUsers && (
-                  <button type="button" className="user-directory-close-button" onClick={() => setShowTerminatedUsers(false)} aria-label="Close terminated accounts">×</button>
-                )}
               </div>
             </div>
             <div className="list-stack">
@@ -232,11 +233,52 @@ function AdminReportsPage() {
                               <td>{directoryUser.Department?.name || 'Unassigned'}</td>
                               {roleGroup.name === 'student' && <td>{directoryUser.student_number || 'N/A'}</td>}
                               <td>{directoryUser.account_status || 'active'}</td>
-                              <td>{showTerminatedUsers ? 'Archived' : (
-                                <button type="button" className="user-terminate-button" onClick={() => terminateUser(directoryUser)} disabled={deletingUserId === directoryUser.id}>
-                                  {deletingUserId === directoryUser.id ? 'Terminating...' : 'Terminate'}
-                                </button>
-                              )}</td>
+                              <td><button type="button" className="user-terminate-button" onClick={() => terminateUser(directoryUser)} disabled={deletingUserId === directoryUser.id}>
+                                {deletingUserId === directoryUser.id ? 'Terminating...' : 'Terminate'}
+                              </button></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </section>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {showUserDirectory && showTerminatedUsers && (
+          <section className="institutional-card user-directory-archive-modal" role="dialog" aria-modal="true" aria-labelledby="terminated-accounts-title">
+            <div className="report-card-heading">
+              <div>
+                <h3 id="terminated-accounts-title">Terminated accounts</h3>
+                <span>Archived accounts organized by role.</span>
+              </div>
+              <button type="button" className="user-directory-close-button" onClick={() => setShowTerminatedUsers(false)} aria-label="Close terminated accounts">×</button>
+            </div>
+            <div className="list-stack">
+              {terminatedRoleGroups.map((roleGroup) => (
+                <section key={roleGroup.name} className="ticket-department-group">
+                  <button type="button" className="ticket-department-heading" onClick={() => toggleUserRole(`terminated-${roleGroup.name}`)} aria-expanded={expandedUserRoles[`terminated-${roleGroup.name}`] === true}>
+                    <span className="ticket-folder-icon" aria-hidden="true" />
+                    <span>{roleGroup.label}</span>
+                    <span className="ticket-department-count">{roleGroup.users.length}</span>
+                  </button>
+                  {expandedUserRoles[`terminated-${roleGroup.name}`] === true && (
+                    <div className="report-table-scroll">
+                      <table className="report-table">
+                        <thead><tr><th>Name</th><th>Email</th><th>Department</th>{roleGroup.name === 'student' && <th>Student Number</th>}<th>Status</th></tr></thead>
+                        <tbody>
+                          {roleGroup.users.length === 0 ? (
+                            <tr><td colSpan={roleGroup.name === 'student' ? 5 : 4} className="small-muted">No terminated users in this group</td></tr>
+                          ) : roleGroup.users.map((directoryUser) => (
+                            <tr key={directoryUser.id}>
+                              <td>{directoryUser.name || 'Unknown'}</td>
+                              <td>{directoryUser.email}</td>
+                              <td>{directoryUser.Department?.name || 'Unassigned'}</td>
+                              {roleGroup.name === 'student' && <td>{directoryUser.student_number || 'N/A'}</td>}
+                              <td>Terminated</td>
                             </tr>
                           ))}
                         </tbody>
