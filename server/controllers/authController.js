@@ -45,6 +45,7 @@ const STAFF_DEPARTMENTS = [
   'Clinic',
   'IT Department',
 ];
+const TCC_INSTITUTION_NAMES = ['tcc', 'tomas claudio colleges'];
 
 const validatePassword = (password) => {
   if (!PASSWORD_POLICY.test(password)) {
@@ -76,8 +77,10 @@ const verifyIdentity = async ({ idDocument, selfie }) => {
   }
 
   const result = await response.json();
+  const institution = String(result.institution || result.school || '').trim().toLowerCase();
   return {
     available: true,
+    schoolIdValid: result.id_valid === true && TCC_INSTITUTION_NAMES.includes(institution),
     matched: result.match === true && Number(result.confidence || 0) >= 0.8,
   };
 };
@@ -186,9 +189,14 @@ exports.verifyRegistration = async (req, res) => {
       return res.status(503).json({ message: 'Identity verification is not configured. Registration cannot be completed.' });
     }
 
+    if (!verificationResult.schoolIdValid) {
+      await user.update({ account_status: 'verification_failed', facial_id: null, verification_token: null });
+      return res.status(422).json({ message: 'Only a valid Tomas Claudio Colleges (TCC) school ID is accepted. Registration was not completed.' });
+    }
+
     if (!verificationResult.matched) {
       await user.update({ account_status: 'verification_failed', facial_id: null, verification_token: null });
-      return res.status(422).json({ message: 'The ID and facial image do not appear to belong to the same person. Registration was not completed.' });
+      return res.status(422).json({ message: 'The TCC ID and facial image do not appear to belong to the same person. Registration was not completed.' });
     }
 
     await user.update({ account_status: 'active', facial_id: selfie, verification_token: null });

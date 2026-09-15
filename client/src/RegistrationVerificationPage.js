@@ -123,11 +123,11 @@ function RegistrationVerificationPage() {
           </div>
           <p className="auth-kicker">Secure registration</p>
           <h2>Verify your identity</h2>
-          <p>Upload your ID first, then center your face in the guide. Registration completes only when both images match.</p>
+          <p>Upload a valid Tomas Claudio Colleges (TCC) school ID first, then center your face in the guide. Registration completes only when the ID is valid and both images match.</p>
         </div>
         <div className="auth-form verification-form">
           <div className={`verification-step ${step === 'id' ? 'active' : 'complete'}`}>
-            <span>1</span><strong>Upload your ID</strong>
+            <span>1</span><strong>Upload your TCC school ID</strong>
             {step === 'id' ? <label className="secondary-action-button verification-upload">Choose ID image<input type="file" accept="image/*" onChange={handleIdUpload} /></label> : <small>ID image ready</small>}
           </div>
           {step !== 'id' && step !== 'failed' && (
