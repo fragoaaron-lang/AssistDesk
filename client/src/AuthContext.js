@@ -104,7 +104,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const resendEmailVerification = async (email) => {
-    const response = await axios.post(`${API_BASE_URL}/api/auth/resend-email-verification`, { email });
+    const response = await axios.post(`${API_BASE_URL}/api/auth/resend-email-verification`, { email }, { timeout: 20000 });
     return response.data;
   };
 

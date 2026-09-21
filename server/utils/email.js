@@ -25,6 +25,9 @@ const createTransporter = () => {
     secure: String(process.env.MAIL_SECURE || 'false') === 'true',
     auth: { user: username, pass: password },
     tls: { rejectUnauthorized: false },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
   });
 };
 

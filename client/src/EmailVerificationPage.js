@@ -49,7 +49,10 @@ function EmailVerificationPage() {
       setMessage(response.message || 'Check your email for a new verification link.');
     } catch (error) {
       setResendState('error');
-      setMessage(error.response?.data?.message || 'Unable to resend the verification email.');
+      const timeoutMessage = error.code === 'ECONNABORTED'
+        ? 'The email server took too long to respond. Check the server email settings and try again.'
+        : error.response?.data?.message || 'Unable to resend the verification email.';
+      setMessage(timeoutMessage);
     }
   };
 
