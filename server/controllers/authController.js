@@ -18,6 +18,9 @@ const sanitizeUser = (user) => ({
   student_number: user.student_number || null,
   profile_picture: user.profile_picture || null,
   facial_id: user.facial_id || null,
+  ...(user.account_status === 'pending_verification' && user.verification_token
+    ? { verification_token: user.verification_token }
+    : {}),
   created_at: user.created_at,
 });
 
@@ -264,7 +267,13 @@ exports.login = async (req, res) => {
       return res.status(403).json({ message: 'This account has been terminated. Please contact an administrator for assistance.' });
     }
 
-    if (user.account_status !== 'active') {
+    const requiresIdentityVerification = ['student', 'faculty', 'staff'].includes(user.role) && !user.facial_id;
+    if (user.account_status === 'pending_verification' || (user.account_status === 'active' && requiresIdentityVerification)) {
+      if (!user.verification_token) {
+        user.verification_token = crypto.randomBytes(32).toString('hex');
+      }
+      await user.update({ account_status: 'pending_verification', verification_token: user.verification_token });
+    } else if (user.account_status !== 'active') {
       return res.status(403).json({ message: 'This account has not completed identity verification.' });
     }
 
@@ -286,6 +295,14 @@ exports.getMe = async (req, res) => {
     const user = await User.findByPk(req.user.id, { include: [{ model: Department }] });
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
+    }
+
+    const requiresIdentityVerification = ['student', 'faculty', 'staff'].includes(user.role) && !user.facial_id;
+    if (user.account_status === 'active' && requiresIdentityVerification) {
+      await user.update({
+        account_status: 'pending_verification',
+        verification_token: user.verification_token || crypto.randomBytes(32).toString('hex'),
+      });
     }
 
     return res.json({ user: sanitizeUser(user) });

@@ -19,7 +19,12 @@ const ProtectedRoute = ({ children, allowedRoles = [], allowIncompleteVerificati
   }
 
   const requiresIdentityVerification = ['student', 'faculty', 'staff'].includes(user.role);
-  if (!allowIncompleteVerification && requiresIdentityVerification && !user.facial_id) {
+  const identityIncomplete = user.account_status === 'pending_verification' || !user.facial_id;
+  if (!allowIncompleteVerification && requiresIdentityVerification && identityIncomplete) {
+    if (user.verification_token) {
+      return <Navigate to={`/verify-registration/${user.verification_token}`} replace state={{ from: location.pathname }} />;
+    }
+
     return <Navigate to="/profile?setup=identity" replace state={{ from: location.pathname }} />;
   }
 

@@ -75,7 +75,7 @@ function App() {
           <Route
             path="/profile"
             element={
-              <ProtectedRoute allowIncompleteVerification>
+              <ProtectedRoute>
                 <ProfilePage />
               </ProtectedRoute>
             }
