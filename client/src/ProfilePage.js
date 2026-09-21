@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import LogoutButton from './LogoutButton';
 import { API_BASE_URL } from './config';
@@ -54,6 +55,10 @@ const prepareProfilePhoto = (file) => new Promise((resolve, reject) => {
 
 function ProfilePage() {
   const { user, token, updateUserProfile } = useAuth();
+  const [searchParams] = useSearchParams();
+  const needsIdentitySetup = searchParams.get('setup') === 'identity'
+    && ['student', 'faculty', 'staff'].includes(user?.role)
+    && !user?.facial_id;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState(() => getProfilePhotoSource(user));
   const [studentNumber, setStudentNumber] = useState(() => user?.student_number || '');
@@ -404,6 +409,13 @@ function ProfilePage() {
     <div className="app-shell">
       <div className="page-shell">
         <div className={`mobile-menu-backdrop ${mobileMenuOpen ? 'show' : ''}`} onClick={() => setMobileMenuOpen(false)} />
+
+        {needsIdentitySetup && (
+          <div role="alert" style={{ margin: '1rem 0', padding: '1rem', border: '1px solid #d99a2b', background: '#fff7df', color: '#694d03' }}>
+            <strong>Finish identity verification to access your account.</strong>
+            <p style={{ margin: '0.4rem 0 0' }}>Your account is open, but you must upload and save a clear Facial ID image below before using dashboard and support features.</p>
+          </div>
+        )}
 
         <header className="page-header">
           <button

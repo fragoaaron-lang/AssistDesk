@@ -39,8 +39,8 @@ function FacialIdCapture({ value, onChange, onSave }) {
   return (
     <div className="facial-id-capture">
       <div className="facial-id-copy">
-        <strong>Facial ID (optional)</strong>
-        <small>Upload a clear face image for future verification. Live camera capture has been removed from this implementation.</small>
+        <strong>Facial ID</strong>
+        <small>Upload and save a clear face image to complete identity verification. Live camera capture has been removed from this implementation.</small>
       </div>
 
       {value ? (
