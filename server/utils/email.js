@@ -11,10 +11,40 @@ const buildEmailVerificationLink = (token) => {
 };
 
 const sendEmail = async ({ to, subject, html }) => {
+  const brevoApiKey = process.env.BREVO_API_KEY;
+  if (brevoApiKey) {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      signal: AbortSignal.timeout(15000),
+      headers: {
+        accept: 'application/json',
+        'api-key': brevoApiKey,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: {
+          name: process.env.BREVO_FROM_NAME || 'AssistDesk',
+          email: process.env.BREVO_FROM_EMAIL || process.env.MAIL_USER,
+        },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+      }),
+    });
+
+    if (!response.ok) {
+      const responseBody = await response.text();
+      throw new Error(`Brevo email delivery failed (${response.status}): ${responseBody.slice(0, 300)}`);
+    }
+
+    return;
+  }
+
   const resendApiKey = process.env.RESEND_API_KEY;
   if (resendApiKey) {
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
+      signal: AbortSignal.timeout(15000),
       headers: {
         Authorization: `Bearer ${resendApiKey}`,
         'Content-Type': 'application/json',

@@ -133,7 +133,10 @@ function RegisterPage({ modal = false, onSwitch }) {
       const result = await register(name, email, password, role, departmentId, studentNumber);
       navigate('/verify-email');
     } catch (error) {
-      setMessage(error.response?.data?.message || 'Registration failed.');
+      const timeoutMessage = error.code === 'ECONNABORTED'
+        ? 'Registration email delivery timed out. Please try again or contact support.'
+        : error.response?.data?.message || 'Registration failed.';
+      setMessage(timeoutMessage);
     }
   };
 

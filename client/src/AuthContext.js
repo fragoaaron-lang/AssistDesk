@@ -86,7 +86,7 @@ export const AuthProvider = ({ children }) => {
       role,
       department_id: departmentId,
       student_number: studentNumber,
-    });
+    }, { timeout: 25000 });
 
     return response.data;
   };
