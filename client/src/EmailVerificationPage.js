@@ -8,7 +8,7 @@ function EmailVerificationPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [status, setStatus] = useState('verifying');
-  const [message, setMessage] = useState('Verifying your email address...');
+  const [message, setMessage] = useState('Your account is verified. Redirecting to your account...');
   const [email, setEmail] = useState(() => location.state?.email || '');
   const [resendState, setResendState] = useState('idle');
   const startedRef = useRef(false);
@@ -64,7 +64,7 @@ function EmailVerificationPage() {
             <img src="/assistdesk-logo.svg" alt="AssistDesk logo" />
           </div>
           <p className="auth-kicker">Email confirmation</p>
-          <h2>{status === 'waiting' ? 'Check your email' : status === 'verifying' ? 'Verifying your email' : status === 'success' ? 'Email verified' : 'Verification failed'}</h2>
+          <h2>{status === 'waiting' ? 'Check your email' : status === 'error' ? 'Verification failed' : 'Account verified'}</h2>
           <p>{message}</p>
         </div>
         <div className="auth-form">
