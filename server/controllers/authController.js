@@ -166,6 +166,27 @@ exports.verifyEmail = async (req, res) => {
   }
 };
 
+exports.resendEmailVerification = async (req, res) => {
+  try {
+    const normalizedEmail = String(req.body?.email || '').trim().toLowerCase();
+    if (!EMAIL_PATTERN.test(normalizedEmail)) {
+      return res.status(400).json({ message: 'Please provide a valid email address.' });
+    }
+
+    const user = await User.findOne({ where: { email: normalizedEmail } });
+    if (user?.account_status === 'pending_verification') {
+      const verificationToken = user.verification_token || crypto.randomBytes(32).toString('hex');
+      await user.update({ verification_token: verificationToken });
+      await sendEmailVerificationEmail({ to: user.email, token: verificationToken, userName: user.name });
+    }
+
+    return res.json({ message: 'If the account is waiting for verification, a new email has been sent.' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Unable to resend the verification email.' });
+  }
+};
+
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;

@@ -1,13 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 
 function EmailVerificationPage() {
   const { verificationToken } = useParams();
-  const { completeEmailVerification } = useAuth();
+  const { completeEmailVerification, resendEmailVerification } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [status, setStatus] = useState('verifying');
   const [message, setMessage] = useState('Verifying your email address...');
+  const [email, setEmail] = useState(() => location.state?.email || '');
+  const [resendState, setResendState] = useState('idle');
   const startedRef = useRef(false);
 
   useEffect(() => {
@@ -37,6 +40,19 @@ function EmailVerificationPage() {
     return () => { active = false; };
   }, [completeEmailVerification, navigate, verificationToken]);
 
+  const handleResend = async (event) => {
+    event.preventDefault();
+    setResendState('sending');
+    try {
+      const response = await resendEmailVerification(email);
+      setResendState('sent');
+      setMessage(response.message || 'Check your email for a new verification link.');
+    } catch (error) {
+      setResendState('error');
+      setMessage(error.response?.data?.message || 'Unable to resend the verification email.');
+    }
+  };
+
   return (
     <main className="auth-shell">
       <div className="auth-card verification-card">
@@ -49,6 +65,14 @@ function EmailVerificationPage() {
           <p>{message}</p>
         </div>
         <div className="auth-form">
+          {status === 'waiting' && (
+            <form onSubmit={handleResend}>
+              <input className="institutional-input" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email address" required />
+              <button type="submit" className="institutional-btn" disabled={resendState === 'sending'}>
+                {resendState === 'sending' ? 'Sending...' : resendState === 'sent' ? 'Email sent' : 'Resend verification email'}
+              </button>
+            </form>
+          )}
           {status === 'error' && <button type="button" className="institutional-btn" onClick={() => navigate('/')}>Return to sign in</button>}
         </div>
       </div>

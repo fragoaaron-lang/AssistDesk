@@ -35,6 +35,10 @@ function LoginPage({ modal = false, onSwitch }) {
       await new Promise((resolve) => window.setTimeout(resolve, 1200));
       navigate('/dashboard');
     } catch (error) {
+      if (error.response?.status === 403 && error.response?.data?.message === 'Please verify your email address before signing in.') {
+        navigate('/verify-email', { state: { email: email.trim() } });
+        return;
+      }
       setMessage(error.response?.data?.message || 'Login failed.');
     } finally {
       setIsLoading(false);

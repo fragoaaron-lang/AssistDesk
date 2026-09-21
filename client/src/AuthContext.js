@@ -103,6 +103,11 @@ export const AuthProvider = ({ children }) => {
     return { user, token: newToken || null };
   };
 
+  const resendEmailVerification = async (email) => {
+    const response = await axios.post(`${API_BASE_URL}/api/auth/resend-email-verification`, { email });
+    return response.data;
+  };
+
   const logout = async () => {
     const currentName = user?.name || localStorage.getItem('assistdesk_last_user_name');
     if (currentName) {
@@ -126,7 +131,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, completeEmailVerification, logout, updateUserProfile }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, completeEmailVerification, resendEmailVerification, logout, updateUserProfile }}>
       {children}
     </AuthContext.Provider>
   );
