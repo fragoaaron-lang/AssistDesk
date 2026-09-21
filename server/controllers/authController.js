@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { User, Department, PasswordResetToken } = require('../models');
-const { sendPasswordResetEmail } = require('../utils/email');
+const { sendPasswordResetEmail, sendEmailVerificationEmail } = require('../utils/email');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'assistdesk-secret';
 const JWT_EXPIRES_IN = '8h';
@@ -17,10 +17,6 @@ const sanitizeUser = (user) => ({
   department_name: user.role === 'student' ? (user.Department?.name || null) : null,
   student_number: user.student_number || null,
   profile_picture: user.profile_picture || null,
-  facial_id: user.facial_id || null,
-  ...(user.account_status === 'pending_verification' && user.verification_token
-    ? { verification_token: user.verification_token }
-    : {}),
   created_at: user.created_at,
 });
 
@@ -50,16 +46,6 @@ const STAFF_DEPARTMENTS = [
 ];
 const TCC_INSTITUTION_NAMES = ['tcc', 'tomas claudio colleges'];
 
-const normalizeIdentityName = (value) => String(value || '')
-  .toLowerCase()
-  .replace(/[^a-z0-9]+/g, ' ')
-  .trim()
-  .replace(/\s+/g, ' ');
-
-const normalizeStudentNumber = (value) => String(value || '')
-  .toUpperCase()
-  .replace(/[^A-Z0-9]/g, '');
-
 const validatePassword = (password) => {
   if (!PASSWORD_POLICY.test(password)) {
     return 'Password must be at least 8 characters long and include an uppercase letter, lowercase letter, number, and special character.';
@@ -72,42 +58,6 @@ const signToken = (user) =>
   jwt.sign({ id: user.id, role: user.role, department_id: user.department_id || null }, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN,
   });
-
-const verifyIdentity = async ({ idDocument, selfie, expectedName, expectedStudentNumber }) => {
-  const verificationUrl = process.env.FACE_VERIFICATION_URL;
-  if (!verificationUrl) {
-    return { available: false, matched: false };
-  }
-
-  const response = await fetch(verificationUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      id_document: idDocument,
-      selfie,
-      expected_name: expectedName,
-      expected_student_number: expectedStudentNumber || null,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Identity provider returned ${response.status}`);
-  }
-
-  const result = await response.json();
-  const institution = String(result.institution || result.school || '').trim().toLowerCase();
-  const nameMatches = normalizeIdentityName(result.id_name || result.document_name)
-    === normalizeIdentityName(expectedName);
-  const studentNumberMatches = !expectedStudentNumber
-    || normalizeStudentNumber(result.id_student_number || result.document_student_number)
-      === normalizeStudentNumber(expectedStudentNumber);
-  return {
-    available: true,
-    schoolIdValid: result.id_valid === true && TCC_INSTITUTION_NAMES.includes(institution),
-    registrationDetailsMatch: nameMatches && studentNumberMatches,
-    matched: result.match === true && Number(result.confidence || 0) >= 0.8,
-  };
-};
 
 exports.register = async (req, res) => {
   try {
@@ -176,21 +126,25 @@ exports.register = async (req, res) => {
       verification_token: crypto.randomBytes(32).toString('hex'),
     });
 
-    return res.status(201).json({
-      message: 'Registration details saved. Identity verification is required.',
-      verification_token: user.verification_token,
-    });
+    try {
+      await sendEmailVerificationEmail({ to: user.email, token: user.verification_token, userName: user.name });
+    } catch (error) {
+      await user.destroy();
+      throw error;
+    }
+
+    return res.status(201).json({ message: 'Registration saved. Check your email to activate your account.' });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: 'Registration failed.' });
+    return res.status(500).json({ message: error.message || 'Registration failed.' });
   }
 };
 
-exports.verifyRegistration = async (req, res) => {
+exports.verifyEmail = async (req, res) => {
   try {
-    const { verification_token, id_document, selfie } = req.body || {};
-    if (!verification_token || !id_document || !selfie) {
-      return res.status(400).json({ message: 'ID document and facial verification are required.' });
+    const { verification_token } = req.params;
+    if (!verification_token) {
+      return res.status(400).json({ message: 'Email verification token is required.' });
     }
 
     const user = await User.findOne({
@@ -201,46 +155,14 @@ exports.verifyRegistration = async (req, res) => {
       return res.status(400).json({ message: 'This registration session is invalid or has expired.' });
     }
 
-    let verificationResult;
-    try {
-      verificationResult = await verifyIdentity({
-        idDocument: id_document,
-        selfie,
-        expectedName: user.name,
-        expectedStudentNumber: user.student_number,
-      });
-    } catch (error) {
-      console.error('Identity provider error:', error.message);
-      return res.status(502).json({ message: 'Identity verification is temporarily unavailable. Please try again.' });
-    }
-
-    if (!verificationResult.available) {
-      return res.status(503).json({ message: 'Identity verification is not configured. Registration cannot be completed.' });
-    }
-
-    if (!verificationResult.schoolIdValid) {
-      await user.update({ account_status: 'verification_failed', facial_id: null, verification_token: null });
-      return res.status(422).json({ message: 'Only a valid Tomas Claudio Colleges (TCC) school ID is accepted. Registration was not completed.' });
-    }
-
-    if (!verificationResult.registrationDetailsMatch) {
-      await user.update({ account_status: 'verification_failed', facial_id: null, verification_token: null });
-      return res.status(422).json({ message: 'The name and student number on the TCC ID must exactly match the registration details. Registration was not completed.' });
-    }
-
-    if (!verificationResult.matched) {
-      await user.update({ account_status: 'verification_failed', facial_id: null, verification_token: null });
-      return res.status(422).json({ message: 'The TCC ID and facial image do not appear to belong to the same person. Registration was not completed.' });
-    }
-
-    await user.update({ account_status: 'active', facial_id: selfie, verification_token: null });
+    await user.update({ account_status: 'active', verification_token: null });
     await user.reload({ include: [{ model: Department }] });
     const token = signToken(user);
 
-    return res.status(200).json({ message: 'Identity verified. Registration complete.', token, user: sanitizeUser(user) });
+    return res.status(200).json({ message: 'Email verified. Registration complete.', token, user: sanitizeUser(user) });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: 'Unable to complete identity verification.' });
+    return res.status(500).json({ message: 'Unable to verify email address.' });
   }
 };
 
@@ -267,14 +189,10 @@ exports.login = async (req, res) => {
       return res.status(403).json({ message: 'This account has been terminated. Please contact an administrator for assistance.' });
     }
 
-    const requiresIdentityVerification = ['student', 'faculty', 'staff'].includes(user.role) && !user.facial_id;
-    if (user.account_status === 'pending_verification' || (user.account_status === 'active' && requiresIdentityVerification)) {
-      if (!user.verification_token) {
-        user.verification_token = crypto.randomBytes(32).toString('hex');
-      }
-      await user.update({ account_status: 'pending_verification', verification_token: user.verification_token });
+    if (user.account_status === 'pending_verification') {
+      return res.status(403).json({ message: 'Please verify your email address before signing in.' });
     } else if (user.account_status !== 'active') {
-      return res.status(403).json({ message: 'This account has not completed identity verification.' });
+      return res.status(403).json({ message: 'This account is not active.' });
     }
 
     const token = signToken(user);
@@ -295,14 +213,6 @@ exports.getMe = async (req, res) => {
     const user = await User.findByPk(req.user.id, { include: [{ model: Department }] });
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
-    }
-
-    const requiresIdentityVerification = ['student', 'faculty', 'staff'].includes(user.role) && !user.facial_id;
-    if (user.account_status === 'active' && requiresIdentityVerification) {
-      await user.update({
-        account_status: 'pending_verification',
-        verification_token: user.verification_token || crypto.randomBytes(32).toString('hex'),
-      });
     }
 
     return res.json({ user: sanitizeUser(user) });
@@ -452,9 +362,9 @@ exports.deleteAccount = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const { profile_picture, student_number, facial_id } = req.body;
+    const { profile_picture, student_number } = req.body;
 
-    if (profile_picture === undefined && student_number === undefined && facial_id === undefined) {
+    if (profile_picture === undefined && student_number === undefined) {
       return res.status(400).json({ message: 'Profile updates are required.' });
     }
 
@@ -469,15 +379,11 @@ exports.updateProfile = async (req, res) => {
     const nextStudentNumber = student_number === undefined
       ? user.student_number
       : student_number ? String(student_number).trim() : null;
-    const nextFacialId = facial_id === undefined
-      ? user.facial_id
-      : facial_id ? String(facial_id).trim() : null;
-
     if (user.role === 'student' && !nextStudentNumber) {
       return res.status(400).json({ message: 'Student number is required for student accounts.' });
     }
 
-    await user.update({ profile_picture: nextValue, student_number: nextStudentNumber, facial_id: nextFacialId });
+    await user.update({ profile_picture: nextValue, student_number: nextStudentNumber });
 
     return res.json({
       message: 'Profile updated successfully.',

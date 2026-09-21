@@ -52,11 +52,6 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
         defaultValue: null,
       },
-      facial_id: {
-        type: DataTypes.TEXT('medium'),
-        allowNull: true,
-        defaultValue: null,
-      },
       verification_token: {
         type: DataTypes.STRING(128),
         allowNull: true,

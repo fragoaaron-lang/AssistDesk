@@ -5,30 +5,55 @@ const buildResetLink = (token) => {
   return `${baseUrl}/reset-password?token=${encodeURIComponent(token)}`;
 };
 
-const sendPasswordResetEmail = async ({ to, token, userName }) => {
-  const resetLink = buildResetLink(token);
+const buildEmailVerificationLink = (token) => {
+  const baseUrl = (process.env.FRONTEND_URL || process.env.CLIENT_URL || 'https://assist-desk-ebon.vercel.app').replace(/\/$/, '');
+  return `${baseUrl}/verify-email/${encodeURIComponent(token)}`;
+};
+
+const createTransporter = () => {
   const host = process.env.MAIL_HOST;
   const username = process.env.MAIL_USER;
   const password = process.env.MAIL_PASS;
 
   if (!host || !username || !password) {
-    throw new Error('Password reset email is not configured. Set MAIL_HOST, MAIL_USER, and MAIL_PASS.');
+    throw new Error('Email delivery is not configured. Set MAIL_HOST, MAIL_USER, and MAIL_PASS.');
   }
 
-  const transporter = nodemailer.createTransport({
+  return nodemailer.createTransport({
     host,
     port: Number(process.env.MAIL_PORT || 587),
     secure: String(process.env.MAIL_SECURE || 'false') === 'true',
-    auth: {
-      user: username,
-      pass: password,
-    },
-    tls: {
-      rejectUnauthorized: false,
-    },
+    auth: { user: username, pass: password },
+    tls: { rejectUnauthorized: false },
   });
+};
 
-  const fromAddress = process.env.MAIL_FROM || username;
+const sendEmailVerificationEmail = async ({ to, token, userName }) => {
+  const verificationLink = buildEmailVerificationLink(token);
+  const transporter = createTransporter();
+  const fromAddress = process.env.MAIL_FROM || process.env.MAIL_USER;
+
+  await transporter.sendMail({
+    from: fromAddress,
+    to,
+    subject: 'Verify your AssistDesk email address',
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937;">
+        <h2 style="margin-bottom: 12px;">Verify your email address</h2>
+        <p>Hello ${userName || 'there'},</p>
+        <p>Click the button below to verify your email and activate your AssistDesk account.</p>
+        <p><a href="${verificationLink}" style="display: inline-block; background: #0f172a; color: #fff; padding: 10px 16px; text-decoration: none; border-radius: 8px;">Verify email</a></p>
+        <p>If the button does not work, copy and paste this link into your browser:</p>
+        <p>${verificationLink}</p>
+      </div>
+    `,
+  });
+};
+
+const sendPasswordResetEmail = async ({ to, token, userName }) => {
+  const resetLink = buildResetLink(token);
+  const transporter = createTransporter();
+  const fromAddress = process.env.MAIL_FROM || process.env.MAIL_USER;
 
   await transporter.sendMail({
     from: fromAddress,
@@ -54,5 +79,7 @@ const sendPasswordResetEmail = async ({ to, token, userName }) => {
 
 module.exports = {
   sendPasswordResetEmail,
+  sendEmailVerificationEmail,
   buildResetLink,
+  buildEmailVerificationLink,
 };

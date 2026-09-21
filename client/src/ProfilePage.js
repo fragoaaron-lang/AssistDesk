@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import LogoutButton from './LogoutButton';
 import { API_BASE_URL } from './config';
 import HeaderProfile from './HeaderProfile';
-import FacialIdCapture from './FacialIdCapture';
 
 const defaultPrefs = {
   compactMode: false,
@@ -55,10 +53,6 @@ const prepareProfilePhoto = (file) => new Promise((resolve, reject) => {
 
 function ProfilePage() {
   const { user, token, updateUserProfile } = useAuth();
-  const [searchParams] = useSearchParams();
-  const needsIdentitySetup = searchParams.get('setup') === 'identity'
-    && ['student', 'faculty', 'staff'].includes(user?.role)
-    && !user?.facial_id;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState(() => getProfilePhotoSource(user));
   const [studentNumber, setStudentNumber] = useState(() => user?.student_number || '');
@@ -74,7 +68,6 @@ function ProfilePage() {
   const [passwordForm, setPasswordForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
   const [passwordState, setPasswordState] = useState({ status: 'idle', message: '' });
   const [showPasswordEditor, setShowPasswordEditor] = useState(false);
-  const [facialId, setFacialId] = useState(() => user?.facial_id || '');
   const [showPasswordFields, setShowPasswordFields] = useState({ oldPassword: false, newPassword: false, confirmPassword: false });
   const [photoUploadLoading, setPhotoUploadLoading] = useState(false);
   const [saveState, setSaveState] = useState({ status: 'idle', message: '' });
@@ -97,7 +90,6 @@ function ProfilePage() {
       return localStorage.getItem(key) || '';
     })(),
     studentNumber: user?.student_number || '',
-    facialId: user?.facial_id || '',
   }));
 
   useEffect(() => {
@@ -127,10 +119,9 @@ function ProfilePage() {
       storedPrefs = defaultPrefs;
     }
 
-    setSavedSnapshot({ prefs: storedPrefs, photo: storedPhoto, studentNumber: user.student_number || '', facialId: user.facial_id || '' });
+    setSavedSnapshot({ prefs: storedPrefs, photo: storedPhoto, studentNumber: user.student_number || '' });
     setProfilePhoto(storedPhoto);
     setStudentNumber(user.student_number || '');
-    setFacialId(user.facial_id || '');
     setPrefs(storedPrefs);
   }, [user?.id, user?.email]);
 
@@ -139,7 +130,7 @@ function ProfilePage() {
     const hasChanges = JSON.stringify(prefs) !== JSON.stringify(savedSnapshot.prefs)
       || profilePhoto !== savedSnapshot.photo
       || studentNumber !== savedSnapshot.studentNumber
-      || facialId !== savedSnapshot.facialId;
+      || false;
     if (hasChanges) {
       setShowSaveDialog(true);
     } else {
@@ -169,7 +160,7 @@ function ProfilePage() {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-            body: JSON.stringify({ profile_picture: nextPhoto || null, student_number: nextStudentNumber || null, facial_id: facialId || null }),
+            body: JSON.stringify({ profile_picture: nextPhoto || null, student_number: nextStudentNumber || null }),
         });
 
         const data = await response.json().catch(() => ({}));
@@ -179,7 +170,7 @@ function ProfilePage() {
         }
 
         const savedPhoto = data.user?.profile_picture || nextPhoto || null;
-        updateUserProfile(savedPhoto, nextStudentNumber, facialId);
+        updateUserProfile(savedPhoto, nextStudentNumber);
         if (savedPhoto) {
           localStorage.setItem(getUserStorageKey(user, 'profile_photo'), savedPhoto);
         } else {
@@ -205,30 +196,6 @@ function ProfilePage() {
     return nextPhoto;
   };
 
-  const handleFacialIdSave = async (nextFacialId) => {
-    if (!user || !token || !nextFacialId) return;
-
-    const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        profile_picture: profilePhoto || null,
-        student_number: studentNumber.trim() || null,
-        facial_id: nextFacialId,
-      }),
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.message || 'Unable to save Facial ID.');
-
-    setFacialId(nextFacialId);
-    updateUserProfile(data.user?.profile_picture || profilePhoto || null, studentNumber, nextFacialId);
-    setSavedSnapshot((current) => ({ ...current, facialId: nextFacialId }));
-    setSaveState({ status: 'success', message: 'Facial ID saved successfully.' });
-  };
-
   const handleSaveChanges = async () => {
     if (user?.role === 'student' && !studentNumber.trim()) {
       setSaveState({ status: 'error', message: 'Student number is required.' });
@@ -243,11 +210,11 @@ function ProfilePage() {
         localStorage.setItem(getUserStorageKey(user, 'profile_prefs'), JSON.stringify(prefs));
       }
 
-      if (profilePhoto !== savedSnapshot.photo || studentNumber !== savedSnapshot.studentNumber || facialId !== savedSnapshot.facialId) {
+      if (profilePhoto !== savedSnapshot.photo || studentNumber !== savedSnapshot.studentNumber) {
         await persistProfilePhoto(profilePhoto || null, studentNumber.trim());
       }
 
-      setSavedSnapshot({ prefs, photo: profilePhoto, studentNumber: studentNumber.trim(), facialId });
+      setSavedSnapshot({ prefs, photo: profilePhoto, studentNumber: studentNumber.trim() });
       setShowSaveDialog(false);
       setShowSuccessDialog(true);
 
@@ -267,7 +234,6 @@ function ProfilePage() {
     setPrefs(savedSnapshot.prefs);
     setProfilePhoto(savedSnapshot.photo);
     setStudentNumber(savedSnapshot.studentNumber || '');
-    setFacialId(savedSnapshot.facialId || '');
     setSaveState({ status: 'idle', message: '' });
     setShowSaveDialog(false);
   };
@@ -409,13 +375,6 @@ function ProfilePage() {
     <div className="app-shell">
       <div className="page-shell">
         <div className={`mobile-menu-backdrop ${mobileMenuOpen ? 'show' : ''}`} onClick={() => setMobileMenuOpen(false)} />
-
-        {needsIdentitySetup && (
-          <div role="alert" style={{ margin: '1rem 0', padding: '1rem', border: '1px solid #d99a2b', background: '#fff7df', color: '#694d03' }}>
-            <strong>Finish identity verification to access your account.</strong>
-            <p style={{ margin: '0.4rem 0 0' }}>Your account is open, but you must upload and save a clear Facial ID image below before using dashboard and support features.</p>
-          </div>
-        )}
 
         <header className="page-header">
           <button
@@ -650,7 +609,6 @@ function ProfilePage() {
           </div>
 
           <div className="profile-security-body">
-            <FacialIdCapture value={facialId} onChange={setFacialId} onSave={handleFacialIdSave} />
             <div className="profile-security-actions">
               <button
                 type="button"

@@ -141,12 +141,8 @@ async function ensureUserProfileColumns() {
     });
   }
 
-  if (!columns.facial_id) {
-    if (sequelize.getDialect() === 'mysql') {
-      await sequelize.query('ALTER TABLE users ADD COLUMN facial_id MEDIUMTEXT NULL;');
-    } else {
-      await sequelize.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS facial_id TEXT NULL;');
-    }
+  if (columns.facial_id) {
+    await queryInterface.removeColumn('users', 'facial_id');
   }
 
   if (!columns.verification_token) {

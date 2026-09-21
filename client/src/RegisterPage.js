@@ -131,7 +131,7 @@ function RegisterPage({ modal = false, onSwitch }) {
     try {
       const name = `${firstName.trim()} ${middleInitial.toUpperCase()}. ${lastName.trim()}`;
       const result = await register(name, email, password, role, departmentId, studentNumber);
-      navigate(`/verify-registration/${result.verification_token}`);
+      navigate('/verify-email');
     } catch (error) {
       setMessage(error.response?.data?.message || 'Registration failed.');
     }

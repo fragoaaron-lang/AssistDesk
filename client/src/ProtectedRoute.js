@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 
-const ProtectedRoute = ({ children, allowedRoles = [], allowIncompleteVerification = false }) => {
+const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
@@ -18,14 +18,12 @@ const ProtectedRoute = ({ children, allowedRoles = [], allowIncompleteVerificati
     return <Navigate to="/" replace />;
   }
 
-  const requiresIdentityVerification = ['student', 'faculty', 'staff'].includes(user.role);
-  const identityIncomplete = user.account_status === 'pending_verification' || !user.facial_id;
-  if (!allowIncompleteVerification && requiresIdentityVerification && identityIncomplete) {
+  if (user.account_status === 'pending_verification') {
     if (user.verification_token) {
-      return <Navigate to={`/verify-registration/${user.verification_token}`} replace state={{ from: location.pathname }} />;
+      return <Navigate to="/verify-email" replace state={{ from: location.pathname }} />;
     }
 
-    return <Navigate to="/profile?setup=identity" replace state={{ from: location.pathname }} />;
+    return <Navigate to="/" replace state={{ from: location.pathname }} />;
   }
 
   return children;

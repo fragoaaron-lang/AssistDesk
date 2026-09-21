@@ -1,5 +1,6 @@
 # Node
 node_modules/
+__pycache__/
 npm-debug.log*
 .env
 .env.*

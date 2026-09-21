@@ -91,12 +91,8 @@ export const AuthProvider = ({ children }) => {
     return response.data;
   };
 
-  const completeRegistration = async (verificationToken, idDocument, selfie) => {
-    const response = await axios.post(`${API_BASE_URL}/api/auth/verify-registration`, {
-      verification_token: verificationToken,
-      id_document: idDocument,
-      selfie,
-    });
+  const completeEmailVerification = async (verificationToken) => {
+    const response = await axios.get(`${API_BASE_URL}/api/auth/verify-email/${verificationToken}`);
 
     const { user, token: newToken } = response.data;
 
@@ -121,17 +117,16 @@ export const AuthProvider = ({ children }) => {
     window.location.assign('/');
   };
 
-  const updateUserProfile = (profilePicture, studentNumber, facialId) => {
+  const updateUserProfile = (profilePicture, studentNumber) => {
     setUser((currentUser) => (currentUser ? {
       ...currentUser,
       profile_picture: profilePicture || null,
       ...(studentNumber !== undefined ? { student_number: studentNumber || null } : {}),
-      ...(facialId !== undefined ? { facial_id: facialId || null } : {}),
     } : currentUser));
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, completeRegistration, logout, updateUserProfile }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, completeEmailVerification, logout, updateUserProfile }}>
       {children}
     </AuthContext.Provider>
   );
