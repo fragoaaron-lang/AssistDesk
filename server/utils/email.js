@@ -10,6 +10,36 @@ const buildEmailVerificationLink = (token) => {
   return `${baseUrl}/verify-email/${encodeURIComponent(token)}`;
 };
 
+const sendEmail = async ({ to, subject, html }) => {
+  const resendApiKey = process.env.RESEND_API_KEY;
+  if (resendApiKey) {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM || process.env.MAIL_FROM || 'onboarding@resend.dev',
+        to: [to],
+        subject,
+        html,
+      }),
+    });
+
+    if (!response.ok) {
+      const responseBody = await response.text();
+      throw new Error(`Resend email delivery failed (${response.status}): ${responseBody.slice(0, 300)}`);
+    }
+
+    return;
+  }
+
+  const transporter = createTransporter();
+  const fromAddress = process.env.MAIL_FROM || process.env.MAIL_USER;
+  await transporter.sendMail({ from: fromAddress, to, subject, html });
+};
+
 const createTransporter = () => {
   const host = process.env.MAIL_HOST;
   const username = process.env.MAIL_USER;
@@ -33,11 +63,7 @@ const createTransporter = () => {
 
 const sendEmailVerificationEmail = async ({ to, token, userName }) => {
   const verificationLink = buildEmailVerificationLink(token);
-  const transporter = createTransporter();
-  const fromAddress = process.env.MAIL_FROM || process.env.MAIL_USER;
-
-  await transporter.sendMail({
-    from: fromAddress,
+  await sendEmail({
     to,
     subject: 'Verify your AssistDesk email address',
     html: `
@@ -49,17 +75,13 @@ const sendEmailVerificationEmail = async ({ to, token, userName }) => {
         <p>If the button does not work, copy and paste this link into your browser:</p>
         <p>${verificationLink}</p>
       </div>
-    `,
+      `,
   });
 };
 
 const sendPasswordResetEmail = async ({ to, token, userName }) => {
   const resetLink = buildResetLink(token);
-  const transporter = createTransporter();
-  const fromAddress = process.env.MAIL_FROM || process.env.MAIL_USER;
-
-  await transporter.sendMail({
-    from: fromAddress,
+  await sendEmail({
     to,
     subject: 'Reset your AssistDesk password',
     html: `
@@ -74,7 +96,7 @@ const sendPasswordResetEmail = async ({ to, token, userName }) => {
         <p>${resetLink}</p>
         <p>This link will expire in 1 hour.</p>
       </div>
-    `,
+      `,
   });
 
   return { success: true, devMode: false, resetLink };
