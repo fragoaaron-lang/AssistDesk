@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { User, Department, PasswordResetToken } = require('../models');
-const { sendPasswordResetEmail, sendEmailVerificationEmail } = require('../utils/email');
+const { sendPasswordResetEmail, sendEmailVerificationEmail, generateVerificationCode } = require('../utils/email');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'assistdesk-secret';
 const JWT_EXPIRES_IN = '8h';
@@ -115,6 +115,7 @@ exports.register = async (req, res) => {
     }
 
     const password_hash = await bcrypt.hash(password, 10);
+    const verificationCode = generateVerificationCode();
     const user = await User.create({
       name: normalizedName,
       email: normalizedEmail,
@@ -123,11 +124,11 @@ exports.register = async (req, res) => {
       department_id: departmentId,
       student_number: role === 'student' ? student_number.trim() : null,
       account_status: 'pending_verification',
-      verification_token: crypto.randomBytes(32).toString('hex'),
+      verification_token: verificationCode,
     });
 
     try {
-      await sendEmailVerificationEmail({ to: user.email, token: user.verification_token, userName: user.name });
+      await sendEmailVerificationEmail({ to: user.email, code: verificationCode, userName: user.name });
     } catch (error) {
       await user.destroy();
       throw error;
@@ -142,17 +143,24 @@ exports.register = async (req, res) => {
 
 exports.verifyEmail = async (req, res) => {
   try {
-    const { verification_token } = req.params;
-    if (!verification_token) {
-      return res.status(400).json({ message: 'Email verification token is required.' });
+    const email = String(req.body?.email || req.query?.email || '').trim().toLowerCase();
+    const submittedCode = String(req.body?.code || req.params?.verification_token || '').trim();
+
+    if (!email || !submittedCode) {
+      return res.status(400).json({ message: 'Email and verification code are required.' });
     }
 
     const user = await User.findOne({
-      where: { verification_token, account_status: 'pending_verification' },
+      where: { email, account_status: 'pending_verification' },
       include: [{ model: Department }],
     });
     if (!user) {
-      return res.status(400).json({ message: 'This registration session is invalid or has expired.' });
+      return res.status(400).json({ message: 'This account is not waiting for verification.' });
+    }
+
+    const storedCode = String(user.verification_token || '').trim();
+    if (!storedCode || submittedCode !== storedCode) {
+      return res.status(400).json({ message: 'The verification code is incorrect or has expired.' });
     }
 
     await user.update({ account_status: 'active', verification_token: null });
@@ -175,9 +183,9 @@ exports.resendEmailVerification = async (req, res) => {
 
     const user = await User.findOne({ where: { email: normalizedEmail } });
     if (user?.account_status === 'pending_verification') {
-      const verificationToken = user.verification_token || crypto.randomBytes(32).toString('hex');
-      await user.update({ verification_token: verificationToken });
-      await sendEmailVerificationEmail({ to: user.email, token: verificationToken, userName: user.name });
+      const verificationCode = user.verification_token || generateVerificationCode();
+      await user.update({ verification_token: verificationCode });
+      await sendEmailVerificationEmail({ to: user.email, code: verificationCode, userName: user.name });
     }
 
     return res.json({ message: 'If the account is waiting for verification, a new email has been sent.' });

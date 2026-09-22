@@ -91,14 +91,13 @@ export const AuthProvider = ({ children }) => {
     return response.data;
   };
 
-  const completeEmailVerification = async (verificationToken) => {
-    const response = await axios.get(`${API_BASE_URL}/api/auth/verify-email/${verificationToken}`);
+  const completeEmailVerification = async (email, code) => {
+    const response = await axios.post(`${API_BASE_URL}/api/auth/verify-email`, { email, code }, { timeout: 20000 });
 
     const { user, token: newToken } = response.data;
 
     localStorage.setItem('assistdesk_token', newToken);
     setToken(newToken);
-
     setUser(user);
     return { user, token: newToken || null };
   };

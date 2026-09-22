@@ -5,6 +5,7 @@ const authMiddleware = require('../middleware/auth');
 const router = express.Router();
 
 router.post('/register', authController.register);
+router.post('/verify-email', authController.verifyEmail);
 router.get('/verify-email/:verification_token', authController.verifyEmail);
 router.post('/resend-email-verification', authController.resendEmailVerification);
 router.post('/login', authController.login);

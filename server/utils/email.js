@@ -1,4 +1,7 @@
+const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+
+const generateVerificationCode = () => String(crypto.randomInt(10000000, 100000000));
 
 const buildResetLink = (token) => {
   const baseUrl = (process.env.FRONTEND_URL || process.env.CLIENT_URL || 'https://assist-desk-ebon.vercel.app').replace(/\/$/, '');
@@ -91,19 +94,17 @@ const createTransporter = () => {
   });
 };
 
-const sendEmailVerificationEmail = async ({ to, token, userName }) => {
-  const verificationLink = buildEmailVerificationLink(token);
+const sendEmailVerificationEmail = async ({ to, code, userName }) => {
   await sendEmail({
     to,
-    subject: 'Verify your AssistDesk email address',
+    subject: 'Your AssistDesk verification code',
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937;">
         <h2 style="margin-bottom: 12px;">Verify your email address</h2>
         <p>Hello ${userName || 'there'},</p>
-        <p>Click the button below to verify your email and activate your AssistDesk account.</p>
-        <p><a href="${verificationLink}" style="display: inline-block; background: #0f172a; color: #fff; padding: 10px 16px; text-decoration: none; border-radius: 8px;">Verify email</a></p>
-        <p>If the button does not work, copy and paste this link into your browser:</p>
-        <p>${verificationLink}</p>
+        <p>Your AssistDesk verification code is:</p>
+        <p style="font-size: 28px; font-weight: 700; letter-spacing: 4px; margin: 18px 0; color: #0f172a;">${code}</p>
+        <p>Enter this 8-digit code in the AssistDesk verification page to activate your account.</p>
       </div>
       `,
   });
@@ -135,6 +136,7 @@ const sendPasswordResetEmail = async ({ to, token, userName }) => {
 module.exports = {
   sendPasswordResetEmail,
   sendEmailVerificationEmail,
+  generateVerificationCode,
   buildResetLink,
   buildEmailVerificationLink,
 };

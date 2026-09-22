@@ -1,53 +1,33 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 
 function EmailVerificationPage() {
-  const { verificationToken } = useParams();
   const { completeEmailVerification, resendEmailVerification } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [status, setStatus] = useState('verifying');
-  const [message, setMessage] = useState('Your account is verified. Redirecting to your account...');
+  const [status, setStatus] = useState('waiting');
+  const [message, setMessage] = useState('We sent an 8-digit verification code to your email. Enter it below to activate your account.');
   const [email, setEmail] = useState(() => location.state?.email || '');
+  const [code, setCode] = useState('');
   const [resendState, setResendState] = useState('idle');
-  const startedRef = useRef(false);
-  const REDIRECT_DELAY_MS = 60000;
-  const redirectPath = (() => {
-    const from = location.state?.from;
-    if (from && from !== '/' && from !== '/login' && from !== '/register') {
-      return from;
+  const REDIRECT_DELAY_MS = 1200;
+
+  const handleVerify = async (event) => {
+    event.preventDefault();
+    setStatus('verifying');
+    setMessage('Verifying your code...');
+
+    try {
+      await completeEmailVerification(email, code);
+      setStatus('success');
+      setMessage('Your email has been verified. You are now signed in. Redirecting to your dashboard...');
+      window.setTimeout(() => navigate('/dashboard', { replace: true }), REDIRECT_DELAY_MS);
+    } catch (error) {
+      setStatus('error');
+      setMessage(error.response?.data?.message || 'This verification code is invalid or expired.');
     }
-
-    return '/dashboard';
-  })();
-
-  useEffect(() => {
-    if (!verificationToken) {
-      setStatus('waiting');
-      setMessage('Registration saved. Check your email and click the verification link to activate your account.');
-      return undefined;
-    }
-
-    if (startedRef.current) return undefined;
-    startedRef.current = true;
-    let active = true;
-
-    completeEmailVerification(verificationToken)
-      .then(() => {
-        if (!active) return;
-        setStatus('success');
-        setMessage('Your email has been verified. You are now signed in and will be redirected to your dashboard in 60 seconds.');
-        window.setTimeout(() => navigate(redirectPath, { replace: true }), REDIRECT_DELAY_MS);
-      })
-      .catch((error) => {
-        if (!active) return;
-        setStatus('error');
-        setMessage(error.response?.data?.message || 'This email verification link is invalid or expired.');
-      });
-
-    return () => { active = false; };
-  }, [completeEmailVerification, navigate, redirectPath, verificationToken]);
+  };
 
   const handleResend = async (event) => {
     event.preventDefault();
@@ -55,12 +35,12 @@ function EmailVerificationPage() {
     try {
       const response = await resendEmailVerification(email);
       setResendState('sent');
-      setMessage(response.message || 'Check your email for a new verification link.');
+      setMessage(response.message || 'A new 8-digit verification code has been sent to your email.');
     } catch (error) {
       setResendState('error');
       const timeoutMessage = error.code === 'ECONNABORTED'
         ? 'The email server took too long to respond. Check the server email settings and try again.'
-        : error.response?.data?.message || 'Unable to resend the verification email.';
+        : error.response?.data?.message || 'Unable to resend the verification code.';
       setMessage(timeoutMessage);
     }
   };
@@ -73,19 +53,31 @@ function EmailVerificationPage() {
             <img src="/assistdesk-logo.svg" alt="AssistDesk logo" />
           </div>
           <p className="auth-kicker">Email confirmation</p>
-          <h2>{status === 'waiting' ? 'Check your email' : status === 'error' ? 'Verification failed' : 'Account verified'}</h2>
+          <h2>{status === 'error' ? 'Verification failed' : status === 'success' ? 'Account verified' : 'Verify your email'}</h2>
           <p>{message}</p>
         </div>
         <div className="auth-form">
-          {status === 'waiting' && (
-            <form onSubmit={handleResend}>
+          {status !== 'success' && (
+            <form onSubmit={handleVerify}>
               <input className="institutional-input" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email address" required />
-              <button type="submit" className="institutional-btn" disabled={resendState === 'sending'}>
-                {resendState === 'sending' ? 'Sending...' : resendState === 'sent' ? 'Email sent' : 'Resend verification email'}
+              <input className="institutional-input" type="text" inputMode="numeric" pattern="[0-9]*" maxLength={8} value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 8))} placeholder="Enter 8-digit code" required />
+              <button type="submit" className="institutional-btn" disabled={status === 'verifying' || resendState === 'sending'}>
+                {status === 'verifying' ? 'Verifying...' : 'Verify account'}
               </button>
             </form>
           )}
-          {status === 'error' && <button type="button" className="institutional-btn" onClick={() => navigate('/')}>Return to sign in</button>}
+          {status !== 'success' && (
+            <form onSubmit={handleResend} style={{ marginTop: '12px' }}>
+              <button type="submit" className="institutional-btn secondary" disabled={resendState === 'sending'}>
+                {resendState === 'sending' ? 'Sending...' : resendState === 'sent' ? 'Code sent' : 'Resend verification code'}
+              </button>
+            </form>
+          )}
+          {status === 'error' && (
+            <button type="button" className="institutional-btn" onClick={() => navigate('/')}>
+              Return to sign in
+            </button>
+          )}
         </div>
       </div>
     </main>
