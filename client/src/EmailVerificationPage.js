@@ -12,6 +12,14 @@ function EmailVerificationPage() {
   const [email, setEmail] = useState(() => location.state?.email || '');
   const [resendState, setResendState] = useState('idle');
   const startedRef = useRef(false);
+  const redirectPath = (() => {
+    const from = location.state?.from;
+    if (from && from !== '/' && from !== '/login' && from !== '/register') {
+      return from;
+    }
+
+    return '/dashboard';
+  })();
 
   useEffect(() => {
     if (!verificationToken) {
@@ -29,7 +37,7 @@ function EmailVerificationPage() {
         if (!active) return;
         setStatus('success');
         setMessage('Your email has been verified. Your AssistDesk account is active.');
-        window.setTimeout(() => navigate('/dashboard', { replace: true }), 1200);
+        window.setTimeout(() => navigate(redirectPath, { replace: true }), 1200);
       })
       .catch((error) => {
         if (!active) return;
@@ -38,7 +46,7 @@ function EmailVerificationPage() {
       });
 
     return () => { active = false; };
-  }, [completeEmailVerification, navigate, verificationToken]);
+  }, [completeEmailVerification, navigate, redirectPath, verificationToken]);
 
   const handleResend = async (event) => {
     event.preventDefault();

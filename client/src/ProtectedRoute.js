@@ -19,11 +19,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   }
 
   if (user.account_status === 'pending_verification') {
-    if (user.verification_token) {
-      return <Navigate to="/verify-email" replace state={{ from: location.pathname }} />;
-    }
-
-    return <Navigate to="/" replace state={{ from: location.pathname }} />;
+    return <Navigate to="/verify-email" replace state={{ from: location.pathname, email: user.email }} />;
   }
 
   return children;
