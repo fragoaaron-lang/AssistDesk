@@ -12,6 +12,7 @@ function EmailVerificationPage() {
   const [email, setEmail] = useState(() => location.state?.email || '');
   const [resendState, setResendState] = useState('idle');
   const startedRef = useRef(false);
+  const REDIRECT_DELAY_MS = 60000;
   const redirectPath = (() => {
     const from = location.state?.from;
     if (from && from !== '/' && from !== '/login' && from !== '/register') {
@@ -36,8 +37,8 @@ function EmailVerificationPage() {
       .then(() => {
         if (!active) return;
         setStatus('success');
-        setMessage('Your email has been verified. Your AssistDesk account is active.');
-        window.setTimeout(() => navigate(redirectPath, { replace: true }), 1200);
+        setMessage('Your email has been verified. You are now signed in and will be redirected to your dashboard in 60 seconds.');
+        window.setTimeout(() => navigate(redirectPath, { replace: true }), REDIRECT_DELAY_MS);
       })
       .catch((error) => {
         if (!active) return;
