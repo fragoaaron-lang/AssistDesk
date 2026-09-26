@@ -1416,7 +1416,8 @@ button, input, select, textarea {
 }
 
 .profile-logout-btn {
-  width: 100%;
+  width: auto;
+  min-width: 120px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
