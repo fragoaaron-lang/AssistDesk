@@ -19,6 +19,31 @@ const faqEntries = [
     keywords: 'registrar certificate enrollment coe request form enrolled outstanding balance payment',
   },
   {
+    question: 'What is the enrollment process?',
+    answer: 'For freshmen and transferees: (1) visit the Guidance Office, then (2) go to the Registrar’s Office, Window 5. For returning students: (1) visit the Registrar’s Office, Window 4, then the Dean’s Office for subject advising; (2) encode subjects at Windows 1, 2, or 3 (returning-student encoding may be at Window 5); (3) get tuition and other-fee assessment at Window 6; (4) pay the SC fee at the Administration Building; (5) pay at Window 8, the Cashier; (6) submit the yellow copy at Window 7; (7) submit the white copy at Window 3; and (8) submit the green copy at the Dean’s Office.',
+    keywords: 'registrar enrollment process freshman transferee returning old students guidance window 5 window 4 dean advising subject encoding window 6 assessment sc fee window 8 cashier yellow white green copy',
+  },
+  {
+    question: 'Where can college students evaluate their grades?',
+    answer: 'College students can evaluate their grades at Registrar Windows 1, 2, or 3.',
+    keywords: 'registrar college evaluate grades evaluation windows 1 2 3',
+  },
+  {
+    question: 'Where can I get Form 137?',
+    answer: 'Request Form 137 at the Registrar Office, usually at Window 1 or 3, or at the window assigned to you. Fill out a request form.',
+    keywords: 'registrar form 137 request window 1 window 3 assigned window school record',
+  },
+  {
+    question: 'Where can I get a vehicle sticker pass?',
+    answer: 'Go to Window 10 for the vehicle qualification review. Once approved, pay the sticker fee at Window 8, the Cashier.',
+    keywords: 'registrar vehicle sticker pass window 10 vehicle qualification review cashier window 8 payment',
+  },
+  {
+    question: 'Who is the head or point person of the Registrar Office?',
+    answer: 'The Registrar Office head/point person is ATTY. Maricris L. Brit-Gesilva, MAEd.',
+    keywords: 'registrar office head point person contact atty maricris brit gesilva',
+  },
+  {
     question: 'How can I request a certificate of grades?',
     answer: 'Fill out a request form available outside the Registrar window. Specify the semester, quarter, or school year you need, and say whether you need the General Weighted Average (GWA) or just a list of grades.',
     keywords: 'registrar certificate grades list gwa general weighted average semester quarter school year request form',

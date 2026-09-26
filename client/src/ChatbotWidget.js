@@ -55,8 +55,13 @@ const FAQ_GROUPS = [
     title: 'Registrar Office',
     questions: [
       'How can I request my Transcript of Records (TOR)?',
+      'What is the enrollment process?',
       'How long does a Transcript of Records request take?',
       'How can I request a Certificate of Enrollment (CoE)?',
+      'Where can college students evaluate their grades?',
+      'Where can I get Form 137?',
+      'Where can I get a vehicle sticker pass?',
+      'Who is the head or point person of the Registrar Office?',
       'How can I request a certificate of grades?',
       'How can I request other school documents from the Registrar?',
       'How can I check the status of my document request?',
