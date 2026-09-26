@@ -74,6 +74,26 @@ const FAQ_GROUPS = [
     ],
   },
   {
+    title: 'Accounting Department',
+    questions: [
+      'How can I check my tuition balance?',
+      'How can I pay my tuition and other fees?',
+      'What payment methods are available?',
+      'Can I pay my tuition online?',
+      'How can I get an official receipt?',
+      'What should I do if my payment is not reflected?',
+      'What are the deadlines for payment?',
+      'Can I pay my tuition in installments?',
+      'How can I check my remaining balance?',
+      'What fees do I need to pay for enrollment?',
+      'How can I request a refund?',
+      'What are the Accounting Office hours?',
+      'What scholarships are available?',
+      'What other scholarships or discounts are available?',
+      'Are academic scholarships currently available?',
+    ],
+  },
+  {
     title: 'Basic Education Department',
     questions: [
       'Who is the principal of Basic Education?',
