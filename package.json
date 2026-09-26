@@ -6,6 +6,7 @@
     "install:server": "npm install --prefix server",
     "start": "npm install --prefix server --no-fund --no-audit && npm start --prefix server",
     "migrate": "npm install --prefix server --no-fund --no-audit && npm --prefix server run migrate",
-    "seed:osa-faqs": "npm --prefix server run seed:osa-faqs"
+    "seed:osa-faqs": "npm --prefix server run seed:osa-faqs",
+    "seed:registrar-faqs": "npm --prefix server run seed:registrar-faqs"
   }
 }

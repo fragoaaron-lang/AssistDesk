@@ -31,6 +31,7 @@ const departmentAliases = [
   { id: 'maintenance', terms: ['maintenance'] },
   { id: 'clinic', terms: ['clinic'] },
   { id: 'accounting', terms: ['accounting department', 'accounting'] },
+  { id: 'registrar', terms: ['registrar office', 'registrar department', 'registrar', 'transcript of records'] },
   { id: 'osa', terms: ['office of the student affairs', 'office of student affairs', 'student affairs', 'osa'] },
   { id: 'guidance', terms: ['guidance'] },
   { id: 'library', terms: ['library'] },

@@ -11,7 +11,8 @@
     "seed:admins": "node seed-department-admins.js",
     "seed:student-numbers": "node seed-student-numbers.js",
     "seed:faqs": "node seed-faqs.js",
-    "seed:osa-faqs": "node seed-osa-faqs.js"
+    "seed:osa-faqs": "node seed-osa-faqs.js",
+    "seed:registrar-faqs": "node seed-registrar-faqs.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",

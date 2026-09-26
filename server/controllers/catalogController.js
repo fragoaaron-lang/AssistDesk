@@ -12,6 +12,7 @@ const canonicalDepartments = [
   ['Maintenance Department', 'Maintenance Department'],
   ['Accounting Department', 'Accounting Department'],
   ['Registrar Department', 'Registrar Department'],
+  ['Registrar Office', 'Registrar Office'],
   ['Library', 'Library'],
   ['Guidance', 'Guidance Office'],
   ['Office of Student Affairs', 'Office of Student Affairs'],
