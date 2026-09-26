@@ -106,6 +106,28 @@ const FAQ_GROUPS = [
     ],
   },
   {
+    title: 'Maintenance Department',
+    questions: [
+      'Who are the contact persons in the Maintenance Department?',
+      'Where can I report a broken chair, table, or classroom equipment?',
+      'Where can I report a problem with classroom facilities?',
+      'Who should I contact if I find damaged school property?',
+      'Where can I report cleanliness concerns?',
+      'How can I request assistance for a facility problem?',
+      'Who should I approach regarding campus maintenance concerns?',
+      'How do I follow up on a maintenance report?',
+      'Can I report a maintenance problem anonymously?',
+      'What information should I provide when reporting a damaged facility?',
+      'What should I do if a facility problem is dangerous?',
+      'What should I do if classroom equipment suddenly stops working during class?',
+      'What should I do if there is no electricity in my classroom?',
+      'What should I do if there is no water in the restroom?',
+      'What should I do if a restroom needs immediate cleaning?',
+      'Can students request repairs for school equipment?',
+      'How long does a maintenance request take?',
+    ],
+  },
+  {
     title: 'Basic Education Department',
     questions: [
       'Who is the principal of Basic Education?',

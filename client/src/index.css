@@ -1584,6 +1584,39 @@ button, input, select, textarea {
 }
 .report-area-chart .report-trend-column small { margin-top: 0.3rem; }
 .report-donut-card { min-height: 250px; }
+.report-priority-chart-layout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(18px, 4vw, 34px);
+  min-height: 170px;
+  padding: 10px 0 4px;
+}
+.report-priority-pie {
+  display: flex;
+  width: 138px;
+  height: 138px;
+  flex: 0 0 138px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 5px solid var(--surface);
+  border-radius: 50%;
+  color: #163548;
+  box-shadow: 0 5px 16px rgba(8, 32, 56, 0.16);
+}
+.report-priority-pie span {
+  font-size: 1.65rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.report-priority-pie small {
+  margin-top: 3px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
 .report-donut {
   display: grid;
   width: 118px;
@@ -1602,8 +1635,8 @@ button, input, select, textarea {
 }
 .report-donut span { z-index: 1; grid-area: 1 / 1; color: var(--navy); font-size: 1.1rem; font-weight: 800; }
 .report-legend { display: grid; gap: 0.35rem; font-size: 0.72rem; }
-.report-legend span { display: flex; align-items: center; gap: 0.35rem; min-width: 0; }
-.report-legend span strong { margin-left: auto; }
+.report-legend > span { display: flex; align-items: center; gap: 0.45rem; min-width: 0; }
+.report-legend > span strong { margin-left: auto; }
 .legend-dot { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 50%; background: #1687c9; }
 .legend-dot-1 { background: #55b9e8; }
 .legend-dot-2 { background: #f0b44d; }
@@ -1612,6 +1645,10 @@ button, input, select, textarea {
 .report-bars-card { min-width: 0; }
 .report-activity-card { grid-column: span 3; }
 .report-bars-card h3, .report-activity-card h3 { margin-top: 0; }
+@media (max-width: 520px) {
+  .report-priority-chart-layout { gap: 14px; }
+  .report-priority-pie { width: 118px; height: 118px; flex-basis: 118px; }
+}
 .report-trend-chart {
   display: flex;
   align-items: end;

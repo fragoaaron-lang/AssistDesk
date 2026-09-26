@@ -120,6 +120,22 @@ function AdminReportsPage() {
     return `${Math.max(4, ((Number(value) || 0) / maximum) * 100)}%`;
   };
 
+  const priorityColors = { low: '#37c94f', medium: '#1f9dd9', urgent: '#ed1725' };
+  const priorityData = ['low', 'medium', 'urgent'].map((priority) => ({
+    name: priority,
+    count: Number(reports?.ticketCountsByPriority?.find((row) => row.priority === priority)?.count) || 0,
+    color: priorityColors[priority],
+  }));
+  const priorityTotal = priorityData.reduce((total, item) => total + item.count, 0);
+  let priorityAngle = 0;
+  const priorityPieBackground = priorityTotal > 0
+    ? `conic-gradient(${priorityData.filter((item) => item.count > 0).map((item) => {
+      const startAngle = priorityAngle;
+      priorityAngle += (item.count / priorityTotal) * 360;
+      return `${item.color} ${startAngle}deg ${priorityAngle}deg`;
+    }).join(', ')})`
+    : '#e8eef3';
+
   if (!reports) {
     return <div style={{ padding: '2rem', fontFamily: 'Arial' }}>Loading Data Analytics...</div>;
   }
@@ -328,10 +344,28 @@ function AdminReportsPage() {
           </div>
           <div className="institutional-card report-donut-card">
             <div className="report-card-heading"><div><h3>Ticket priorities</h3><span>Low, medium, and urgent</span></div></div>
-            <div className="report-legend report-priority-list">{['low', 'medium', 'urgent'].map((priority) => {
-              const row = reports.ticketCountsByPriority.find((item) => item.priority === priority);
-              return <span key={priority}><i className="legend-dot legend-dot-0" />{priority} <strong>{row?.count || 0}</strong></span>;
-            })}</div>
+            <div className="report-priority-chart-layout">
+              <div
+                className="report-priority-pie"
+                role="img"
+                aria-label={priorityTotal > 0
+                  ? `Ticket priorities: ${priorityData.map((item) => `${item.name} ${item.count}`).join(', ')}. Total ${priorityTotal}.`
+                  : 'No tickets to chart by priority.'}
+                style={{ background: priorityPieBackground }}
+              >
+                <span>{priorityTotal}</span>
+                <small>Total</small>
+              </div>
+              <div className="report-legend report-priority-list" aria-label="Ticket priority counts">
+                {priorityData.map((item) => (
+                  <span key={item.name}>
+                    <i className="legend-dot" style={{ backgroundColor: item.color }} aria-hidden="true" />
+                    <span>{item.name}</span>
+                    <strong>{item.count}</strong>
+                  </span>
+                ))}
+              </div>
+            </div>
           </div>
           <div className="institutional-card report-donut-card">
             <div className="report-card-heading"><div><h3>Most asked FAQ</h3><span>Based on assistant questions</span></div></div>

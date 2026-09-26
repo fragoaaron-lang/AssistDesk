@@ -9,6 +9,7 @@
     "seed:osa-faqs": "npm --prefix server run seed:osa-faqs",
     "seed:registrar-faqs": "npm --prefix server run seed:registrar-faqs",
     "seed:accounting-faqs": "npm --prefix server run seed:accounting-faqs",
-    "seed:about-tcc-faqs": "npm --prefix server run seed:about-tcc-faqs"
+    "seed:about-tcc-faqs": "npm --prefix server run seed:about-tcc-faqs",
+    "seed:maintenance-faqs": "npm --prefix server run seed:maintenance-faqs"
   }
 }
