@@ -15,6 +15,7 @@ const canonicalDepartments = [
   ['Library', 'Library'],
   ['Guidance', 'Guidance Office'],
   ['Office of Student Affairs', 'Office of Student Affairs'],
+  ['Office of the Student Affairs', 'Office of the Student Affairs'],
   ['Clinic', 'Clinic'],
   ['IT Department', 'Information Technology Department'],
 ];

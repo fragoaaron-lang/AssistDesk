@@ -10,7 +10,8 @@
     "migrate": "node db-migrate.js",
     "seed:admins": "node seed-department-admins.js",
     "seed:student-numbers": "node seed-student-numbers.js",
-    "seed:faqs": "node seed-faqs.js"
+    "seed:faqs": "node seed-faqs.js",
+    "seed:osa-faqs": "node seed-osa-faqs.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",

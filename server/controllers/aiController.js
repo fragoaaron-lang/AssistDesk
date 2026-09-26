@@ -31,6 +31,7 @@ const departmentAliases = [
   { id: 'maintenance', terms: ['maintenance'] },
   { id: 'clinic', terms: ['clinic'] },
   { id: 'accounting', terms: ['accounting department', 'accounting'] },
+  { id: 'osa', terms: ['office of the student affairs', 'office of student affairs', 'student affairs', 'osa'] },
   { id: 'guidance', terms: ['guidance'] },
   { id: 'library', terms: ['library'] },
 ];
@@ -272,7 +273,7 @@ const buildResponse = async (query) => {
     };
   }
 
-  const department = findDepartmentForIntent(await Department.findAll(), departmentIntent) || best.item.Department;
+  const department = best.item.Department || findDepartmentForIntent(await Department.findAll(), departmentIntent);
   const response = best.item.answer || best.item.name || 'I found a likely match in the knowledge base.';
 
   return {

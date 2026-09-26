@@ -10,6 +10,7 @@ const defaultDepartments = [
   { name: 'Accounting', description: 'Handles payment, billing, and account assistance.', point_person: 'Ms. Joy Lim', contact_number: '02-1234-5686', location: 'Finance Building, Room 204', office_hours: '8:00 AM - 5:00 PM' },
   { name: 'Maintenance', description: 'Handles facilities, repairs, and campus infrastructure concerns.', point_person: 'Mr. Joel Rivera', contact_number: '02-1234-5687', location: 'Maintenance Office, Room 007', office_hours: '7:00 AM - 6:00 PM' },
   { name: 'Student Affairs', description: 'Supports student welfare, guidance, and campus activities.', point_person: 'Mr. Rafael Santos', contact_number: '02-1234-5679', location: 'Student Center, Room 205', office_hours: '9:00 AM - 4:00 PM' },
+  { name: 'Office of the Student Affairs', description: 'Provides student orientation, student activities, canteen management, student security, and student affairs support.', location: 'Near TCC Gymnasium', office_hours: 'Monday-Friday 8:00 AM-5:00 PM; head usually available 6:00 AM-9:00 PM; lunch 12:00-1:00 PM' },
   { name: 'Clinic', description: 'Provides health services and medical assistance.', point_person: 'Dr. Maria Torres', contact_number: '02-1234-5688', location: 'Clinic Building, Room 010', office_hours: '7:00 AM - 7:00 PM' },
 ];
 
