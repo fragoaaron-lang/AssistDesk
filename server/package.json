@@ -13,7 +13,8 @@
     "seed:faqs": "node seed-faqs.js",
     "seed:osa-faqs": "node seed-osa-faqs.js",
     "seed:registrar-faqs": "node seed-registrar-faqs.js",
-    "seed:accounting-faqs": "node seed-accounting-faqs.js"
+    "seed:accounting-faqs": "node seed-accounting-faqs.js",
+    "seed:about-tcc-faqs": "node seed-about-tcc-faqs.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",

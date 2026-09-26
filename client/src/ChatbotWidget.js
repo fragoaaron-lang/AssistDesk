@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 
 const FAQ_GROUPS = [
   {
-    title: 'Overall student questions',
+    title: 'About TCC',
     questions: [
       'Who is the president of TCC?',
       'Who is the secretary of TCC?',
@@ -29,6 +29,10 @@ const FAQ_GROUPS = [
       'Where can I get Form 138?',
       'Who is the point person of Guidance?',
       'Who is the point person of the Library?',
+      'What is Tomas Claudio Colleges (TCC)?',
+      'What does Tomas Claudio Colleges (TCC) offer?',
+      'What are the admission requirements or application requirements?',
+      'What is the mission and vision of Tomas Claudio Colleges (TCC)?',
     ],
   },
   {
