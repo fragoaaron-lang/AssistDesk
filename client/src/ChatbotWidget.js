@@ -52,6 +52,28 @@ const FAQ_GROUPS = [
     ],
   },
   {
+    title: 'Registrar Office',
+    questions: [
+      'How can I request my Transcript of Records (TOR)?',
+      'How long does a Transcript of Records request take?',
+      'How can I request a Certificate of Enrollment (CoE)?',
+      'How can I request a certificate of grades?',
+      'How can I request other school documents from the Registrar?',
+      'How can I check the status of my document request?',
+      'How much are the fees for documents requested from the Registrar?',
+      'How can I correct an error in my student records or documents?',
+      'How can I request a transfer credential?',
+      'How can I get a copy of my academic records?',
+      'What are the Registrar Office hours?',
+      'How can I fix an incomplete grade?',
+      'Where is the Registrar Office located?',
+      'How can faculty submit grades to the Registrar?',
+      'What is the deadline for submitting grades?',
+      'How can I correct or update a grade already submitted to the Registrar?',
+      'How can faculty or staff update their information?',
+    ],
+  },
+  {
     title: 'Basic Education Department',
     questions: [
       'Who is the principal of Basic Education?',

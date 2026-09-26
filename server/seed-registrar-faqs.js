@@ -100,7 +100,7 @@ async function seed() {
         name: departmentName,
         description: 'Handles student records, transcripts, enrollment certificates, grades, and other official school documents.',
         location: 'Administration Building (J.B. Angeles Building)',
-        office_hours: 'Collegiate: Monday-Friday 8:00 AM-5:00 PM; Graduate studies and doctorate: Saturday 8:00 AM-12:00 noon',
+        office_hours: 'Weekdays 8AM-5PM; Grad/Doctorate Sat 8AM-noon',
       },
       transaction,
     });

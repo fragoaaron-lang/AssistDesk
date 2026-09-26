@@ -90,7 +90,7 @@ async function seed() {
         name: departmentName,
         description: 'Provides student orientation, student activities, canteen management, student security, and student affairs support.',
         location: 'Near TCC Gymnasium',
-        office_hours: 'Monday-Friday 8:00 AM-5:00 PM; head usually available 6:00 AM-9:00 PM; lunch 12:00-1:00 PM',
+        office_hours: 'Weekdays 8AM-5PM; Head 6AM-9PM; Lunch 12-1PM',
       },
       transaction,
     });
