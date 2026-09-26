@@ -1405,6 +1405,27 @@ button, input, select, textarea {
   background: #fff1f1;
 }
 
+.profile-logout-btn {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 8px 12px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.profile-logout-btn:hover:not(:disabled) {
+  background: var(--surface-soft);
+}
+
+.profile-logout-btn:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
 .profile-section-header h3 {
   margin: 0;
 }
