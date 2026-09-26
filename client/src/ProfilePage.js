@@ -700,8 +700,11 @@ function ProfilePage() {
             <button type="button" className="account-deletion-btn" onClick={openDeleteDialog}>
               Delete account
             </button>
-            <LogoutButton className="profile-logout-btn" />
           </div>
+        </div>
+
+        <div className="institutional-card profile-logout-card">
+          <LogoutButton className="profile-logout-btn" />
         </div>
       </div>
     </div>

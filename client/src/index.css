@@ -1363,6 +1363,12 @@ button, input, select, textarea {
   margin-top: 18px;
 }
 
+.profile-logout-card {
+  width: min(420px, 100%);
+  margin-top: 12px;
+  padding: 14px 16px;
+}
+
 .account-deletion-panel {
   width: min(420px, 100%);
   display: flex;
