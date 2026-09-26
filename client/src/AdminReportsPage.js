@@ -115,9 +115,10 @@ function AdminReportsPage() {
     users: (reports?.users || []).filter((directoryUser) => directoryUser.role === roleName && directoryUser.account_status === 'terminated'),
   }));
 
-  const getChartWidth = (value, rows) => {
+  const getChartHeight = (value, rows) => {
     const maximum = Math.max(...rows.map((row) => Number(row.count) || 0), 1);
-    return `${Math.max(4, ((Number(value) || 0) / maximum) * 100)}%`;
+    const count = Number(value) || 0;
+    return count > 0 ? `${Math.max(8, (count / maximum) * 100)}%` : '0%';
   };
 
   const priorityColors = { low: '#37c94f', medium: '#1f9dd9', urgent: '#ed1725' };
@@ -336,11 +337,23 @@ function AdminReportsPage() {
             <section className="report-visual-grid">
           <div className="institutional-card report-bars-card">
             <h3>Tickets per department</h3>
-            <div className="report-chart" aria-label="Tickets per department">
-              {reports.ticketCountsByDepartment.map((row) => (
-                <div key={row.department_id} className="report-chart-row"><div className="report-chart-label"><span>{row.department_name}</span><strong>{row.count}</strong></div><div className="report-chart-track"><span className="report-chart-bar department" style={{ width: getChartWidth(row.count, reports.ticketCountsByDepartment) }} /></div></div>
-              ))}
-            </div>
+            {reports.ticketCountsByDepartment.length > 0 ? (
+              <div
+                className="report-department-bar-chart"
+                role="img"
+                aria-label={`Tickets per department: ${reports.ticketCountsByDepartment.map((row) => `${row.department_name}, ${row.count}`).join('; ')}`}
+              >
+                {reports.ticketCountsByDepartment.map((row) => (
+                  <div key={row.department_id || row.department_name} className="report-department-bar-item" title={`${row.department_name}: ${row.count} tickets`}>
+                    <strong className="report-department-bar-value">{row.count}</strong>
+                    <div className="report-department-bar-plot">
+                      <span className="report-department-bar" style={{ height: getChartHeight(row.count, reports.ticketCountsByDepartment) }} />
+                    </div>
+                    <span className="report-department-bar-label">{row.department_name}</span>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="small-muted">No department ticket data yet.</p>}
           </div>
           <div className="institutional-card report-donut-card">
             <div className="report-card-heading"><div><h3>Ticket priorities</h3><span>Low, medium, and urgent</span></div></div>
