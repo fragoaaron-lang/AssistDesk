@@ -36,6 +36,7 @@ const FAQ_GROUPS = [
     questions: [
       'What services does the Office of the Student Affairs provide?',
       'How can I contact the Office of the Student Affairs?',
+      'Who is the head or point person of OSA?',
       'Where is the Office of the Student Affairs, and what are its office hours?',
       'How can I request a student ID or a replacement ID?',
       'How can I report a student concern or complaint to OSA?',

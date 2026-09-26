@@ -14,6 +14,11 @@ const faqEntries = [
     keywords: 'osa contact inquire online facebook tcc office student affairs visit walk in',
   },
   {
+    question: 'Who is the head or point person of OSA?',
+    answer: 'The head/point person of the Office of the Student Affairs is Dr. Catherine M. Dungca, Ed.D.',
+    keywords: 'osa head point person director officer contact dr catherine dungca edd',
+  },
+  {
     question: 'Where is the Office of the Student Affairs, and what are its office hours?',
     answer: 'The Office of the Student Affairs is near the TCC Gymnasium. Regular office hours are Monday to Friday, 8:00 AM to 5:00 PM. The head is usually available from 6:00 AM until 9:00 PM. Lunch break is from 12:00 PM to 1:00 PM.',
     keywords: 'osa location office hours hours schedule gymnasium monday friday lunch break',
