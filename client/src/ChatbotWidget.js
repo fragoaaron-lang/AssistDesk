@@ -32,6 +32,26 @@ const FAQ_GROUPS = [
     ],
   },
   {
+    title: 'Office of Student Affairs',
+    questions: [
+      'What services does the Office of the Student Affairs provide?',
+      'How can I contact the Office of the Student Affairs?',
+      'Where is the Office of the Student Affairs, and what are its office hours?',
+      'How can I request a student ID or a replacement ID?',
+      'How can I report a student concern or complaint to OSA?',
+      'How do I file a complaint about another student?',
+      'Where can I find the school rules and regulations for students?',
+      'What are the consequences of violating school policies?',
+      'How do I appeal a disciplinary decision?',
+      'How can a student organization request event approval?',
+      'What are the requirements for student leadership positions?',
+      'How can I become a student representative or student leader?',
+      'What should I do if I lose an item on campus?',
+      'How can I claim a lost-and-found item?',
+      'How long does OSA take to process a request or complaint?',
+    ],
+  },
+  {
     title: 'Basic Education Department',
     questions: [
       'Who is the principal of Basic Education?',
