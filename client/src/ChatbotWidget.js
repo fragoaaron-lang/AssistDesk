@@ -82,7 +82,7 @@ function ChatbotWidget() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [history, sending, open]);
 
-  if (!token || !user) return null;
+  if (!token || !user || user.account_status === 'terminated') return null;
 
   const getAssistantName = () => {
     if (gender === 'boy') return 'Alex';

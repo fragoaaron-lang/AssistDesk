@@ -31,8 +31,7 @@ module.exports = async (req, res, next) => {
     };
 
     const isTerminatedAccountView = user.account_status === 'terminated'
-      && ((req.baseUrl === '/api/auth' && req.path === '/me' && req.method === 'GET')
-        || (req.baseUrl === '/api/ai' && req.path === '/ask' && req.method === 'POST'));
+      && req.baseUrl === '/api/auth' && req.path === '/me' && req.method === 'GET';
     if (user.account_status !== 'active' && !isTerminatedAccountView) {
       return res.status(403).json({ message: 'This account is not active.' });
     }

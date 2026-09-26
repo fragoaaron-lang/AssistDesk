@@ -220,17 +220,16 @@ function DashboardPage() {
             <div style={{ color: '#a12b2b', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Account terminated</div>
             <h2 style={{ margin: '10px 0 12px' }}>Your account has been terminated</h2>
             <p style={{ lineHeight: 1.7 }}>
-              This account was terminated because it violated AssistDesk policies and regulations. If you believe this decision was made in error, you may appeal to an administrator using the AI chatbot or by email.
+              This account was terminated because it violated AssistDesk policies and regulations. If you believe this decision was made in error, you may appeal to an administrator by email.
             </p>
             <div className="inline-actions" style={{ marginTop: '24px', gap: '12px' }}>
-              <a className="institutional-btn" href="/assistant">Appeal using the AI chatbot</a>
               {appealMailLink ? (
                 <a className="institutional-btn small secondary" href={appealMailLink}>Appeal by email</a>
               ) : (
-                <p className="helper-text" style={{ flexBasis: '100%' }}>Email appeals are not configured. Please use the AI chatbot to contact an administrator.</p>
+                <p className="helper-text" style={{ flexBasis: '100%' }}>Email appeals are not configured. Please contact an administrator directly.</p>
               )}
             </div>
-            <p className="helper-text" style={{ marginTop: '24px' }}>You can still use the appeal assistant or sign out. Other account services are unavailable while the account is terminated.</p>
+            <p className="helper-text" style={{ marginTop: '24px' }}>Other account services are unavailable while the account is terminated. You may sign out below.</p>
           </main>
         </div>
       </div>
