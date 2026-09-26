@@ -1544,6 +1544,24 @@ button, input, select, textarea {
 .report-chart-bar.status { background: var(--gold); }
 .report-chart-bar.requester { background: var(--navy); }
 .report-chart-bar.concern { background: #d97745; }
+.report-chart-bar.faq { background: linear-gradient(90deg, #55c9bd, #1687c9); }
+.report-most-faq-card { grid-column: 1 / -1; }
+.report-faq-bar-chart { display: grid; gap: 14px; }
+.report-faq-bar-row { min-width: 0; }
+.report-faq-bar-label {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 5px;
+  color: var(--text);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+.report-faq-bar-label span { min-width: 0; overflow-wrap: anywhere; }
+.report-faq-bar-label strong { flex: 0 0 auto; color: var(--navy); }
+.report-faq-bar-row .report-chart-track { height: 11px; }
+.report-faq-bar-row .report-chart-bar { min-width: 0; }
 .report-department-bar-chart {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(58px, 1fr));

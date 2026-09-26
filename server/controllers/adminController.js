@@ -59,14 +59,16 @@ exports.getReports = async (req, res) => {
     const faqs = await Faq.findAll({ attributes: ['id', 'question', 'keywords'] });
     const chatMessages = await ChatLog.findAll({ attributes: ['message'] });
     const normalizeText = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ');
-    const mostAskedFaq = faqs.map((faq) => {
+    const faqUsage = faqs.map((faq) => {
       const terms = `${faq.question} ${faq.keywords || ''}`.split(/\s+/).map(normalizeText).filter((term) => term.length > 3);
       const count = chatMessages.filter((chat) => {
         const message = normalizeText(chat.message);
         return terms.length > 0 && terms.filter((term) => message.includes(term)).length >= Math.min(2, terms.length);
       }).length;
       return { id: faq.id, question: faq.question, count };
-    }).sort((first, second) => second.count - first.count)[0] || null;
+    }).sort((first, second) => second.count - first.count);
+    const mostAskedFaqs = faqUsage.filter((faq) => faq.count > 0).slice(0, 5);
+    const mostAskedFaq = faqUsage[0] || null;
 
     const concernCounts = await Ticket.findAll({
       attributes: ['category', [Ticket.sequelize.fn('COUNT', Ticket.sequelize.col('id')), 'count']],
@@ -146,6 +148,7 @@ exports.getReports = async (req, res) => {
       recentTickets,
       monthlyTicketCounts,
       mostAskedFaq,
+      mostAskedFaqs,
     });
   } catch (error) {
     console.error(error);

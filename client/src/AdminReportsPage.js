@@ -121,6 +121,11 @@ function AdminReportsPage() {
     return count > 0 ? `${Math.max(8, (count / maximum) * 100)}%` : '0%';
   };
 
+  const getFaqChartWidth = (value, rows) => {
+    const maximum = Math.max(...rows.map((row) => Number(row.count) || 0), 1);
+    return `${Math.max(5, ((Number(value) || 0) / maximum) * 100)}%`;
+  };
+
   const getDepartmentStatusHeight = (value, rows) => {
     const maximum = Math.max(...rows.map((row) => (Number(row.resolved) || 0) + (Number(row.unresolved) || 0)), 1);
     const count = Number(value) || 0;
@@ -386,9 +391,18 @@ function AdminReportsPage() {
               </div>
             </div>
           </div>
-          <div className="institutional-card report-donut-card">
-            <div className="report-card-heading"><div><h3>Most asked FAQ</h3><span>Based on assistant questions</span></div></div>
-            {reports.mostAskedFaq ? <div className="report-faq-highlight"><strong>{reports.mostAskedFaq.question}</strong><span>{reports.mostAskedFaq.count} matching question(s)</span></div> : <p className="small-muted">No FAQ activity yet</p>}
+          <div className="institutional-card report-bars-card report-most-faq-card">
+            <div className="report-card-heading"><div><h3>Most asked FAQs</h3><span>Top questions matched in assistant conversations</span></div></div>
+            {reports.mostAskedFaqs?.length > 0 ? (
+              <div className="report-faq-bar-chart" aria-label="Most asked FAQs">
+                {reports.mostAskedFaqs.map((faq) => (
+                  <div key={faq.id} className="report-faq-bar-row" title={`${faq.question}: ${faq.count} matching question(s)`}>
+                    <div className="report-faq-bar-label"><span>{faq.question}</span><strong>{faq.count}</strong></div>
+                    <div className="report-chart-track"><span className="report-chart-bar faq" style={{ width: getFaqChartWidth(faq.count, reports.mostAskedFaqs) }} /></div>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="small-muted">No FAQ activity yet.</p>}
           </div>
           <div className="institutional-card report-bars-card report-status-bars-card">
             <h3>Resolved vs unresolved by department</h3>
