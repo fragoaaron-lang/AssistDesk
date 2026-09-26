@@ -657,9 +657,13 @@ button, input, select, textarea {
 .mobile-menu-actions .institutional-btn.secondary.small {
   min-height: 46px;
   justify-content: center;
-  background: linear-gradient(135deg, #f7f3e8, #f2d99b);
-  color: var(--navy);
-  border: 1px solid rgba(15,45,82,0.08);
+  background: linear-gradient(135deg, #d92d20, #b42318);
+  color: #fff;
+  border: 1px solid #b42318;
+}
+
+.mobile-menu-actions .institutional-btn.secondary.small.logout-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #c5221a, #912018);
 }
 
 .header-actions {
@@ -1423,8 +1427,15 @@ button, input, select, textarea {
   cursor: pointer;
 }
 
-.profile-logout-btn:hover:not(:disabled) {
-  background: var(--surface-soft);
+.profile-logout-btn.logout-button {
+  border-color: #b42318;
+  background: linear-gradient(135deg, #d92d20, #b42318);
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(180, 35, 24, 0.2);
+}
+
+.profile-logout-btn.logout-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #c5221a, #912018);
 }
 
 .profile-logout-btn:disabled {
@@ -1679,6 +1690,22 @@ button, input, select, textarea {
   background: linear-gradient(135deg, #f7f3e8, #ede0b2);
   color: var(--navy);
   box-shadow: none;
+}
+
+.institutional-btn.secondary.logout-button {
+  border: 1px solid #b42318;
+  background: linear-gradient(135deg, #d92d20, #b42318);
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(180, 35, 24, 0.2);
+}
+
+.institutional-btn.secondary.logout-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #c5221a, #912018);
+}
+
+.logout-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
 }
 
 .institutional-btn.small {

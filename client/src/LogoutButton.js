@@ -14,7 +14,7 @@ function LogoutButton({ onBeforeLogout, className = 'institutional-btn secondary
 
   return (
     <>
-      <button type="button" className={className} onClick={handleLogout} disabled={loggingOut}>
+      <button type="button" className={`logout-button ${className}`} onClick={handleLogout} disabled={loggingOut}>
         {loggingOut ? 'Logging out...' : 'Logout'}
       </button>
       {loggingOut && (
