@@ -24,6 +24,16 @@ const faqEntries = [
     keywords: 'registrar enrollment process freshman transferee returning old students guidance window 5 window 4 dean advising subject encoding window 6 assessment sc fee window 8 cashier yellow white green copy',
   },
   {
+    question: 'How does adding a subject work?',
+    answer: 'A student may add or change subjects starting in the second week of the semester, with prior approval from their adviser and payment of the appropriate fee. To have the subject credited, consult the Dean or Department Head and report the change on the prescribed form to Accounting and the Registrar within the allowed subject-load revision period.',
+    keywords: 'registrar add adding change subject course adviser approval dean department head accounting form second week semester fee revision load',
+  },
+  {
+    question: 'How does dropping a subject work?',
+    answer: 'A subject drop must be acknowledged by the Dean and professor and officially reported to the Registrar on the prescribed form; otherwise, it may receive a failing mark and be recorded in the student’s permanent record. Drops officially filed during the subject-load revision period do not appear in the permanent record or indicate academic performance. Drops after enrollment and before preliminary examinations receive an A.W. (Authorized Withdrawal) remark. No subject drops are allowed after preliminary examinations.',
+    keywords: 'registrar drop dropping subject course dean professor prescribed form official report permanent record failing aw authorized withdrawal preliminary examinations revision load',
+  },
+  {
     question: 'Where can college students evaluate their grades?',
     answer: 'College students can evaluate their grades at Registrar Windows 1, 2, or 3.',
     keywords: 'registrar college evaluate grades evaluation windows 1 2 3',
