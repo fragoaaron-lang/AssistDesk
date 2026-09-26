@@ -62,6 +62,28 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   useEffect(() => {
+    if (!token) return undefined;
+
+    const refreshAccountStatus = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUser(response.data.user);
+      } catch (error) {
+        if (error.response?.status === 401) {
+          localStorage.removeItem('assistdesk_token');
+          setToken(null);
+          setUser(null);
+        }
+      }
+    };
+
+    const statusRefreshTimer = window.setInterval(refreshAccountStatus, 30000);
+    return () => window.clearInterval(statusRefreshTimer);
+  }, [token]);
+
+  useEffect(() => {
     applySavedTheme(user);
   }, [user?.id, user?.email]);
 

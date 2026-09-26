@@ -14,6 +14,10 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     return <Navigate to="/" replace />;
   }
 
+  if (user.account_status === 'terminated' && !['/dashboard', '/assistant'].includes(location.pathname)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
     return <Navigate to="/" replace />;
   }

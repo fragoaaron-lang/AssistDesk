@@ -29,6 +29,10 @@ function LoginPage({ modal = false, onSwitch }) {
       const result = await login(email, password);
       const userName = result?.user?.name || email.split('@')[0];
       const firstName = userName.split(' ')[0];
+      if (result?.user?.account_status === 'terminated') {
+        navigate('/dashboard');
+        return;
+      }
       setWelcomeName(firstName);
       sessionStorage.setItem('assistdesk_show_welcome_splash', 'true');
       sessionStorage.setItem('assistdesk_welcome_name', firstName);

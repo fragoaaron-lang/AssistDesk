@@ -198,3 +198,24 @@ exports.deleteUser = async (req, res) => {
     return res.status(500).json({ message: 'Unable to terminate user account.' });
   }
 };
+
+exports.reactivateUser = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+    if (user.id === req.user.id || user.role === 'admin') {
+      return res.status(403).json({ message: 'Administrator accounts cannot be reactivated here.' });
+    }
+    if (user.account_status !== 'terminated') {
+      return res.status(400).json({ message: 'Only terminated accounts can be reactivated.' });
+    }
+
+    await user.update({ account_status: 'active' });
+    return res.json({ message: 'User account reactivated successfully.' });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Unable to reactivate user account.' });
+  }
+};

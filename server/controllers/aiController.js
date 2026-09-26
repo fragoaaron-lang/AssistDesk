@@ -1,4 +1,4 @@
-const { Faq, Service, Department, ChatLog, Ticket, TicketUpdate, Notification } = require('../models');
+const { Faq, Service, Department, ChatLog, Ticket, TicketUpdate, Notification, User } = require('../models');
 const { notifyUser, notifyAdmins, notifyDepartmentAdmins } = require('../utils/socket');
 const { addTicketNumber } = require('../utils/ticketNumber');
 
@@ -320,6 +320,13 @@ const getTicketReference = (message) => {
   return directIdMatch ? Number(directIdMatch[1]) : null;
 };
 
+const isAccountAppealMessage = (message) => /\b(appeal|appealing|request(?:ing)?\s+(?:an?\s+)?review|review\s+(?:my\s+)?(?:account|termination)|terminated\s+account)\b/i.test(String(message || ''));
+
+const getAppealContactEmail = () => {
+  const configuredEmail = process.env.APPEAL_CONTACT_EMAIL || process.env.MAIL_USER || process.env.MAIL_FROM || '';
+  return configuredEmail.match(/<([^>]+)>/)?.[1] || configuredEmail || null;
+};
+
 const handleTicketCommand = async (message, userId) => {
   const normalized = normalize(message);
 
@@ -438,23 +445,57 @@ const handleTicketCommand = async (message, userId) => {
 
 exports.askAssistant = async (req, res) => {
   try {
-    const { message, user_id, assistant_name: requestedAssistantName } = req.body;
+    const { message, account_appeal: requestedAccountAppeal, assistant_name: requestedAssistantName } = req.body;
     if (!message) {
       return res.status(400).json({ message: 'A message is required.' });
     }
 
-    const commandResult = await handleTicketCommand(message, req.user.id);
-    const result = commandResult || await buildResponse(message);
+    const isTerminated = req.user.account_status === 'terminated';
+    const appealSubmitted = isTerminated && (requestedAccountAppeal === true || isAccountAppealMessage(message));
+    const appealEmail = getAppealContactEmail();
+    let result;
+
+    if (appealSubmitted) {
+      result = {
+        ai_response: 'Your appeal has been forwarded to the AssistDesk administrators for review. Please keep an eye on your email for a response.',
+      };
+    } else if (isTerminated) {
+      result = {
+        ai_response: `This account was terminated because it violated AssistDesk policies and regulations. To appeal, say “I want to appeal my account termination” and include the reason for your request. I will forward it to an administrator.${appealEmail ? ` You may also email ${appealEmail}.` : ''}`,
+      };
+    } else {
+      const commandResult = await handleTicketCommand(message, req.user.id);
+      result = commandResult || await buildResponse(message);
+    }
+
     const assistantName = ['Alex', 'Maya'].includes(requestedAssistantName) ? requestedAssistantName : 'Assistant';
     result.ai_response = result.ai_response
       .replace('I am AssistDesk, your campus support assistant', `I am ${assistantName}, your AssistDesk campus support assistant`)
       .replace('Hello! I am AssistDesk, your campus support assistant', `Hello! I am ${assistantName}, your AssistDesk campus support assistant`);
     const chatLog = await ChatLog.create({
-      user_id: user_id || 0,
+      user_id: req.user.id,
       message,
       ai_response: result.ai_response,
       matched_department_id: result.matched_department,
     });
+
+    if (appealSubmitted) {
+      const administrators = await User.findAll({
+        where: { role: 'admin', account_status: 'active' },
+        attributes: ['id'],
+      });
+      const appealSummary = String(message).replace(/\s+/g, ' ').trim().slice(0, 1000);
+      await Notification.bulkCreate(administrators.map((administrator) => ({
+        user_id: administrator.id,
+        message: `Account appeal from ${req.user.name || 'user'} (${req.user.email}): ${appealSummary}`,
+      })));
+      notifyAdmins('accountAppealReceived', {
+        user_id: req.user.id,
+        name: req.user.name,
+        email: req.user.email,
+        message: appealSummary,
+      });
+    }
 
     return res.json({
       message: 'Assistant response generated.',

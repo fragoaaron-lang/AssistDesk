@@ -95,7 +95,7 @@ function DashboardPage() {
   };
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || user?.account_status === 'terminated') return;
 
     loadData();
     const socket = getSocket();
@@ -110,7 +110,7 @@ function DashboardPage() {
       socket.off('ticketStatusUpdated', loadData);
       socket.off('announcementCreated', loadData);
     };
-  }, [token]);
+  }, [token, user?.account_status]);
 
   const getHeatStrength = (count) => Math.min(0.92, 0.2 + (Number(count) * 0.12));
 
@@ -179,7 +179,7 @@ function DashboardPage() {
   );
 
 
-  if (showWelcomeSplash) {
+  if (showWelcomeSplash && user?.account_status !== 'terminated') {
     return (
       <main className="splash-screen" aria-label="Loading AssistDesk">
         <div className="splash-mark">
@@ -192,6 +192,48 @@ function DashboardPage() {
         <p>Preparing your support workspace</p>
         <div className="splash-progress" aria-hidden="true"><span /></div>
       </main>
+    );
+  }
+
+  if (user?.account_status === 'terminated') {
+    const appealSubject = encodeURIComponent('Appeal of AssistDesk account termination');
+    const appealBody = encodeURIComponent(`Hello AssistDesk administrator,\n\nI would like to appeal the termination of my account.\n\nName: ${user.name || ''}\nEmail: ${user.email || ''}\n\nPlease review my account.\n`);
+    const appealMailLink = user.appeal_email
+      ? `mailto:${user.appeal_email}?subject=${appealSubject}&body=${appealBody}`
+      : null;
+
+    return (
+      <div className="app-shell">
+        <div className="page-shell">
+          <header className="page-header">
+            <button type="button" className="header-brand header-brand-button" onClick={() => window.location.reload()} aria-label="Refresh AssistDesk">
+              <div className="brand-badge"><img src="/assistdesk-logo.svg" alt="AssistDesk logo" /></div>
+              <div><h1>AssistDesk</h1><p>Account status</p></div>
+            </button>
+            <div className="header-actions">
+              <HeaderProfile user={user} />
+              <LogoutButton />
+            </div>
+          </header>
+
+          <main className="institutional-card" role="alert" style={{ maxWidth: '820px', margin: '48px auto', padding: 'clamp(24px, 5vw, 48px)' }}>
+            <div style={{ color: '#a12b2b', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Account terminated</div>
+            <h2 style={{ margin: '10px 0 12px' }}>Your account has been terminated</h2>
+            <p style={{ lineHeight: 1.7 }}>
+              This account was terminated because it violated AssistDesk policies and regulations. If you believe this decision was made in error, you may appeal to an administrator using the AI chatbot or by email.
+            </p>
+            <div className="inline-actions" style={{ marginTop: '24px', gap: '12px' }}>
+              <a className="institutional-btn" href="/assistant">Appeal using the AI chatbot</a>
+              {appealMailLink ? (
+                <a className="institutional-btn small secondary" href={appealMailLink}>Appeal by email</a>
+              ) : (
+                <p className="helper-text" style={{ flexBasis: '100%' }}>Email appeals are not configured. Please use the AI chatbot to contact an administrator.</p>
+              )}
+            </div>
+            <p className="helper-text" style={{ marginTop: '24px' }}>You can still use the appeal assistant or sign out. Other account services are unavailable while the account is terminated.</p>
+          </main>
+        </div>
+      </div>
     );
   }
 

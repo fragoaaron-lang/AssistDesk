@@ -19,7 +19,7 @@ function AiChatPage() {
     try {
       const res = await axios.post(
         `${API_BASE_URL}/api/ai/ask`,
-        { message, user_id: user?.id || 0 },
+        { message, account_appeal: user?.account_status === 'terminated' },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -33,6 +33,69 @@ function AiChatPage() {
       setHistory((prev) => [...prev, { role: 'assistant', text: 'Unable to connect to the assistant.' }]);
     }
   };
+
+  if (user?.account_status === 'terminated') {
+    const appealSubject = encodeURIComponent('Appeal of AssistDesk account termination');
+    const appealBody = encodeURIComponent(`Hello AssistDesk administrator,\n\nI would like to appeal the termination of my account.\n\nName: ${user.name || ''}\nEmail: ${user.email || ''}\n\nMy explanation:\n`);
+    const appealMailLink = user.appeal_email
+      ? `mailto:${user.appeal_email}?subject=${appealSubject}&body=${appealBody}`
+      : null;
+
+    return (
+      <div className="app-shell">
+        <div className="page-shell">
+          <header className="page-header">
+            <button type="button" className="header-brand header-brand-button" onClick={() => window.location.reload()} aria-label="Refresh AssistDesk">
+              <div className="brand-badge"><img src="/assistdesk-logo.svg" alt="AssistDesk logo" /></div>
+              <div><h1>AssistDesk</h1><p>Account appeal</p></div>
+            </button>
+            <div className="header-actions">
+              <a className="header-nav-button" href="/dashboard">Dashboard</a>
+              <LogoutButton />
+            </div>
+          </header>
+
+          <div className="page-intro">
+            <div>
+              <h2>Appeal your account termination</h2>
+              <p>Explain why you believe the decision should be reviewed. Your message will be forwarded to the administrators.</p>
+            </div>
+          </div>
+
+          <section className="institutional-card" style={{ maxWidth: '820px', margin: '0 auto' }}>
+            <div style={{ marginBottom: '18px', padding: '14px 16px', borderRadius: '12px', background: 'var(--surface-soft)', lineHeight: 1.6 }}>
+              This account was terminated because it violated AssistDesk policies and regulations. You can submit an appeal here or email the administrator.
+            </div>
+            <div style={{ minHeight: '180px', maxHeight: '360px', overflowY: 'auto', marginBottom: '16px' }} aria-live="polite">
+              {history.length === 0 && <p className="helper-text">Use the form below to send your appeal and any relevant details.</p>}
+              {history.map((entry, index) => (
+                <div key={index} className={`chat-message ${entry.role}`}>
+                  <strong>{entry.role === 'user' ? 'You' : 'AssistDesk'}:</strong>
+                  <span>{entry.text}</span>
+                </div>
+              ))}
+            </div>
+            <form onSubmit={sendMessage} style={{ display: 'grid', gap: '12px' }}>
+              <textarea
+                className="institutional-input"
+                value={message}
+                onChange={(event) => setMessage(event.target.value)}
+                placeholder="Describe why you are appealing and include any relevant details..."
+                aria-label="Appeal details"
+                rows={5}
+                required
+              />
+              <div className="inline-actions" style={{ gap: '10px' }}>
+                <button className="institutional-btn" type="submit" disabled={!message.trim()}>Send appeal to administrators</button>
+                {appealMailLink && <a className="institutional-btn small secondary" href={appealMailLink}>Appeal by email</a>}
+              </div>
+            </form>
+            {!appealMailLink && <p className="helper-text" style={{ marginTop: '12px' }}>Email appeals are not configured. Please submit your appeal using this form.</p>}
+          </section>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app-shell">

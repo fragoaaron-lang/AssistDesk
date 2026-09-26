@@ -47,7 +47,7 @@ function AdminReportsPage() {
   const [showUserDirectory, setShowUserDirectory] = useState(() => new URLSearchParams(window.location.search).get('view') === 'users');
   const [showTerminatedUsers, setShowTerminatedUsers] = useState(false);
   const [expandedUserRoles, setExpandedUserRoles] = useState({});
-  const [deletingUserId, setDeletingUserId] = useState(null);
+  const [updatingUserId, setUpdatingUserId] = useState(null);
 
   const loadReports = async () => {
     try {
@@ -72,8 +72,8 @@ function AdminReportsPage() {
   };
 
   const terminateUser = async (directoryUser) => {
-    if (!window.confirm(`Terminate ${directoryUser.name || directoryUser.email}'s account? This cannot be undone.`)) return;
-    setDeletingUserId(directoryUser.id);
+    if (!window.confirm(`Terminate ${directoryUser.name || directoryUser.email}'s account? Related tickets and chat history will be removed.`)) return;
+    setUpdatingUserId(directoryUser.id);
     try {
       await axios.delete(`${API_BASE_URL}/api/admin/users/${directoryUser.id}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -83,7 +83,23 @@ function AdminReportsPage() {
     } catch (error) {
       setMessage(error.response?.data?.message || 'Unable to terminate user account.');
     } finally {
-      setDeletingUserId(null);
+      setUpdatingUserId(null);
+    }
+  };
+
+  const reactivateUser = async (directoryUser) => {
+    if (!window.confirm(`Reactivate ${directoryUser.name || directoryUser.email}'s account? They will be able to sign in again. Previously removed data will not be restored.`)) return;
+    setUpdatingUserId(directoryUser.id);
+    try {
+      await axios.post(`${API_BASE_URL}/api/admin/users/${directoryUser.id}/reactivate`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setMessage('User account reactivated successfully.');
+      await loadReports();
+    } catch (error) {
+      setMessage(error.response?.data?.message || 'Unable to reactivate user account.');
+    } finally {
+      setUpdatingUserId(null);
     }
   };
 
@@ -233,8 +249,8 @@ function AdminReportsPage() {
                               <td>{directoryUser.Department?.name || 'Unassigned'}</td>
                               {roleGroup.name === 'student' && <td>{directoryUser.student_number || 'N/A'}</td>}
                               <td>{directoryUser.account_status || 'active'}</td>
-                              <td><button type="button" className="user-terminate-button" onClick={() => terminateUser(directoryUser)} disabled={deletingUserId === directoryUser.id}>
-                                {deletingUserId === directoryUser.id ? 'Terminating...' : 'Terminate'}
+                              <td><button type="button" className="user-terminate-button" onClick={() => terminateUser(directoryUser)} disabled={updatingUserId === directoryUser.id}>
+                                {updatingUserId === directoryUser.id ? 'Updating...' : 'Terminate'}
                               </button></td>
                             </tr>
                           ))}
@@ -268,10 +284,10 @@ function AdminReportsPage() {
                   {expandedUserRoles[`terminated-${roleGroup.name}`] === true && (
                     <div className="report-table-scroll">
                       <table className="report-table">
-                        <thead><tr><th>Name</th><th>Email</th><th>Department</th>{roleGroup.name === 'student' && <th>Student Number</th>}<th>Status</th></tr></thead>
+                        <thead><tr><th>Name</th><th>Email</th><th>Department</th>{roleGroup.name === 'student' && <th>Student Number</th>}<th>Status</th><th>Actions</th></tr></thead>
                         <tbody>
                           {roleGroup.users.length === 0 ? (
-                            <tr><td colSpan={roleGroup.name === 'student' ? 5 : 4} className="small-muted">No terminated users in this group</td></tr>
+                            <tr><td colSpan={roleGroup.name === 'student' ? 6 : 5} className="small-muted">No terminated users in this group</td></tr>
                           ) : roleGroup.users.map((directoryUser) => (
                             <tr key={directoryUser.id}>
                               <td>{directoryUser.name || 'Unknown'}</td>
@@ -279,6 +295,14 @@ function AdminReportsPage() {
                               <td>{directoryUser.Department?.name || 'Unassigned'}</td>
                               {roleGroup.name === 'student' && <td>{directoryUser.student_number || 'N/A'}</td>}
                               <td>Terminated</td>
+                              <td><button
+                                type="button"
+                                className="user-reactivate-button"
+                                onClick={() => reactivateUser(directoryUser)}
+                                disabled={updatingUserId === directoryUser.id}
+                              >
+                                {updatingUserId === directoryUser.id ? 'Updating...' : 'Reactivate'}
+                              </button></td>
                             </tr>
                           ))}
                         </tbody>

@@ -18,6 +18,8 @@ const sanitizeUser = (user) => ({
   student_number: user.student_number || null,
   profile_picture: user.profile_picture || null,
   created_at: user.created_at,
+  appeal_email: (process.env.APPEAL_CONTACT_EMAIL || process.env.MAIL_USER || process.env.MAIL_FROM || '')
+    .match(/<([^>]+)>/)?.[1] || process.env.APPEAL_CONTACT_EMAIL || process.env.MAIL_USER || process.env.MAIL_FROM || null,
 });
 
 const PASSWORD_POLICY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
@@ -214,20 +216,16 @@ exports.login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
-    if (user.account_status === 'terminated') {
-      return res.status(403).json({ message: 'This account has been terminated. Please contact an administrator for assistance.' });
-    }
-
     if (user.account_status === 'pending_verification') {
       return res.status(403).json({ message: 'Please verify your email address before signing in.' });
-    } else if (user.account_status !== 'active') {
+    } else if (user.account_status !== 'active' && user.account_status !== 'terminated') {
       return res.status(403).json({ message: 'This account is not active.' });
     }
 
     const token = signToken(user);
 
     return res.json({
-      message: 'Login successful.',
+      message: user.account_status === 'terminated' ? 'Account status notice.' : 'Login successful.',
       token,
       user: sanitizeUser(user),
     });

@@ -1032,6 +1032,23 @@ button, input, select, textarea {
   cursor: wait;
   opacity: 0.65;
 }
+.user-reactivate-button {
+  padding: 5px 9px;
+  border: 1px solid #75b79a;
+  border-radius: 6px;
+  background: #effaf4;
+  color: #17653d;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.user-reactivate-button:hover:not(:disabled) {
+  background: #ddf3e7;
+}
+.user-reactivate-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
 .user-directory-archive-button {
   display: inline-grid;
   width: 36px;
