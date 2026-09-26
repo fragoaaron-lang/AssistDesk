@@ -121,6 +121,12 @@ function AdminReportsPage() {
     return count > 0 ? `${Math.max(8, (count / maximum) * 100)}%` : '0%';
   };
 
+  const getDepartmentStatusHeight = (value, rows) => {
+    const maximum = Math.max(...rows.map((row) => (Number(row.resolved) || 0) + (Number(row.unresolved) || 0)), 1);
+    const count = Number(value) || 0;
+    return count > 0 ? `${Math.max(8, (count / maximum) * 100)}%` : '0%';
+  };
+
   const priorityColors = { low: '#37c94f', medium: '#1f9dd9', urgent: '#ed1725' };
   const priorityData = ['low', 'medium', 'urgent'].map((priority) => ({
     name: priority,
@@ -384,13 +390,37 @@ function AdminReportsPage() {
             <div className="report-card-heading"><div><h3>Most asked FAQ</h3><span>Based on assistant questions</span></div></div>
             {reports.mostAskedFaq ? <div className="report-faq-highlight"><strong>{reports.mostAskedFaq.question}</strong><span>{reports.mostAskedFaq.count} matching question(s)</span></div> : <p className="small-muted">No FAQ activity yet</p>}
           </div>
-          <div className="institutional-card report-bars-card">
+          <div className="institutional-card report-bars-card report-status-bars-card">
             <h3>Resolved vs unresolved by department</h3>
-            <div className="report-chart" aria-label="Tickets by department">
-              {reports.ticketsByDepartmentStatus.map((row) => (
-                <div key={row.department_id || 'unassigned'} className="report-department-status-row"><div className="report-chart-label"><span>{row.department_name}</span><strong>{row.resolved} resolved / {row.unresolved} unresolved</strong></div><small>Closed or resolved: {row.resolved} · Open or pending: {row.unresolved}</small></div>
-              ))}
-            </div>
+            {reports.ticketsByDepartmentStatus.length > 0 ? (
+              <>
+                <div className="report-status-legend" aria-label="Graph legend">
+                  <span><i className="report-status-swatch resolved" aria-hidden="true" />Resolved</span>
+                  <span><i className="report-status-swatch unresolved" aria-hidden="true" />Unresolved</span>
+                </div>
+                <div
+                  className="report-status-bar-chart"
+                  role="img"
+                  aria-label={`Resolved and unresolved tickets by department: ${reports.ticketsByDepartmentStatus.map((row) => `${row.department_name}: ${row.resolved} resolved, ${row.unresolved} unresolved`).join('; ')}`}
+                >
+                  {reports.ticketsByDepartmentStatus.map((row) => (
+                    <div key={row.department_id || 'unassigned'} className="report-status-bar-group" title={`${row.department_name}: ${row.resolved} resolved, ${row.unresolved} unresolved`}>
+                      <div className="report-status-bar-pair">
+                        <div className="report-status-bar-column">
+                          <strong>{row.resolved}</strong>
+                          <div className="report-status-bar-plot"><span className="report-status-bar resolved" style={{ height: getDepartmentStatusHeight(row.resolved, reports.ticketsByDepartmentStatus) }} /></div>
+                        </div>
+                        <div className="report-status-bar-column">
+                          <strong>{row.unresolved}</strong>
+                          <div className="report-status-bar-plot"><span className="report-status-bar unresolved" style={{ height: getDepartmentStatusHeight(row.unresolved, reports.ticketsByDepartmentStatus) }} /></div>
+                        </div>
+                      </div>
+                      <span className="report-status-bar-label">{row.department_name}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : <p className="small-muted">No department ticket data yet.</p>}
           </div>
           </section>
           <section className="institutional-card report-table-card">
