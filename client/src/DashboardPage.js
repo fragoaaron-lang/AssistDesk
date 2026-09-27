@@ -207,7 +207,28 @@ function DashboardPage() {
   }
 
   return (
-    <div className="app-shell">
+    <div className="app-shell dashboard-heatmap-shell">
+      <div className="dashboard-heatmap-background" aria-hidden="true">
+        <img src="/schoolmap.png" alt="" />
+        <div className="dashboard-heatmap-overlay">
+          {visibleDepartments.filter((dept) => Number(dept.ticket_count || 0) > 0).map((dept) => {
+            const pos = getBuildingPosition(dept);
+            const ticketCount = Number(dept.ticket_count || 0);
+            return (
+              <span
+                key={`dashboard-bg-heat-${dept.id}`}
+                className="dashboard-heatmap-spot"
+                style={{
+                  left: `${pos.x}%`,
+                  top: `${pos.y}%`,
+                  '--heat-opacity': getHeatStrength(ticketCount),
+                  '--heat-size': `${Math.min(34, 16 + ticketCount * 2)}%`,
+                }}
+              />
+            );
+          })}
+        </div>
+      </div>
       <div className="page-shell">
         <div className={`mobile-menu-backdrop ${mobileMenuOpen ? 'show' : ''}`} onClick={() => setMobileMenuOpen(false)} />
         <header className="page-header">

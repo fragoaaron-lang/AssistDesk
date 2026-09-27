@@ -2139,6 +2139,56 @@ button, input, select, textarea {
 
 .helper-text { color: var(--muted); font-size: 0.95rem; margin: 8px 0 0; }
 
+.dashboard-heatmap-shell {
+  position: relative;
+  isolation: isolate;
+}
+
+.dashboard-heatmap-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.24;
+}
+
+.dashboard-heatmap-background::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(247, 250, 255, 0.78), rgba(233, 242, 255, 0.34));
+}
+
+.dashboard-heatmap-background img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.8) contrast(1.08) brightness(0.9);
+}
+
+.dashboard-heatmap-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.dashboard-heatmap-spot {
+  position: absolute;
+  width: var(--heat-size);
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(239, 25, 32, var(--heat-opacity)) 0 11%, rgba(255, 196, 0, calc(var(--heat-opacity) * 0.9)) 31%, rgba(40, 224, 52, calc(var(--heat-opacity) * 0.72)) 58%, rgba(40, 224, 52, 0) 76%);
+  filter: blur(16px);
+  mix-blend-mode: multiply;
+  opacity: 0.75;
+}
+
+.page-shell {
+  position: relative;
+  z-index: 1;
+}
+
 .map-shell {
   border: 1px solid var(--border);
   border-radius: 18px;
