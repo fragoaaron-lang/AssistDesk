@@ -133,9 +133,27 @@ const sendPasswordResetEmail = async ({ to, token, userName }) => {
   return { success: true, devMode: false, resetLink };
 };
 
+const sendTicketEtaExpiredEmail = async ({ to, userName, ticketSubject, ticketId, eta }) => {
+  const etaLabel = new Date(eta).toLocaleString();
+  await sendEmail({
+    to,
+    subject: `ETA lapsed for ticket #${ticketId || 'N/A'}: ${ticketSubject}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 680px; margin: 0 auto;">
+        <h2 style="margin-bottom: 12px; color: #b91c1c;">Ticket ETA missed</h2>
+        <p>Hello ${userName || 'there'},</p>
+        <p>The request <strong>${ticketSubject}</strong> was not resolved before its ETA of <strong>${etaLabel}</strong>.</p>
+        <p>As a result, the ticket has been automatically escalated to <strong>urgent</strong> priority and requires immediate attention.</p>
+        <p>Please review the ticket and take the next action without delay.</p>
+      </div>
+    `,
+  });
+};
+
 module.exports = {
   sendPasswordResetEmail,
   sendEmailVerificationEmail,
+  sendTicketEtaExpiredEmail,
   generateVerificationCode,
   buildResetLink,
   buildEmailVerificationLink,

@@ -1,6 +1,7 @@
 const { Ticket, TicketUpdate, Department, User, Notification, Faq, Service } = require('../models');
 const { notifyUser, notifyAdmins, notifyDepartmentAdmins } = require('../utils/socket');
 const { addTicketNumber } = require('../utils/ticketNumber');
+const { sendTicketEtaExpiredEmail } = require('../utils/email');
 
 const normalize = (text) =>
   String(text || '')
@@ -80,6 +81,103 @@ const mapPriorityToDatabase = (priority) => {
   return priority || 'medium';
 };
 
+exports.processMissedEtaTickets = async () => {
+  try {
+    const tickets = await Ticket.findAll({
+      include: [
+        { model: Department, attributes: ['id', 'name'] },
+        { model: User, attributes: ['id', 'name', 'email', 'role', 'department_id'] },
+      ],
+      order: [['estimated_completion_at', 'ASC']],
+    });
+
+    const expiredTickets = tickets.filter((ticket) => {
+      if (ticket.priority === 'urgent') return false;
+      if (['resolved', 'closed'].includes(ticket.status)) return false;
+      if (!ticket.estimated_completion_at) return false;
+      return new Date(ticket.estimated_completion_at) <= new Date();
+    });
+
+    for (const ticket of expiredTickets) {
+      const submitter = ticket.User || await User.findByPk(ticket.user_id, { attributes: ['id', 'name', 'email', 'role', 'department_id'] });
+      const departmentAdmins = await User.findAll({
+        where: { role: 'admin', department_id: ticket.department_id },
+        attributes: ['id', 'name', 'email'],
+      });
+      const fallbackAdmins = departmentAdmins.length > 0 ? departmentAdmins : await User.findAll({
+        where: { role: 'admin' },
+        attributes: ['id', 'name', 'email'],
+      });
+      const adminRecipients = [...new Map((fallbackAdmins || []).map((admin) => [admin.email, admin])).values()];
+
+      ticket.priority = 'urgent';
+      ticket.updated_at = new Date();
+      await ticket.save();
+
+      const escalationMessage = `ETA expired for ticket "${ticket.subject}" and priority was automatically set to urgent.`;
+      const escalatedBy = adminRecipients[0]?.id || submitter?.id || ticket.user_id;
+      await TicketUpdate.create({
+        ticket_id: ticket.id,
+        message: escalationMessage,
+        updated_by: escalatedBy,
+      });
+
+      await Notification.create({
+        user_id: ticket.user_id,
+        message: `Your ticket "${ticket.subject}" missed its ETA and has been escalated to urgent priority.`,
+      });
+
+      for (const admin of adminRecipients) {
+        if (!admin?.email) continue;
+        await Notification.create({
+          user_id: admin.id,
+          message: `Ticket "${ticket.subject}" missed its ETA and was automatically escalated to urgent priority.`,
+        }).catch((notificationError) => {
+          console.error('ETA notification creation failed for admin:', notificationError.message);
+        });
+      }
+
+      notifyUser(ticket.user_id, 'ticketEtaExpired', { ticket });
+      notifyDepartmentAdmins(ticket.department_id, 'ticketEtaExpired', { ticket });
+      notifyAdmins('ticketEtaExpired', { ticket });
+
+      try {
+        if (submitter?.email) {
+          await sendTicketEtaExpiredEmail({
+            to: submitter.email,
+            userName: submitter.name,
+            ticketSubject: ticket.subject,
+            ticketId: ticket.id,
+            eta: ticket.estimated_completion_at,
+          });
+        }
+      } catch (emailError) {
+        console.error('User ETA expiry email failed:', emailError.message);
+      }
+
+      for (const admin of adminRecipients) {
+        if (!admin?.email) continue;
+        try {
+          await sendTicketEtaExpiredEmail({
+            to: admin.email,
+            userName: admin.name,
+            ticketSubject: ticket.subject,
+            ticketId: ticket.id,
+            eta: ticket.estimated_completion_at,
+          });
+        } catch (emailError) {
+          console.error(`Admin ETA expiry email failed for ${admin.email}:`, emailError.message);
+        }
+      }
+    }
+
+    return expiredTickets.length;
+  } catch (error) {
+    console.error('ETA expiry processing failed:', error.message, error.stack);
+    return 0;
+  }
+};
+
 exports.createTicket = async (req, res) => {
   try {
     const { user_id, subject, description, category = 'Other', priority = 'medium', department_id: selectedDepartmentId, estimated_completion_at, attachment_data, attachment_name, attachment_type } = req.body;
@@ -147,6 +245,8 @@ exports.createTicket = async (req, res) => {
     notifyUser(ticket.user_id, 'ticketCreated', { ticket });
     notifyDepartmentAdmins(resolvedDepartmentId, 'ticketCreated', { ticket });
     notifyAdmins('ticketCreated', { ticket });
+
+    await exports.processMissedEtaTickets();
 
     return res.status(201).json(ticket);
   } catch (error) {
@@ -306,6 +406,8 @@ exports.updateTicketEta = async (req, res) => {
       message: `The estimated completion time for "${ticket.subject}" is ${eta.toLocaleString()}.`,
     });
     notifyUser(ticket.user_id, 'ticketEtaUpdated', { ticket, update });
+
+    await exports.processMissedEtaTickets();
 
     return res.json({ ticket, update });
   } catch (error) {

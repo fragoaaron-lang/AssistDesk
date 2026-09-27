@@ -12,6 +12,7 @@ const ticketRoutes = require('./routes/ticketRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const { createSocketServer } = require('./utils/socket');
+const { processMissedEtaTickets } = require('./controllers/ticketController');
 const seedDepartmentAdmins = require('./seed-department-admins');
 
 const app = express();
@@ -188,6 +189,21 @@ sequelize
   .then(() => {
     databaseReady = true;
     console.log(`Server running on http://localhost:${PORT}`);
+
+    const etaMonitorIntervalMs = Number(process.env.ETA_MONITOR_INTERVAL_MS || 60000);
+    const runEtaMonitor = async () => {
+      try {
+        const escalatedCount = await processMissedEtaTickets();
+        if (escalatedCount > 0) {
+          console.log(`Escalated ${escalatedCount} overdue ticket(s) to urgent priority.`);
+        }
+      } catch (error) {
+        console.error('ETA monitor failed:', error.message);
+      }
+    };
+
+    runEtaMonitor();
+    setInterval(runEtaMonitor, etaMonitorIntervalMs);
   })
   .catch((error) => {
     console.error('Unable to connect to the database:', error);
