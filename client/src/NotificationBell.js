@@ -17,7 +17,7 @@ function NotificationBell() {
       const res = await axios.get(`${API_BASE_URL}/api/dashboard/notifications`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setNotifications(res.data);
+      setNotifications(res.data || []);
     } catch (err) {
       console.error('Unable to load notifications', err);
       setNotifications([]);
@@ -25,7 +25,7 @@ function NotificationBell() {
   };
 
   const deleteNotification = async (notificationId) => {
-    if (deletingId !== null) return;
+    if (deletingId !== null || !token) return;
     const previousNotifications = notifications;
     setDeletingId(notificationId);
     setNotifications((current) => current.filter((notification) => notification.id !== notificationId));
@@ -51,57 +51,76 @@ function NotificationBell() {
   };
 
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      setNotifications([]);
+      return;
+    }
+
+    loadNotifications();
 
     const socket = getSocket();
     if (!socket) return;
 
-    loadNotifications();
+    const refreshNotifications = () => loadNotifications();
 
-    socket.on('ticketCreated', loadNotifications);
-    socket.on('ticketStatusUpdated', loadNotifications);
-    socket.on('announcementCreated', loadNotifications);
+    socket.on('ticketCreated', refreshNotifications);
+    socket.on('ticketStatusUpdated', refreshNotifications);
+    socket.on('ticketEtaUpdated', refreshNotifications);
+    socket.on('ticketEtaExpired', refreshNotifications);
+    socket.on('announcementCreated', refreshNotifications);
 
     return () => {
-      socket.off('ticketCreated', loadNotifications);
-      socket.off('ticketStatusUpdated', loadNotifications);
-      socket.off('announcementCreated', loadNotifications);
+      socket.off('ticketCreated', refreshNotifications);
+      socket.off('ticketStatusUpdated', refreshNotifications);
+      socket.off('ticketEtaUpdated', refreshNotifications);
+      socket.off('ticketEtaExpired', refreshNotifications);
+      socket.off('announcementCreated', refreshNotifications);
     };
   }, [token]);
 
+  const hasNotifications = notifications.length > 0;
+
   return (
-    <div style={{ position: 'relative' }}>
+    <div className="notification-bell-wrap">
       <button
-        className="notification-button"
+        type="button"
+        className={`notification-button ${hasNotifications ? 'has-notifications' : ''}`}
         onClick={() => setOpen((prev) => !prev)}
-        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.75rem 1rem', borderRadius: '999px', background: '#1976d2', color: '#fff', border: 'none', cursor: 'pointer' }}
+        aria-label="Notifications"
+        title={hasNotifications ? `${notifications.length} unread notification(s)` : 'No notifications'}
       >
-        🔔 {notifications.length}
+        <span className="notification-bell-icon" aria-hidden="true">🔔</span>
+        {hasNotifications && <span className="notification-badge">{notifications.length}</span>}
       </button>
+
       {open && (
-        <div style={{ position: 'absolute', top: '3.5rem', right: 0, width: '320px', maxHeight: '360px', overflowY: 'auto', background: '#fff', border: '1px solid #ddd', borderRadius: '8px', boxShadow: '0 8px 20px rgba(0,0,0,0.1)', padding: '0.75rem', zIndex: 10 }}>
-          <div style={{ marginBottom: '0.75rem', fontWeight: 'bold' }}>Recent Notifications</div>
-          {notifications.length === 0 && <div style={{ color: '#666' }}>No notifications yet.</div>}
-          {notifications.map((note) => (
-            <div key={note.id} className="notification-bell-item">
-              <div className="notification-bell-content">
-                <div>{note.message}</div>
-                <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.25rem' }}>{new Date(note.created_at).toLocaleString()}</div>
+        <div className="notification-dropdown" role="menu" aria-label="Notification list">
+          <div className="notification-dropdown-header">Recent Notifications</div>
+          {notifications.length === 0 ? (
+            <div className="notification-empty">No notifications yet.</div>
+          ) : (
+            notifications.map((note) => (
+              <div key={note.id} className="notification-bell-item">
+                <div className="notification-bell-content">
+                  <div>{note.message}</div>
+                  <div className="notification-bell-time">{new Date(note.created_at).toLocaleString()}</div>
+                </div>
+                <button
+                  type="button"
+                  className="notification-delete-btn"
+                  onClick={(event) => { event.stopPropagation(); setPendingDelete(note); }}
+                  disabled={deletingId === note.id}
+                  title="Delete notification"
+                  aria-label="Delete notification"
+                >
+                  ×
+                </button>
               </div>
-              <button
-                type="button"
-                className="notification-delete-btn"
-                onClick={(event) => { event.stopPropagation(); setPendingDelete(note); }}
-                disabled={deletingId === note.id}
-                title="Delete notification"
-                aria-label="Delete notification"
-              >
-                ×
-              </button>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       )}
+
       {pendingDelete && (
         <div className="notification-confirm-backdrop" role="presentation">
           <div className="notification-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="notification-confirm-title">
@@ -114,6 +133,7 @@ function NotificationBell() {
           </div>
         </div>
       )}
+
       {deleteMessage && <div className="notification-success-popup" role="status">{deleteMessage}</div>}
     </div>
   );

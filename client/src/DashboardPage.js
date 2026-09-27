@@ -11,10 +11,6 @@ function DashboardPage() {
   const { user, token } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dashboard, setDashboard] = useState({ departments: [], announcements: [], stats: {} });
-  const [notifications, setNotifications] = useState([]);
-  const [deletingNotificationId, setDeletingNotificationId] = useState(null);
-  const [pendingNotificationDelete, setPendingNotificationDelete] = useState(null);
-  const [deleteMessage, setDeleteMessage] = useState('');
   const [zoomLevel, setZoomLevel] = useState(1);
   const [selectedMapTicket, setSelectedMapTicket] = useState(null);
   const [hoveredMapTicket, setHoveredMapTicket] = useState(null);
@@ -58,40 +54,10 @@ function DashboardPage() {
   const loadData = async () => {
     try {
       const dashboardRes = await axios.get(`${API_BASE_URL}/api/dashboard`, { headers: { Authorization: `Bearer ${token}` } });
-      const notificationsRes = await axios.get(`${API_BASE_URL}/api/dashboard/notifications`, { headers: { Authorization: `Bearer ${token}` } });
-      
       setDashboard(dashboardRes.data);
-      setNotifications(notificationsRes.data);
-      
     } catch (error) {
       console.error('Error loading dashboard:', error);
     }
-  };
-
-  const deleteNotification = async (notificationId) => {
-    if (deletingNotificationId !== null) return;
-    const previousNotifications = notifications;
-    setDeletingNotificationId(notificationId);
-    setNotifications((current) => current.filter((note) => note.id !== notificationId));
-    try {
-      await axios.delete(`${API_BASE_URL}/api/dashboard/notifications/${notificationId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setDeleteMessage('Notification deleted successfully.');
-      window.setTimeout(() => setDeleteMessage(''), 2400);
-    } catch (error) {
-      setNotifications(previousNotifications);
-      console.error('Error deleting notification:', error);
-    } finally {
-      setDeletingNotificationId(null);
-    }
-  };
-
-  const confirmDeleteNotification = () => {
-    if (!pendingNotificationDelete) return;
-    const notificationId = pendingNotificationDelete.id;
-    setPendingNotificationDelete(null);
-    deleteNotification(notificationId);
   };
 
   useEffect(() => {
@@ -103,11 +69,15 @@ function DashboardPage() {
 
     socket.on('ticketCreated', loadData);
     socket.on('ticketStatusUpdated', loadData);
+    socket.on('ticketEtaUpdated', loadData);
+    socket.on('ticketEtaExpired', loadData);
     socket.on('announcementCreated', loadData);
 
     return () => {
       socket.off('ticketCreated', loadData);
       socket.off('ticketStatusUpdated', loadData);
+      socket.off('ticketEtaUpdated', loadData);
+      socket.off('ticketEtaExpired', loadData);
       socket.off('announcementCreated', loadData);
     };
   }, [token, user?.account_status]);
@@ -412,44 +382,6 @@ function DashboardPage() {
             </div>
           </div>
         )}
-
-        <div className="institutional-card">
-          <h3>Notifications</h3>
-          <div className="notification-list">
-            {notifications.length === 0 ? (
-              <p className="small-muted" style={{ textAlign: 'center', padding: '16px' }}>No notifications</p>
-            ) : (
-              notifications.map((note) => (
-                <div key={note.id} className="notification-item">
-                  <span className="notification-message">{note.message}</span>
-                  <button
-                    type="button"
-                    className="notification-delete-btn"
-                    onClick={(event) => { event.stopPropagation(); setPendingNotificationDelete(note); }}
-                    disabled={deletingNotificationId === note.id}
-                    title="Delete notification"
-                    aria-label="Delete notification"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-        {pendingNotificationDelete && (
-          <div className="notification-confirm-backdrop" role="presentation">
-            <div className="notification-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="dashboard-notification-confirm-title">
-              <strong id="dashboard-notification-confirm-title">Delete notification?</strong>
-              <p>{pendingNotificationDelete.message}</p>
-              <div className="notification-confirm-actions">
-                <button type="button" className="institutional-btn small secondary" onClick={() => setPendingNotificationDelete(null)}>Cancel</button>
-                <button type="button" className="institutional-btn small notification-confirm-delete" onClick={confirmDeleteNotification}>Delete</button>
-              </div>
-            </div>
-          </div>
-        )}
-        {deleteMessage && <div className="notification-success-popup" role="status">{deleteMessage}</div>}
       </div>
     </div>
   );
