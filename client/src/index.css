@@ -3403,6 +3403,8 @@ body.dark-mode .map-ticket-detail-close {
 }
 
 @media (max-width: 640px) {
+  .header-profile-row .header-profile { display: none; }
+  .header-actions > .logout-button { display: none !important; }
   .app-shell { padding: 12px; }
   .page-header { padding: 12px; gap: 10px; border-radius: 16px; top: 8px; }
   .header-brand { min-width: 0; gap: 9px; flex: 1 1 auto; }

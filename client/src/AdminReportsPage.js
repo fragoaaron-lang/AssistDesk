@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
-import NotificationBell from './NotificationBell';
+import HeaderProfile from './HeaderProfile';
 import LogoutButton from './LogoutButton';
 import SidebarProfile from './SidebarProfile';
 
@@ -203,7 +203,8 @@ function AdminReportsPage() {
             )}
           </div>
           <div className="header-actions">
-            <NotificationBell />
+            <HeaderProfile user={user} />
+            <LogoutButton />
           </div>
         </header>
 

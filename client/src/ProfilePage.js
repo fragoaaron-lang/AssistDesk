@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { API_BASE_URL } from './config';
-import NotificationBell from './NotificationBell';
+import HeaderProfile from './HeaderProfile';
 import LogoutButton from './LogoutButton';
 
 const defaultPrefs = {
@@ -409,7 +409,8 @@ function ProfilePage() {
           </div>
 
           <div className="header-actions">
-            <NotificationBell />
+            <HeaderProfile user={user} />
+            <LogoutButton />
           </div>
         </header>
 

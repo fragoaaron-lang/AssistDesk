@@ -3,7 +3,7 @@ import axios from 'axios';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 import { getSocket } from './socket';
-import NotificationBell from './NotificationBell';
+import HeaderProfile from './HeaderProfile';
 import LogoutButton from './LogoutButton';
 import SidebarProfile from './SidebarProfile';
 
@@ -181,7 +181,8 @@ function DashboardPage() {
               <div><h1>AssistDesk</h1><p>Account status</p></div>
             </button>
             <div className="header-actions">
-              <NotificationBell />
+              <HeaderProfile user={user} />
+              <LogoutButton />
             </div>
           </header>
 
@@ -240,7 +241,8 @@ function DashboardPage() {
             )}
           </div>
           <div className="header-actions">
-            <NotificationBell />
+            <HeaderProfile user={user} />
+            <LogoutButton />
           </div>
         </header>
 
