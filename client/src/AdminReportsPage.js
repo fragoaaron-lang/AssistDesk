@@ -3,6 +3,7 @@ import axios from 'axios';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 import NotificationBell from './NotificationBell';
+import LogoutButton from './LogoutButton';
 import SidebarProfile from './SidebarProfile';
 
 const getTicketPrefix = (departmentName) => {

@@ -4,6 +4,7 @@ import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 import { getSocket } from './socket';
 import NotificationBell from './NotificationBell';
+import LogoutButton from './LogoutButton';
 import SidebarProfile from './SidebarProfile';
 
 function DashboardPage() {

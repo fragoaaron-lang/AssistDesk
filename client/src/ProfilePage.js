@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { API_BASE_URL } from './config';
 import NotificationBell from './NotificationBell';
+import LogoutButton from './LogoutButton';
 
 const defaultPrefs = {
   compactMode: false,
