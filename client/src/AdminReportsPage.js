@@ -48,6 +48,8 @@ function AdminReportsPage() {
   const [showTerminatedUsers, setShowTerminatedUsers] = useState(false);
   const [expandedUserRoles, setExpandedUserRoles] = useState({});
   const [updatingUserId, setUpdatingUserId] = useState(null);
+  const [activePriority, setActivePriority] = useState(null);
+  const [hoveredPriority, setHoveredPriority] = useState(null);
 
   const loadReports = async () => {
     try {
@@ -139,14 +141,26 @@ function AdminReportsPage() {
     color: priorityColors[priority],
   }));
   const priorityTotal = priorityData.reduce((total, item) => total + item.count, 0);
-  let priorityAngle = 0;
-  const priorityPieBackground = priorityTotal > 0
-    ? `conic-gradient(${priorityData.filter((item) => item.count > 0).map((item) => {
-      const startAngle = priorityAngle;
-      priorityAngle += (item.count / priorityTotal) * 360;
-      return `${item.color} ${startAngle}deg ${priorityAngle}deg`;
-    }).join(', ')})`
-    : '#e8eef3';
+  const priorityCircumference = 2 * Math.PI * 58;
+  const selectedPriority = priorityData.find((item) => item.name === (hoveredPriority || activePriority));
+  let priorityOffset = 0;
+  const prioritySlices = priorityData.map((item) => {
+    const length = priorityTotal > 0 ? (item.count / priorityTotal) * priorityCircumference : 0;
+    const slice = { ...item, length, offset: priorityOffset };
+    priorityOffset += length;
+    return slice;
+  });
+
+  const toggleActivePriority = (priority) => {
+    setActivePriority((current) => current === priority ? null : priority);
+  };
+
+  const handlePriorityKeyDown = (event, priority) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      toggleActivePriority(priority);
+    }
+  };
 
   if (!reports) {
     return <div style={{ padding: '2rem', fontFamily: 'Arial' }}>Loading Data Analytics...</div>;
@@ -369,27 +383,67 @@ function AdminReportsPage() {
           <div className="institutional-card report-donut-card">
             <div className="report-card-heading"><div><h3>Ticket priorities</h3><span>Low, medium, and urgent</span></div></div>
             <div className="report-priority-chart-layout">
-              <div
-                className="report-priority-pie"
-                role="img"
-                aria-label={priorityTotal > 0
-                  ? `Ticket priorities: ${priorityData.map((item) => `${item.name} ${item.count}`).join(', ')}. Total ${priorityTotal}.`
-                  : 'No tickets to chart by priority.'}
-                style={{ background: priorityPieBackground }}
-              >
-                <span>{priorityTotal}</span>
-                <small>Total</small>
+              <div className="report-priority-chart-wrap">
+                <svg
+                  className="report-priority-pie"
+                  viewBox="0 0 160 160"
+                  role="group"
+                  aria-label={`Ticket priorities, ${priorityTotal} total tickets. Select a slice for details.`}
+                >
+                  <circle className="report-priority-pie-track" cx="80" cy="80" r="58" />
+                  {prioritySlices.filter((item) => item.count > 0).map((item) => (
+                    <circle
+                      key={item.name}
+                      className={`report-priority-slice${(hoveredPriority || activePriority) === item.name ? ' is-active' : ''}${(hoveredPriority || activePriority) && (hoveredPriority || activePriority) !== item.name ? ' is-muted' : ''}`}
+                      cx="80"
+                      cy="80"
+                      r="58"
+                      fill="none"
+                      stroke={item.color}
+                      strokeWidth="34"
+                      strokeDasharray={`${item.length} ${priorityCircumference - item.length}`}
+                      strokeDashoffset={-item.offset}
+                      transform="rotate(-90 80 80)"
+                      role="button"
+                      tabIndex="0"
+                      aria-label={`${item.name}: ${item.count} tickets, ${Math.round((item.count / priorityTotal) * 100)} percent`}
+                      aria-pressed={activePriority === item.name}
+                      onPointerEnter={() => setHoveredPriority(item.name)}
+                      onPointerLeave={() => setHoveredPriority(null)}
+                      onFocus={() => setHoveredPriority(item.name)}
+                      onBlur={() => setHoveredPriority(null)}
+                      onClick={() => toggleActivePriority(item.name)}
+                      onKeyDown={(event) => handlePriorityKeyDown(event, item.name)}
+                    />
+                  ))}
+                </svg>
+                <div className="report-priority-pie-center" aria-live="polite">
+                  <strong>{selectedPriority ? selectedPriority.count : priorityTotal}</strong>
+                  <small>{selectedPriority ? selectedPriority.name : 'Total'}</small>
+                  {selectedPriority && priorityTotal > 0 && <small>{Math.round((selectedPriority.count / priorityTotal) * 100)}% of tickets</small>}
+                </div>
               </div>
               <div className="report-legend report-priority-list" aria-label="Ticket priority counts">
                 {priorityData.map((item) => (
-                  <span key={item.name}>
+                  <button
+                    key={item.name}
+                    type="button"
+                    className={`report-priority-legend-button${activePriority === item.name ? ' is-selected' : ''}`}
+                    aria-pressed={activePriority === item.name}
+                    onPointerEnter={() => setHoveredPriority(item.name)}
+                    onPointerLeave={() => setHoveredPriority(null)}
+                    onFocus={() => setHoveredPriority(item.name)}
+                    onBlur={() => setHoveredPriority(null)}
+                    onClick={() => toggleActivePriority(item.name)}
+                  >
                     <i className="legend-dot" style={{ backgroundColor: item.color }} aria-hidden="true" />
                     <span>{item.name}</span>
                     <strong>{item.count}</strong>
-                  </span>
+                  </button>
                 ))}
               </div>
             </div>
+            <p className="report-priority-chart-hint">Hover or select a slice to inspect its share. Select it again to reset.</p>
           </div>
           <div className="institutional-card report-bars-card report-most-faq-card">
             <div className="report-card-heading"><div><h3>Most asked FAQs</h3><span>Top questions matched in assistant conversations</span></div></div>
