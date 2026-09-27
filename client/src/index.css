@@ -3380,12 +3380,12 @@ body.dark-mode .map-ticket-detail-close {
     width: 100%;
   }
   .header-actions {
-    display: none;
+    display: flex;
     width: auto;
     margin-left: auto;
     justify-content: flex-end;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
   }
   .header-actions > * { flex-shrink: 0; }
   .mobile-menu-actions {
@@ -3420,14 +3420,13 @@ body.dark-mode .map-ticket-detail-close {
   .form-row { flex-direction: column; gap: 0; }
   .header-actions {
     width: auto;
-    order: -1;
-    margin-right: auto;
-    justify-content: flex-start;
+    margin-left: auto;
+    justify-content: flex-end;
     gap: 8px;
   }
   .header-actions > * { flex: 0 0 auto; }
   .header-profile-row {
-    order: -1;
+    order: 0;
   }
   .institutional-btn.small { width: auto; }
   .auth-shell { padding: 12px; }
