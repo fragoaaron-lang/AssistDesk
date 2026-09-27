@@ -380,7 +380,7 @@ function AdminReportsPage() {
               </div>
             ) : <p className="small-muted">No department ticket data yet.</p>}
           </div>
-          <div className="institutional-card report-donut-card">
+          <div className="institutional-card report-donut-card report-priority-card">
             <div className="report-card-heading"><div><h3>Ticket priorities</h3><span>Low, medium, and urgent</span></div></div>
             <div className="report-priority-chart-layout">
               <div className="report-priority-chart-wrap">
