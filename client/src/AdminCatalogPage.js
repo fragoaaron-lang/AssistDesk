@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
-import LogoutButton from './LogoutButton';
-import HeaderProfile from './HeaderProfile';
+import NotificationBell from './NotificationBell';
 import SidebarProfile from './SidebarProfile';
 
 function AdminCatalogPage() {
@@ -103,8 +102,7 @@ function AdminCatalogPage() {
             )}
           </div>
           <div className="header-actions">
-            <HeaderProfile user={user} />
-            <LogoutButton />
+            <NotificationBell />
           </div>
         </header>
 

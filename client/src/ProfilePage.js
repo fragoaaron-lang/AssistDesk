@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
-import LogoutButton from './LogoutButton';
 import { API_BASE_URL } from './config';
-import HeaderProfile from './HeaderProfile';
+import NotificationBell from './NotificationBell';
 
 const defaultPrefs = {
   compactMode: false,
@@ -409,8 +408,7 @@ function ProfilePage() {
           </div>
 
           <div className="header-actions">
-            <HeaderProfile user={user} />
-            <LogoutButton />
+            <NotificationBell />
           </div>
         </header>
 

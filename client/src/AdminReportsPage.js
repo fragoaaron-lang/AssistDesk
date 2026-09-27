@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
-import LogoutButton from './LogoutButton';
-import HeaderProfile from './HeaderProfile';
+import NotificationBell from './NotificationBell';
 import SidebarProfile from './SidebarProfile';
 
 const getTicketPrefix = (departmentName) => {
@@ -203,8 +202,7 @@ function AdminReportsPage() {
             )}
           </div>
           <div className="header-actions">
-            <HeaderProfile user={user} />
-            <LogoutButton />
+            <NotificationBell />
           </div>
         </header>
 
