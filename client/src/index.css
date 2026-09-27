@@ -3420,10 +3420,15 @@ body.dark-mode .map-ticket-detail-close {
   .form-row { flex-direction: column; gap: 0; }
   .header-actions {
     width: auto;
-    justify-content: flex-end;
+    order: -1;
+    margin-right: auto;
+    justify-content: flex-start;
     gap: 8px;
   }
   .header-actions > * { flex: 0 0 auto; }
+  .header-profile-row {
+    order: -1;
+  }
   .institutional-btn.small { width: auto; }
   .auth-shell { padding: 12px; }
   .auth-hero, .auth-form { padding: 20px; }
