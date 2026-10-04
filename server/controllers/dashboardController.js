@@ -9,8 +9,8 @@ const defaultDepartments = [
   { name: 'HM Department', description: 'Hospitality Management Department', map_x: 25, map_y: 9 },
   { name: 'Crim Department', description: 'Criminology Department', map_x: 67, map_y: 12 },
   { name: 'Nursing Department', description: 'Nursing Department', map_x: 62, map_y: 65 },
-  { name: 'Accounting Department', description: 'Accounting Department', location: ADMIN_BUILDING_LOCATION, map_x: 45, map_y: 63.5 },
-  { name: 'Registrar Office', description: 'Registrar Office', location: ADMIN_BUILDING_LOCATION, map_x: 45, map_y: 63.5 },
+  { name: 'Accounting Department', description: 'Accounting Department', location: ADMIN_BUILDING_LOCATION, map_x: 43, map_y: 65.5 },
+  { name: 'Registrar Office', description: 'Registrar Office', location: ADMIN_BUILDING_LOCATION, map_x: 43, map_y: 61.5 },
   { name: 'Maintenance', description: 'Maintenance Department', map_x: 85.5, map_y: 54 },
   { name: 'Office of the Student Affairs', description: 'Office of Student Affairs', location: 'Near TCC Gymnasium', map_x: 15, map_y: 32 },
   { name: 'Clinic', description: 'Clinic', map_x: 54, map_y: 37 },
@@ -44,14 +44,19 @@ const initialMapPositions = {
   'physical therapy department': [68, 44],
   'bspt department': [68, 44],
   bspt: [68, 44],
-  'accounting department': [45, 63.5],
-  accounting: [45, 63.5],
-  'registrar office': [45, 63.5],
-  'registrar department': [45, 63.5],
-  'library department': [45, 63.5],
-  library: [45, 63.5],
-  guidance: [45, 63.5],
-  'guidance office': [45, 63.5],
+  'accounting department': [43, 65.5],
+  'accounting office': [43, 65.5],
+  accounting: [43, 65.5],
+  registrar: [43, 61.5],
+  'registrar office': [43, 61.5],
+  'registrar department': [43, 61.5],
+  'office of the registrar': [43, 61.5],
+  'library department': [47, 65.5],
+  'library office': [47, 65.5],
+  library: [47, 65.5],
+  guidance: [47, 61.5],
+  'guidance office': [47, 61.5],
+  'guidance department': [47, 61.5],
   maintenance: [85.5, 54],
   'maintenance department': [85.5, 54],
   'maintenance office': [85.5, 54],
@@ -95,7 +100,7 @@ exports.getDashboard = async (req, res) => {
       if (!position) continue;
       const isFixedBuildingLocation = normalizedName.includes('maintenance')
         || ['cs department', 'cs', 'computer science department', 'college of computer studies', 'it department', 'information technology department', 'information and technology department', 'information technology', 'information and technology'].includes(normalizedName)
-        || ['accounting department', 'accounting', 'registrar office', 'registrar department', 'library department', 'library', 'guidance', 'guidance office'].includes(normalizedName);
+        || isAdministrationBuildingDepartment;
       if (!isFixedBuildingLocation && department.map_x != null && department.map_y != null) continue;
       await department.update({
         map_x: isFixedBuildingLocation ? position[0] : (department.map_x ?? position[0]),
