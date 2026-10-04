@@ -115,19 +115,56 @@ const isCollegeStudent = (currentUser) => currentUser?.role === 'student'
 
 const getDepartmentDisplayName = (department) => {
   const normalizedName = String(department?.name || '').toLowerCase();
-  if (['cs', 'computer science department', 'college of computer studies'].includes(normalizedName)) {
-    return 'College of Computer Studies';
-  }
-  if (['charm', 'college of hospitality and restaurant management', 'college of hospitality management'].includes(normalizedName)) {
-    return 'College of Hospitality Management';
-  }
-  if (['cba', 'college of business administration', 'college of business and accountancy'].includes(normalizedName)) {
-    return 'College of Business and Accountancy';
-  }
-  if (['education department', 'college of education'].includes(normalizedName)) {
-    return 'College of Education';
-  }
+  if (['cs', 'cs department', 'computer science department', 'college of computer studies'].includes(normalizedName)) return 'College of Computer Studies';
+  if (['charm', 'hm department', 'college of hospitality and restaurant management', 'college of hospitality management'].includes(normalizedName)) return 'College of Hospitality Management';
+  if (['cba', 'accountancy', 'college of business administration', 'college of business and accountancy'].includes(normalizedName)) return 'College of Business and Accountancy';
+  if (['education department', 'college of education'].includes(normalizedName)) return 'College of Education';
+  if (['college of nursing', 'nursing department'].includes(normalizedName)) return 'College of Nursing';
+  if (['college of criminology', 'crim department', 'criminology department'].includes(normalizedName)) return 'College of Criminology';
+  if (['college of physical therapy', 'physical therapy department'].includes(normalizedName)) return 'College of Physical Therapy';
+  if (['accounting', 'accounting department'].includes(normalizedName)) return 'Accounting Department';
+  if (['maintenance', 'maintenance department'].includes(normalizedName)) return 'Maintenance Department';
+  if (['registrar department', 'registrar office'].includes(normalizedName)) return 'Registrar Office';
+  if (['student affairs', 'office of student affairs', 'office of the student affairs'].includes(normalizedName)) return 'Office of Student Affairs';
+  if (['library', 'library department'].includes(normalizedName)) return 'Library Department';
   return department?.display_name || department?.name;
+};
+
+const getDepartmentOptionPriority = (department) => {
+  const name = normalizeDepartmentName(department);
+  const preferredNames = [
+    'basic education department',
+    'education department',
+    'college of nursing',
+    'cs',
+    'cba',
+    'charm',
+    'college of criminology',
+    'college of physical therapy',
+    'maintenance department',
+    'accounting department',
+    'registrar office',
+    'library',
+    'guidance',
+    'office of student affairs',
+    'clinic',
+    'it department',
+  ];
+  const preferredIndex = preferredNames.indexOf(name);
+  return preferredIndex === -1 ? preferredNames.length : preferredIndex;
+};
+
+const deduplicateDepartments = (records) => {
+  const unique = new Map();
+  [...records]
+    .sort((first, second) => getDepartmentOptionPriority(first) - getDepartmentOptionPriority(second)
+      || Number(first.id) - Number(second.id))
+    .forEach((department) => {
+      const displayName = getDepartmentDisplayName(department);
+      const key = String(displayName || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+      if (!unique.has(key)) unique.set(key, { ...department, display_name: displayName });
+    });
+  return [...unique.values()].sort((first, second) => first.display_name.localeCompare(second.display_name));
 };
 
 function TicketsPage() {
@@ -185,9 +222,7 @@ function TicketsPage() {
     const res = await axios.get(`${API_BASE_URL}/api/catalog/departments`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    const options = (res.data.departments || []).sort((first, second) => (
-      getDepartmentDisplayName(first).localeCompare(getDepartmentDisplayName(second))
-    ));
+    const options = deduplicateDepartments(res.data.departments || []);
     setDepartments(options);
   };
 
