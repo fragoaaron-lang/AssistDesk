@@ -704,9 +704,23 @@ button, input, select, textarea {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
-  flex: 0 1 auto;
+  flex-wrap: nowrap;
+  flex: 0 0 auto;
   min-width: 0;
+}
+
+.header-actions .logout-button { white-space: nowrap; }
+
+@media (min-width: 901px) and (max-width: 1200px) {
+  .page-header { gap: 8px; padding: 14px 16px; }
+  .header-brand { gap: 8px; }
+  .header-brand .brand-badge { width: 44px; height: 44px; border-radius: 12px; }
+  .header-brand h1 { font-size: 1rem; white-space: nowrap; }
+  .header-brand p { font-size: 0.72rem; white-space: nowrap; }
+  .nav-links { gap: 2px; }
+  .nav-links a,
+  .nav-links .header-nav-button { padding: 7px 6px; font-size: 0.78rem; white-space: nowrap; }
+  .header-actions { gap: 6px; }
 }
 
 .profile-summary-row {
