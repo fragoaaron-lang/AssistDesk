@@ -7,8 +7,8 @@ const defaultDepartments = [
   { name: 'HM Department', description: 'Hospitality Management Department', map_x: 25, map_y: 9 },
   { name: 'Crim Department', description: 'Criminology Department', map_x: 67, map_y: 12 },
   { name: 'Nursing Department', description: 'Nursing Department', map_x: 62, map_y: 65 },
-  { name: 'Accounting Department', description: 'Accounting Department', map_x: 43, map_y: 65 },
-  { name: 'Registrar Office', description: 'Registrar Office', map_x: 43, map_y: 65 },
+  { name: 'Accounting Department', description: 'Accounting Department', map_x: 45, map_y: 63.5 },
+  { name: 'Registrar Office', description: 'Registrar Office', map_x: 45, map_y: 63.5 },
   { name: 'Maintenance', description: 'Maintenance Department', map_x: 85.5, map_y: 54 },
   { name: 'Office of the Student Affairs', description: 'Office of Student Affairs', location: 'Near TCC Gymnasium', map_x: 15, map_y: 32 },
   { name: 'Clinic', description: 'Clinic', map_x: 54, map_y: 37 },
@@ -38,10 +38,14 @@ const initialMapPositions = {
   'physical therapy department': [68, 44],
   'bspt department': [68, 44],
   bspt: [68, 44],
-  'accounting department': [43, 65],
-  accounting: [43, 65],
-  'registrar office': [43, 65],
-  'registrar department': [43, 65],
+  'accounting department': [45, 63.5],
+  accounting: [45, 63.5],
+  'registrar office': [45, 63.5],
+  'registrar department': [45, 63.5],
+  'library department': [45, 63.5],
+  library: [45, 63.5],
+  guidance: [45, 63.5],
+  'guidance office': [45, 63.5],
   maintenance: [85.5, 54],
   'maintenance department': [85.5, 54],
   'maintenance office': [85.5, 54],
@@ -74,11 +78,12 @@ exports.getDashboard = async (req, res) => {
       const normalizedName = String(department.name || '').toLowerCase().trim();
       const position = initialMapPositions[normalizedName];
       if (!position) continue;
-      const isMaintenance = normalizedName.includes('maintenance');
-      if (!isMaintenance && department.map_x != null && department.map_y != null) continue;
+      const isFixedBuildingLocation = normalizedName.includes('maintenance')
+        || ['accounting department', 'accounting', 'registrar office', 'registrar department', 'library department', 'library', 'guidance', 'guidance office'].includes(normalizedName);
+      if (!isFixedBuildingLocation && department.map_x != null && department.map_y != null) continue;
       await department.update({
-        map_x: isMaintenance ? position[0] : (department.map_x ?? position[0]),
-        map_y: isMaintenance ? position[1] : (department.map_y ?? position[1]),
+        map_x: isFixedBuildingLocation ? position[0] : (department.map_x ?? position[0]),
+        map_y: isFixedBuildingLocation ? position[1] : (department.map_y ?? position[1]),
       });
     }
 
