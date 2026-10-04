@@ -167,6 +167,17 @@ const FAQ_GROUPS = [
     ],
   },
   {
+    title: 'IT Department',
+    questions: [
+      'What IT services are available to students?',
+      'Where can students get IT-related technical support?',
+      'Who are the IT department contact persons?',
+      'Who should I contact about internet-related issues?',
+      'How does the IT department handle concerns?',
+      'What are the IT department office hours?',
+    ],
+  },
+  {
     title: 'Basic Education Department',
     questions: [
       'Who is the principal of Basic Education?',
