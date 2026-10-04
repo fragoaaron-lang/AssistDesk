@@ -9,7 +9,7 @@ const defaultDepartments = [
   { name: 'Nursing Department', description: 'Nursing Department', map_x: 62, map_y: 65 },
   { name: 'Accounting Department', description: 'Accounting Department', map_x: 43, map_y: 65 },
   { name: 'Registrar Office', description: 'Registrar Office', map_x: 43, map_y: 65 },
-  { name: 'Maintenance', description: 'Maintenance Department' },
+  { name: 'Maintenance', description: 'Maintenance Department', map_x: 85.5, map_y: 54 },
   { name: 'Office of the Student Affairs', description: 'Office of Student Affairs', location: 'Near TCC Gymnasium', map_x: 15, map_y: 32 },
   { name: 'Clinic', description: 'Clinic', map_x: 54, map_y: 37 },
 ];
@@ -42,6 +42,9 @@ const initialMapPositions = {
   accounting: [43, 65],
   'registrar office': [43, 65],
   'registrar department': [43, 65],
+  maintenance: [85.5, 54],
+  'maintenance department': [85.5, 54],
+  'maintenance office': [85.5, 54],
   'office of the student affairs': [15, 32],
   'office of student affairs': [15, 32],
   'student affairs': [15, 32],
@@ -68,13 +71,14 @@ exports.getDashboard = async (req, res) => {
 
     const mapDepartments = await Department.findAll();
     for (const department of mapDepartments) {
-      if (department.map_x != null && department.map_y != null) continue;
       const normalizedName = String(department.name || '').toLowerCase().trim();
       const position = initialMapPositions[normalizedName];
       if (!position) continue;
+      const isMaintenance = normalizedName.includes('maintenance');
+      if (!isMaintenance && department.map_x != null && department.map_y != null) continue;
       await department.update({
-        map_x: department.map_x ?? position[0],
-        map_y: department.map_y ?? position[1],
+        map_x: isMaintenance ? position[0] : (department.map_x ?? position[0]),
+        map_y: isMaintenance ? position[1] : (department.map_y ?? position[1]),
       });
     }
 
