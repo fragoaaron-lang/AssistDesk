@@ -56,6 +56,14 @@ const defaultGeneralIssueOptions = {
       'Student Welfare and Conduct': ['Student concern or complaint', 'Safety, bullying, or conduct concern', 'Request for student support', 'Lost-and-found inquiry', 'Other student welfare concern'],
       'Student Activities and Organizations': ['Student organization or event approval', 'Facility or equipment reservation', 'Student activity concern', 'Other organization request'],
       'Student Services': ['Student ID concern', 'School rules or policy inquiry', 'Campus security concern', 'General Office of Student Affairs inquiry'],
+      'Gate Pass / Sticker': [
+        'Request a vehicle gate pass',
+        'Vehicle sticker application process — Window 10 review, then Window 8 payment',
+        'Vehicle sticker renewal or replacement process',
+        'Gate pass application steps and requirements',
+        'Gate pass or sticker payment and claiming process',
+        'Other gate pass or sticker concern',
+      ],
     },
     guidance: {
       'Guidance and Counseling': ['Request counseling or personal support', 'Academic guidance request', 'Career or program guidance', 'Urgent student welfare concern', 'Other guidance concern'],
