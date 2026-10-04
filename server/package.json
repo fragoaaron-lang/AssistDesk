@@ -15,7 +15,9 @@
     "seed:registrar-faqs": "node seed-registrar-faqs.js",
     "seed:accounting-faqs": "node seed-accounting-faqs.js",
     "seed:about-tcc-faqs": "node seed-about-tcc-faqs.js",
-    "seed:maintenance-faqs": "node seed-maintenance-faqs.js"
+    "seed:maintenance-faqs": "node seed-maintenance-faqs.js",
+    "seed:library-faqs": "node seed-library-faqs.js",
+    "seed:clinic-faqs": "node seed-clinic-faqs.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",

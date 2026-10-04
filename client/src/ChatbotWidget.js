@@ -128,6 +128,24 @@ const FAQ_GROUPS = [
     ],
   },
   {
+    title: 'Clinic Department',
+    questions: [
+      'What services are available at the school clinic?',
+      'What should I bring when visiting the clinic?',
+      'Where can I get first-aid assistance?',
+      'Can I request a medical certificate from the clinic?',
+      'What should I do if I need to rest because I feel unwell?',
+      'What are the clinic operating hours?',
+      'What should I do if the clinic is closed?',
+      'What documents are needed when requesting a medical certificate?',
+      'Can the clinic contact my parent or guardian if I become sick?',
+      'Can I stay in the clinic until I feel better?',
+      'What should I do if I get injured during a school activity?',
+      'What should I do if another student needs urgent medical attention?',
+      'Does the clinic provide medicine for all types of illnesses?',
+    ],
+  },
+  {
     title: 'Library Department',
     questions: [
       'What are the library operating hours?',
