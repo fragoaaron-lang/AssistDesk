@@ -256,6 +256,10 @@ function ChatbotWidget() {
         role: 'assistant',
         text: response.data.ai_response,
         details: response.data.department_details,
+        source: response.data.source,
+        clarificationRequired: response.data.clarification_required,
+        clarificationOptions: response.data.clarification_options || [],
+        escalationAvailable: response.data.escalation_available,
         ticket: response.data.ticket,
         ticketProcess: response.data.ticket_process,
         tickets: response.data.tickets,
@@ -313,6 +317,9 @@ function ChatbotWidget() {
           )}
 
           <div className="chatbot-body">
+            <p className="chatbot-limitations" role="note">
+              AssistDesk answers from its FAQ and service records, which may be incomplete or outdated. It is not a substitute for official decisions, medical advice, or emergency help. Do not share passwords or sensitive personal information. Contact the relevant office to verify important details.
+            </p>
             {history.length === 0 && (
               <div style={{ textAlign: 'center', padding: '20px 12px' }}>
                 <div style={{ fontSize: '2rem', marginBottom: '10px' }}>{gender === 'boy' ? '👦' : '👧'}</div>
@@ -324,6 +331,15 @@ function ChatbotWidget() {
                 {entry.role === 'assistant' && <span style={{ fontSize: '1.2rem', marginRight: '8px' }}>{gender === 'boy' ? '👦' : '👧'}</span>}
                 <span>{entry.text}</span>
                 {entry.details && <small>{entry.details.name} · {entry.details.office_hours || 'Contact the department for office hours.'}</small>}
+                {entry.source && <small className="chatbot-source">Source: {entry.source.type} #{entry.source.id} — {entry.source.label}{entry.source.department ? ` (${entry.source.department})` : ''}</small>}
+                {entry.clarificationRequired && entry.clarificationOptions.length > 0 && (
+                  <div className="chatbot-clarification-options" aria-label="Clarify your question">
+                    {entry.clarificationOptions.map((option) => (
+                      <button type="button" key={option} disabled={sending} onClick={() => sendMessage(null, option)}>{option}</button>
+                    ))}
+                  </div>
+                )}
+                {entry.escalationAvailable && <a className="chatbot-escalation-link" href="/tickets">Create a support ticket for staff follow-up</a>}
                 {entry.ticket && (
                   <>
                     <small>

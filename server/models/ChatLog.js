@@ -23,6 +23,14 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
+      matched_faq_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      matched_service_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       created_at: {
         type: DataTypes.DATE,
         allowNull: false,
@@ -39,6 +47,8 @@ module.exports = (sequelize, DataTypes) => {
   ChatLog.associate = (models) => {
     ChatLog.belongsTo(models.User, { foreignKey: 'user_id' });
     ChatLog.belongsTo(models.Department, { foreignKey: 'matched_department_id' });
+    ChatLog.belongsTo(models.Faq, { foreignKey: 'matched_faq_id', as: 'MatchedFaq' });
+    ChatLog.belongsTo(models.Service, { foreignKey: 'matched_service_id', as: 'MatchedService' });
   };
 
   return ChatLog;

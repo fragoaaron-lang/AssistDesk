@@ -12,21 +12,22 @@ function AiChatPage() {
   const [message, setMessage] = useState('');
   const [history, setHistory] = useState([]);
 
-  const sendMessage = async (e) => {
-    e.preventDefault();
-    if (!message.trim()) return;
+  const sendMessage = async (e, selectedQuestion = null) => {
+    e?.preventDefault();
+    const text = (selectedQuestion || message).trim();
+    if (!text) return;
 
     try {
       const res = await axios.post(
         `${API_BASE_URL}/api/ai/ask`,
-        { message, user_id: user?.id || 0 },
+        { message: text, user_id: user?.id || 0 },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       setHistory((prev) => [
         ...prev,
-        { role: 'user', text: message },
-        { role: 'assistant', text: res.data.ai_response, details: res.data.department_details, service: res.data.service_details, ticket: res.data.ticket, tickets: res.data.tickets },
+        { role: 'user', text },
+        { role: 'assistant', text: res.data.ai_response, details: res.data.department_details, service: res.data.service_details, source: res.data.source, clarificationRequired: res.data.clarification_required, clarificationOptions: res.data.clarification_options || [], escalationAvailable: res.data.escalation_available, ticket: res.data.ticket, tickets: res.data.tickets },
       ]);
       setMessage('');
     } catch (error) {
@@ -105,6 +106,10 @@ function AiChatPage() {
         </div>
 
         <div className="institutional-card">
+          <div className="ai-limitations-notice" role="note">
+            <strong>About this assistant</strong>
+            <p>Answers are based on AssistDesk FAQ and service records and may be incomplete or outdated. The assistant cannot make official decisions or provide medical, legal, or emergency advice. Do not share passwords or sensitive personal information. Verify important details with the relevant office; submit a ticket for staff follow-up.</p>
+          </div>
           <form onSubmit={sendMessage} style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <input className="institutional-input" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Ask about enrollment, transcript, IT support..." style={{ flex: '1 1 280px', marginBottom: 0 }} />
             <button className="institutional-btn" type="submit">Send</button>
@@ -119,6 +124,15 @@ function AiChatPage() {
             {history.map((entry, index) => (
               <div key={index} style={{ marginBottom: '1rem' }}>
                 <strong>{entry.role === 'user' ? 'You' : 'Assistant'}:</strong> {entry.text}
+                {entry.source && <div className="ai-response-source">Source: {entry.source.type} #{entry.source.id} — {entry.source.label}{entry.source.department ? ` (${entry.source.department})` : ''}</div>}
+                {entry.clarificationRequired && entry.clarificationOptions.length > 0 && (
+                  <div className="ai-clarification-options" aria-label="Clarify your question">
+                    {entry.clarificationOptions.map((option) => (
+                      <button className="institutional-btn small secondary" type="button" key={option} onClick={() => sendMessage(null, option)}>{option}</button>
+                    ))}
+                  </div>
+                )}
+                {entry.escalationAvailable && <p><a href="/tickets">Create a support ticket for staff follow-up</a></p>}
                 {entry.details && (
                   <div style={{ marginTop: '0.4rem', background: '#f7f7f7', padding: '0.7rem', borderRadius: '10px' }}>
                     <div><strong>Department:</strong> {entry.details.name}</div>

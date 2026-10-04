@@ -99,9 +99,6 @@ const getLocalConversationResponse = (query) => {
   if (/\b(what is assistdesk|what is this|what is this app|what is this for)\b/.test(normalizedQuery)) {
     return 'AssistDesk is the campus support portal for finding information, contacting the right department, submitting requests, and tracking ticket progress.';
   }
-    if (/\b(enroll|enrollment|admission|admissions)\b/.test(normalizedQuery) && /\b(college|school|tcc|course|program|freshman|transferee)\b/.test(normalizedQuery)) {
-      return 'For college enrollment: freshmen and transferees should start at the Guidance Office, then proceed to the Registrar Office at Window 5. Old students should visit the Registrar Office at Window 4 and the Dean\'s Office for advising, then complete subject encoding at Windows 1, 2, or 3. Continue to Accounting at Window 6 for assessment and finish payment at the Cashier at Window 8.';
-    }
   if (/\b(submit|create|file|make)\b.*\b(request|ticket|complaint|concern|report)\b/.test(normalizedQuery)) {
     return 'To submit a request, open Tickets, choose a department and issue, describe the concern, then select Create ticket. You can also say “submit request:” followed by your concern.';
   }
@@ -258,28 +255,51 @@ const buildResponse = async (query) => {
     }))
     .sort((a, b) => b.score - a.score);
 
-  const topFaq = scoredFaqs[0];
-  const topService = scoredServices[0];
-  const rankedMatches = [topFaq, topService].filter(Boolean).sort((first, second) => second.score - first.score);
+  const rankedMatches = [
+    ...scoredFaqs.map((match) => ({ ...match, sourceType: 'faq' })),
+    ...scoredServices.map((match) => ({ ...match, sourceType: 'service' })),
+  ].sort((first, second) => second.score - first.score);
   const best = rankedMatches[0];
   const secondBest = rankedMatches[1];
-  const isConfidentMatch = best && best.score >= 5 && (!secondBest || best.score - secondBest.score >= 2);
+  const isAmbiguous = Boolean(best && secondBest && best.score >= 5 && best.score - secondBest.score < 2);
+  const isConfidentMatch = Boolean(best && best.score >= 5 && !isAmbiguous);
 
   if (!isConfidentMatch) {
+    const clarificationOptions = rankedMatches
+      .filter((match) => match.score > 0)
+      .slice(0, 3)
+      .map((match) => match.sourceType === 'faq' ? match.item.question : match.item.name);
+    const clarificationText = isAmbiguous
+      ? `I found a couple of close matches. Which one do you mean: ${clarificationOptions.join(' or ')}?`
+      : clarificationOptions.length
+        ? `I’m not sure I found the right answer. Are you asking about ${clarificationOptions.join(', or ')}?`
+        : 'I could not find an approved FAQ or service entry for that question. Please include the department and a little more detail, or submit a support ticket for staff follow-up.';
     return {
-      ai_response: 'I want to make sure I give you the right information. Please mention the department, service, or ticket number, such as “Where is the Registrar?”, “How do I submit a request?”, or “What is the status of my tickets?”',
+      ai_response: clarificationText,
       matched_department: null,
       department_details: null,
       service_details: null,
+      source: null,
+      clarification_required: true,
+      clarification_options: clarificationOptions,
+      escalation_available: true,
     };
   }
 
   const department = best.item.Department || findDepartmentForIntent(await Department.findAll(), departmentIntent);
   const response = best.item.answer || best.item.name || 'I found a likely match in the knowledge base.';
+  const source = best.sourceType === 'faq'
+    ? { type: 'FAQ', id: best.item.id, label: best.item.question, department: department?.name || null }
+    : { type: 'Service', id: best.item.id, label: best.item.name, department: department?.name || null };
 
   return {
     ai_response: response,
     matched_department: department ? department.id : null,
+    matched_faq_id: best.sourceType === 'faq' ? best.item.id : null,
+    matched_service_id: best.sourceType === 'service' ? best.item.id : null,
+    source,
+    clarification_required: false,
+    escalation_available: false,
     department_details: department
       ? {
           id: department.id,
@@ -457,6 +477,8 @@ exports.askAssistant = async (req, res) => {
       message,
       ai_response: result.ai_response,
       matched_department_id: result.matched_department,
+      matched_faq_id: result.matched_faq_id || null,
+      matched_service_id: result.matched_service_id || null,
     });
 
     return res.json({

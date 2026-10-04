@@ -159,6 +159,25 @@ async function ensureUserProfileColumns() {
   }
 }
 
+async function ensureChatLogSourceColumns() {
+  const queryInterface = sequelize.getQueryInterface();
+  if (!(await queryInterface.tableExists('chat_logs'))) return;
+
+  const columns = await queryInterface.describeTable('chat_logs');
+  if (!columns.matched_faq_id) {
+    await queryInterface.addColumn('chat_logs', 'matched_faq_id', {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    });
+  }
+  if (!columns.matched_service_id) {
+    await queryInterface.addColumn('chat_logs', 'matched_service_id', {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    });
+  }
+}
+
 const server = app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}.`);
 });
@@ -178,6 +197,7 @@ sequelize
     return sequelize.sync({ alter: false, force: false });
   })
   .then(() => ensureUserProfileColumns())
+  .then(() => ensureChatLogSourceColumns())
   .then(() => {
     return backfillAdminTable();
   })
