@@ -383,42 +383,6 @@ function DashboardPage() {
           </div>
         </div>
 
-        <section className="institutional-card department-directory" aria-labelledby="department-directory-title">
-          <div className="map-toolbar">
-            <div>
-              <h3 id="department-directory-title">Department directory</h3>
-              <p className="map-subtitle">Office details and services maintained by administrators</p>
-            </div>
-          </div>
-          <div className="department-directory-grid">
-            {visibleDepartments.map((department) => {
-              const departmentServices = (dashboard.services || []).filter((service) => Number(service.department_id) === Number(department.id));
-              return (
-                <details className="department-directory-item" key={`directory-${department.id}`}>
-                  <summary>
-                    <strong>{department.name}</strong>
-                    <span>{department.location || 'Location not listed'}</span>
-                  </summary>
-                  <div className="department-directory-details">
-                    <p>{department.description || 'Service description not listed.'}</p>
-                    {department.point_person && <p><strong>Contact person:</strong> {department.point_person}</p>}
-                    {department.contact_number && <p><strong>Contact number:</strong> <a href={`tel:${department.contact_number}`}>{department.contact_number}</a></p>}
-                    <p><strong>Office hours:</strong> {department.office_hours || 'Not listed; contact the office to confirm.'}</p>
-                    <strong>Services</strong>
-                    {departmentServices.length > 0 ? (
-                      <ul>{departmentServices.map((service) => <li key={service.id}>
-                        <strong>{service.name}</strong>
-                        {service.requirements && <span> — {service.requirements}</span>}
-                        {service.processing_time && <small> Processing time: {service.processing_time}</small>}
-                      </li>)}</ul>
-                    ) : <p className="small-muted">No services listed yet.</p>}
-                  </div>
-                </details>
-              );
-            })}
-          </div>
-        </section>
-
         {selectedMapTicket && (
           <div className="map-ticket-detail-backdrop" role="presentation" onClick={() => setSelectedMapTicket(null)}>
             <div className="map-ticket-detail" role="dialog" aria-modal="true" aria-labelledby="map-ticket-detail-title" onClick={(event) => event.stopPropagation()}>
