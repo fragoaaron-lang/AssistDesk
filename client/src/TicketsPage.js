@@ -729,7 +729,6 @@ function TicketsPage() {
                   <option key={department.id} value={department.id}>{getDepartmentDisplayName(department)}</option>
                 ))}
               </select>
-              <p className="helper-text">Automatic routing only submits when the concern matches a department confidently. Otherwise, select the department yourself.</p>
               <select className="institutional-select" value={form.category} onChange={(e) => handleGeneralIssueChange(e.target.value)} required>
                 <option value="">Select a general issue{selectedDepartment ? ` for ${getDepartmentDisplayName(selectedDepartment)}` : ''}</option>
                 {Object.keys(generalIssueOptions).map((category) => (

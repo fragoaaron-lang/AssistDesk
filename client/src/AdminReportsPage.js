@@ -474,9 +474,9 @@ function AdminReportsPage() {
             <p className="report-priority-chart-hint">Hover or select a slice to inspect its share. Select it again to reset.</p>
           </div>
           <div className="institutional-card report-bars-card report-most-faq-card">
-            <div className="report-card-heading"><div><h3>Most asked FAQs</h3><span>Top questions matched in assistant conversations</span></div></div>
+            <div className="report-card-heading"><div><h3>Top FAQs</h3><span>Top questions matched in assistant conversations</span></div></div>
             {reports.mostAskedFaqs?.length > 0 ? (
-              <div className="report-faq-bar-chart" aria-label="Most asked FAQs">
+              <div className="report-faq-bar-chart" aria-label="Top FAQs">
                 {reports.mostAskedFaqs.map((faq) => (
                   <div key={faq.id} className="report-faq-bar-row" title={`${faq.question}: ${faq.count} matching question(s)`}>
                     <div className="report-faq-bar-label"><span>{faq.question}</span><strong>{faq.count}</strong></div>
