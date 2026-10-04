@@ -8,83 +8,72 @@ import SidebarProfile from './SidebarProfile';
 import TicketProgressBar from './TicketProgressBar';
 import { getSocket } from './socket';
 
-const generalIssueOptions = {
-  'IT and Technology': [
-    'Wi-Fi or internet access',
-    'Computer or laptop problem',
-    'Printer or scanner problem',
-    'Software or system access',
-    'Password or account access',
-  ],
-  'Facilities and Maintenance': [
-    'Electrical or lighting problem',
-    'Plumbing or water problem',
-    'Air conditioning or ventilation',
-    'Furniture or fixture damage',
-    'Building or room damage',
-  ],
-  'Classroom Concerns': [
-    'Classroom equipment',
-    'Classroom cleanliness',
-    'Missing classroom supplies',
-    'Room temperature or comfort',
-  ],
-  'Academic Support': [
-    'Class schedule concern',
-    'Learning materials request',
-    'Assignment or course concern',
-    'Tutoring or academic assistance',
-  ],
-  'Student Services': [
-    'Enrollment or registration',
-    'Student records request',
-    'Student ID concern',
-    'Transportation concern',
-    'Uniform or school requirement',
-  ],
-  'Safety and Security': [
-    'Safety hazard',
-    'Security equipment problem',
-    'Unsafe area or incident',
-    'Lost and found item',
-  ],
-  'Health and Wellness': [
-    'Nurse or medical assistance',
-    'Counseling referral',
-    'Accessibility concern',
-    'Wellness concern',
-  ],
-  'Library and Resources': [
-    'Book or resource request',
-    'Library student ID',
-    'Previous research access',
-  ],
-  'Clubs, Sports, and Events': [
-    'Club or organization concern',
-    'Sports equipment or facility',
-    'Event setup request',
-    'Room reservation request',
-  ],
-  'Administrative Requests': [
-    'Form or document request',
-    'Permit or approval request',
-    'School announcement request',
-    'Current general issue',
-  ],
-  'Cleaning and Sanitation': [
-    'Restroom concern',
-    'Trash or waste collection',
-    'Pest concern',
-    'Sanitation supplies',
-  ],
-  'Food Services': [
-    'Cafeteria concern',
-    'Meal quality or availability',
-    'Food safety concern',
-    'Vending machine problem',
-  ],
-};
+const defaultGeneralIssueOptions = {
+    'Academic or Department Service': ['Question about a department service', 'Course or program concern', 'Schedule or appointment concern', 'Learning materials or resource request', 'Other academic or department concern'],
+    'Administrative Request': ['Form or document request', 'Enrollment or records question', 'Payment or assessment question', 'Approval or permit request', 'Other administrative concern'],
+    'Technology or Equipment': ['System or account access', 'Network or internet concern', 'Computer or equipment problem', 'Software or printing concern', 'Other technology concern'],
+    'Facilities or Safety': ['Facility repair request', 'Cleanliness or sanitation concern', 'Safety hazard or incident', 'Room or equipment concern', 'Other facilities concern'],
+    'Health or Student Support': ['Health or wellness concern', 'Counseling or guidance request', 'Accessibility or accommodation concern', 'Urgent student support concern', 'Other student support concern'],
+    'General Inquiry or Feedback': ['Request for information', 'Service suggestion or feedback', 'Complaint or concern', 'Other general request'],
+  };
 
+  const departmentGeneralIssueOptions = {
+    it: {
+      'Network and Connectivity': ['Wi-Fi or internet access', 'Network outage or slow connection', 'Connect a device to campus network', 'Other network concern'],
+      'Computer and Equipment': ['Computer or laptop problem', 'Printer or scanner problem', 'Classroom or office equipment problem', 'Request equipment assistance', 'Other equipment concern'],
+      'Software and Account Access': ['Password or account access', 'Email or portal access', 'Software installation or error', 'System permission request', 'Other software or access concern'],
+      'Other IT Support': ['General IT question', 'Request technical assistance', 'Report a technology issue not listed'],
+    },
+    maintenance: {
+      'Building and Room Repairs': ['Electrical or lighting problem', 'Plumbing or water problem', 'Air conditioning or ventilation problem', 'Door, window, or structural damage', 'Other building repair'],
+      'Furniture and Equipment': ['Broken chair, table, or furniture', 'Classroom equipment repair', 'Request furniture or fixture repair', 'Other equipment concern'],
+      'Cleaning and Sanitation': ['Classroom cleanliness', 'Restroom cleanliness or supplies', 'Waste or pest concern', 'Other sanitation concern'],
+      'Safety and Other Maintenance': ['Safety hazard or damaged property', 'Urgent facility problem', 'General maintenance request', 'Other maintenance concern'],
+    },
+    clinic: {
+      'Medical Assistance': ['First aid or injury', 'Feeling unwell or need clinical rest', 'Medical consultation', 'Urgent medical assistance', 'Other medical concern'],
+      'Clinic Documents and Services': ['Medical certificate inquiry', 'Physical examination inquiry', 'Dental service inquiry', 'Laboratory result or appointment question', 'Other clinic service'],
+      'Clinic Information': ['Clinic hours or availability', 'Medicine availability', 'Parent or guardian contact request', 'General clinic question'],
+    },
+    library: {
+      'Books and Borrowing': ['Borrow or return a book', 'Book renewal or reservation', 'Overdue, lost, or damaged book', 'Book or reference availability', 'Other borrowing concern'],
+      'Research and Study Resources': ['Research or thesis material request', 'OPAC or catalog access', 'Online academic resource access', 'Library computer or internet access', 'Study space concern'],
+      'Other Library Support': ['Library hours or policy question', 'Library card concern', 'General library request'],
+    },
+    accounting: {
+      'Tuition and Payments': ['Tuition balance or statement inquiry', 'Payment not reflected', 'Payment method or receipt concern', 'Installment or payment schedule inquiry', 'Other payment concern'],
+      'Fees and Assessment': ['Enrollment fee assessment', 'Graduation or document fee inquiry', 'Refund or adjustment request', 'Other fee or assessment concern'],
+      'Scholarships and Discounts': ['Scholarship eligibility inquiry', 'Discount or benefit inquiry', 'Scholarship record concern', 'Other scholarship concern'],
+      'Other Accounting Support': ['General accounting question', 'Request a financial record', 'Other accounting request'],
+    },
+    registrar: {
+      'Enrollment and Registration': ['Enrollment or subject encoding concern', 'Add or drop a subject', 'Class schedule or subject load inquiry', 'Transfer or enrollment document concern', 'Other enrollment concern'],
+      'Student Records and Documents': ['Transcript of Records request', 'Certificate or Form 137/138 request', 'Certificate of Enrollment or grades request', 'Correction to student record', 'Other document request'],
+      'Grades and Academic Records': ['Incomplete grade inquiry', 'Grade submission or correction', 'Academic record evaluation', 'Other grade or records concern'],
+      'Other Registrar Support': ['Registrar office hours or location', 'Request status follow-up', 'General registrar inquiry'],
+    },
+    osa: {
+      'Student Welfare and Conduct': ['Student concern or complaint', 'Safety, bullying, or conduct concern', 'Request for student support', 'Lost-and-found inquiry', 'Other student welfare concern'],
+      'Student Activities and Organizations': ['Student organization or event approval', 'Facility or equipment reservation', 'Student activity concern', 'Other organization request'],
+      'Student Services': ['Student ID concern', 'School rules or policy inquiry', 'Campus security concern', 'General Office of Student Affairs inquiry'],
+    },
+    guidance: {
+      'Guidance and Counseling': ['Request counseling or personal support', 'Academic guidance request', 'Career or program guidance', 'Urgent student welfare concern', 'Other guidance concern'],
+      'Guidance Services': ['Good Moral Certificate inquiry', 'Referral or appointment request', 'Guidance office hours or location', 'Other guidance service'],
+    },
+    education: {
+      'Classes and Academic Support': ['Class schedule or subject concern', 'Course or lesson concern', 'Learning material request', 'Academic assistance or tutoring', 'Other academic concern'],
+      'Department Services': ['Enrollment or advising concern', 'Uniform or program requirement', 'Faculty or classroom concern', 'Department document or information request', 'Other department concern'],
+    },
+    basic: {
+      'Basic Education Classes': ['Class schedule or section concern', 'Learning material or book request', 'Classroom concern', 'Academic assistance request', 'Other class concern'],
+      'Student and Parent Services': ['Enrollment or student record concern', 'ID or uniform concern', 'Adviser or school communication concern', 'Safety or student welfare concern', 'Other Basic Education request'],
+    },
+    college: {
+      'Classes and Academic Support': ['Class schedule or subject concern', 'Course or program concern', 'Learning material request', 'Academic assistance or tutoring', 'Other academic concern'],
+      'Department Services': ['Enrollment or advising concern', 'Uniform or program requirement', 'Faculty or classroom concern', 'Department document or information request', 'Other department concern'],
+    },
+  };
 const collegeDepartmentNames = [
   'basic education department',
   'college of nursing',
@@ -112,6 +101,23 @@ const getCollegeDepartmentKey = (department) => {
 
 const isCollegeStudent = (currentUser) => currentUser?.role === 'student'
   && Boolean(getCollegeDepartmentKey(currentUser.department_name));
+
+const getDepartmentIssueOptions = (department) => {
+  if (!department) return defaultGeneralIssueOptions;
+  const name = normalizeDepartmentName(department);
+  if (name.includes('maintenance')) return departmentGeneralIssueOptions.maintenance;
+  if (name.includes('clinic')) return departmentGeneralIssueOptions.clinic;
+  if (name.includes('library')) return departmentGeneralIssueOptions.library;
+  if (name.includes('accounting')) return departmentGeneralIssueOptions.accounting;
+  if (name.includes('registrar')) return departmentGeneralIssueOptions.registrar;
+  if (name.includes('student affairs') || name === 'osa') return departmentGeneralIssueOptions.osa;
+  if (name.includes('guidance')) return departmentGeneralIssueOptions.guidance;
+  if (name.includes('information technology') || name.includes('it department')) return departmentGeneralIssueOptions.it;
+  if (name.includes('basic education')) return departmentGeneralIssueOptions.basic;
+  if (['education department', 'college of education'].includes(name)) return departmentGeneralIssueOptions.education;
+  if (getCollegeDepartmentKey(department)) return departmentGeneralIssueOptions.college;
+  return defaultGeneralIssueOptions;
+};
 
 const getDepartmentDisplayName = (department) => {
   const normalizedName = String(department?.name || '').toLowerCase();
@@ -243,6 +249,8 @@ function TicketsPage() {
     return () => events.forEach((eventName) => socket.off(eventName, refreshQueue));
   }, [token]);
 
+  const selectedDepartment = departments.find((department) => String(department.id) === String(form.department_id));
+  const generalIssueOptions = getDepartmentIssueOptions(selectedDepartment);
   const specificIssueOptions = generalIssueOptions[form.category] || [];
   const studentCollegeKey = getCollegeDepartmentKey(user?.department_name);
   const availableDepartments = isCollegeStudent(user)
@@ -252,7 +260,6 @@ function TicketsPage() {
     })
     : departments;
 
-  const selectedDepartment = departments.find((department) => String(department.id) === String(form.department_id));
   const isMaintenanceDepartment = selectedDepartment?.name?.toLowerCase().includes('maintenance');
   const getDepartmentFolder = (department) => {
     const name = getDepartmentDisplayName(department) || 'Unassigned Department';
@@ -657,13 +664,14 @@ function TicketsPage() {
               </select>
               <p className="helper-text">Automatic routing only submits when the concern matches a department confidently. Otherwise, select the department yourself.</p>
               <select className="institutional-select" value={form.category} onChange={(e) => handleGeneralIssueChange(e.target.value)} required>
-                <option value="">Select a general issue</option>
+                <option value="">Select a general issue{selectedDepartment ? ` for ${getDepartmentDisplayName(selectedDepartment)}` : ''}</option>
                 {Object.keys(generalIssueOptions).map((category) => (
                   <option key={category} value={category}>{category}</option>
                 ))}
               </select>
+              <p className="helper-text">{selectedDepartment ? `Issue categories are tailored for ${getDepartmentDisplayName(selectedDepartment)}.` : 'Choose a broad concern category; automatic routing will use it with your description.'}</p>
               <select className="institutional-select" value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} required disabled={!form.category}>
-                <option value="">Select a specific issue</option>
+                <option value="">Select a specific issue or request</option>
                 {specificIssueOptions.map((subject) => (
                   <option key={subject} value={subject}>{subject}</option>
                 ))}
