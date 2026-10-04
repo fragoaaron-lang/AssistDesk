@@ -2286,6 +2286,72 @@ button, input, select, textarea {
   border-radius: 12px;
 }
 
+.campus-department-marker-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.campus-department-marker {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 150px;
+  padding: 4px 7px;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(16, 53, 77, 0.55);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #102f45;
+  box-shadow: 0 2px 7px rgba(8, 32, 56, 0.28);
+  font-size: clamp(0.52rem, 0.9vw, 0.72rem);
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: left;
+}
+
+.campus-department-marker-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border: 1px solid white;
+  border-radius: 50%;
+  background: #0b7180;
+  box-shadow: 0 0 0 1px #0b7180;
+}
+
+.department-map-coordinate-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(120px, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.department-map-coordinate-fields label { display: grid; gap: 4px; font-size: 0.82rem; font-weight: 700; }
+.department-map-coordinate-fields small { grid-column: 1 / -1; color: var(--muted); }
+
+.department-directory { margin: 20px 0; }
+.department-directory-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; padding: 14px; }
+.department-directory-item { min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: 11px; background: var(--surface); }
+.department-directory-item summary { display: grid; gap: 4px; padding: 12px; cursor: pointer; list-style: none; }
+.department-directory-item summary::-webkit-details-marker { display: none; }
+.department-directory-item summary::after { content: '+'; justify-self: end; grid-column: 2; grid-row: 1 / span 2; align-self: center; color: var(--teal); font-size: 1.2rem; font-weight: 800; }
+.department-directory-item[open] summary::after { content: '−'; }
+.department-directory-item summary strong { color: var(--navy); }
+.department-directory-item summary span { color: var(--muted); font-size: 0.82rem; }
+.department-directory-details { padding: 0 12px 12px; color: var(--text); font-size: 0.86rem; line-height: 1.5; }
+.department-directory-details p { margin: 6px 0; }
+.department-directory-details ul { margin: 6px 0 0; padding-left: 19px; }
+.department-directory-details li { margin: 5px 0; }
+.department-directory-details li small { display: block; color: var(--muted); }
+
+@media (max-width: 640px) {
+  .campus-department-marker { max-width: 96px; gap: 3px; padding: 3px 4px; border-radius: 5px; font-size: 0.48rem; }
+  .campus-department-marker-dot { width: 6px; height: 6px; flex-basis: 6px; }
+}
+
 .heatmap-layer {
   position: absolute;
   inset: 0;

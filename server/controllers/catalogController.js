@@ -54,9 +54,15 @@ exports.getDepartments = async (req, res) => {
 
 exports.createDepartment = async (req, res) => {
   try {
-    const { name, description, point_person, contact_number, location, office_hours } = req.body;
+    const { name, description, point_person, contact_number, location, office_hours, map_x, map_y } = req.body;
     if (!name) {
       return res.status(400).json({ message: 'Department name is required.' });
+    }
+    const parsedMapX = map_x === '' || map_x == null ? null : Number(map_x);
+    const parsedMapY = map_y === '' || map_y == null ? null : Number(map_y);
+    if ((parsedMapX != null && (!Number.isFinite(parsedMapX) || parsedMapX < 0 || parsedMapX > 100))
+      || (parsedMapY != null && (!Number.isFinite(parsedMapY) || parsedMapY < 0 || parsedMapY > 100))) {
+      return res.status(400).json({ message: 'Map coordinates must be percentages from 0 to 100.' });
     }
     const department = await Department.create({
       name,
@@ -65,6 +71,8 @@ exports.createDepartment = async (req, res) => {
       contact_number,
       location,
       office_hours,
+      map_x: parsedMapX,
+      map_y: parsedMapY,
     });
     return res.status(201).json(department);
   } catch (error) {
@@ -80,7 +88,18 @@ exports.updateDepartment = async (req, res) => {
     if (!department) {
       return res.status(404).json({ message: 'Department not found.' });
     }
-    await department.update(req.body);
+    const updates = { ...req.body };
+    for (const coordinate of ['map_x', 'map_y']) {
+      if (Object.prototype.hasOwnProperty.call(updates, coordinate)) {
+        const value = updates[coordinate];
+        const parsed = value === '' || value == null ? null : Number(value);
+        if (parsed != null && (!Number.isFinite(parsed) || parsed < 0 || parsed > 100)) {
+          return res.status(400).json({ message: 'Map coordinates must be percentages from 0 to 100.' });
+        }
+        updates[coordinate] = parsed;
+      }
+    }
+    await department.update(updates);
     return res.json(department);
   } catch (error) {
     console.error(error);

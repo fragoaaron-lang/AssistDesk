@@ -207,6 +207,18 @@ async function ensureTicketRoutingColumns() {
   }
 }
 
+async function ensureDepartmentMapColumns() {
+  const queryInterface = sequelize.getQueryInterface();
+  if (!(await queryInterface.tableExists('departments'))) return;
+  const columns = await queryInterface.describeTable('departments');
+  if (!columns.map_x) {
+    await queryInterface.addColumn('departments', 'map_x', { type: DataTypes.FLOAT, allowNull: true });
+  }
+  if (!columns.map_y) {
+    await queryInterface.addColumn('departments', 'map_y', { type: DataTypes.FLOAT, allowNull: true });
+  }
+}
+
 const server = app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}.`);
 });
@@ -228,6 +240,7 @@ sequelize
   .then(() => ensureUserProfileColumns())
   .then(() => ensureChatLogSourceColumns())
   .then(() => ensureTicketRoutingColumns())
+  .then(() => ensureDepartmentMapColumns())
   .then(() => {
     return backfillAdminTable();
   })

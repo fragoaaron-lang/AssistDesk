@@ -10,7 +10,7 @@ import SidebarProfile from './SidebarProfile';
 function DashboardPage() {
   const { user, token } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [dashboard, setDashboard] = useState({ departments: [], announcements: [], stats: {} });
+  const [dashboard, setDashboard] = useState({ departments: [], services: [], announcements: [], stats: {} });
   const [zoomLevel, setZoomLevel] = useState(1);
   const [selectedMapTicket, setSelectedMapTicket] = useState(null);
   const [hoveredMapTicket, setHoveredMapTicket] = useState(null);
@@ -91,25 +91,30 @@ function DashboardPage() {
   };
 
   const getBuildingPosition = (department) => {
-    const name = String(department.name || '').toLowerCase();
-    if (name.includes('admin')) return { x: 16, y: 50 };
-    if (name.includes('library') || name.includes('jb') || name.includes('angeles')) return { x: 42, y: 60 };
-    if (name.includes('crim')) return { x: 64, y: 13 };
-    if (name.includes('nurs')) return { x: 60, y: 75 };
-    if (name.includes('clinic')) return { x: 54, y: 35 };
-    if (name.includes('maintenance')) return { x: 82, y: 57 };
-    if (name.includes('student')) return { x: 18, y: 34 };
-    if (name.includes('account')) return { x: 52, y: 45 };
-    if (name.includes('education')) return { x: 54, y: 22 };
-    if (name.includes('cs')) return { x: 42, y: 24 };
-    if (name.includes('hm') || name.includes('charm')) return { x: 24, y: 9 };
-    if (name.includes('technology') || name.includes('information')) return { x: 42, y: 34 };
-    return { x: 50, y: 50 };
+    const x = Number(department?.map_x);
+    const y = Number(department?.map_y);
+    if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || x > 100 || y < 0 || y > 100) return null;
+    return { x, y };
   };
+
+  const getOfficeMapLabel = (department) => department.display_name || department.name || 'Campus office';
+
+  const mappedDepartmentGroups = useMemo(() => {
+    const groups = new Map();
+    visibleDepartments.forEach((department) => {
+      const position = getBuildingPosition(department);
+      if (!position) return;
+      const key = `${position.x.toFixed(1)}:${position.y.toFixed(1)}`;
+      if (!groups.has(key)) groups.set(key, { ...position, departments: [] });
+      groups.get(key).departments.push(department);
+    });
+    return [...groups.values()];
+  }, [visibleDepartments]);
 
   const getTicketPosition = (ticket, departmentTicketIndex) => {
     const department = (dashboard.departments || []).find((item) => Number(item.id) === Number(ticket.department_id));
-    const basePosition = getBuildingPosition(department || {});
+    const basePosition = getBuildingPosition(department);
+    if (!basePosition) return null;
     const angle = departmentTicketIndex * 2.39996;
     const radius = departmentTicketIndex === 0 ? 0 : Math.min(7, 2.5 + departmentTicketIndex * 0.8);
     return {
@@ -211,7 +216,7 @@ function DashboardPage() {
       <div className="dashboard-heatmap-background" aria-hidden="true">
         <img src="/schoolmap.png" alt="" />
         <div className="dashboard-heatmap-overlay">
-          {visibleDepartments.filter((dept) => Number(dept.ticket_count || 0) > 0).map((dept) => {
+          {visibleDepartments.filter((dept) => Number(dept.ticket_count || 0) > 0 && getBuildingPosition(dept)).map((dept) => {
             const pos = getBuildingPosition(dept);
             const ticketCount = Number(dept.ticket_count || 0);
             return (
@@ -296,7 +301,7 @@ function DashboardPage() {
           <div className="map-toolbar">
             <div>
               <h3>Campus request forecast</h3>
-              <p className="map-subtitle">Live request intensity by building</p>
+              <p className="map-subtitle">Ticket activity and admin-maintained office markers on the bundled campus map. No GPS or route navigation.</p>
             </div>
             <div className="actions">
               <button className="institutional-btn small secondary" onClick={() => setZoomLevel((value) => Math.max(0.8, value - 0.2))}>−</button>
@@ -314,7 +319,7 @@ function DashboardPage() {
               >
                 <img src="/schoolmap.png" alt="Campus map" />
                 <div className="heatmap-layer" aria-hidden="true">
-                  {visibleDepartments.filter((dept) => Number(dept.ticket_count || 0) > 0).map((dept) => {
+                  {visibleDepartments.filter((dept) => Number(dept.ticket_count || 0) > 0 && getBuildingPosition(dept)).map((dept) => {
                     const pos = getBuildingPosition(dept);
                     const ticketCount = Number(dept.ticket_count || 0);
                     return (
@@ -331,6 +336,25 @@ function DashboardPage() {
                     );
                   })}
                 </div>
+                <div className="campus-department-marker-layer" role="group" aria-label="Department office locations">
+                  {mappedDepartmentGroups.map((group) => {
+                    const departmentNames = [...new Set(group.departments.map(getOfficeMapLabel))];
+                    const locationNames = [...new Set(group.departments.map((department) => department.location).filter(Boolean))];
+                    return (
+                      <div
+                        key={`department-map-marker-${group.x}-${group.y}`}
+                        className="campus-department-marker"
+                        style={{ left: `${group.x}%`, top: `${group.y}%` }}
+                        title={`${departmentNames.join(', ')}${locationNames.length ? ` — ${locationNames.join(', ')}` : ''}`}
+                        role="img"
+                        aria-label={`${departmentNames.join(', ')} office location${locationNames.length ? `. ${locationNames.join(', ')}` : ''}`}
+                      >
+                        <span className="campus-department-marker-dot" aria-hidden="true" />
+                        <span>{departmentNames.join(' / ')}</span>
+                      </div>
+                    );
+                  })}
+                </div>
                 <div className="ticket-pin-layer">
                   {mapTickets.map((ticket, index) => {
                     const departmentTicketIndex = mapTickets
@@ -338,6 +362,7 @@ function DashboardPage() {
                       .filter((item) => Number(item.department_id) === Number(ticket.department_id))
                       .length;
                     const pos = getTicketPosition(ticket, departmentTicketIndex);
+                    if (!pos) return null;
                     return (
                       <button
                         type="button"
@@ -373,6 +398,8 @@ function DashboardPage() {
                 </div>
               </div>
               <div className="heatmap-legend" role="region" aria-label="Map legend">
+                <strong>Department offices</strong>
+                <span><span className="campus-department-marker-dot" aria-hidden="true"></span>Office location (configured in Catalog)</span>
                 <strong>Priority level</strong>
                 <span>
                   <span className="legend-swatch low" aria-hidden="true"></span>
@@ -390,6 +417,42 @@ function DashboardPage() {
             </div>
           </div>
         </div>
+
+        <section className="institutional-card department-directory" aria-labelledby="department-directory-title">
+          <div className="map-toolbar">
+            <div>
+              <h3 id="department-directory-title">Department directory</h3>
+              <p className="map-subtitle">Office details and services maintained by administrators</p>
+            </div>
+          </div>
+          <div className="department-directory-grid">
+            {visibleDepartments.map((department) => {
+              const departmentServices = (dashboard.services || []).filter((service) => Number(service.department_id) === Number(department.id));
+              return (
+                <details className="department-directory-item" key={`directory-${department.id}`}>
+                  <summary>
+                    <strong>{department.name}</strong>
+                    <span>{department.location || 'Location not listed'}</span>
+                  </summary>
+                  <div className="department-directory-details">
+                    <p>{department.description || 'Service description not listed.'}</p>
+                    {department.point_person && <p><strong>Contact person:</strong> {department.point_person}</p>}
+                    {department.contact_number && <p><strong>Contact number:</strong> <a href={`tel:${department.contact_number}`}>{department.contact_number}</a></p>}
+                    <p><strong>Office hours:</strong> {department.office_hours || 'Not listed; contact the office to confirm.'}</p>
+                    <strong>Services</strong>
+                    {departmentServices.length > 0 ? (
+                      <ul>{departmentServices.map((service) => <li key={service.id}>
+                        <strong>{service.name}</strong>
+                        {service.requirements && <span> — {service.requirements}</span>}
+                        {service.processing_time && <small> Processing time: {service.processing_time}</small>}
+                      </li>)}</ul>
+                    ) : <p className="small-muted">No services listed yet.</p>}
+                  </div>
+                </details>
+              );
+            })}
+          </div>
+        </section>
 
         {selectedMapTicket && (
           <div className="map-ticket-detail-backdrop" role="presentation" onClick={() => setSelectedMapTicket(null)}>

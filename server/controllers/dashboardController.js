@@ -1,20 +1,54 @@
-const { Department, Announcement, Ticket, Notification, sequelize, User } = require('../models');
+const { Department, Service, Announcement, Ticket, Notification, sequelize, User } = require('../models');
 const { formatTicketNumber } = require('../utils/ticketNumber');
 
 const defaultDepartments = [
-  { name: 'CS Department', description: 'Supports computer science academic and student service needs.', point_person: 'Mr. Adrian Cruz', contact_number: '02-1234-5681', location: 'Computer Science Building, Room 210', office_hours: '8:00 AM - 5:00 PM' },
-  { name: 'Education Department', description: 'Handles education-related concerns and academic coordination.', point_person: 'Ms. Liza Santos', contact_number: '02-1234-5682', location: 'Education Building, Room 115', office_hours: '8:00 AM - 5:00 PM' },
-  { name: 'HM Department', description: 'Supports hospitality management requests and student concerns.', point_person: 'Mr. Ben Alvarez', contact_number: '02-1234-5683', location: 'Hospitality Building, Room 410', office_hours: '9:00 AM - 4:00 PM' },
-  { name: 'Crim Department', description: 'Handles criminal justice-related requests and coordination.', point_person: 'Prof. Rose Dela Cruz', contact_number: '02-1234-5684', location: 'Criminal Justice Building, Room 305', office_hours: '8:00 AM - 5:00 PM' },
-  { name: 'Nursing Department', description: 'Provides nursing department support and clinical coordination.', point_person: 'Ms. Grace Ramos', contact_number: '02-1234-5685', location: 'Nursing Building, Room 120', office_hours: '8:00 AM - 5:00 PM' },
-  { name: 'Accounting Department', description: 'Handles tuition balances, payments, fees, receipts, refunds, and scholarship inquiries.', location: 'Window 8, Cashier', office_hours: 'Mon-Fri 8AM-5PM' },
-  { name: 'Accounting', description: 'Handles payment, billing, and account assistance.', point_person: 'Ms. Joy Lim', contact_number: '02-1234-5686', location: 'Finance Building, Room 204', office_hours: '8:00 AM - 5:00 PM' },
-  { name: 'Registrar Office', description: 'Handles student records, transcripts, enrollment certificates, grades, and other official school documents.', location: 'Administration Building (J.B. Angeles Building)', office_hours: 'Weekdays 8AM-5PM; Grad/Doctorate Sat 8AM-noon' },
-  { name: 'Maintenance', description: 'Handles facilities, repairs, and campus infrastructure concerns.', point_person: 'Mr. Joel Rivera', contact_number: '02-1234-5687', location: 'Maintenance Office, Room 007', office_hours: '7:00 AM - 6:00 PM' },
-  { name: 'Student Affairs', description: 'Supports student welfare, guidance, and campus activities.', point_person: 'Mr. Rafael Santos', contact_number: '02-1234-5679', location: 'Student Center, Room 205', office_hours: '9:00 AM - 4:00 PM' },
-  { name: 'Office of the Student Affairs', description: 'Provides student orientation, student activities, canteen management, student security, and student affairs support.', location: 'Near TCC Gymnasium', office_hours: 'Weekdays 8AM-5PM; Head 6AM-9PM; Lunch 12-1PM' },
-  { name: 'Clinic', description: 'Provides health services and medical assistance.', point_person: 'Dr. Maria Torres', contact_number: '02-1234-5688', location: 'Clinic Building, Room 010', office_hours: '7:00 AM - 7:00 PM' },
+  { name: 'CS Department', description: 'Computer Science Department' },
+  { name: 'Education Department', description: 'Education Department', map_x: 35, map_y: 42 },
+  { name: 'HM Department', description: 'Hospitality Management Department', map_x: 25, map_y: 9 },
+  { name: 'Crim Department', description: 'Criminology Department', map_x: 67, map_y: 12 },
+  { name: 'Nursing Department', description: 'Nursing Department', map_x: 62, map_y: 65 },
+  { name: 'Accounting Department', description: 'Accounting Department', map_x: 43, map_y: 65 },
+  { name: 'Registrar Office', description: 'Registrar Office', map_x: 43, map_y: 65 },
+  { name: 'Maintenance', description: 'Maintenance Department' },
+  { name: 'Office of the Student Affairs', description: 'Office of Student Affairs', location: 'Near TCC Gymnasium', map_x: 15, map_y: 32 },
+  { name: 'Clinic', description: 'Clinic', map_x: 54, map_y: 37 },
 ];
+
+const initialMapPositions = {
+  'basic education department': [75, 30],
+  'education department': [35, 42],
+  'college of education': [35, 42],
+  'bshm department': [25, 9],
+  'hm department': [25, 9],
+  hm: [25, 9],
+  'college of hospitality management': [25, 9],
+  charm: [25, 9],
+  'crim department': [67, 12],
+  'bscrim department': [67, 12],
+  bscrim: [67, 12],
+  'college of criminology': [67, 12],
+  'nursing department': [62, 65],
+  nursing: [62, 65],
+  'college of nursing': [62, 65],
+  cba: [54, 43],
+  accountancy: [54, 43],
+  'college of business administration': [54, 43],
+  'college of business and accountancy': [54, 43],
+  'college of physical therapy': [68, 44],
+  'physical therapy department': [68, 44],
+  'bspt department': [68, 44],
+  bspt: [68, 44],
+  'accounting department': [43, 65],
+  accounting: [43, 65],
+  'registrar office': [43, 65],
+  'registrar department': [43, 65],
+  'office of the student affairs': [15, 32],
+  'office of student affairs': [15, 32],
+  'student affairs': [15, 32],
+  clinic: [54, 37],
+  'it department': [40, 31],
+  'information technology department': [40, 31],
+};
 
 exports.getDashboard = async (req, res) => {
   try {
@@ -23,9 +57,32 @@ exports.getDashboard = async (req, res) => {
         where: { name: department.name },
         defaults: department,
       });
+      const storedDepartment = await Department.findOne({ where: { name: department.name } });
+      if (storedDepartment && (storedDepartment.map_x == null || storedDepartment.map_y == null)) {
+        await storedDepartment.update({
+          map_x: storedDepartment.map_x ?? department.map_x ?? null,
+          map_y: storedDepartment.map_y ?? department.map_y ?? null,
+        });
+      }
+    }
+
+    const mapDepartments = await Department.findAll();
+    for (const department of mapDepartments) {
+      if (department.map_x != null && department.map_y != null) continue;
+      const normalizedName = String(department.name || '').toLowerCase().trim();
+      const position = initialMapPositions[normalizedName];
+      if (!position) continue;
+      await department.update({
+        map_x: department.map_x ?? position[0],
+        map_y: department.map_y ?? position[1],
+      });
     }
 
     const departments = await Department.findAll({ order: [['name', 'ASC']] });
+    const services = await Service.findAll({
+      include: [{ model: Department }],
+      order: [['name', 'ASC']],
+    });
     const ticketCounts = await Ticket.findAll({
       attributes: [
         'department_id',
@@ -74,7 +131,7 @@ exports.getDashboard = async (req, res) => {
       openTickets: await Ticket.count({ where: { status: 'open' } }),
     };
 
-    return res.json({ departments: departmentsWithStats, announcements, stats, topConcernDepartments, tickets: ticketsWithCodes });
+    return res.json({ departments: departmentsWithStats, services, announcements, stats, topConcernDepartments, tickets: ticketsWithCodes });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Unable to load dashboard.' });

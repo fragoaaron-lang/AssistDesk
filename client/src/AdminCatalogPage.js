@@ -12,7 +12,7 @@ function AdminCatalogPage() {
   const [departments, setDepartments] = useState([]);
   const [services, setServices] = useState([]);
   const [faqs, setFaqs] = useState([]);
-  const [departmentForm, setDepartmentForm] = useState({ name: '', description: '', point_person: '', contact_number: '', location: '', office_hours: '' });
+  const [departmentForm, setDepartmentForm] = useState({ name: '', description: '', point_person: '', contact_number: '', location: '', office_hours: '', map_x: '', map_y: '' });
   const [serviceForm, setServiceForm] = useState({ department_id: '', name: '', requirements: '', processing_time: '' });
   const [faqForm, setFaqForm] = useState({ department_id: '', question: '', answer: '', keywords: '' });
   const [editingDepartmentId, setEditingDepartmentId] = useState(null);
@@ -55,7 +55,7 @@ function AdminCatalogPage() {
     if (editingDepartmentId) await api.put(`/departments/${editingDepartmentId}`, departmentForm);
     else await api.post('/departments', departmentForm);
     setEditingDepartmentId(null);
-    setDepartmentForm({ name: '', description: '', point_person: '', contact_number: '', location: '', office_hours: '' });
+    setDepartmentForm({ name: '', description: '', point_person: '', contact_number: '', location: '', office_hours: '', map_x: '', map_y: '' });
     loadData();
   };
 
@@ -171,12 +171,18 @@ function AdminCatalogPage() {
             <input className="institutional-input" placeholder="Location" value={departmentForm.location} onChange={(e) => setDepartmentForm({ ...departmentForm, location: e.target.value })} />
             <input className="institutional-input" placeholder="Office Hours" value={departmentForm.office_hours} onChange={(e) => setDepartmentForm({ ...departmentForm, office_hours: e.target.value })} />
             <button className="institutional-btn" type="submit">{editingDepartmentId ? 'Update Department' : 'Save Department'}</button>
-            {editingDepartmentId && <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingDepartmentId(null); setDepartmentForm({ name: '', description: '', point_person: '', contact_number: '', location: '', office_hours: '' }); }}>Cancel edit</button>}
+            <div className="department-map-coordinate-fields">
+              <label>Map X (%)<input className="institutional-input" type="number" min="0" max="100" step="0.1" placeholder="0–100 from left" value={departmentForm.map_x} onChange={(e) => setDepartmentForm({ ...departmentForm, map_x: e.target.value })} /></label>
+              <label>Map Y (%)<input className="institutional-input" type="number" min="0" max="100" step="0.1" placeholder="0–100 from top" value={departmentForm.map_y} onChange={(e) => setDepartmentForm({ ...departmentForm, map_y: e.target.value })} /></label>
+              <small>Coordinates are percentages of the bundled campus map image. Leave blank to hide this office marker.</small>
+            </div>
+            {editingDepartmentId && <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingDepartmentId(null); setDepartmentForm({ name: '', description: '', point_person: '', contact_number: '', location: '', office_hours: '', map_x: '', map_y: '' }); }}>Cancel edit</button>}
           </form>
           <div className="list-stack" style={{ marginTop: '12px' }}>
             {departments.map((dept) => <div className="inline-actions" key={dept.id}>
               <span>{dept.name} — {dept.point_person || 'No point person'}</span>
-              <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingDepartmentId(dept.id); setDepartmentForm({ name: dept.name || '', description: dept.description || '', point_person: dept.point_person || '', contact_number: dept.contact_number || '', location: dept.location || '', office_hours: dept.office_hours || '' }); }}>Edit</button>
+              <span className="small-muted">{dept.map_x == null || dept.map_y == null ? 'Map marker not set' : `Map: ${Number(dept.map_x).toFixed(1)}%, ${Number(dept.map_y).toFixed(1)}%`}</span>
+              <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingDepartmentId(dept.id); setDepartmentForm({ name: dept.name || '', description: dept.description || '', point_person: dept.point_person || '', contact_number: dept.contact_number || '', location: dept.location || '', office_hours: dept.office_hours || '', map_x: dept.map_x ?? '', map_y: dept.map_y ?? '' }); }}>Edit</button>
               <button className="institutional-btn small danger" type="button" onClick={() => deleteCatalogItem('departments', dept.id, dept.name)}>Delete</button>
             </div>)}
           </div>

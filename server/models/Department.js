@@ -31,6 +31,16 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING(100),
         allowNull: true,
       },
+      map_x: {
+        type: DataTypes.FLOAT,
+        allowNull: true,
+        validate: { min: 0, max: 100 },
+      },
+      map_y: {
+        type: DataTypes.FLOAT,
+        allowNull: true,
+        validate: { min: 0, max: 100 },
+      },
       created_at: {
         type: DataTypes.DATE,
         allowNull: false,
