@@ -97,6 +97,27 @@ function DashboardPage() {
     return { x, y };
   };
 
+  const mappedOfficePins = (() => {
+    const groups = new Map();
+    visibleDepartments.forEach((department) => {
+      const position = getBuildingPosition(department);
+      if (!position) return;
+      const key = `${position.x.toFixed(1)}:${position.y.toFixed(1)}`;
+      if (!groups.has(key)) groups.set(key, { ...position, departments: [] });
+      groups.get(key).departments.push(department);
+    });
+
+    return [...groups.values()].flatMap((group) => group.departments.map((department, index) => {
+      const angle = (Math.PI * 2 * index) / group.departments.length - Math.PI / 2;
+      const radius = group.departments.length > 1 ? 1.35 : 0;
+      return {
+        department,
+        x: group.x + Math.cos(angle) * radius,
+        y: group.y + Math.sin(angle) * radius,
+      };
+    }));
+  })();
+
   const getTicketPosition = (ticket, departmentTicketIndex) => {
     const department = (dashboard.departments || []).find((item) => Number(item.id) === Number(ticket.department_id));
     const basePosition = getBuildingPosition(department);
@@ -287,7 +308,7 @@ function DashboardPage() {
           <div className="map-toolbar">
             <div>
               <h3>Campus request forecast</h3>
-              <p className="map-subtitle">Ticket activity and priority distribution on the bundled campus map. No GPS or route navigation.</p>
+              <p className="map-subtitle">Office pins, ticket activity, and priority distribution on the bundled campus map. No GPS or route navigation.</p>
             </div>
             <div className="actions">
               <button className="institutional-btn small secondary" onClick={() => setZoomLevel((value) => Math.max(0.8, value - 0.2))}>−</button>
@@ -321,6 +342,18 @@ function DashboardPage() {
                       />
                     );
                   })}
+                </div>
+                <div className="campus-office-pin-layer" role="group" aria-label="Department office pins">
+                  {mappedOfficePins.map(({ department, x, y }) => (
+                    <span
+                      key={`office-pin-${department.id}`}
+                      className="campus-office-pin"
+                      style={{ left: `${x}%`, top: `${y}%` }}
+                      title={`${department.name} — ${department.location || 'Office location'}`}
+                      role="img"
+                      aria-label={`${department.name}, ${department.location || 'office location not listed'}`}
+                    />
+                  ))}
                 </div>
                 <div className="ticket-pin-layer">
                   {mapTickets.map((ticket, index) => {
@@ -365,6 +398,7 @@ function DashboardPage() {
                 </div>
               </div>
               <div className="heatmap-legend" role="region" aria-label="Map legend">
+                <span><span className="office-pin-legend-marker" aria-hidden="true" />Office pin</span>
                 <strong>Priority level</strong>
                 <span>
                   <span className="legend-swatch low" aria-hidden="true"></span>

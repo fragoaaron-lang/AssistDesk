@@ -13,7 +13,7 @@ Department marker coordinates are stored on each department record as `map_x` an
 - For example, `map_x = 50`, `map_y = 50` places the marker at the center.
 - If either coordinate is blank, no office marker or map ticket/heat position is shown for that department; the dashboard does not guess a location from the department name.
 
-Initial percentages are image-based starting estimates for recognizable labeled buildings. An authorized admin should verify and adjust each coordinate against the official campus map. The server fills coordinates only when they are currently blank and never overwrites admin-maintained values, except for fixed campus locations: Maintenance is pinned to the Workshop (85.5%, 54%); Library, Registrar, Guidance, and Accounting are pinned to the J.B. Angeles (Administration) Building (45%, 63.5%); CS is pinned inside the right-hand Information & Technology Building (54.5%, 31%); and IT is pinned inside the left-hand Information & Technology Building below D.H. Soriano Hall (39%, 32%).
+Initial percentages are image-based starting estimates for recognizable labeled buildings. An authorized admin should verify and adjust each coordinate against the official campus map. The server fills coordinates only when they are currently blank and never overwrites admin-maintained map values, except for fixed campus locations: Maintenance is pinned to the Workshop (85.5%, 54%); Library, Registrar, Guidance, and Accounting are pinned to the J.B. Angeles (Administration) Building (45%, 63.5%), and their saved physical location is normalized to “Administration Building (J.B. Angeles Building)”; CS is pinned inside the right-hand Information & Technology Building (54.5%, 31%); and IT is pinned inside the left-hand Information & Technology Building below D.H. Soriano Hall (39%, 32%).
 
 ## Updating office information and coordinates
 
@@ -23,4 +23,4 @@ Department records without confirmed locations should keep map coordinates blank
 
 ## Map capabilities and limitations
 
-The dashboard overlays department labels, ticket pins, and ticket-volume heat spots on the static campus image. Office labels are rendered from department records with saved map coordinates. Ticket and heat overlays are omitted when a department lacks coordinates. The map does not calculate walking routes, use GPS, locate a user's device, or provide real-time person tracking. Live updates refer only to application ticket events.
+The dashboard overlays unlabeled office pins, ticket pins, and ticket-volume heat spots on the static campus image. Hovering or focusing an office pin reveals its department and physical location; pins for departments in the same building are fanned out slightly for visibility. Ticket and heat overlays are omitted when a department lacks coordinates. The map does not calculate walking routes, use GPS, locate a user's device, or provide real-time person tracking. Live updates refer only to application ticket events.

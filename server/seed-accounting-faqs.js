@@ -89,7 +89,7 @@ async function seed() {
       defaults: {
         name: departmentName,
         description: 'Handles tuition balances, payments, fees, receipts, refunds, and scholarship inquiries.',
-        location: 'Window 8, Cashier',
+        location: 'Administration Building (J.B. Angeles Building)',
         office_hours: 'Mon-Fri 8AM-5PM',
       },
       transaction,

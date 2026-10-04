@@ -94,6 +94,7 @@ async function seed() {
       defaults: {
         name: departmentName,
         description: 'Provides book borrowing, study space, research materials, computers, and access to academic resources.',
+        location: 'Administration Building (J.B. Angeles Building)',
         office_hours: 'Monday-Friday 8AM-5PM',
       },
       transaction,

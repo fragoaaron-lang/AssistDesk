@@ -1,14 +1,16 @@
 const { Department, Service, Announcement, Ticket, Notification, sequelize, User } = require('../models');
 const { formatTicketNumber } = require('../utils/ticketNumber');
 
+const ADMIN_BUILDING_LOCATION = 'Administration Building (J.B. Angeles Building)';
+
 const defaultDepartments = [
   { name: 'CS Department', description: 'Computer Science Department', map_x: 54.5, map_y: 31 },
   { name: 'Education Department', description: 'Education Department', map_x: 35, map_y: 42 },
   { name: 'HM Department', description: 'Hospitality Management Department', map_x: 25, map_y: 9 },
   { name: 'Crim Department', description: 'Criminology Department', map_x: 67, map_y: 12 },
   { name: 'Nursing Department', description: 'Nursing Department', map_x: 62, map_y: 65 },
-  { name: 'Accounting Department', description: 'Accounting Department', map_x: 45, map_y: 63.5 },
-  { name: 'Registrar Office', description: 'Registrar Office', map_x: 45, map_y: 63.5 },
+  { name: 'Accounting Department', description: 'Accounting Department', location: ADMIN_BUILDING_LOCATION, map_x: 45, map_y: 63.5 },
+  { name: 'Registrar Office', description: 'Registrar Office', location: ADMIN_BUILDING_LOCATION, map_x: 45, map_y: 63.5 },
   { name: 'Maintenance', description: 'Maintenance Department', map_x: 85.5, map_y: 54 },
   { name: 'Office of the Student Affairs', description: 'Office of Student Affairs', location: 'Near TCC Gymnasium', map_x: 15, map_y: 32 },
   { name: 'Clinic', description: 'Clinic', map_x: 54, map_y: 37 },
@@ -83,6 +85,12 @@ exports.getDashboard = async (req, res) => {
     const mapDepartments = await Department.findAll();
     for (const department of mapDepartments) {
       const normalizedName = String(department.name || '').toLowerCase().trim();
+      const isAdministrationBuildingDepartment = ['accounting', 'registrar', 'library', 'guidance']
+        .some((office) => normalizedName.includes(office));
+      if (isAdministrationBuildingDepartment && department.location !== ADMIN_BUILDING_LOCATION) {
+        await department.update({ location: ADMIN_BUILDING_LOCATION });
+      }
+
       const position = initialMapPositions[normalizedName];
       if (!position) continue;
       const isFixedBuildingLocation = normalizedName.includes('maintenance')
