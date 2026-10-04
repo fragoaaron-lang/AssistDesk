@@ -128,6 +128,27 @@ const FAQ_GROUPS = [
     ],
   },
   {
+    title: 'Library Department',
+    questions: [
+      'What are the library operating hours?',
+      'What do I need to borrow a book from the library?',
+      'How many books can I borrow at a time?',
+      'How long can I keep a borrowed library book?',
+      'What should I do if I lose a borrowed library book?',
+      'Can I use the library for studying?',
+      'Where can I return borrowed books?',
+      'Can I borrow reference books from the library?',
+      'What happens if I return a library book late?',
+      'What happens if I damage a library book?',
+      'Can I renew a borrowed library book?',
+      'Can I reserve a book that is currently unavailable?',
+      'Can I search the library collection before visiting?',
+      'Are research or thesis materials available in the library?',
+      'Can I use a computer in the library?',
+      'Can I access online academic resources through the library?',
+    ],
+  },
+  {
     title: 'Basic Education Department',
     questions: [
       'Who is the principal of Basic Education?',
