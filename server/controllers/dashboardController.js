@@ -2,7 +2,7 @@ const { Department, Service, Announcement, Ticket, Notification, sequelize, User
 const { formatTicketNumber } = require('../utils/ticketNumber');
 
 const defaultDepartments = [
-  { name: 'CS Department', description: 'Computer Science Department' },
+  { name: 'CS Department', description: 'Computer Science Department', map_x: 43, map_y: 26 },
   { name: 'Education Department', description: 'Education Department', map_x: 35, map_y: 42 },
   { name: 'HM Department', description: 'Hospitality Management Department', map_x: 25, map_y: 9 },
   { name: 'Crim Department', description: 'Criminology Department', map_x: 67, map_y: 12 },
@@ -15,6 +15,10 @@ const defaultDepartments = [
 ];
 
 const initialMapPositions = {
+  'cs department': [43, 26],
+  cs: [43, 26],
+  'computer science department': [43, 26],
+  'college of computer studies': [43, 26],
   'basic education department': [75, 30],
   'education department': [35, 42],
   'college of education': [35, 42],
@@ -53,8 +57,11 @@ const initialMapPositions = {
   'office of student affairs': [15, 32],
   'student affairs': [15, 32],
   clinic: [54, 37],
-  'it department': [40, 31],
-  'information technology department': [40, 31],
+  'it department': [39, 32],
+  'information technology department': [39, 32],
+  'information and technology department': [39, 32],
+  'information technology': [39, 32],
+  'information and technology': [39, 32],
 };
 
 exports.getDashboard = async (req, res) => {
@@ -79,6 +86,7 @@ exports.getDashboard = async (req, res) => {
       const position = initialMapPositions[normalizedName];
       if (!position) continue;
       const isFixedBuildingLocation = normalizedName.includes('maintenance')
+        || ['cs department', 'cs', 'computer science department', 'college of computer studies', 'it department', 'information technology department', 'information and technology department', 'information technology', 'information and technology'].includes(normalizedName)
         || ['accounting department', 'accounting', 'registrar office', 'registrar department', 'library department', 'library', 'guidance', 'guidance office'].includes(normalizedName);
       if (!isFixedBuildingLocation && department.map_x != null && department.map_y != null) continue;
       await department.update({

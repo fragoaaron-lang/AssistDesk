@@ -13,7 +13,7 @@ Department marker coordinates are stored on each department record as `map_x` an
 - For example, `map_x = 50`, `map_y = 50` places the marker at the center.
 - If either coordinate is blank, no office marker or map ticket/heat position is shown for that department; the dashboard does not guess a location from the department name.
 
-Initial percentages are image-based starting estimates for recognizable labeled buildings. An authorized admin should verify and adjust each coordinate against the official campus map. The server fills coordinates only when they are currently blank and never overwrites admin-maintained values, except for fixed campus locations: Maintenance is pinned to the Workshop (85.5%, 54%), while Library, Registrar, Guidance, and Accounting are pinned to the J.B. Angeles (Administration) Building (45%, 63.5%).
+Initial percentages are image-based starting estimates for recognizable labeled buildings. An authorized admin should verify and adjust each coordinate against the official campus map. The server fills coordinates only when they are currently blank and never overwrites admin-maintained values, except for fixed campus locations: Maintenance is pinned to the Workshop (85.5%, 54%); Library, Registrar, Guidance, and Accounting are pinned to the J.B. Angeles (Administration) Building (45%, 63.5%); CS is placed below the Basic Education Building and above the Information & Technology Building (43%, 26%); and IT is pinned inside the Information & Technology Building below D.H. Soriano Hall (39%, 32%).
 
 ## Updating office information and coordinates
 
