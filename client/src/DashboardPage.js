@@ -97,20 +97,6 @@ function DashboardPage() {
     return { x, y };
   };
 
-  const getOfficeMapLabel = (department) => department.display_name || department.name || 'Campus office';
-
-  const mappedDepartmentGroups = useMemo(() => {
-    const groups = new Map();
-    visibleDepartments.forEach((department) => {
-      const position = getBuildingPosition(department);
-      if (!position) return;
-      const key = `${position.x.toFixed(1)}:${position.y.toFixed(1)}`;
-      if (!groups.has(key)) groups.set(key, { ...position, departments: [] });
-      groups.get(key).departments.push(department);
-    });
-    return [...groups.values()];
-  }, [visibleDepartments]);
-
   const getTicketPosition = (ticket, departmentTicketIndex) => {
     const department = (dashboard.departments || []).find((item) => Number(item.id) === Number(ticket.department_id));
     const basePosition = getBuildingPosition(department);
@@ -301,7 +287,7 @@ function DashboardPage() {
           <div className="map-toolbar">
             <div>
               <h3>Campus request forecast</h3>
-              <p className="map-subtitle">Ticket activity and admin-maintained office markers on the bundled campus map. No GPS or route navigation.</p>
+              <p className="map-subtitle">Ticket activity and priority distribution on the bundled campus map. No GPS or route navigation.</p>
             </div>
             <div className="actions">
               <button className="institutional-btn small secondary" onClick={() => setZoomLevel((value) => Math.max(0.8, value - 0.2))}>−</button>
@@ -333,25 +319,6 @@ function DashboardPage() {
                           '--heat-size': `${Math.min(34, 16 + ticketCount * 2)}%`,
                         }}
                       />
-                    );
-                  })}
-                </div>
-                <div className="campus-department-marker-layer" role="group" aria-label="Department office locations">
-                  {mappedDepartmentGroups.map((group) => {
-                    const departmentNames = [...new Set(group.departments.map(getOfficeMapLabel))];
-                    const locationNames = [...new Set(group.departments.map((department) => department.location).filter(Boolean))];
-                    return (
-                      <div
-                        key={`department-map-marker-${group.x}-${group.y}`}
-                        className="campus-department-marker"
-                        style={{ left: `${group.x}%`, top: `${group.y}%` }}
-                        title={`${departmentNames.join(', ')}${locationNames.length ? ` — ${locationNames.join(', ')}` : ''}`}
-                        role="img"
-                        aria-label={`${departmentNames.join(', ')} office location${locationNames.length ? `. ${locationNames.join(', ')}` : ''}`}
-                      >
-                        <span className="campus-department-marker-dot" aria-hidden="true" />
-                        <span>{departmentNames.join(' / ')}</span>
-                      </div>
                     );
                   })}
                 </div>
@@ -398,8 +365,6 @@ function DashboardPage() {
                 </div>
               </div>
               <div className="heatmap-legend" role="region" aria-label="Map legend">
-                <strong>Department offices</strong>
-                <span><span className="campus-department-marker-dot" aria-hidden="true"></span>Office location (configured in Catalog)</span>
                 <strong>Priority level</strong>
                 <span>
                   <span className="legend-swatch low" aria-hidden="true"></span>
