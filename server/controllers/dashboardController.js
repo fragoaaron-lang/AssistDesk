@@ -2,7 +2,7 @@ const { Department, Service, Announcement, Ticket, Notification, sequelize, User
 const { formatTicketNumber } = require('../utils/ticketNumber');
 
 const defaultDepartments = [
-  { name: 'CS Department', description: 'Computer Science Department', map_x: 43, map_y: 26 },
+  { name: 'CS Department', description: 'Computer Science Department', map_x: 54.5, map_y: 31 },
   { name: 'Education Department', description: 'Education Department', map_x: 35, map_y: 42 },
   { name: 'HM Department', description: 'Hospitality Management Department', map_x: 25, map_y: 9 },
   { name: 'Crim Department', description: 'Criminology Department', map_x: 67, map_y: 12 },
@@ -15,10 +15,10 @@ const defaultDepartments = [
 ];
 
 const initialMapPositions = {
-  'cs department': [43, 26],
-  cs: [43, 26],
-  'computer science department': [43, 26],
-  'college of computer studies': [43, 26],
+  'cs department': [54.5, 31],
+  cs: [54.5, 31],
+  'computer science department': [54.5, 31],
+  'college of computer studies': [54.5, 31],
   'basic education department': [75, 30],
   'education department': [35, 42],
   'college of education': [35, 42],
