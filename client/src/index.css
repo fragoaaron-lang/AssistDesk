@@ -2306,48 +2306,6 @@ button, input, select, textarea {
   background: transparent;
 }
 
-.campus-office-pin-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
-}
-
-.campus-office-pin {
-  position: absolute;
-  display: block;
-  width: 17px;
-  height: 17px;
-  transform: translate(-50%, -50%);
-  border: 2px solid #fff;
-  border-radius: 50%;
-  background: #0b7180;
-  box-shadow: 0 1px 6px rgba(8, 32, 56, 0.65), 0 0 0 1px #07505d;
-  pointer-events: auto;
-  cursor: help;
-}
-
-.campus-office-pin::after {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 5px;
-  height: 5px;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: #fff;
-  content: '';
-}
-
-.office-pin-legend-marker {
-  width: 9px;
-  height: 9px;
-  border: 1px solid #fff;
-  border-radius: 50%;
-  background: #0b7180;
-  box-shadow: 0 0 0 1px #07505d;
-}
-
 .heatmap-legend {
   position: absolute;
   right: 12px;

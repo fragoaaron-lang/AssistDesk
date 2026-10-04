@@ -23,4 +23,4 @@ Department records without confirmed locations should keep map coordinates blank
 
 ## Map capabilities and limitations
 
-The dashboard overlays unlabeled office pins, ticket pins, and ticket-volume heat spots on the static campus image. Hovering or focusing an office pin reveals its department and physical location; pins for departments in the same building are fanned out slightly for visibility. Ticket and heat overlays are omitted when a department lacks coordinates. The map does not calculate walking routes, use GPS, locate a user's device, or provide real-time person tracking. Live updates refer only to application ticket events.
+The dashboard overlays ticket pins and ticket-volume heat spots on the static campus image; it does not display department office pins or labels. Ticket and heat overlays are omitted when a department lacks coordinates. The map does not calculate walking routes, use GPS, locate a user's device, or provide real-time person tracking. Live updates refer only to application ticket events.
