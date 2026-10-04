@@ -1,7 +1,8 @@
-const { Ticket, TicketUpdate, Department, User, Notification, Faq, Service } = require('../models');
-const { notifyUser, notifyAdmins, notifyDepartmentAdmins } = require('../utils/socket');
+const { Ticket, TicketUpdate, Department, User, Notification } = require('../models');
+const { notifyUser, notifyAdmins, notifyDepartmentAdmins, notifyDepartmentStaff } = require('../utils/socket');
 const { addTicketNumber } = require('../utils/ticketNumber');
 const { sendTicketEtaExpiredEmail } = require('../utils/email');
+const { inferDepartment } = require('../utils/departmentRouting');
 
 const normalize = (text) =>
   String(text || '')
@@ -9,16 +10,6 @@ const normalize = (text) =>
     .replace(/[^a-z0-9\s]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-
-const scoreText = (query, target) => {
-  const qTokens = new Set(normalize(query).split(' ').filter(Boolean));
-  const tTokens = normalize(target).split(' ').filter(Boolean);
-  let score = 0;
-  tTokens.forEach((token) => {
-    if (qTokens.has(token)) score += 2;
-  });
-  return score;
-};
 
 const getEstimatedCompletion = (priority, requestedAt = new Date()) => {
   const hoursByPriority = { urgent: 24, medium: 48, low: 72 };
@@ -57,23 +48,12 @@ const canAccessSelectedDepartment = (user, department) => {
   return !selectedCollegeKey || selectedCollegeKey === requesterCollegeKey;
 };
 
-const inferDepartmentId = async (subject, description) => {
-  const faqs = await Faq.findAll({ include: [{ model: Department }] });
-  const services = await Service.findAll({ include: [{ model: Department }] });
-  const query = `${subject} ${description}`;
+const isTicketManager = (user) => ['admin', 'staff'].includes(user?.role);
 
-  const scoredFaqs = faqs
-    .map((faq) => ({ id: faq.department_id, score: scoreText(query, `${faq.question} ${faq.answer} ${faq.keywords || ''}`) }))
-    .filter((item) => item.score > 0)
-    .sort((a, b) => b.score - a.score);
-
-  const scoredServices = services
-    .map((service) => ({ id: service.department_id, score: scoreText(query, `${service.name} ${service.requirements || ''}`) }))
-    .filter((item) => item.score > 0)
-    .sort((a, b) => b.score - a.score);
-
-  const best = scoredFaqs[0] || scoredServices[0];
-  return best ? best.id : null;
+const canManageTicket = (user, ticket) => {
+  if (!isTicketManager(user)) return false;
+  if (user.role === 'staff') return Number(user.department_id) === Number(ticket.department_id);
+  return !user.department_id || Number(user.department_id) === Number(ticket.department_id);
 };
 
 const mapPriorityToDatabase = (priority) => {
@@ -120,6 +100,8 @@ exports.processMissedEtaTickets = async () => {
         ticket_id: ticket.id,
         message: escalationMessage,
         updated_by: escalatedBy,
+        action: 'system_priority_escalated',
+        department_id: ticket.department_id,
       });
 
       await Notification.create({
@@ -139,6 +121,7 @@ exports.processMissedEtaTickets = async () => {
 
       notifyUser(ticket.user_id, 'ticketEtaExpired', { ticket });
       notifyDepartmentAdmins(ticket.department_id, 'ticketEtaExpired', { ticket });
+      notifyDepartmentStaff(ticket.department_id, 'ticketEtaExpired', { ticket });
       notifyAdmins('ticketEtaExpired', { ticket });
 
       try {
@@ -181,11 +164,16 @@ exports.processMissedEtaTickets = async () => {
 exports.createTicket = async (req, res) => {
   try {
     const { subject, description, category = 'Other', priority = 'medium', department_id: selectedDepartmentId, estimated_completion_at, attachment_data, attachment_name, attachment_type } = req.body;
-    if (!subject || !description) {
+    if (!String(subject || '').trim() || !String(description || '').trim()) {
       return res.status(400).json({ message: 'Subject and description are required.' });
+    }
+    if (!['low', 'medium', 'urgent'].includes(priority)) {
+      return res.status(400).json({ message: 'Priority must be low, medium, or urgent.' });
     }
 
     const requester = await User.findByPk(req.user.id, { include: [{ model: Department }] });
+    if (!requester) return res.status(401).json({ message: 'Authenticated account not found.' });
+    const routing = await inferDepartment(subject, description, category);
     const selectedDepartment = selectedDepartmentId ? await Department.findByPk(selectedDepartmentId) : null;
     if (selectedDepartmentId && !selectedDepartment) {
       return res.status(400).json({ message: 'Selected department is invalid.' });
@@ -194,9 +182,14 @@ exports.createTicket = async (req, res) => {
       return res.status(403).json({ message: 'Students can only submit tickets to their own college department.' });
     }
 
-    const resolvedDepartmentId = selectedDepartmentId
-      ? Number(selectedDepartmentId)
-      : await inferDepartmentId(subject, description);
+    if (!selectedDepartment && !routing.accepted) {
+      return res.status(409).json({
+        message: 'The concern did not match a department confidently. Please select the correct department before submitting.',
+        routing_candidates: routing.candidates,
+        routing_score: routing.score,
+      });
+    }
+    const resolvedDepartmentId = selectedDepartment ? Number(selectedDepartmentId) : routing.department_id;
     const resolvedDepartment = selectedDepartment || (resolvedDepartmentId ? await Department.findByPk(resolvedDepartmentId) : null);
     if (resolvedDepartment && !canAccessSelectedDepartment(requester, resolvedDepartment)) {
       return res.status(403).json({ message: 'Students can only submit tickets to their own college department.' });
@@ -207,9 +200,9 @@ exports.createTicket = async (req, res) => {
 
     const ticket = await Ticket.create({
       user_id: req.user.id,
-      department_id: resolvedDepartmentId || 1,
-      subject,
-      description,
+      department_id: resolvedDepartmentId,
+      subject: String(subject).trim(),
+      description: String(description).trim(),
       attachment_data: attachment_data || null,
       attachment_name: attachment_name || null,
       attachment_type: attachment_type || null,
@@ -217,14 +210,21 @@ exports.createTicket = async (req, res) => {
       priority: databasePriority,
       status: 'open',
       estimated_completion_at: estimated_completion_at || getEstimatedCompletion(databasePriority),
+      routing_method: selectedDepartment ? 'user_selected' : 'automatic',
+      suggested_department_id: routing.suggested_department_id,
+      routing_confidence: routing.confidence,
     });
     ticket.Department = await Department.findByPk(ticket.department_id, { attributes: ['name'] });
     addTicketNumber(ticket);
 
     await TicketUpdate.create({
       ticket_id: ticket.id,
-      message: 'Ticket created and routed to the most relevant department.',
+      message: selectedDepartment
+        ? `Ticket submitted to ${resolvedDepartment.name} by requester selection. Routing suggestion: ${routing.candidates[0]?.name || 'none'} (score ${routing.score}).`
+        : `Ticket automatically routed to ${resolvedDepartment.name} with routing score ${routing.score} and margin ${routing.margin}.`,
       updated_by: req.user.id,
+      action: 'ticket_created',
+      department_id: resolvedDepartmentId,
     });
 
     await Notification.create({
@@ -241,9 +241,17 @@ exports.createTicket = async (req, res) => {
         }))
       );
     }
+    const departmentStaff = await User.findAll({ where: { role: 'staff', department_id: resolvedDepartmentId, account_status: 'active' } });
+    if (departmentStaff.length > 0) {
+      await Notification.bulkCreate(departmentStaff.map((staffMember) => ({
+        user_id: staffMember.id,
+        message: `New ticket in your department: "${subject}".`,
+      })));
+    }
 
     notifyUser(ticket.user_id, 'ticketCreated', { ticket });
     notifyDepartmentAdmins(resolvedDepartmentId, 'ticketCreated', { ticket });
+    notifyDepartmentStaff(resolvedDepartmentId, 'ticketCreated', { ticket });
     notifyAdmins('ticketCreated', { ticket });
 
     await exports.processMissedEtaTickets();
@@ -259,13 +267,16 @@ exports.getTickets = async (req, res) => {
   try {
     const where = req.user.role === 'admin'
       ? (req.user.department_id ? { department_id: req.user.department_id } : {})
-      : { user_id: req.user.id };
+      : req.user.role === 'staff'
+        ? { department_id: req.user.department_id || -1 }
+        : { user_id: req.user.id };
     const tickets = await Ticket.findAll({
       where,
       include: [
         { model: Department },
         { model: User, include: [{ model: Department }] },
-        { model: TicketUpdate, order: [['created_at', 'ASC']] },
+        { model: User, as: 'Assignee', attributes: ['id', 'name', 'email', 'role'] },
+        { model: TicketUpdate, include: [{ model: User, as: 'Updater', attributes: ['id', 'name', 'email'] }], order: [['created_at', 'ASC']] },
       ],
       order: [['created_at', 'DESC']],
     });
@@ -295,16 +306,15 @@ exports.getTicketById = async (req, res) => {
       include: [
         { model: Department },
         { model: User, include: [{ model: Department }] },
-        { model: TicketUpdate, order: [['created_at', 'ASC']] },
+        { model: TicketUpdate, include: [{ model: User, as: 'Updater', attributes: ['id', 'name', 'email'] }], order: [['created_at', 'ASC']] },
+        { model: User, as: 'Assignee', attributes: ['id', 'name', 'email', 'role'] },
       ],
     });
     if (!ticket) {
       return res.status(404).json({ message: 'Ticket not found.' });
     }
-    if (req.user.role === 'admin') {
-      if (req.user.department_id && ticket.department_id !== req.user.department_id) {
-        return res.status(403).json({ message: 'Forbidden.' });
-      }
+    if (isTicketManager(req.user)) {
+      if (!canManageTicket(req.user, ticket)) return res.status(403).json({ message: 'You may only access tickets in your authorized department.' });
     } else if (ticket.user_id !== req.user.id) {
       return res.status(403).json({ message: 'Forbidden.' });
     }
@@ -326,15 +336,13 @@ exports.updateTicketStatus = async (req, res) => {
     if (!ticket) {
       return res.status(404).json({ message: 'Ticket not found.' });
     }
-    if (req.user.role === 'admin') {
-      if (req.user.department_id && ticket.department_id !== req.user.department_id) {
-        return res.status(403).json({ message: 'Forbidden.' });
-      }
-    } else if (ticket.user_id !== req.user.id) {
-      return res.status(403).json({ message: 'Forbidden.' });
-    }
+    if (!canManageTicket(req.user, ticket)) return res.status(403).json({ message: 'Only authorized department staff can update ticket status.' });
     if (!['open', 'pending', 'in_progress', 'resolved', 'closed'].includes(status)) {
       return res.status(400).json({ message: 'Invalid status.' });
+    }
+    const nextStatuses = { open: ['pending'], pending: ['in_progress'], in_progress: ['resolved'], resolved: ['closed'], closed: [] };
+    if (!nextStatuses[ticket.status]?.includes(status)) {
+      return res.status(409).json({ message: `Invalid status transition from ${ticket.status} to ${status}. Move the ticket through the defined workflow stages.` });
     }
     ticket.status = status;
     ticket.updated_at = new Date();
@@ -343,6 +351,8 @@ exports.updateTicketStatus = async (req, res) => {
       ticket_id: ticket.id,
       message: `Status updated to ${status}.`,
       updated_by: req.user.id,
+      action: 'status_changed',
+      department_id: ticket.department_id,
     });
     addTicketNumber(ticket);
 
@@ -363,6 +373,7 @@ exports.updateTicketStatus = async (req, res) => {
 
     notifyUser(ticket.user_id, 'ticketStatusUpdated', { ticket });
     notifyDepartmentAdmins(ticket.department_id, 'ticketStatusUpdated', { ticket });
+    notifyDepartmentStaff(ticket.department_id, 'ticketStatusUpdated', { ticket });
     notifyAdmins('ticketStatusUpdated', { ticket });
 
     return res.json(ticket);
@@ -375,17 +386,11 @@ exports.updateTicketStatus = async (req, res) => {
 exports.updateTicketEta = async (req, res) => {
   try {
     const { estimated_completion_at: estimatedCompletionAt } = req.body;
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Only admins can set the estimated completion time.' });
-    }
-
     const ticket = await Ticket.findByPk(req.params.id);
     if (!ticket) {
       return res.status(404).json({ message: 'Ticket not found.' });
     }
-    if (req.user.department_id && ticket.department_id !== req.user.department_id) {
-      return res.status(403).json({ message: 'Forbidden.' });
-    }
+    if (!canManageTicket(req.user, ticket)) return res.status(403).json({ message: 'Only authorized department staff can set the estimated completion time.' });
 
     const eta = new Date(estimatedCompletionAt);
     if (!estimatedCompletionAt || Number.isNaN(eta.getTime())) {
@@ -399,6 +404,8 @@ exports.updateTicketEta = async (req, res) => {
       ticket_id: ticket.id,
       message: `Estimated completion updated to ${eta.toLocaleString()}.`,
       updated_by: req.user.id,
+      action: 'eta_changed',
+      department_id: ticket.department_id,
     });
 
     await Notification.create({
@@ -406,6 +413,7 @@ exports.updateTicketEta = async (req, res) => {
       message: `The estimated completion time for "${ticket.subject}" is ${eta.toLocaleString()}.`,
     });
     notifyUser(ticket.user_id, 'ticketEtaUpdated', { ticket, update });
+    notifyDepartmentStaff(ticket.department_id, 'ticketEtaUpdated', { ticket, update });
 
     await exports.processMissedEtaTickets();
 
@@ -416,7 +424,191 @@ exports.updateTicketEta = async (req, res) => {
   }
 };
 
-exports.deleteTicket = async (req, res) => {
+  exports.getTicketAssignees = async (req, res) => {
+    try {
+      const ticket = await Ticket.findByPk(req.params.id);
+      if (!ticket) return res.status(404).json({ message: 'Ticket not found.' });
+      if (!canManageTicket(req.user, ticket)) return res.status(403).json({ message: 'You may only view assignees for tickets in your authorized department.' });
+
+      const assignees = await User.findAll({
+        where: { department_id: ticket.department_id, role: 'staff', account_status: 'active' },
+        attributes: ['id', 'name', 'email', 'department_id'],
+        order: [['name', 'ASC']],
+      });
+      return res.json({ assignees });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Unable to load department staff.' });
+    }
+  };
+
+  exports.updateTicketAssignment = async (req, res) => {
+    try {
+      const ticket = await Ticket.findByPk(req.params.id);
+      if (!ticket) return res.status(404).json({ message: 'Ticket not found.' });
+      if (!canManageTicket(req.user, ticket)) return res.status(403).json({ message: 'Only authorized department staff can assign this ticket.' });
+
+      const requestedAssigneeId = req.body.assigned_user_id ? Number(req.body.assigned_user_id) : null;
+      if ((ticket.assigned_user_id ? Number(ticket.assigned_user_id) : null) === requestedAssigneeId) {
+        return res.status(400).json({ message: 'The ticket already has that assignment.' });
+      }
+      if (req.user.role === 'staff' && !requestedAssigneeId) {
+        return res.status(403).json({ message: 'Staff must assign a ticket to an active department staff member.' });
+      }
+
+      let assignee = null;
+      if (requestedAssigneeId) {
+        assignee = await User.findOne({
+          where: { id: requestedAssigneeId, department_id: ticket.department_id, role: 'staff', account_status: 'active' },
+        });
+        if (!assignee) return res.status(400).json({ message: 'The assignee must be active staff in the ticket’s department.' });
+      }
+
+      const previousAssigneeId = ticket.assigned_user_id;
+      const previousAssignee = previousAssigneeId ? await User.findByPk(previousAssigneeId, { attributes: ['id', 'name'] }) : null;
+      ticket.assigned_user_id = assignee?.id || null;
+      ticket.assigned_at = assignee ? new Date() : null;
+      const wasOpen = ticket.status === 'open' && Boolean(assignee);
+      if (wasOpen) ticket.status = 'pending';
+      ticket.updated_at = new Date();
+      await ticket.save();
+      await TicketUpdate.create({
+        ticket_id: ticket.id,
+        updated_by: req.user.id,
+        action: assignee ? (previousAssigneeId ? 'ticket_reassigned' : 'ticket_accepted') : 'ticket_unassigned',
+        department_id: ticket.department_id,
+        message: assignee
+          ? (previousAssigneeId
+            ? `Assignment changed from ${previousAssignee?.name || `staff user ${previousAssigneeId}`} to ${assignee.name}.`
+            : `${assignee.name} accepted this ticket.`) + (wasOpen ? ' Status moved from open to pending.' : '')
+          : `The ticket was unassigned${previousAssignee ? ` from ${previousAssignee.name}` : ''} by an administrator.`,
+      });
+      if (previousAssigneeId && previousAssigneeId !== assignee?.id) {
+        await Notification.create({ user_id: previousAssigneeId, message: `Ticket ${ticket.id} was reassigned away from you: "${ticket.subject}".` });
+      }
+      if (assignee) {
+        await Notification.create({ user_id: assignee.id, message: `Ticket ${ticket.id} was assigned to you: "${ticket.subject}".` });
+        notifyUser(assignee.id, 'ticketAssignmentUpdated', { ticket });
+      }
+      if (wasOpen) {
+        await Notification.create({ user_id: ticket.user_id, message: `Your ticket "${ticket.subject}" has been accepted and is pending department action.` });
+      }
+
+      await ticket.reload({ include: [{ model: Department }, { model: User, as: 'Assignee', attributes: ['id', 'name', 'email', 'role'] }] });
+      addTicketNumber(ticket);
+      notifyUser(ticket.user_id, 'ticketAssignmentUpdated', { ticket });
+      if (wasOpen) {
+        notifyUser(ticket.user_id, 'ticketStatusUpdated', { ticket });
+        notifyDepartmentAdmins(ticket.department_id, 'ticketStatusUpdated', { ticket });
+        notifyDepartmentStaff(ticket.department_id, 'ticketStatusUpdated', { ticket });
+        notifyAdmins('ticketStatusUpdated', { ticket });
+      }
+      notifyDepartmentAdmins(ticket.department_id, 'ticketAssignmentUpdated', { ticket });
+      notifyDepartmentStaff(ticket.department_id, 'ticketAssignmentUpdated', { ticket });
+      notifyAdmins('ticketAssignmentUpdated', { ticket });
+      return res.json(ticket);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Unable to update ticket assignment.' });
+    }
+  };
+
+  exports.updateTicketDepartment = async (req, res) => {
+    try {
+      const ticket = await Ticket.findByPk(req.params.id);
+      if (!ticket) return res.status(404).json({ message: 'Ticket not found.' });
+      if (!canManageTicket(req.user, ticket)) return res.status(403).json({ message: 'Only authorized staff in the current department can correct ticket routing.' });
+
+      const newDepartmentId = Number(req.body.department_id);
+      const newDepartment = Number.isInteger(newDepartmentId) ? await Department.findByPk(newDepartmentId) : null;
+      if (!newDepartment) return res.status(400).json({ message: 'Select a valid destination department.' });
+      if (newDepartmentId === Number(ticket.department_id)) return res.status(400).json({ message: 'The ticket is already routed to that department.' });
+
+      const oldDepartmentId = ticket.department_id;
+      const oldDepartment = await Department.findByPk(oldDepartmentId);
+      const previousAssignee = ticket.assigned_user_id
+        ? await User.findByPk(ticket.assigned_user_id, { attributes: ['id', 'name'] })
+        : null;
+      const reason = String(req.body.reason || '').trim();
+      ticket.department_id = newDepartmentId;
+      ticket.assigned_user_id = null;
+      ticket.assigned_at = null;
+      ticket.routing_method = 'corrected';
+      ticket.updated_at = new Date();
+      await ticket.save();
+
+      await TicketUpdate.create({
+        ticket_id: ticket.id,
+        updated_by: req.user.id,
+        action: 'department_rerouted',
+        department_id: newDepartmentId,
+        previous_department_id: oldDepartmentId,
+        message: `Routing corrected from ${oldDepartment?.name || oldDepartmentId} to ${newDepartment.name}.${previousAssignee ? ` Previous assignee ${previousAssignee.name} was released.` : ''}${reason ? ` Reason: ${reason}` : ''}`,
+      });
+      await Notification.create({ user_id: ticket.user_id, message: `Your ticket "${ticket.subject}" was routed to ${newDepartment.name}.` });
+      if (previousAssignee) {
+        await Notification.create({ user_id: previousAssignee.id, message: `Ticket ${ticket.id} was rerouted and removed from your assigned queue.` });
+      }
+      const newDepartmentStaff = await User.findAll({ where: { role: 'staff', department_id: newDepartmentId, account_status: 'active' } });
+      if (newDepartmentStaff.length > 0) {
+        await Notification.bulkCreate(newDepartmentStaff.map((staffMember) => ({
+          user_id: staffMember.id,
+          message: `A ticket was routed to your department: "${ticket.subject}".`,
+        })));
+      }
+
+      await ticket.reload({ include: [{ model: Department }, { model: User, as: 'Assignee', attributes: ['id', 'name', 'email', 'role'] }] });
+      addTicketNumber(ticket);
+      notifyUser(ticket.user_id, 'ticketDepartmentUpdated', { ticket });
+      notifyDepartmentAdmins(oldDepartmentId, 'ticketDepartmentUpdated', { ticket });
+      notifyDepartmentAdmins(newDepartmentId, 'ticketDepartmentUpdated', { ticket });
+      notifyDepartmentStaff(oldDepartmentId, 'ticketDepartmentUpdated', { ticket });
+      notifyDepartmentStaff(newDepartmentId, 'ticketDepartmentUpdated', { ticket });
+      notifyAdmins('ticketDepartmentUpdated', { ticket });
+      return res.json(ticket);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Unable to correct ticket routing.' });
+    }
+  };
+
+  exports.escalateTicketPriority = async (req, res) => {
+    try {
+      const ticket = await Ticket.findByPk(req.params.id);
+      if (!ticket) return res.status(404).json({ message: 'Ticket not found.' });
+      if (!canManageTicket(req.user, ticket)) return res.status(403).json({ message: 'Only authorized department staff can escalate this ticket.' });
+
+      const levels = { low: 1, medium: 2, urgent: 3 };
+      const priority = req.body.priority || 'urgent';
+      if (!(priority in levels) || levels[priority] <= levels[ticket.priority]) {
+        return res.status(400).json({ message: 'Escalation priority must be higher than the current ticket priority.' });
+      }
+
+      const previousPriority = ticket.priority;
+      ticket.priority = priority;
+      ticket.updated_at = new Date();
+      await ticket.save();
+      await TicketUpdate.create({
+        ticket_id: ticket.id,
+        updated_by: req.user.id,
+        action: 'priority_escalated',
+        department_id: ticket.department_id,
+        message: `Priority escalated from ${previousPriority} to ${priority}. ${String(req.body.reason || '').trim()}`.trim(),
+      });
+      await Notification.create({ user_id: ticket.user_id, message: `Your ticket "${ticket.subject}" was escalated to ${priority} priority.` });
+      addTicketNumber(ticket);
+      notifyUser(ticket.user_id, 'ticketPriorityUpdated', { ticket });
+      notifyDepartmentAdmins(ticket.department_id, 'ticketPriorityUpdated', { ticket });
+      notifyDepartmentStaff(ticket.department_id, 'ticketPriorityUpdated', { ticket });
+      notifyAdmins('ticketPriorityUpdated', { ticket });
+      return res.json(ticket);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'Unable to escalate ticket priority.' });
+    }
+  };
+
+  exports.deleteTicket = async (req, res) => {
   try {
     if (!['student', 'faculty', 'staff'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Only student, faculty, and staff users can delete their own tickets.' });
@@ -428,6 +620,11 @@ exports.deleteTicket = async (req, res) => {
     }
     if (ticket.user_id !== req.user.id) {
       return res.status(403).json({ message: 'You can only delete your own tickets.' });
+    }
+
+    const routingCorrection = await TicketUpdate.findOne({ where: { ticket_id: ticket.id, action: 'department_rerouted' } });
+    if (routingCorrection) {
+      return res.status(409).json({ message: 'This ticket has a routing correction audit record and cannot be deleted.' });
     }
 
     const transaction = await Ticket.sequelize.transaction();
@@ -450,9 +647,6 @@ exports.deleteTicket = async (req, res) => {
 exports.addTicketUpdate = async (req, res) => {
   try {
     const { message } = req.body;
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Only admins can add ticket updates.' });
-    }
     if (!message || !String(message).trim()) {
       return res.status(400).json({ message: 'An update message is required.' });
     }
@@ -460,12 +654,14 @@ exports.addTicketUpdate = async (req, res) => {
     if (!ticket) {
       return res.status(404).json({ message: 'Ticket not found.' });
     }
-    if (req.user.role === 'admin') {
-      if (req.user.department_id && ticket.department_id !== req.user.department_id) {
-        return res.status(403).json({ message: 'Forbidden.' });
-      }
-    }
-    const update = await TicketUpdate.create({ ticket_id: ticket.id, message: String(message).trim(), updated_by: req.user.id });
+    if (!canManageTicket(req.user, ticket)) return res.status(403).json({ message: 'Only authorized department staff can post ticket updates.' });
+    const update = await TicketUpdate.create({
+      ticket_id: ticket.id,
+      message: String(message).trim(),
+      updated_by: req.user.id,
+      action: 'comment',
+      department_id: ticket.department_id,
+    });
     await Notification.create({
       user_id: ticket.user_id,
       message: `New update on your ticket "${ticket.subject}".`,

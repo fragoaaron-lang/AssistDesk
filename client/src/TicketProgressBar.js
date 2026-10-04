@@ -20,7 +20,8 @@ const TicketProgressBar = ({ status, canUpdate = false, onStatusChange, updating
         <div className="ticket-progress-steps">
           {statuses.map((s, index) => {
             const isUpdating = updatingStatus === s;
-            const stepClassName = `ticket-progress-step ${s === status ? 'active' : ''} ${index < currentIndex ? 'completed' : ''} ${canUpdate ? 'interactive' : ''}`;
+            const isNextStage = index === currentIndex + 1;
+            const stepClassName = `ticket-progress-step ${s === status ? 'active' : ''} ${index < currentIndex ? 'completed' : ''} ${canUpdate && isNextStage ? 'interactive' : ''}`;
             const stepLabel = isUpdating ? 'Updating...' : statusLabels[s];
 
             return canUpdate ? (
@@ -32,7 +33,7 @@ const TicketProgressBar = ({ status, canUpdate = false, onStatusChange, updating
                 aria-label={`Set ticket status to ${statusLabels[s]}`}
                 aria-current={s === status ? 'step' : undefined}
                 onClick={() => onStatusChange(s)}
-                disabled={Boolean(updatingStatus)}
+                disabled={Boolean(updatingStatus) || !isNextStage}
               >
                 <span className="ticket-progress-dot" />
                 <span className="ticket-progress-label">{stepLabel}</span>
@@ -52,7 +53,7 @@ const TicketProgressBar = ({ status, canUpdate = false, onStatusChange, updating
       </div>
       <div className="ticket-progress-status">
         <span className={`ticket-status-badge ${status}`}>{statusLabels[status]}</span>
-        {canUpdate && <span className="ticket-progress-hint">Select a stage to update this ticket</span>}
+        {canUpdate && <span className="ticket-progress-hint">Advance the ticket one workflow stage at a time</span>}
       </div>
     </div>
   );

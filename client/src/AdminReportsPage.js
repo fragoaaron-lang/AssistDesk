@@ -43,6 +43,7 @@ function AdminReportsPage() {
   const { token, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [reports, setReports] = useState(null);
+  const [departments, setDepartments] = useState([]);
   const [message, setMessage] = useState('');
   const [showUserDirectory, setShowUserDirectory] = useState(() => new URLSearchParams(window.location.search).get('view') === 'users');
   const [showTerminatedUsers, setShowTerminatedUsers] = useState(false);
@@ -63,7 +64,12 @@ function AdminReportsPage() {
   };
 
   useEffect(() => {
-    if (token) loadReports();
+    if (token) {
+      loadReports();
+      axios.get(`${API_BASE_URL}/api/catalog/departments`, { headers: { Authorization: `Bearer ${token}` } })
+        .then((response) => setDepartments(response.data.departments || []))
+        .catch(() => setMessage('Unable to load departments for personnel management.'));
+    }
   }, [token]);
 
   const toggleUserRole = (roleName) => {
@@ -74,7 +80,7 @@ function AdminReportsPage() {
   };
 
   const terminateUser = async (directoryUser) => {
-    if (!window.confirm(`Terminate ${directoryUser.name || directoryUser.email}'s account? Related tickets and chat history will be removed.`)) return;
+    if (!window.confirm(`Terminate ${directoryUser.name || directoryUser.email}'s account? Access will be disabled, chat history removed, and ticket/audit records retained for operational traceability.`)) return;
     setUpdatingUserId(directoryUser.id);
     try {
       await axios.delete(`${API_BASE_URL}/api/admin/users/${directoryUser.id}`, {
@@ -100,6 +106,21 @@ function AdminReportsPage() {
       await loadReports();
     } catch (error) {
       setMessage(error.response?.data?.message || 'Unable to reactivate user account.');
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
+  const updateUserDepartment = async (directoryUser, departmentId) => {
+    setUpdatingUserId(directoryUser.id);
+    try {
+      await axios.put(`${API_BASE_URL}/api/admin/users/${directoryUser.id}/department`, { department_id: Number(departmentId) }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setMessage(`${directoryUser.name || directoryUser.email}'s department was updated.`);
+      await loadReports();
+    } catch (error) {
+      setMessage(error.response?.data?.message || 'Unable to update user department.');
     } finally {
       setUpdatingUserId(null);
     }
@@ -195,6 +216,7 @@ function AdminReportsPage() {
             <a href="/profile">Profile</a>
             {user?.role === 'admin' && (
               <>
+                <a href="/admin/catalog">Catalog</a>
                 <a href="/admin/reports">Data Analytics</a>
                 <button type="button" className="header-nav-button" onClick={() => setShowUserDirectory((current) => !current)} aria-expanded={showUserDirectory}>
                   Users
@@ -221,6 +243,7 @@ function AdminReportsPage() {
             <a href="/profile" onClick={() => setMobileMenuOpen(false)}>Profile</a>
             {user?.role === 'admin' && (
               <>
+                <a href="/admin/catalog" onClick={() => setMobileMenuOpen(false)}>Catalog</a>
                 <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Data Analytics</a>
                 <button type="button" className="header-nav-button" onClick={() => { setShowUserDirectory((current) => !current); setMobileMenuOpen(false); }} aria-expanded={showUserDirectory}>
                   Users
@@ -288,7 +311,12 @@ function AdminReportsPage() {
                             <tr key={directoryUser.id}>
                               <td>{directoryUser.name || 'Unknown'}</td>
                               <td>{directoryUser.email}</td>
-                              <td>{directoryUser.Department?.name || 'Unassigned'}</td>
+                              <td>
+                                <select className="institutional-select" value={directoryUser.department_id || ''} onChange={(event) => updateUserDepartment(directoryUser, event.target.value)} disabled={updatingUserId === directoryUser.id} aria-label={`Department for ${directoryUser.name || directoryUser.email}`}>
+                                  <option value="" disabled>Select department</option>
+                                  {departments.map((department) => <option key={department.id} value={department.id}>{department.display_name || department.name}</option>)}
+                                </select>
+                              </td>
                               {roleGroup.name === 'student' && <td>{directoryUser.student_number || 'N/A'}</td>}
                               <td>{directoryUser.account_status || 'active'}</td>
                               <td><button type="button" className="user-terminate-button" onClick={() => terminateUser(directoryUser)} disabled={updatingUserId === directoryUser.id}>

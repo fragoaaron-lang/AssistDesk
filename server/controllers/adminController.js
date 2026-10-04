@@ -1,5 +1,5 @@
-const { User, Department, Ticket, TicketUpdate, Notification, ChatLog, Admin, PasswordResetToken, Announcement, Faq } = require('../models');
-const { notifyAdmins } = require('../utils/socket');
+const { User, Department, Ticket, Notification, ChatLog, Admin, PasswordResetToken, Announcement, Faq } = require('../models');
+const { notifyAdmins, moveStaffDepartmentRoom } = require('../utils/socket');
 const { addTicketNumber } = require('../utils/ticketNumber');
 const { Op } = require('sequelize');
 
@@ -182,13 +182,6 @@ exports.deleteUser = async (req, res) => {
       return res.status(403).json({ message: 'Administrator accounts cannot be terminated here.' });
     }
 
-    const tickets = await user.getTickets ? await user.getTickets() : [];
-    const ticketIds = tickets.map((ticket) => ticket.id);
-    if (ticketIds.length) {
-      await TicketUpdate.destroy({ where: { ticket_id: ticketIds } });
-      await Ticket.destroy({ where: { id: ticketIds } });
-    }
-
     await Notification.destroy({ where: { user_id: user.id } });
     await ChatLog.destroy({ where: { user_id: user.id } });
     await Admin.destroy({ where: { user_id: user.id } });
@@ -220,5 +213,42 @@ exports.reactivateUser = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Unable to reactivate user account.' });
+  }
+};
+
+exports.updateUserDepartment = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id);
+    if (!user) return res.status(404).json({ message: 'User not found.' });
+    if (!['student', 'faculty', 'staff'].includes(user.role)) {
+      return res.status(403).json({ message: 'Only student, faculty, and staff department assignments can be changed here.' });
+    }
+
+    const departmentId = Number(req.body.department_id);
+    const department = Number.isInteger(departmentId) ? await Department.findByPk(departmentId) : null;
+    if (!department) return res.status(400).json({ message: 'Select a valid department.' });
+
+    if (user.role === 'staff' && Number(user.department_id) !== department.id) {
+      const activeAssignments = await Ticket.count({
+        where: {
+          assigned_user_id: user.id,
+          department_id: { [Op.ne]: department.id },
+          status: { [Op.notIn]: ['resolved', 'closed'] },
+        },
+      });
+      if (activeAssignments > 0) {
+        return res.status(409).json({ message: 'Reassign this staff member’s active tickets before changing their department.' });
+      }
+    }
+
+    const previousDepartmentId = user.department_id;
+    await user.update({ department_id: department.id });
+    if (user.role === 'staff' && Number(previousDepartmentId) !== Number(department.id)) {
+      moveStaffDepartmentRoom(user.id, previousDepartmentId, department.id);
+    }
+    return res.json({ message: 'User department updated successfully.', user: { id: user.id, role: user.role, department_id: department.id, department_name: department.name } });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Unable to update user department.' });
   }
 };

@@ -8,6 +8,7 @@ const router = express.Router();
 router.get('/reports', authMiddleware, authorize('admin'), adminController.getReports);
 router.delete('/users/:id', authMiddleware, authorize('admin'), adminController.deleteUser);
 router.post('/users/:id/reactivate', authMiddleware, authorize('admin'), adminController.reactivateUser);
+router.put('/users/:id/department', authMiddleware, authorize('admin'), adminController.updateUserDepartment);
 router.post('/announcements', authMiddleware, authorize('admin'), adminController.createAnnouncement);
 
 module.exports = router;

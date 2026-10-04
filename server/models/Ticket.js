@@ -21,6 +21,27 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
+      assigned_user_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      assigned_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      suggested_department_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      routing_method: {
+        type: DataTypes.STRING(24),
+        allowNull: false,
+        defaultValue: 'manual',
+      },
+      routing_confidence: {
+        type: DataTypes.FLOAT,
+        allowNull: true,
+      },
       subject: {
         type: DataTypes.STRING(200),
         allowNull: false,
@@ -81,6 +102,7 @@ module.exports = (sequelize, DataTypes) => {
 
   Ticket.associate = (models) => {
     Ticket.belongsTo(models.User, { foreignKey: 'user_id' });
+    Ticket.belongsTo(models.User, { foreignKey: 'assigned_user_id', as: 'Assignee' });
     Ticket.belongsTo(models.Department, { foreignKey: 'department_id' });
     Ticket.hasMany(models.TicketUpdate, { foreignKey: 'ticket_id' });
   };

@@ -1,6 +1,7 @@
-const { Faq, Service, Department, ChatLog, Ticket, TicketUpdate, Notification } = require('../models');
-const { notifyUser, notifyAdmins, notifyDepartmentAdmins } = require('../utils/socket');
+const { Faq, Service, Department, User, ChatLog, Ticket, TicketUpdate, Notification } = require('../models');
+const { notifyUser, notifyAdmins, notifyDepartmentAdmins, notifyDepartmentStaff } = require('../utils/socket');
 const { addTicketNumber } = require('../utils/ticketNumber');
+const { inferDepartment } = require('../utils/departmentRouting');
 
 const normalize = (text) =>
   String(text || '')
@@ -206,22 +207,6 @@ const getGeminiResponse = async (query, faqs, services, departments) => {
   if (!response.ok) throw new Error(`Gemini request failed with status ${response.status}`);
   const data = await response.json();
   return data.candidates?.[0]?.content?.parts?.map((part) => part.text).join('').trim() || null;
-};
-
-const inferDepartmentId = async (query) => {
-  const [faqs, services] = await Promise.all([
-    Faq.findAll(),
-    Service.findAll(),
-  ]);
-  const candidates = [
-    ...faqs.map((faq) => ({ id: faq.department_id, text: `${faq.question} ${faq.answer} ${faq.keywords || ''}` })),
-    ...services.map((service) => ({ id: service.department_id, text: `${service.name} ${service.requirements || ''}` })),
-  ];
-  const best = candidates
-    .map((candidate) => ({ ...candidate, score: scoreText(query, candidate.text) }))
-    .filter((candidate) => candidate.score > 0)
-    .sort((a, b) => b.score - a.score)[0];
-  return best ? best.id : null;
 };
 
 const buildResponse = async (query) => {
@@ -432,25 +417,53 @@ const handleTicketCommand = async (message, userId) => {
 
   const description = submitMatch[1].trim();
   if (!description) return { ai_response: 'Please include a short description after “submit request”.', action: 'submit_help' };
-  const departmentId = await inferDepartmentId(description);
-  const department = departmentId ? await Department.findByPk(departmentId) : null;
+  const routing = await inferDepartment(description, description, 'Other');
+  if (!routing.accepted) {
+    const suggestions = routing.candidates.map((candidate) => candidate.name).join(', ');
+    return {
+      ai_response: `I could not confidently choose a department, so I have not created a ticket. Open Tickets, select the correct department, and submit your concern${suggestions ? `. Possible departments: ${suggestions}` : ''}.`,
+      action: 'routing_clarification',
+      clarification_required: true,
+      clarification_options: [],
+      escalation_available: true,
+    };
+  }
+  const departmentId = routing.department_id;
+  const department = await Department.findByPk(departmentId);
   const ticket = await Ticket.create({
     user_id: userId,
-    department_id: departmentId || 1,
+    department_id: departmentId,
     subject: description.slice(0, 200),
     description,
     category: 'Other',
     priority: mapPriorityToDatabase('medium'),
     status: 'open',
     estimated_completion_at: getEstimatedCompletion('medium'),
+    suggested_department_id: routing.suggested_department_id,
+    routing_method: 'automatic',
+    routing_confidence: routing.confidence,
   });
   ticket.Department = department;
   addTicketNumber(ticket);
-  await TicketUpdate.create({ ticket_id: ticket.id, message: 'Ticket created through the assistant.', updated_by: userId });
+  await TicketUpdate.create({
+    ticket_id: ticket.id,
+    message: `Ticket created through the assistant and automatically routed to ${department?.name || 'the suggested department'} with routing score ${routing.score}.`,
+    updated_by: userId,
+    action: 'ticket_created',
+    department_id: departmentId,
+  });
   await Notification.create({ user_id: userId, message: `Your ticket "${ticket.subject}" has been created.` });
+  const departmentStaff = await User.findAll({ where: { role: 'staff', department_id: departmentId, account_status: 'active' } });
+  if (departmentStaff.length > 0) {
+    await Notification.bulkCreate(departmentStaff.map((staffMember) => ({
+      user_id: staffMember.id,
+      message: `New ticket in your department: "${ticket.subject}".`,
+    })));
+  }
   notifyUser(userId, 'ticketCreated', { ticket });
   notifyAdmins('ticketCreated', { ticket });
   if (departmentId) notifyDepartmentAdmins(departmentId, 'ticketCreated', { ticket });
+  if (departmentId) notifyDepartmentStaff(departmentId, 'ticketCreated', { ticket });
   return {
     ai_response: `Your request was submitted${department ? ` to ${department.name}` : ''}. Ticket ID: ${ticket.ticket_code}.`,
     ticket,

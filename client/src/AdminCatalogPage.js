@@ -15,6 +15,9 @@ function AdminCatalogPage() {
   const [departmentForm, setDepartmentForm] = useState({ name: '', description: '', point_person: '', contact_number: '', location: '', office_hours: '' });
   const [serviceForm, setServiceForm] = useState({ department_id: '', name: '', requirements: '', processing_time: '' });
   const [faqForm, setFaqForm] = useState({ department_id: '', question: '', answer: '', keywords: '' });
+  const [editingDepartmentId, setEditingDepartmentId] = useState(null);
+  const [editingServiceId, setEditingServiceId] = useState(null);
+  const [editingFaqId, setEditingFaqId] = useState(null);
   const [message, setMessage] = useState('');
 
   const groupedFaqs = Object.values(faqs.reduce((groups, faq) => {
@@ -49,23 +52,39 @@ function AdminCatalogPage() {
 
   const createDepartment = async (e) => {
     e.preventDefault();
-    await api.post('/departments', departmentForm);
+    if (editingDepartmentId) await api.put(`/departments/${editingDepartmentId}`, departmentForm);
+    else await api.post('/departments', departmentForm);
+    setEditingDepartmentId(null);
     setDepartmentForm({ name: '', description: '', point_person: '', contact_number: '', location: '', office_hours: '' });
     loadData();
   };
 
   const createService = async (e) => {
     e.preventDefault();
-    await api.post('/services', serviceForm);
+    if (editingServiceId) await api.put(`/services/${editingServiceId}`, serviceForm);
+    else await api.post('/services', serviceForm);
+    setEditingServiceId(null);
     setServiceForm({ department_id: '', name: '', requirements: '', processing_time: '' });
     loadData();
   };
 
   const createFaq = async (e) => {
     e.preventDefault();
-    await api.post('/faqs', faqForm);
+    if (editingFaqId) await api.put(`/faqs/${editingFaqId}`, faqForm);
+    else await api.post('/faqs', faqForm);
+    setEditingFaqId(null);
     setFaqForm({ department_id: '', question: '', answer: '', keywords: '' });
     loadData();
+  };
+
+  const deleteCatalogItem = async (kind, id, label) => {
+    if (!window.confirm(`Delete ${label}?`)) return;
+    try {
+      await api.delete(`/${kind}/${id}`);
+      loadData();
+    } catch (error) {
+      setMessage(error.response?.data?.message || `Unable to delete ${label}.`);
+    }
   };
 
   return (
@@ -97,6 +116,7 @@ function AdminCatalogPage() {
             <a href="/profile">Profile</a>
             {user?.role === 'admin' && (
               <>
+                <a href="/admin/catalog">Catalog</a>
                 <a href="/admin/reports">Data Analytics</a>
                 <a href="/admin/reports?view=users" className="header-nav-button">Users</a>
               </>
@@ -121,6 +141,7 @@ function AdminCatalogPage() {
             <a href="/profile" onClick={() => setMobileMenuOpen(false)}>Profile</a>
             {user?.role === 'admin' && (
               <>
+                <a href="/admin/catalog" onClick={() => setMobileMenuOpen(false)}>Catalog</a>
                 <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Data Analytics</a>
                 <a href="/admin/reports?view=users" className="header-nav-button" onClick={() => setMobileMenuOpen(false)}>Users</a>
               </>
@@ -141,7 +162,7 @@ function AdminCatalogPage() {
         {message && <p>{message}</p>}
 
         <div className="institutional-card" style={{ marginBottom: '20px' }}>
-          <h3>Add Department</h3>
+          <h3>{editingDepartmentId ? 'Edit Department' : 'Add Department'}</h3>
           <form onSubmit={createDepartment}>
             <input className="institutional-input" placeholder="Name" value={departmentForm.name} onChange={(e) => setDepartmentForm({ ...departmentForm, name: e.target.value })} required />
             <input className="institutional-input" placeholder="Description" value={departmentForm.description} onChange={(e) => setDepartmentForm({ ...departmentForm, description: e.target.value })} />
@@ -149,35 +170,46 @@ function AdminCatalogPage() {
             <input className="institutional-input" placeholder="Contact Number" value={departmentForm.contact_number} onChange={(e) => setDepartmentForm({ ...departmentForm, contact_number: e.target.value })} />
             <input className="institutional-input" placeholder="Location" value={departmentForm.location} onChange={(e) => setDepartmentForm({ ...departmentForm, location: e.target.value })} />
             <input className="institutional-input" placeholder="Office Hours" value={departmentForm.office_hours} onChange={(e) => setDepartmentForm({ ...departmentForm, office_hours: e.target.value })} />
-            <button className="institutional-btn" type="submit">Save Department</button>
+            <button className="institutional-btn" type="submit">{editingDepartmentId ? 'Update Department' : 'Save Department'}</button>
+            {editingDepartmentId && <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingDepartmentId(null); setDepartmentForm({ name: '', description: '', point_person: '', contact_number: '', location: '', office_hours: '' }); }}>Cancel edit</button>}
           </form>
           <div className="list-stack" style={{ marginTop: '12px' }}>
-            {departments.map((dept) => <div key={dept.id}>{dept.name} — {dept.point_person}</div>)}
+            {departments.map((dept) => <div className="inline-actions" key={dept.id}>
+              <span>{dept.name} — {dept.point_person || 'No point person'}</span>
+              <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingDepartmentId(dept.id); setDepartmentForm({ name: dept.name || '', description: dept.description || '', point_person: dept.point_person || '', contact_number: dept.contact_number || '', location: dept.location || '', office_hours: dept.office_hours || '' }); }}>Edit</button>
+              <button className="institutional-btn small danger" type="button" onClick={() => deleteCatalogItem('departments', dept.id, dept.name)}>Delete</button>
+            </div>)}
           </div>
         </div>
 
         <div className="institutional-card" style={{ marginBottom: '20px' }}>
-          <h3>Add Service</h3>
+          <h3>{editingServiceId ? 'Edit Service' : 'Add Service'}</h3>
           <form onSubmit={createService}>
             <input className="institutional-input" placeholder="Department ID" value={serviceForm.department_id} onChange={(e) => setServiceForm({ ...serviceForm, department_id: e.target.value })} required />
             <input className="institutional-input" placeholder="Service Name" value={serviceForm.name} onChange={(e) => setServiceForm({ ...serviceForm, name: e.target.value })} required />
             <input className="institutional-input" placeholder="Requirements" value={serviceForm.requirements} onChange={(e) => setServiceForm({ ...serviceForm, requirements: e.target.value })} />
             <input className="institutional-input" placeholder="Processing Time" value={serviceForm.processing_time} onChange={(e) => setServiceForm({ ...serviceForm, processing_time: e.target.value })} />
-            <button className="institutional-btn" type="submit">Save Service</button>
+            <button className="institutional-btn" type="submit">{editingServiceId ? 'Update Service' : 'Save Service'}</button>
+            {editingServiceId && <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingServiceId(null); setServiceForm({ department_id: '', name: '', requirements: '', processing_time: '' }); }}>Cancel edit</button>}
           </form>
           <div className="list-stack" style={{ marginTop: '12px' }}>
-            {services.map((service) => <div key={service.id}>{service.name}</div>)}
+            {services.map((service) => <div className="inline-actions" key={service.id}>
+              <span>{service.name} — {service.Department?.name || 'Department unavailable'}</span>
+              <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingServiceId(service.id); setServiceForm({ department_id: String(service.department_id), name: service.name || '', requirements: service.requirements || '', processing_time: service.processing_time || '' }); }}>Edit</button>
+              <button className="institutional-btn small danger" type="button" onClick={() => deleteCatalogItem('services', service.id, service.name)}>Delete</button>
+            </div>)}
           </div>
         </div>
 
         <div className="institutional-card">
-          <h3>Add FAQ</h3>
+          <h3>{editingFaqId ? 'Edit FAQ' : 'Add FAQ'}</h3>
           <form onSubmit={createFaq}>
             <input className="institutional-input" placeholder="Department ID" value={faqForm.department_id} onChange={(e) => setFaqForm({ ...faqForm, department_id: e.target.value })} required />
             <input className="institutional-input" placeholder="Question" value={faqForm.question} onChange={(e) => setFaqForm({ ...faqForm, question: e.target.value })} required />
             <input className="institutional-input" placeholder="Answer" value={faqForm.answer} onChange={(e) => setFaqForm({ ...faqForm, answer: e.target.value })} required />
             <input className="institutional-input" placeholder="Keywords" value={faqForm.keywords} onChange={(e) => setFaqForm({ ...faqForm, keywords: e.target.value })} />
-            <button className="institutional-btn" type="submit">Save FAQ</button>
+            <button className="institutional-btn" type="submit">{editingFaqId ? 'Update FAQ' : 'Save FAQ'}</button>
+            {editingFaqId && <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingFaqId(null); setFaqForm({ department_id: '', question: '', answer: '', keywords: '' }); }}>Cancel edit</button>}
           </form>
           <div className="list-stack" style={{ marginTop: '12px' }}>
             {groupedFaqs.map((group) => (
@@ -192,6 +224,11 @@ function AdminCatalogPage() {
                     <div key={faq.id} className="catalog-faq-item">
                       <strong>{faq.question}</strong>
                       <p>{faq.answer}</p>
+                      <p><small>Routing keywords: {faq.keywords || 'None'}</small></p>
+                      <div className="inline-actions">
+                        <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingFaqId(faq.id); setFaqForm({ department_id: String(faq.department_id), question: faq.question || '', answer: faq.answer || '', keywords: faq.keywords || '' }); }}>Edit FAQ / routing keywords</button>
+                        <button className="institutional-btn small danger" type="button" onClick={() => deleteCatalogItem('faqs', faq.id, faq.question)}>Delete FAQ</button>
+                      </div>
                     </div>
                   ))}
                 </div>

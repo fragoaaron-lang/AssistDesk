@@ -45,6 +45,8 @@ const createSocketServer = (server) => {
         if (payload.department_id) {
           socket.join(`department_admin_${payload.department_id}`);
         }
+      } else if (payload.role === 'staff' && payload.department_id) {
+        socket.join(`department_staff_${payload.department_id}`);
       }
     } catch (error) {
       socket.disconnect(true);
@@ -69,6 +71,18 @@ const notifyDepartmentAdmins = (departmentId, event, payload) => {
   io.to(`department_admin_${departmentId}`).emit(event, payload);
 };
 
+const notifyDepartmentStaff = (departmentId, event, payload) => {
+  if (!io || !departmentId) return;
+  io.to(`department_staff_${departmentId}`).emit(event, payload);
+};
+
+const moveStaffDepartmentRoom = (userId, oldDepartmentId, newDepartmentId) => {
+  if (!io || !userId) return;
+  const userRoom = `user_${userId}`;
+  if (oldDepartmentId) io.in(userRoom).socketsLeave(`department_staff_${oldDepartmentId}`);
+  if (newDepartmentId) io.in(userRoom).socketsJoin(`department_staff_${newDepartmentId}`);
+};
+
 const notifyAllUsers = (event, payload) => {
   if (!io) return;
   io.emit(event, payload);
@@ -79,5 +93,7 @@ module.exports = {
   notifyUser,
   notifyAdmins,
   notifyDepartmentAdmins,
+  notifyDepartmentStaff,
+  moveStaffDepartmentRoom,
   notifyAllUsers,
 };

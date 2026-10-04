@@ -4,6 +4,7 @@ import { AuthProvider } from './AuthContext';
 import ProtectedRoute from './ProtectedRoute';
 import DashboardPage from './DashboardPage';
 import AdminReportsPage from './AdminReportsPage';
+import AdminCatalogPage from './AdminCatalogPage';
 import AiChatPage from './AiChatPage';
 import TicketsPage from './TicketsPage';
 import ProfilePage from './ProfilePage';
@@ -53,6 +54,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <AdminReportsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/catalog"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminCatalogPage />
               </ProtectedRoute>
             }
           />

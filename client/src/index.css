@@ -395,6 +395,20 @@ button, input, select, textarea {
 
 .ticket-notice.success { border-color: #8bd6a0; background: #effbf2; color: #176b35; }
 .ticket-notice.error { border-color: #e6a4a4; background: #fff3f3; color: #9b2525; }
+.ticket-form-error {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid #e6a4a4;
+  border-radius: 10px;
+  background: #fff3f3;
+  color: #9b2525;
+  line-height: 1.45;
+}
+.ticket-form-error button { border: 0; background: transparent; color: inherit; font-size: 1.2rem; cursor: pointer; }
 
 .ticket-notice-spinner {
   width: 16px;

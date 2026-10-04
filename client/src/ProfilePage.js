@@ -402,6 +402,7 @@ function ProfilePage() {
             <a href="/profile">Profile</a>
             {user?.role === 'admin' && (
               <>
+                <a href="/admin/catalog">Catalog</a>
                 <a href="/admin/reports">Data Analytics</a>
                 <a href="/admin/reports?view=users" className="header-nav-button">Users</a>
               </>
@@ -442,6 +443,7 @@ function ProfilePage() {
             <a href="/profile" onClick={() => setMobileMenuOpen(false)}>Profile</a>
             {user?.role === 'admin' && (
               <>
+                <a href="/admin/catalog" onClick={() => setMobileMenuOpen(false)}>Catalog</a>
                 <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Data Analytics</a>
                 <a href="/admin/reports?view=users" className="header-nav-button" onClick={() => setMobileMenuOpen(false)}>Users</a>
               </>

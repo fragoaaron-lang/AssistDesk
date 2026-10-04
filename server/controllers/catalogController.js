@@ -39,10 +39,7 @@ exports.getDepartments = async (req, res) => {
       where: { name: 'Registrar Department' },
       defaults: { name: 'Registrar Department', description: 'Handles student records, enrollment, and official document requests.' },
     });
-    const departmentRecords = await Department.findAll({
-      where: { name: canonicalDepartments.map(([name]) => name) },
-      order: [['name', 'ASC']],
-    });
+    const departmentRecords = await Department.findAll({ order: [['name', 'ASC']] });
     const displayNames = Object.fromEntries(canonicalDepartments);
     const rows = departmentRecords.map((department) => ({
       ...department.toJSON(),

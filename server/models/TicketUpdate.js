@@ -19,6 +19,19 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
+      action: {
+        type: DataTypes.STRING(40),
+        allowNull: false,
+        defaultValue: 'comment',
+      },
+      department_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      previous_department_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
       created_at: {
         type: DataTypes.DATE,
         allowNull: false,
@@ -34,6 +47,7 @@ module.exports = (sequelize, DataTypes) => {
 
   TicketUpdate.associate = (models) => {
     TicketUpdate.belongsTo(models.Ticket, { foreignKey: 'ticket_id' });
+    TicketUpdate.belongsTo(models.User, { foreignKey: 'updated_by', as: 'Updater' });
   };
 
   return TicketUpdate;

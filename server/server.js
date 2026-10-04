@@ -178,6 +178,35 @@ async function ensureChatLogSourceColumns() {
   }
 }
 
+async function ensureTicketRoutingColumns() {
+  const queryInterface = sequelize.getQueryInterface();
+  if (await queryInterface.tableExists('tickets')) {
+    const columns = await queryInterface.describeTable('tickets');
+    const additions = {
+      assigned_user_id: { type: DataTypes.INTEGER, allowNull: true },
+      assigned_at: { type: DataTypes.DATE, allowNull: true },
+      suggested_department_id: { type: DataTypes.INTEGER, allowNull: true },
+      routing_method: { type: DataTypes.STRING(24), allowNull: false, defaultValue: 'manual' },
+      routing_confidence: { type: DataTypes.FLOAT, allowNull: true },
+    };
+    for (const [column, definition] of Object.entries(additions)) {
+      if (!columns[column]) await queryInterface.addColumn('tickets', column, definition);
+    }
+  }
+
+  if (await queryInterface.tableExists('ticket_updates')) {
+    const columns = await queryInterface.describeTable('ticket_updates');
+    const additions = {
+      action: { type: DataTypes.STRING(40), allowNull: false, defaultValue: 'comment' },
+      department_id: { type: DataTypes.INTEGER, allowNull: true },
+      previous_department_id: { type: DataTypes.INTEGER, allowNull: true },
+    };
+    for (const [column, definition] of Object.entries(additions)) {
+      if (!columns[column]) await queryInterface.addColumn('ticket_updates', column, definition);
+    }
+  }
+}
+
 const server = app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}.`);
 });
@@ -198,6 +227,7 @@ sequelize
   })
   .then(() => ensureUserProfileColumns())
   .then(() => ensureChatLogSourceColumns())
+  .then(() => ensureTicketRoutingColumns())
   .then(() => {
     return backfillAdminTable();
   })

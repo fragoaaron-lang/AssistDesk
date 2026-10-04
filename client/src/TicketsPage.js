@@ -6,6 +6,7 @@ import HeaderProfile from './HeaderProfile';
 import LogoutButton from './LogoutButton';
 import SidebarProfile from './SidebarProfile';
 import TicketProgressBar from './TicketProgressBar';
+import { getSocket } from './socket';
 
 const generalIssueOptions = {
   'IT and Technology': [
@@ -131,6 +132,7 @@ const getDepartmentDisplayName = (department) => {
 
 function TicketsPage() {
   const { token, user } = useAuth();
+  const isTicketManager = ['admin', 'staff'].includes(user?.role);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [tickets, setTickets] = useState([]);
   const [departments, setDepartments] = useState([]);
@@ -145,6 +147,10 @@ function TicketsPage() {
   const [etaDraft, setEtaDraft] = useState('');
   const [updateMessage, setUpdateMessage] = useState('');
   const [ticketActionState, setTicketActionState] = useState('idle');
+  const [staffOptions, setStaffOptions] = useState([]);
+  const [assignmentSelection, setAssignmentSelection] = useState('');
+  const [routingSelection, setRoutingSelection] = useState('');
+  const [routingReason, setRoutingReason] = useState('');
   const uploadErrorTimeoutRef = useRef(null);
 
   const toDateTimeLocal = (value) => {
@@ -168,6 +174,13 @@ function TicketsPage() {
     setTickets(res.data);
   };
 
+  const reloadSelectedTicket = async (ticketId) => {
+    const response = await axios.get(`${API_BASE_URL}/api/tickets/${ticketId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setSelectedTicket(response.data);
+  };
+
   const loadDepartments = async () => {
     const res = await axios.get(`${API_BASE_URL}/api/catalog/departments`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -176,9 +189,6 @@ function TicketsPage() {
       getDepartmentDisplayName(first).localeCompare(getDepartmentDisplayName(second))
     ));
     setDepartments(options);
-    if (!form.department_id && options.length > 0) {
-      setForm((current) => ({ ...current, department_id: String(options[0].id), subject: '' }));
-    }
   };
 
   useEffect(() => {
@@ -186,6 +196,16 @@ function TicketsPage() {
       loadTickets();
       loadDepartments();
     }
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return undefined;
+    const socket = getSocket();
+    if (!socket) return undefined;
+    const refreshQueue = () => loadTickets();
+    const events = ['ticketCreated', 'ticketStatusUpdated', 'ticketEtaUpdated', 'ticketEtaExpired', 'ticketAssignmentUpdated', 'ticketDepartmentUpdated', 'ticketPriorityUpdated', 'ticketUpdateAdded'];
+    events.forEach((eventName) => socket.on(eventName, refreshQueue));
+    return () => events.forEach((eventName) => socket.off(eventName, refreshQueue));
   }, [token]);
 
   const specificIssueOptions = generalIssueOptions[form.category] || [];
@@ -207,7 +227,7 @@ function TicketsPage() {
 
   const groupedTickets = Object.values(tickets.reduce((groups, ticket) => {
     const requesterDepartment = ticket.User?.Department;
-    const department = user?.role === 'admin'
+    const department = isTicketManager
       ? requesterDepartment
       : ticket.Department;
     if (user?.role === 'student' && studentCollegeKey) {
@@ -250,6 +270,12 @@ function TicketsPage() {
       setSelectedTicket(ticket);
       setEtaDraft(toDateTimeLocal(ticket.estimated_completion_at));
       setUpdateMessage('');
+      setRoutingSelection(String(ticket.department_id));
+      setRoutingReason('');
+      setAssignmentSelection(ticket.assigned_user_id ? String(ticket.assigned_user_id) : '');
+      axios.get(`${API_BASE_URL}/api/tickets/${ticket.id}/assignees`, { headers: { Authorization: `Bearer ${token}` } })
+        .then((response) => setStaffOptions(response.data.assignees || []))
+        .catch(() => setStaffOptions([]));
       setTicketActionState('idle');
     }}>
       {ticket.ticket_code || `#${ticket.id}`}
@@ -274,15 +300,16 @@ function TicketsPage() {
       }, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const nextDepartmentId = departments[0]?.id ? String(departments[0].id) : '';
-      setForm({ subject: '', description: '', category: '', priority: 'medium', department_id: nextDepartmentId });
+      setForm({ subject: '', description: '', category: '', priority: 'medium', department_id: '' });
       setAttachment(null);
       await loadTickets();
       const ticketCode = response.data.ticket_code || response.data.id;
       setSubmissionState({ status: 'success', message: 'Ticket created successfully.', ticketCode });
       window.setTimeout(() => setSubmissionState({ status: 'idle', message: '', ticketCode: '' }), 2200);
     } catch (error) {
-      setSubmissionState({ status: 'error', message: 'Unable to create ticket. Please try again.', ticketCode: '' });
+      const routeSuggestions = error.response?.data?.routing_candidates?.map((candidate) => candidate.name).filter(Boolean);
+      const baseMessage = error.response?.data?.message || 'Unable to create ticket. Please try again.';
+      setSubmissionState({ status: 'error', message: routeSuggestions?.length ? `${baseMessage} Suggested departments: ${routeSuggestions.join(', ')}.` : baseMessage, ticketCode: '' });
     }
   };
 
@@ -351,10 +378,10 @@ function TicketsPage() {
 
     setUpdatingStatus(status);
     try {
-      const response = await axios.put(`${API_BASE_URL}/api/tickets/${id}/status`, { status }, {
+      await axios.put(`${API_BASE_URL}/api/tickets/${id}/status`, { status }, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setSelectedTicket((current) => (current?.id === id ? { ...current, status: response.data.status || status } : current));
+      await reloadSelectedTicket(id);
       await loadTickets();
     } catch (error) {
       setSubmissionState({ status: 'error', message: error.response?.data?.message || 'Unable to update ticket status.', ticketCode: '' });
@@ -407,6 +434,69 @@ function TicketsPage() {
     }
   };
 
+  const updateAssignment = async (assigneeId = assignmentSelection) => {
+    if (!selectedTicket) return;
+    setTicketActionState('assignment');
+    try {
+      const response = await axios.put(`${API_BASE_URL}/api/tickets/${selectedTicket.id}/assignment`, {
+        assigned_user_id: assigneeId ? Number(assigneeId) : null,
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      await reloadSelectedTicket(selectedTicket.id);
+      setAssignmentSelection(response.data.assigned_user_id ? String(response.data.assigned_user_id) : '');
+      await loadTickets();
+    } catch (error) {
+      setSubmissionState({ status: 'error', message: error.response?.data?.message || 'Unable to update ticket assignment.', ticketCode: '' });
+    } finally {
+      setTicketActionState('idle');
+    }
+  };
+
+  const updateDepartment = async (event) => {
+    event.preventDefault();
+    if (!selectedTicket || !routingSelection) return;
+    setTicketActionState('department');
+    try {
+      const response = await axios.put(`${API_BASE_URL}/api/tickets/${selectedTicket.id}/department`, {
+        department_id: Number(routingSelection),
+        reason: routingReason,
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      if (user.role === 'staff' || (user.role === 'admin' && user.department_id)) {
+        setSelectedTicket(null);
+        setStaffOptions([]);
+        await loadTickets();
+        return;
+      }
+      await reloadSelectedTicket(selectedTicket.id);
+      setRoutingSelection(String(response.data.department_id));
+      setAssignmentSelection('');
+      setStaffOptions([]);
+      await loadTickets();
+      const assigneeResponse = await axios.get(`${API_BASE_URL}/api/tickets/${selectedTicket.id}/assignees`, { headers: { Authorization: `Bearer ${token}` } });
+      setStaffOptions(assigneeResponse.data.assignees || []);
+    } catch (error) {
+      setSubmissionState({ status: 'error', message: error.response?.data?.message || 'Unable to correct ticket routing.', ticketCode: '' });
+    } finally {
+      setTicketActionState('idle');
+    }
+  };
+
+  const escalatePriority = async () => {
+    if (!selectedTicket || selectedTicket.priority === 'urgent') return;
+    setTicketActionState('priority');
+    try {
+      await axios.put(`${API_BASE_URL}/api/tickets/${selectedTicket.id}/priority`, {
+        priority: 'urgent',
+        reason: 'Escalated by department staff.',
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      await reloadSelectedTicket(selectedTicket.id);
+      await loadTickets();
+    } catch (error) {
+      setSubmissionState({ status: 'error', message: error.response?.data?.message || 'Unable to escalate ticket priority.', ticketCode: '' });
+    } finally {
+      setTicketActionState('idle');
+    }
+  };
+
   const deleteTicket = async (ticket) => {
     const ticketCode = ticket.ticket_code || `#${ticket.id}`;
     if (!window.confirm(`Delete ticket ${ticketCode}? This cannot be undone.`)) return;
@@ -448,6 +538,7 @@ function TicketsPage() {
             <a href="/profile">Profile</a>
             {user?.role === 'admin' && (
               <>
+                <a href="/admin/catalog">Catalog</a>
                 <a href="/admin/reports">Data Analytics</a>
                 <a href="/admin/reports?view=users" className="header-nav-button">Users</a>
               </>
@@ -459,7 +550,7 @@ function TicketsPage() {
           </div>
         </header>
 
-        {submissionState.status !== 'idle' && (
+        {(submissionState.status === 'loading' || submissionState.status === 'success') && (
           <div className="ticket-modal-backdrop">
             <div className={`ticket-notice ${submissionState.status}`} role={submissionState.status === 'loading' ? 'status' : 'alert'} aria-live="polite">
               {submissionState.status === 'loading' && <span className="ticket-notice-spinner" aria-hidden="true" />}
@@ -469,6 +560,13 @@ function TicketsPage() {
                 <strong className="ticket-notice-id">{submissionState.ticketCode}</strong>
               )}
             </div>
+          </div>
+        )}
+
+        {submissionState.status === 'error' && (
+          <div className="ticket-form-error" role="alert">
+            <span>{submissionState.message}</span>
+            <button type="button" onClick={() => setSubmissionState({ status: 'idle', message: '', ticketCode: '' })} aria-label="Dismiss error">×</button>
           </div>
         )}
 
@@ -494,6 +592,7 @@ function TicketsPage() {
             <a href="/profile" onClick={() => setMobileMenuOpen(false)}>Profile</a>
             {user?.role === 'admin' && (
               <>
+                <a href="/admin/catalog" onClick={() => setMobileMenuOpen(false)}>Catalog</a>
                 <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Data Analytics</a>
                 <a href="/admin/reports?view=users" className="header-nav-button" onClick={() => setMobileMenuOpen(false)}>Users</a>
               </>
@@ -515,12 +614,13 @@ function TicketsPage() {
           <div className={`institutional-card ticket-form-card ${submissionState.status === 'loading' ? 'is-submitting' : ''}`} style={{ marginBottom: '20px' }}>
             <h3>Create a new request</h3>
             <form onSubmit={createTicket} aria-busy={submissionState.status === 'loading'}>
-              <select className="institutional-select" value={form.department_id} onChange={(e) => handleDepartmentChange(e.target.value)} required>
-                <option value="">Select a department</option>
+              <select className="institutional-select" value={form.department_id} onChange={(e) => handleDepartmentChange(e.target.value)}>
+                <option value="">Auto-route when confident, or select a department</option>
                 {availableDepartments.map((department) => (
                   <option key={department.id} value={department.id}>{getDepartmentDisplayName(department)}</option>
                 ))}
               </select>
+              <p className="helper-text">Automatic routing only submits when the concern matches a department confidently. Otherwise, select the department yourself.</p>
               <select className="institutional-select" value={form.category} onChange={(e) => handleGeneralIssueChange(e.target.value)} required>
                 <option value="">Select a general issue</option>
                 {Object.keys(generalIssueOptions).map((category) => (
@@ -575,7 +675,7 @@ function TicketsPage() {
 
         <div className="institutional-card">
           <h3>Recent tickets</h3>
-          {user?.role === 'admin' ? (
+          {isTicketManager ? (
             <div className="list-stack admin-ticket-folders">
               {adminRoleGroups.map((roleGroup) => (
                 <section key={roleGroup.key} className="ticket-department-group">
@@ -640,7 +740,7 @@ function TicketsPage() {
               <h4>{selectedTicket.subject}</h4>
               <TicketProgressBar
                 status={selectedTicket.status}
-                canUpdate={user?.role === 'admin'}
+                canUpdate={isTicketManager}
                 onStatusChange={(status) => updateStatus(selectedTicket.id, status)}
                 updatingStatus={updatingStatus}
               />
@@ -649,6 +749,10 @@ function TicketsPage() {
                 <div><strong>Requester:</strong> {selectedTicket.User?.name || selectedTicket.User?.email || 'Unknown'}</div>
                 <div><strong>Requester department:</strong> {selectedTicket.User?.Department?.name || 'Unassigned'}</div>
                 <div><strong>Routed department:</strong> {selectedTicket.Department?.name || 'Unassigned'}</div>
+                <div><strong>Assigned staff:</strong> {selectedTicket.Assignee?.name || 'Unassigned'}</div>
+                <div><strong>Routing mode:</strong> {selectedTicket.routing_method || 'manual'}</div>
+                <div><strong>Routing confidence:</strong> {selectedTicket.routing_confidence == null ? 'Not recorded' : `${Math.round(selectedTicket.routing_confidence * 100)}% (heuristic)`}</div>
+                <div><strong>Original suggestion:</strong> {departments.find((department) => Number(department.id) === Number(selectedTicket.suggested_department_id))?.name || 'Not available'}</div>
                 <div><strong>Category:</strong> {selectedTicket.category || 'Other'}</div>
                 <div><strong>Priority:</strong> {selectedTicket.priority}</div>
                 <div><strong>Estimated completion:</strong> {formatDateTime(selectedTicket.estimated_completion_at)}</div>
@@ -662,17 +766,39 @@ function TicketsPage() {
                   <div className="ticket-update-list">
                     {[...(selectedTicket.TicketUpdates || [])].sort((first, second) => new Date(first.created_at) - new Date(second.created_at)).map((update) => (
                       <article key={update.id} className="ticket-update-item">
-                        <div className="ticket-update-item-meta">{formatDateTime(update.created_at)}</div>
+                        <div className="ticket-update-item-meta">
+                          {formatDateTime(update.created_at)}{update.action ? ` · ${update.action.replace(/_/g, ' ')}` : ''}{update.Updater?.name ? ` · ${update.Updater.name}` : update.action?.startsWith('system_') ? ' · System' : update.updated_by ? ` · User #${update.updated_by}` : ''}{update.department_id ? ` · Department #${update.department_id}` : ''}
+                        </div>
                         <p>{update.message}</p>
                       </article>
                     ))}
                   </div>
                 ) : <p className="small-muted">No updates have been posted yet.</p>}
               </section>
-              {user?.role === 'admin' && (
+              {isTicketManager && (
                 <div className="ticket-admin-controls">
+                  <section className="ticket-update-form">
+                    <label><strong>Assignment</strong><span>{selectedTicket.Assignee?.name ? `Assigned to ${selectedTicket.Assignee.name}` : 'Unassigned ticket'}</span></label>
+                    <>
+                        <select className="institutional-select" required={user.role === 'staff'} value={assignmentSelection} onChange={(event) => setAssignmentSelection(event.target.value)}>
+                          {user.role === 'admin' && <option value="">Unassigned</option>}
+                          {staffOptions.map((staffMember) => <option key={staffMember.id} value={staffMember.id}>{staffMember.name} — {staffMember.email}</option>)}
+                        </select>
+                        <button className="institutional-btn small" type="button" onClick={() => updateAssignment()} disabled={ticketActionState !== 'idle' || (user.role === 'staff' && !assignmentSelection) || String(selectedTicket.assigned_user_id || '') === assignmentSelection}>{ticketActionState === 'assignment' ? 'Saving...' : 'Assign / Reassign'}</button>
+                        {user.role === 'staff' && !selectedTicket.assigned_user_id && <button className="institutional-btn small secondary" type="button" onClick={() => updateAssignment(String(user.id))} disabled={ticketActionState !== 'idle'}>Accept for me</button>}
+                    </>
+                  </section>
+                  <form className="ticket-update-form" onSubmit={updateDepartment}>
+                    <label htmlFor="ticket-routing-department"><strong>Correct routing</strong><span>Choose the department that should handle this ticket; the correction is logged.</span></label>
+                    <select id="ticket-routing-department" className="institutional-select" value={routingSelection} onChange={(event) => setRoutingSelection(event.target.value)} required>
+                      {departments.map((department) => <option key={department.id} value={department.id}>{getDepartmentDisplayName(department)}</option>)}
+                    </select>
+                    <input className="institutional-input" value={routingReason} onChange={(event) => setRoutingReason(event.target.value)} placeholder="Reason for routing correction (optional)" />
+                    <button className="institutional-btn small" type="submit" disabled={ticketActionState !== 'idle' || Number(routingSelection) === Number(selectedTicket.department_id)}>{ticketActionState === 'department' ? 'Correcting...' : 'Update department'}</button>
+                  </form>
+                  {selectedTicket.priority !== 'urgent' && <button className="institutional-btn small danger" type="button" onClick={escalatePriority} disabled={ticketActionState !== 'idle'}>{ticketActionState === 'priority' ? 'Escalating...' : 'Escalate to urgent'}</button>}
                   <form className="ticket-eta-form" onSubmit={updateEta}>
-                    <label htmlFor="ticket-eta"><strong>Set ETA</strong><span>Only admins can change this.</span></label>
+                    <label htmlFor="ticket-eta"><strong>Set ETA</strong><span>Authorized department staff can change this.</span></label>
                     <input id="ticket-eta" className="institutional-input" type="datetime-local" value={etaDraft} onChange={(event) => setEtaDraft(event.target.value)} required />
                     <button className="institutional-btn small" type="submit" disabled={ticketActionState !== 'idle'}>{ticketActionState === 'eta' ? 'Saving...' : 'Save ETA'}</button>
                   </form>
@@ -685,7 +811,7 @@ function TicketsPage() {
               )}
               {selectedTicket.attachment_data && <img className="ticket-attachment-image" src={selectedTicket.attachment_data} alt={selectedTicket.attachment_name || 'Ticket attachment'} />}
               <div className="inline-actions">
-                {user?.role !== 'admin' && <button type="button" className="institutional-btn small danger" onClick={() => { deleteTicket(selectedTicket); setSelectedTicket(null); }}>Delete ticket</button>}
+                {!isTicketManager && <button type="button" className="institutional-btn small danger" onClick={() => { deleteTicket(selectedTicket); setSelectedTicket(null); }}>Delete ticket</button>}
               </div>
             </div>
           </div>
