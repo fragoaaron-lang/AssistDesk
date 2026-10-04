@@ -114,6 +114,11 @@ const collegeDepartmentNames = [
 
 const normalizeDepartmentName = (department) => String(department?.name || department || '').toLowerCase().trim();
 
+const isQuestionLikeConcern = (value) => {
+  const text = String(value || '').trim();
+  return text.includes('?') || /^(what|where|when|who|whom|whose|why|how|can|could|would|should|do|does|did|is|are|was|were|will|may|might|which)\b/i.test(text);
+};
+
 const getCollegeDepartmentKey = (department) => {
   const name = normalizeDepartmentName(department);
   if (name === 'basic education department') return 'basic-education';
@@ -358,13 +363,35 @@ function TicketsPage() {
 
   const createTicket = async (e) => {
     e.preventDefault();
-    setSubmissionState({ status: 'loading', message: 'Creating your ticket...' });
+    const questionLike = isQuestionLikeConcern(form.description);
+    setSubmissionState({ status: 'loading', message: questionLike ? 'Checking whether the AI can answer your question...' : 'Creating your ticket...' });
 
     try {
       if (isMaintenanceDepartment && !attachment) {
         setSubmissionState({ status: 'error', message: 'Please upload an image for a maintenance ticket.', ticketCode: '' });
         return;
       }
+
+      if (questionLike) {
+        try {
+          const aiResponse = await axios.post(`${API_BASE_URL}/api/ai/ask`, {
+            message: form.description.trim(),
+          }, { headers: { Authorization: `Bearer ${token}` } });
+
+          if (aiResponse.data?.source && aiResponse.data?.clarification_required !== true) {
+            setSubmissionState({ status: 'idle', message: '', ticketCode: '' });
+            window.dispatchEvent(new CustomEvent('assistdesk:ai-question-answered', {
+              detail: { question: form.description.trim(), response: aiResponse.data },
+            }));
+            return;
+          }
+        } catch (aiError) {
+          // If the assistant is unavailable or cannot confidently answer, continue with normal ticket submission.
+          console.warn('AI could not answer ticket inquiry; continuing with ticket submission.', aiError.message);
+        }
+        setSubmissionState({ status: 'loading', message: 'No confident AI answer was found. Creating your support ticket...' });
+      }
+
       const response = await axios.post(`${API_BASE_URL}/api/tickets`, {
         ...form,
         user_id: user?.id || 0,

@@ -217,6 +217,34 @@ function ChatbotWidget() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [history, sending, open]);
 
+  useEffect(() => {
+    const handleAnsweredTicketQuestion = (event) => {
+      const question = String(event.detail?.question || '').trim();
+      const response = event.detail?.response;
+      if (!question || !response?.ai_response || !response?.source) return;
+
+      setOpen(true);
+      setShowFaqs(false);
+      setMessage('');
+      setHistory((current) => [
+        ...current,
+        { role: 'user', text: question },
+        {
+          role: 'assistant',
+          text: response.ai_response,
+          details: response.department_details,
+          source: response.source,
+          ticket: response.ticket,
+          ticketProcess: response.ticket_process,
+          tickets: response.tickets,
+        },
+      ]);
+    };
+
+    window.addEventListener('assistdesk:ai-question-answered', handleAnsweredTicketQuestion);
+    return () => window.removeEventListener('assistdesk:ai-question-answered', handleAnsweredTicketQuestion);
+  }, []);
+
   if (!token || !user || user.account_status === 'terminated') return null;
 
   const getAssistantName = () => {
