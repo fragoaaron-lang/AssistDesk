@@ -180,7 +180,7 @@ exports.processMissedEtaTickets = async () => {
 
 exports.createTicket = async (req, res) => {
   try {
-    const { user_id, subject, description, category = 'Other', priority = 'medium', department_id: selectedDepartmentId, estimated_completion_at, attachment_data, attachment_name, attachment_type } = req.body;
+    const { subject, description, category = 'Other', priority = 'medium', department_id: selectedDepartmentId, estimated_completion_at, attachment_data, attachment_name, attachment_type } = req.body;
     if (!subject || !description) {
       return res.status(400).json({ message: 'Subject and description are required.' });
     }
@@ -206,7 +206,7 @@ exports.createTicket = async (req, res) => {
     const databasePriority = mapPriorityToDatabase(priority);
 
     const ticket = await Ticket.create({
-      user_id: user_id || req.user.id,
+      user_id: req.user.id,
       department_id: resolvedDepartmentId || 1,
       subject,
       description,
