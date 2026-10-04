@@ -65,6 +65,32 @@ const defaultGeneralIssueOptions = {
       'Classes and Academic Support': ['Class schedule or subject concern', 'Course or lesson concern', 'Learning material request', 'Academic assistance or tutoring', 'Other academic concern'],
       'Department Services': ['Enrollment or advising concern', 'Uniform or program requirement', 'Faculty or classroom concern', 'Department document or information request', 'Other department concern'],
     },
+    cs: {
+      'Computer Science Courses': ['Programming assignment or coding issue', 'Software development project concern', 'Course or curriculum question', 'Algorithm or computing topic assistance', 'Other CS academic concern'],
+      'Computer Labs and Tools': ['Computer laboratory access', 'Programming software or license issue', 'Computer or lab equipment problem', 'Project or development environment access', 'Other CS lab concern'],
+      'Department Services': ['Class schedule or enrollment concern', 'Learning material request', 'Faculty or advising concern', 'Internship or practicum inquiry', 'Other Computer Studies request'],
+    },
+    cba: {
+      'Business and Accountancy Courses': ['Accounting or bookkeeping course concern', 'Business or management course concern', 'Coursework or case-study assistance', 'Course or curriculum question', 'Other CBA academic concern'],
+      'Learning and Department Resources': ['Accounting or business software access', 'Learning material request', 'Class schedule or enrollment concern', 'Faculty or advising concern', 'Other CBA resource request'],
+      'Practicum and Department Services': ['Internship or OJT inquiry', 'Uniform or program requirement', 'Department document request', 'Other CBA service concern'],
+    },
+    crim: {
+      'Criminology Courses and Activities': ['Criminology or criminal justice course concern', 'Practical activity or project concern', 'Research or learning material request', 'Course or schedule question', 'Other CRIM academic concern'],
+      'Department Requirements and Resources': ['Uniform or equipment concern', 'Laboratory or training resource issue', 'Internship or OJT inquiry', 'Faculty or advising concern', 'Other CRIM department request'],
+    },
+    hm: {
+      'Hospitality Courses and Practical Work': ['Hospitality or tourism course concern', 'Kitchen or food-service practical activity', 'Food preparation equipment issue', 'Learning material request', 'Other HM academic concern'],
+      'Department Requirements and Resources': ['Uniform or grooming requirement', 'Kitchen or laboratory access', 'Internship or OJT inquiry', 'Class schedule or advising concern', 'Other Hospitality Management request'],
+    },
+    pt: {
+      'Physical Therapy Courses and Practice': ['Physical therapy course concern', 'Practical or laboratory activity', 'Clinical placement or internship inquiry', 'Learning material request', 'Other PT academic concern'],
+      'Clinical and Lab Resources': ['Therapy equipment concern', 'Laboratory access or availability', 'Clinical duty schedule concern', 'Faculty or advising concern', 'Other PT resource request'],
+    },
+    nursing: {
+      'Nursing Courses and Clinical Duty': ['Nursing course or skills-lab concern', 'Clinical duty or placement inquiry', 'Clinical schedule concern', 'Learning material or module request', 'Other Nursing academic concern'],
+      'Department Requirements and Resources': ['Uniform or clinical requirement', 'Laboratory equipment concern', 'Internship or clinical documentation', 'Faculty or advising concern', 'Other Nursing department request'],
+    },
     basic: {
       'Basic Education Classes': ['Class schedule or section concern', 'Learning material or book request', 'Classroom concern', 'Academic assistance request', 'Other class concern'],
       'Student and Parent Services': ['Enrollment or student record concern', 'ID or uniform concern', 'Adviser or school communication concern', 'Safety or student welfare concern', 'Other Basic Education request'],
@@ -114,6 +140,12 @@ const getDepartmentIssueOptions = (department) => {
   if (name.includes('guidance')) return departmentGeneralIssueOptions.guidance;
   if (name.includes('information technology') || name.includes('it department')) return departmentGeneralIssueOptions.it;
   if (name.includes('basic education')) return departmentGeneralIssueOptions.basic;
+  if (name.includes('computer science') || name.includes('computer studies') || name === 'cs' || name.includes('bscs')) return departmentGeneralIssueOptions.cs;
+  if (name.includes('business administration') || name.includes('business and accountancy') || name === 'cba' || name.includes('accountancy') || name.includes('bsa') || name.includes('bsba')) return departmentGeneralIssueOptions.cba;
+  if (name.includes('criminology') || name.includes('crim') || name.includes('bscrim')) return departmentGeneralIssueOptions.crim;
+  if (name.includes('hospitality') || name.includes('charm') || name.includes('bshm') || name === 'hm') return departmentGeneralIssueOptions.hm;
+  if (name.includes('physical therapy') || name.includes('bspt')) return departmentGeneralIssueOptions.pt;
+  if (name.includes('nursing') || name === 'bsn') return departmentGeneralIssueOptions.nursing;
   if (['education department', 'college of education'].includes(name)) return departmentGeneralIssueOptions.education;
   if (getCollegeDepartmentKey(department)) return departmentGeneralIssueOptions.college;
   return defaultGeneralIssueOptions;
