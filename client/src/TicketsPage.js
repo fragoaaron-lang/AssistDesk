@@ -724,7 +724,7 @@ function TicketsPage() {
             <h3>Create a new request</h3>
             <form onSubmit={createTicket} aria-busy={submissionState.status === 'loading'}>
               <select className="institutional-select" value={form.department_id} onChange={(e) => handleDepartmentChange(e.target.value)}>
-                <option value="">Auto-route when confident, or select a department</option>
+                <option value="">Select a department</option>
                 {availableDepartments.map((department) => (
                   <option key={department.id} value={department.id}>{getDepartmentDisplayName(department)}</option>
                 ))}
