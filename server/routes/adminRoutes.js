@@ -5,6 +5,7 @@ const authorize = require('../middleware/authorize');
 
 const router = express.Router();
 
+router.get('/reports/export', authMiddleware, authorize('admin'), adminController.exportReportsCsv);
 router.get('/reports', authMiddleware, authorize('admin'), adminController.getReports);
 router.delete('/users/:id', authMiddleware, authorize('admin'), adminController.deleteUser);
 router.post('/users/:id/reactivate', authMiddleware, authorize('admin'), adminController.reactivateUser);

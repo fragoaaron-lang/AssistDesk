@@ -44,6 +44,7 @@ function AdminReportsPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [reports, setReports] = useState(null);
   const [departments, setDepartments] = useState([]);
+  const [reportFilters, setReportFilters] = useState({ start_date: '', end_date: '', department_id: '', category: '', priority: '', status: '' });
   const [message, setMessage] = useState('');
   const [showUserDirectory, setShowUserDirectory] = useState(() => new URLSearchParams(window.location.search).get('view') === 'users');
   const [showTerminatedUsers, setShowTerminatedUsers] = useState(false);
@@ -52,14 +53,56 @@ function AdminReportsPage() {
   const [activePriority, setActivePriority] = useState(null);
   const [hoveredPriority, setHoveredPriority] = useState(null);
 
-  const loadReports = async () => {
+  const getReportParams = (filters = reportFilters) => Object.fromEntries(
+    Object.entries(filters).filter(([, value]) => value !== '')
+  );
+
+  const loadReports = async (filters = reportFilters) => {
     try {
       const res = await axios.get(`${API_BASE_URL}/api/admin/reports`, {
         headers: { Authorization: `Bearer ${token}` },
+        params: getReportParams(filters),
       });
       setReports(res.data);
     } catch (error) {
       setMessage('Unable to load reports.');
+    }
+  };
+
+  const applyReportFilters = async (event) => {
+    event.preventDefault();
+    if (reportFilters.start_date && reportFilters.end_date && reportFilters.start_date > reportFilters.end_date) {
+      setMessage('Start date must be on or before end date.');
+      return;
+    }
+    setMessage('');
+    await loadReports(reportFilters);
+  };
+
+  const resetReportFilters = async () => {
+    const emptyFilters = { start_date: '', end_date: '', department_id: '', category: '', priority: '', status: '' };
+    setReportFilters(emptyFilters);
+    setMessage('');
+    await loadReports(emptyFilters);
+  };
+
+  const exportReportCsv = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/admin/reports/export`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: getReportParams(),
+        responseType: 'blob',
+      });
+      const blobUrl = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv;charset=utf-8' }));
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `assistdesk-report-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      setMessage(error.response?.data?.message || 'Unable to export report.');
     }
   };
 
@@ -387,6 +430,27 @@ function AdminReportsPage() {
 
         {!showUserDirectory && (
           <>
+            <section className="institutional-card report-filter-card" aria-label="Report filters">
+              <div className="report-card-heading">
+                <div><h3>Report filters</h3><span>Filters apply to ticket metrics, timing summaries, audit events, and CSV export.</span></div>
+                <button type="button" className="institutional-btn small secondary" onClick={exportReportCsv}>Export CSV</button>
+              </div>
+              <form className="report-filter-form" onSubmit={applyReportFilters}>
+                <label>From<input className="institutional-input" type="date" value={reportFilters.start_date} onChange={(event) => setReportFilters((current) => ({ ...current, start_date: event.target.value }))} /></label>
+                <label>To<input className="institutional-input" type="date" value={reportFilters.end_date} onChange={(event) => setReportFilters((current) => ({ ...current, end_date: event.target.value }))} /></label>
+                <label>Department<select className="institutional-select" value={reportFilters.department_id} onChange={(event) => setReportFilters((current) => ({ ...current, department_id: event.target.value }))}><option value="">All departments</option>{departments.map((department) => <option key={department.id} value={department.id}>{department.display_name || department.name}</option>)}</select></label>
+                <label>Category<select className="institutional-select" value={reportFilters.category} onChange={(event) => setReportFilters((current) => ({ ...current, category: event.target.value }))}><option value="">All categories</option>{(reports.availableCategories || []).map((category) => <option key={category} value={category}>{category}</option>)}</select></label>
+                <label>Priority<select className="institutional-select" value={reportFilters.priority} onChange={(event) => setReportFilters((current) => ({ ...current, priority: event.target.value }))}><option value="">All priorities</option>{['low', 'medium', 'urgent'].map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
+                <label>Status<select className="institutional-select" value={reportFilters.status} onChange={(event) => setReportFilters((current) => ({ ...current, status: event.target.value }))}><option value="">All statuses</option>{['open', 'pending', 'in_progress', 'resolved', 'closed'].map((value) => <option key={value} value={value}>{value.replace('_', ' ')}</option>)}</select></label>
+                <div className="report-filter-actions"><button className="institutional-btn small" type="submit">Apply filters</button><button className="institutional-btn small secondary" type="button" onClick={resetReportFilters}>Reset</button></div>
+              </form>
+              <div className="report-filter-summary" aria-label="Filtered ticket totals">
+                <span>Total tickets <strong>{Object.values(reports.ticketCountsByStatus || []).reduce((sum, row) => sum + Number(row.count || 0), 0)}</strong></span>
+                <span>Assigned <strong>{reports.assignmentCounts?.assigned ?? 0}</strong></span>
+                <span>Unassigned <strong>{reports.assignmentCounts?.unassigned ?? 0}</strong></span>
+              </div>
+              <p className="small-muted report-generated-meta">Generated {new Date(reports.generated_at).toLocaleString()} · Prepared by {reports.prepared_by} · Coverage: {reports.filters?.start_date || 'all available dates'} to {reports.filters?.end_date || 'present'}</p>
+            </section>
             <section className="report-visual-grid">
           <div className="institutional-card report-bars-card">
             <h3>Tickets per department</h3>
@@ -518,6 +582,20 @@ function AdminReportsPage() {
               </>
             ) : <p className="small-muted">No department ticket data yet.</p>}
           </div>
+          </section>
+          <section className="institutional-card report-table-card">
+            <h3>Response and resolution time by department</h3>
+            <p className="small-muted">Elapsed time from ticket creation to the first staff/admin update, and to the first resolved/closed status update.</p>
+            <div className="report-table-scroll"><table className="report-table"><thead><tr><th>Department</th><th>Tickets with response</th><th>Avg first response (hours)</th><th>Tickets resolved/closed</th><th>Avg resolution (hours)</th></tr></thead><tbody>
+              {(reports.responseAndResolutionByDepartment || []).length === 0 ? <tr><td colSpan="5" className="small-muted">No response or resolution data for these filters.</td></tr> : reports.responseAndResolutionByDepartment.map((row) => <tr key={row.department_id}><td>{row.department_name}</td><td>{row.responded_ticket_count}</td><td>{row.average_first_response_hours ?? 'N/A'}</td><td>{row.resolved_ticket_count}</td><td>{row.average_resolution_hours ?? 'N/A'}</td></tr>)}
+            </tbody></table></div>
+          </section>
+          <section className="institutional-card report-table-card">
+            <h3>Ticket audit activity</h3>
+            <p className="small-muted">Workflow actions associated with tickets matching the current filters. Showing up to 200 most recent events.</p>
+            <div className="report-table-scroll"><table className="report-table"><thead><tr><th>Time</th><th>Ticket</th><th>Action</th><th>Actor role</th><th>Department ID</th><th>Details</th></tr></thead><tbody>
+              {(reports.auditRecords || []).length === 0 ? <tr><td colSpan="6" className="small-muted">No audit events for these filters.</td></tr> : reports.auditRecords.map((record, index) => <tr key={`${record.ticket_id}-${record.action}-${record.created_at}-${index}`}><td>{new Date(record.created_at).toLocaleString()}</td><td>{getCompleteTicketCode({ id: record.ticket_id, Department: { name: departments.find((department) => Number(department.id) === Number(record.department_id))?.name } })}</td><td>{record.action}</td><td>{record.actor_role}</td><td>{record.department_id}</td><td>{record.message}</td></tr>)}
+            </tbody></table></div>
           </section>
           <section className="institutional-card report-table-card">
           <h3>Ticket detail table</h3>

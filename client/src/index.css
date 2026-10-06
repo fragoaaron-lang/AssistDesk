@@ -1563,6 +1563,14 @@ button, input, select, textarea {
 }
 
 .report-chart { margin-bottom: 1.25rem; }
+.report-filter-card { margin-bottom: 20px; }
+.report-filter-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; align-items: end; }
+.report-filter-form label { display: grid; gap: 5px; color: var(--muted); font-size: 0.8rem; font-weight: 700; }
+.report-filter-form .institutional-input, .report-filter-form .institutional-select { margin: 0; min-width: 0; }
+.report-filter-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.report-filter-summary { display: flex; flex-wrap: wrap; gap: 10px 20px; margin-top: 14px; color: var(--muted); font-size: 0.85rem; }
+.report-filter-summary strong { margin-left: 5px; color: var(--navy); font-size: 1rem; }
+.report-generated-meta { margin: 14px 0 0; }
 .report-chart:last-child { margin-bottom: 0; }
 .report-chart-title {
   display: block;
