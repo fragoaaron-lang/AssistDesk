@@ -28,6 +28,10 @@ function AdminCatalogPage() {
     return groups;
   }, {})).sort((first, second) => first.name.localeCompare(second.name));
   const isDepartmentScopedAdmin = user?.role === 'admin' && Number(user.department_id) > 0;
+  const getDepartmentNameById = (departmentId) => {
+    const match = departments.find((department) => Number(department.id) === Number(departmentId));
+    return match ? (match.display_name || match.name) : 'Your department';
+  };
 
   const api = axios.create({
     baseURL: `${API_BASE_URL}/api/catalog`,
@@ -195,7 +199,7 @@ function AdminCatalogPage() {
           <h3>{editingServiceId ? 'Edit Service' : 'Add Service'}</h3>
           <form onSubmit={createService}>
             {isDepartmentScopedAdmin ? (
-              <input className="institutional-input" value={serviceForm.department_id || user.department_id || ''} readOnly />
+              <input className="institutional-input" value={getDepartmentNameById(user.department_id) || 'Your department'} readOnly />
             ) : (
               <select className="institutional-select" value={serviceForm.department_id} onChange={(e) => setServiceForm({ ...serviceForm, department_id: e.target.value })} required>
                 <option value="">Select department</option>
@@ -223,7 +227,7 @@ function AdminCatalogPage() {
           <h3>{editingFaqId ? 'Edit FAQ' : 'Add FAQ'}</h3>
           <form onSubmit={createFaq}>
             {isDepartmentScopedAdmin ? (
-              <input className="institutional-input" value={faqForm.department_id || user.department_id || ''} readOnly />
+              <input className="institutional-input" value={getDepartmentNameById(user.department_id) || 'Your department'} readOnly />
             ) : (
               <select className="institutional-select" value={faqForm.department_id} onChange={(e) => setFaqForm({ ...faqForm, department_id: e.target.value })} required>
                 <option value="">Select department</option>
