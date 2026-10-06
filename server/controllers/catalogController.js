@@ -27,6 +27,19 @@ const parsePagination = (req) => {
   return { page, limit };
 };
 
+const isDepartmentScopedAdmin = (user) => user?.role === 'admin' && Number(user.department_id) > 0;
+const isOwnDepartment = (user, departmentId) => !isDepartmentScopedAdmin(user)
+  || Number(user.department_id) === Number(departmentId);
+
+const findScopedCatalogItem = async (Model, id, req) => {
+  const item = await Model.findByPk(id);
+  if (!item) return { item: null, forbidden: false };
+  if (isDepartmentScopedAdmin(req.user) && !isOwnDepartment(req.user, item.department_id)) {
+    return { item, forbidden: true };
+  }
+  return { item, forbidden: false };
+};
+
 exports.getDepartments = async (req, res) => {
   try {
     const page = Number(req.query.page) || 1;
@@ -39,7 +52,12 @@ exports.getDepartments = async (req, res) => {
       where: { name: 'Registrar Department' },
       defaults: { name: 'Registrar Department', description: 'Handles student records, enrollment, and official document requests.' },
     });
-    const departmentRecords = await Department.findAll({ order: [['name', 'ASC']] });
+    const departmentRecords = await Department.findAll({
+      ...(req.user?.role === 'admin' && Number(req.user.department_id) > 0
+        ? { where: { id: req.user.department_id } }
+        : {}),
+      order: [['name', 'ASC']],
+    });
     const displayNames = Object.fromEntries(canonicalDepartments);
     const rows = departmentRecords.map((department) => ({
       ...department.toJSON(),
@@ -54,6 +72,9 @@ exports.getDepartments = async (req, res) => {
 
 exports.createDepartment = async (req, res) => {
   try {
+    if (isDepartmentScopedAdmin(req.user)) {
+      return res.status(403).json({ message: 'Department-scoped administrators cannot create departments.' });
+    }
     const { name, description, point_person, contact_number, location, office_hours, map_x, map_y } = req.body;
     if (!name) {
       return res.status(400).json({ message: 'Department name is required.' });
@@ -88,6 +109,9 @@ exports.updateDepartment = async (req, res) => {
     if (!department) {
       return res.status(404).json({ message: 'Department not found.' });
     }
+    if (!isOwnDepartment(req.user, department.id)) {
+      return res.status(403).json({ message: 'You may only edit your own department.' });
+    }
     const updates = { ...req.body };
     for (const coordinate of ['map_x', 'map_y']) {
       if (Object.prototype.hasOwnProperty.call(updates, coordinate)) {
@@ -114,6 +138,9 @@ exports.deleteDepartment = async (req, res) => {
     if (!department) {
       return res.status(404).json({ message: 'Department not found.' });
     }
+    if (!isOwnDepartment(req.user, department.id)) {
+      return res.status(403).json({ message: 'You may only delete your own department.' });
+    }
     await department.destroy();
     return res.json({ message: 'Department deleted.' });
   } catch (error) {
@@ -127,6 +154,7 @@ exports.getServices = async (req, res) => {
     const { page, limit } = parsePagination(req);
     const offset = (page - 1) * limit;
     const { count, rows } = await Service.findAndCountAll({
+      ...(isDepartmentScopedAdmin(req.user) ? { where: { department_id: req.user.department_id } } : {}),
       limit,
       offset,
       include: [{ model: Department }],
@@ -145,7 +173,13 @@ exports.createService = async (req, res) => {
     if (!department_id || !name) {
       return res.status(400).json({ message: 'Department and service name are required.' });
     }
-    const service = await Service.create({ department_id, name, requirements, processing_time });
+    const targetDepartmentId = isDepartmentScopedAdmin(req.user) ? req.user.department_id : department_id;
+    if (!isOwnDepartment(req.user, targetDepartmentId)) {
+      return res.status(403).json({ message: 'You may only create services for your own department.' });
+    }
+    const department = await Department.findByPk(targetDepartmentId);
+    if (!department) return res.status(400).json({ message: 'Selected department is invalid.' });
+    const service = await Service.create({ department_id: targetDepartmentId, name, requirements, processing_time });
     return res.status(201).json(service);
   } catch (error) {
     console.error(error);
@@ -156,11 +190,15 @@ exports.createService = async (req, res) => {
 exports.updateService = async (req, res) => {
   try {
     const { id } = req.params;
-    const service = await Service.findByPk(id);
+    const { item: service, forbidden } = await findScopedCatalogItem(Service, id, req);
     if (!service) {
       return res.status(404).json({ message: 'Service not found.' });
     }
-    await service.update(req.body);
+    if (forbidden) return res.status(403).json({ message: 'You may only edit services in your own department.' });
+    if (isDepartmentScopedAdmin(req.user) && req.body.department_id != null && !isOwnDepartment(req.user, req.body.department_id)) {
+      return res.status(403).json({ message: 'You may only assign services to your own department.' });
+    }
+    await service.update({ ...req.body, ...(isDepartmentScopedAdmin(req.user) ? { department_id: req.user.department_id } : {}) });
     return res.json(service);
   } catch (error) {
     console.error(error);
@@ -171,10 +209,11 @@ exports.updateService = async (req, res) => {
 exports.deleteService = async (req, res) => {
   try {
     const { id } = req.params;
-    const service = await Service.findByPk(id);
+    const { item: service, forbidden } = await findScopedCatalogItem(Service, id, req);
     if (!service) {
       return res.status(404).json({ message: 'Service not found.' });
     }
+    if (forbidden) return res.status(403).json({ message: 'You may only delete services in your own department.' });
     await service.destroy();
     return res.json({ message: 'Service deleted.' });
   } catch (error) {
@@ -188,6 +227,7 @@ exports.getFaqs = async (req, res) => {
     const { page, limit } = parsePagination(req);
     const offset = (page - 1) * limit;
     const { count, rows } = await Faq.findAndCountAll({
+      ...(isDepartmentScopedAdmin(req.user) ? { where: { department_id: req.user.department_id } } : {}),
       limit,
       offset,
       include: [{ model: Department }],
@@ -206,7 +246,13 @@ exports.createFaq = async (req, res) => {
     if (!department_id || !question || !answer) {
       return res.status(400).json({ message: 'Department, question, and answer are required.' });
     }
-    const faq = await Faq.create({ department_id, question, answer, keywords });
+    const targetDepartmentId = isDepartmentScopedAdmin(req.user) ? req.user.department_id : department_id;
+    if (!isOwnDepartment(req.user, targetDepartmentId)) {
+      return res.status(403).json({ message: 'You may only create FAQs for your own department.' });
+    }
+    const department = await Department.findByPk(targetDepartmentId);
+    if (!department) return res.status(400).json({ message: 'Selected department is invalid.' });
+    const faq = await Faq.create({ department_id: targetDepartmentId, question, answer, keywords });
     return res.status(201).json(faq);
   } catch (error) {
     console.error(error);
@@ -217,11 +263,15 @@ exports.createFaq = async (req, res) => {
 exports.updateFaq = async (req, res) => {
   try {
     const { id } = req.params;
-    const faq = await Faq.findByPk(id);
+    const { item: faq, forbidden } = await findScopedCatalogItem(Faq, id, req);
     if (!faq) {
       return res.status(404).json({ message: 'FAQ not found.' });
     }
-    await faq.update(req.body);
+    if (forbidden) return res.status(403).json({ message: 'You may only edit FAQs in your own department.' });
+    if (isDepartmentScopedAdmin(req.user) && req.body.department_id != null && !isOwnDepartment(req.user, req.body.department_id)) {
+      return res.status(403).json({ message: 'You may only assign FAQs to your own department.' });
+    }
+    await faq.update({ ...req.body, ...(isDepartmentScopedAdmin(req.user) ? { department_id: req.user.department_id } : {}) });
     return res.json(faq);
   } catch (error) {
     console.error(error);
@@ -232,10 +282,11 @@ exports.updateFaq = async (req, res) => {
 exports.deleteFaq = async (req, res) => {
   try {
     const { id } = req.params;
-    const faq = await Faq.findByPk(id);
+    const { item: faq, forbidden } = await findScopedCatalogItem(Faq, id, req);
     if (!faq) {
       return res.status(404).json({ message: 'FAQ not found.' });
     }
+    if (forbidden) return res.status(403).json({ message: 'You may only delete FAQs in your own department.' });
     await faq.destroy();
     return res.json({ message: 'FAQ deleted.' });
   } catch (error) {

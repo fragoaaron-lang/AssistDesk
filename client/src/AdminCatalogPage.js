@@ -35,7 +35,7 @@ function AdminCatalogPage() {
 
   const loadData = async () => {
     const [deptRes, serviceRes, faqRes] = await Promise.all([
-      api.get('/departments'),
+      api.get('/departments/manage'),
       api.get('/services'),
       api.get('/faqs'),
     ]);
@@ -162,8 +162,8 @@ function AdminCatalogPage() {
         {message && <p>{message}</p>}
 
         <div className="institutional-card" style={{ marginBottom: '20px' }}>
-          <h3>{editingDepartmentId ? 'Edit Department' : 'Add Department'}</h3>
-          <form onSubmit={createDepartment}>
+          <h3>{editingDepartmentId ? 'Edit Department' : (user?.role === 'admin' && user?.department_id ? 'Your Department' : 'Add Department')}</h3>
+          {(!user?.department_id || editingDepartmentId) && <form onSubmit={createDepartment}>
             <input className="institutional-input" placeholder="Name" value={departmentForm.name} onChange={(e) => setDepartmentForm({ ...departmentForm, name: e.target.value })} required />
             <input className="institutional-input" placeholder="Description" value={departmentForm.description} onChange={(e) => setDepartmentForm({ ...departmentForm, description: e.target.value })} />
             <input className="institutional-input" placeholder="Point Person" value={departmentForm.point_person} onChange={(e) => setDepartmentForm({ ...departmentForm, point_person: e.target.value })} />
@@ -177,7 +177,7 @@ function AdminCatalogPage() {
               <small>Coordinates are percentages of the bundled campus map image. Leave blank to hide this office marker.</small>
             </div>
             {editingDepartmentId && <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingDepartmentId(null); setDepartmentForm({ name: '', description: '', point_person: '', contact_number: '', location: '', office_hours: '', map_x: '', map_y: '' }); }}>Cancel edit</button>}
-          </form>
+          </form>}
           <div className="list-stack" style={{ marginTop: '12px' }}>
             {departments.map((dept) => <div className="inline-actions" key={dept.id}>
               <span>{dept.name} — {dept.point_person || 'No point person'}</span>
