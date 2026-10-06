@@ -27,6 +27,7 @@ function AdminCatalogPage() {
     groups[departmentId].faqs.push(faq);
     return groups;
   }, {})).sort((first, second) => first.name.localeCompare(second.name));
+  const isDepartmentScopedAdmin = user?.role === 'admin' && Number(user.department_id) > 0;
 
   const api = axios.create({
     baseURL: `${API_BASE_URL}/api/catalog`,
@@ -61,19 +62,21 @@ function AdminCatalogPage() {
 
   const createService = async (e) => {
     e.preventDefault();
-    if (editingServiceId) await api.put(`/services/${editingServiceId}`, serviceForm);
-    else await api.post('/services', serviceForm);
+    const payload = isDepartmentScopedAdmin ? { ...serviceForm, department_id: String(user.department_id) } : serviceForm;
+    if (editingServiceId) await api.put(`/services/${editingServiceId}`, payload);
+    else await api.post('/services', payload);
     setEditingServiceId(null);
-    setServiceForm({ department_id: '', name: '', requirements: '', processing_time: '' });
+    setServiceForm({ department_id: isDepartmentScopedAdmin ? String(user.department_id) : '', name: '', requirements: '', processing_time: '' });
     loadData();
   };
 
   const createFaq = async (e) => {
     e.preventDefault();
-    if (editingFaqId) await api.put(`/faqs/${editingFaqId}`, faqForm);
-    else await api.post('/faqs', faqForm);
+    const payload = isDepartmentScopedAdmin ? { ...faqForm, department_id: String(user.department_id) } : faqForm;
+    if (editingFaqId) await api.put(`/faqs/${editingFaqId}`, payload);
+    else await api.post('/faqs', payload);
     setEditingFaqId(null);
-    setFaqForm({ department_id: '', question: '', answer: '', keywords: '' });
+    setFaqForm({ department_id: isDepartmentScopedAdmin ? String(user.department_id) : '', question: '', answer: '', keywords: '' });
     loadData();
   };
 
@@ -191,12 +194,21 @@ function AdminCatalogPage() {
         <div className="institutional-card" style={{ marginBottom: '20px' }}>
           <h3>{editingServiceId ? 'Edit Service' : 'Add Service'}</h3>
           <form onSubmit={createService}>
-            <input className="institutional-input" placeholder="Department ID" value={serviceForm.department_id} onChange={(e) => setServiceForm({ ...serviceForm, department_id: e.target.value })} required />
+            {isDepartmentScopedAdmin ? (
+              <input className="institutional-input" value={serviceForm.department_id || user.department_id || ''} readOnly />
+            ) : (
+              <select className="institutional-select" value={serviceForm.department_id} onChange={(e) => setServiceForm({ ...serviceForm, department_id: e.target.value })} required>
+                <option value="">Select department</option>
+                {departments.map((department) => (
+                  <option key={department.id} value={department.id}>{department.display_name || department.name}</option>
+                ))}
+              </select>
+            )}
             <input className="institutional-input" placeholder="Service Name" value={serviceForm.name} onChange={(e) => setServiceForm({ ...serviceForm, name: e.target.value })} required />
             <input className="institutional-input" placeholder="Requirements" value={serviceForm.requirements} onChange={(e) => setServiceForm({ ...serviceForm, requirements: e.target.value })} />
             <input className="institutional-input" placeholder="Processing Time" value={serviceForm.processing_time} onChange={(e) => setServiceForm({ ...serviceForm, processing_time: e.target.value })} />
             <button className="institutional-btn" type="submit">{editingServiceId ? 'Update Service' : 'Save Service'}</button>
-            {editingServiceId && <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingServiceId(null); setServiceForm({ department_id: '', name: '', requirements: '', processing_time: '' }); }}>Cancel edit</button>}
+            {editingServiceId && <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingServiceId(null); setServiceForm({ department_id: isDepartmentScopedAdmin ? String(user.department_id) : '', name: '', requirements: '', processing_time: '' }); }}>Cancel edit</button>}
           </form>
           <div className="list-stack" style={{ marginTop: '12px' }}>
             {services.map((service) => <div className="inline-actions" key={service.id}>
@@ -210,12 +222,21 @@ function AdminCatalogPage() {
         <div className="institutional-card">
           <h3>{editingFaqId ? 'Edit FAQ' : 'Add FAQ'}</h3>
           <form onSubmit={createFaq}>
-            <input className="institutional-input" placeholder="Department ID" value={faqForm.department_id} onChange={(e) => setFaqForm({ ...faqForm, department_id: e.target.value })} required />
+            {isDepartmentScopedAdmin ? (
+              <input className="institutional-input" value={faqForm.department_id || user.department_id || ''} readOnly />
+            ) : (
+              <select className="institutional-select" value={faqForm.department_id} onChange={(e) => setFaqForm({ ...faqForm, department_id: e.target.value })} required>
+                <option value="">Select department</option>
+                {departments.map((department) => (
+                  <option key={department.id} value={department.id}>{department.display_name || department.name}</option>
+                ))}
+              </select>
+            )}
             <input className="institutional-input" placeholder="Question" value={faqForm.question} onChange={(e) => setFaqForm({ ...faqForm, question: e.target.value })} required />
             <input className="institutional-input" placeholder="Answer" value={faqForm.answer} onChange={(e) => setFaqForm({ ...faqForm, answer: e.target.value })} required />
             <input className="institutional-input" placeholder="Keywords" value={faqForm.keywords} onChange={(e) => setFaqForm({ ...faqForm, keywords: e.target.value })} />
             <button className="institutional-btn" type="submit">{editingFaqId ? 'Update FAQ' : 'Save FAQ'}</button>
-            {editingFaqId && <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingFaqId(null); setFaqForm({ department_id: '', question: '', answer: '', keywords: '' }); }}>Cancel edit</button>}
+            {editingFaqId && <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingFaqId(null); setFaqForm({ department_id: isDepartmentScopedAdmin ? String(user.department_id) : '', question: '', answer: '', keywords: '' }); }}>Cancel edit</button>}
           </form>
           <div className="list-stack" style={{ marginTop: '12px' }}>
             {groupedFaqs.map((group) => (
