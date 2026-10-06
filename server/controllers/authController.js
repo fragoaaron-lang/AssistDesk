@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { User, Department, PasswordResetToken } = require('../models');
 const { sendPasswordResetEmail, sendEmailVerificationEmail, generateVerificationCode } = require('../utils/email');
+const { recordAudit } = require('../utils/auditLog');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'assistdesk-secret';
 const JWT_EXPIRES_IN = '8h';
@@ -128,13 +129,20 @@ exports.register = async (req, res) => {
       account_status: 'pending_verification',
       verification_token: verificationCode,
     });
-
     try {
       await sendEmailVerificationEmail({ to: user.email, code: verificationCode, userName: user.name });
     } catch (error) {
       await user.destroy();
       throw error;
     }
+    await recordAudit({
+      actor: user,
+      action: 'account.registered',
+      entityType: 'user',
+      entityId: user.id,
+      departmentId: user.department_id,
+      after: { name: user.name, email: user.email, role: user.role, department_id: user.department_id, account_status: user.account_status },
+    });
 
     return res.status(201).json({ message: 'Registration saved. Check your email to activate your account.' });
   } catch (error) {
@@ -165,7 +173,24 @@ exports.verifyEmail = async (req, res) => {
       return res.status(400).json({ message: 'The verification code is incorrect or has expired.' });
     }
 
-    await user.update({ account_status: 'active', verification_token: null });
+    const transaction = await User.sequelize.transaction();
+    try {
+      await user.update({ account_status: 'active', verification_token: null }, { transaction });
+      await recordAudit({
+        actor: user,
+        action: 'account.email_verified',
+        entityType: 'user',
+        entityId: user.id,
+        departmentId: user.department_id,
+        before: { account_status: 'pending_verification' },
+        after: { account_status: 'active' },
+        transaction,
+      });
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
     await user.reload({ include: [{ model: Department }] });
     const token = signToken(user);
 
@@ -188,6 +213,7 @@ exports.resendEmailVerification = async (req, res) => {
       const verificationCode = user.verification_token || generateVerificationCode();
       await user.update({ verification_token: verificationCode });
       await sendEmailVerificationEmail({ to: user.email, code: verificationCode, userName: user.name });
+      await recordAudit({ actor: user, action: 'account.verification_resent', entityType: 'user', entityId: user.id, departmentId: user.department_id });
     }
 
     return res.json({ message: 'If the account is waiting for verification, a new email has been sent.' });
@@ -208,20 +234,25 @@ exports.login = async (req, res) => {
     const normalizedEmail = email.trim().toLowerCase();
     const user = await User.findOne({ where: { email: normalizedEmail }, include: [{ model: Department }] });
     if (!user) {
+      await recordAudit({ actor: { name: normalizedEmail, role: 'anonymous' }, action: 'auth.login_failed', entityType: 'authentication_attempt', metadata: { attempted_email: normalizedEmail, reason: 'unknown_account' } });
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
     if (!passwordMatch) {
+      await recordAudit({ actor: { name: normalizedEmail, role: 'anonymous' }, action: 'auth.login_failed', entityType: 'user', entityId: user.id, departmentId: user.department_id, metadata: { reason: 'invalid_credentials', attempted_user_id: user.id } });
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
     if (user.account_status === 'pending_verification') {
+      await recordAudit({ actor: user, action: 'auth.login_denied', entityType: 'user', entityId: user.id, metadata: { reason: 'pending_verification' } });
       return res.status(403).json({ message: 'Please verify your email address before signing in.' });
     } else if (user.account_status !== 'active' && user.account_status !== 'terminated') {
+      await recordAudit({ actor: user, action: 'auth.login_denied', entityType: 'user', entityId: user.id, metadata: { reason: 'inactive_account', account_status: user.account_status } });
       return res.status(403).json({ message: 'This account is not active.' });
     }
 
+    await recordAudit({ actor: user, action: 'auth.login', entityType: 'user', entityId: user.id, after: { account_status: user.account_status } });
     const token = signToken(user);
 
     return res.json({
@@ -232,6 +263,16 @@ exports.login = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Login failed.' });
+  }
+};
+
+exports.logout = async (req, res) => {
+  try {
+    await recordAudit({ actor: req.user, action: 'auth.logout', entityType: 'user', entityId: req.user.id, departmentId: req.user.department_id });
+    return res.json({ message: 'Logout recorded.' });
+  } catch (error) {
+    console.error('Logout audit recording failed:', error.message);
+    return res.status(500).json({ message: 'Unable to record logout.' });
   }
 };
 
@@ -267,6 +308,7 @@ exports.forgotPassword = async (req, res) => {
 
     await PasswordResetToken.destroy({ where: { email: normalizedEmail } });
     await PasswordResetToken.create({ email: normalizedEmail, token, expires_at });
+    await recordAudit({ actor: user, action: 'account.password_reset_requested', entityType: 'user', entityId: user.id, departmentId: user.department_id, metadata: { expires_at: expires_at.toISOString() } });
 
     await sendPasswordResetEmail({
       to: normalizedEmail,
@@ -304,8 +346,17 @@ exports.resetPassword = async (req, res) => {
     }
 
     const password_hash = await bcrypt.hash(newPassword, 10);
-    await User.update({ password_hash }, { where: { email: resetRecord.email } });
-    await resetRecord.destroy();
+    const user = await User.findOne({ where: { email: resetRecord.email } });
+    const transaction = await User.sequelize.transaction();
+    try {
+      await User.update({ password_hash }, { where: { email: resetRecord.email }, transaction });
+      if (user) await recordAudit({ actor: user, action: 'account.password_reset', entityType: 'user', entityId: user.id, departmentId: user.department_id, metadata: { method: 'email_token' }, transaction });
+      await resetRecord.destroy({ transaction });
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
 
     return res.json({ message: 'Password reset successful.' });
   } catch (error) {
@@ -338,7 +389,15 @@ exports.changePassword = async (req, res) => {
     }
 
     const password_hash = await bcrypt.hash(newPassword, 10);
-    await user.update({ password_hash });
+    const transaction = await User.sequelize.transaction();
+    try {
+      await user.update({ password_hash }, { transaction });
+      await recordAudit({ actor: user, action: 'account.password_changed', entityType: 'user', entityId: user.id, departmentId: user.department_id, metadata: { method: 'self_service' }, transaction });
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
 
     return res.json({ message: 'Password changed successfully.' });
   } catch (error) {
@@ -365,20 +424,40 @@ exports.deleteAccount = async (req, res) => {
       return res.status(401).json({ message: 'Current password is incorrect.' });
     }
 
-    const tickets = await user.getTickets ? await user.getTickets() : [];
-    const ticketIds = tickets.map((ticket) => ticket.id);
-
-    if (ticketIds.length) {
-      await require('../models').TicketUpdate.destroy({ where: { ticket_id: ticketIds } });
-      await require('../models').Ticket.destroy({ where: { id: ticketIds } });
+    const previousValues = { name: user.name, email: user.email, role: user.role, department_id: user.department_id, account_status: user.account_status };
+    const models = require('../models');
+    const anonymizedPasswordHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
+    const transaction = await models.sequelize.transaction();
+    try {
+      await models.Notification.destroy({ where: { user_id: user.id }, transaction });
+      await models.ChatLog.destroy({ where: { user_id: user.id }, transaction });
+      await models.Admin.destroy({ where: { user_id: user.id }, transaction });
+      await models.PasswordResetToken.destroy({ where: { email: user.email }, transaction });
+      await user.update({
+        name: 'Deleted Account',
+        email: `deleted-${user.id}@deleted.invalid`,
+        password_hash: anonymizedPasswordHash,
+        account_status: 'deleted',
+        department_id: null,
+        student_number: null,
+        profile_picture: null,
+        verification_token: null,
+      }, { transaction });
+      await recordAudit({
+        actor: { ...user.toJSON(), ...previousValues },
+        action: 'account.self_deleted',
+        entityType: 'user',
+        entityId: user.id,
+        departmentId: previousValues.department_id,
+        before: previousValues,
+        after: { name: 'Deleted Account', email: `deleted-${user.id}@deleted.invalid`, account_status: 'deleted', department_id: null },
+        transaction,
+      });
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
     }
-
-    await require('../models').Notification.destroy({ where: { user_id: user.id } });
-    await require('../models').ChatLog.destroy({ where: { user_id: user.id } });
-    await require('../models').Admin.destroy({ where: { user_id: user.id } });
-    await require('../models').PasswordResetToken.destroy({ where: { email: user.email } });
-
-    await user.destroy();
 
     return res.json({ message: 'Account deleted successfully.' });
   } catch (error) {
@@ -410,7 +489,25 @@ exports.updateProfile = async (req, res) => {
       return res.status(400).json({ message: 'Student number is required for student accounts.' });
     }
 
-    await user.update({ profile_picture: nextValue, student_number: nextStudentNumber });
+    const before = { profile_picture_set: Boolean(user.profile_picture), student_number: user.student_number || null };
+    const transaction = await User.sequelize.transaction();
+    try {
+      await user.update({ profile_picture: nextValue, student_number: nextStudentNumber }, { transaction });
+      await recordAudit({
+        actor: user,
+        action: 'account.profile_updated',
+        entityType: 'user',
+        entityId: user.id,
+        departmentId: user.department_id,
+        before,
+        after: { profile_picture_set: Boolean(user.profile_picture), student_number: user.student_number || null },
+        transaction,
+      });
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
 
     return res.json({
       message: 'Profile updated successfully.',

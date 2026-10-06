@@ -17,6 +17,7 @@ db.TicketUpdate = require('./TicketUpdate')(sequelize, DataTypes);
 db.Notification = require('./Notification')(sequelize, DataTypes);
 db.Announcement = require('./Announcement')(sequelize, DataTypes);
 db.ChatLog = require('./ChatLog')(sequelize, DataTypes);
+db.AuditLog = require('./AuditLog')(sequelize, DataTypes);
 
 Object.keys(db).forEach((modelName) => {
   if (db[modelName] && typeof db[modelName].associate === 'function') {

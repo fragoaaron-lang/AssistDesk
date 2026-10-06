@@ -43,6 +43,7 @@ function AdminReportsPage() {
   const { token, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [reports, setReports] = useState(null);
+  const [auditLogs, setAuditLogs] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [reportFilters, setReportFilters] = useState({ start_date: '', end_date: '', department_id: '', category: '', priority: '', status: '' });
   const [message, setMessage] = useState('');
@@ -66,6 +67,18 @@ function AdminReportsPage() {
       setReports(res.data);
     } catch (error) {
       setMessage('Unable to load reports.');
+    }
+  };
+
+  const loadAuditLogs = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/admin/audit-logs`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { limit: 200 },
+      });
+      setAuditLogs(response.data.auditLogs || []);
+    } catch (error) {
+      setMessage(error.response?.data?.message || 'Unable to load audit history.');
     }
   };
 
@@ -109,6 +122,7 @@ function AdminReportsPage() {
   useEffect(() => {
     if (token) {
       loadReports();
+      loadAuditLogs();
       axios.get(`${API_BASE_URL}/api/catalog/departments`, { headers: { Authorization: `Bearer ${token}` } })
         .then((response) => setDepartments(response.data.departments || []))
         .catch(() => setMessage('Unable to load departments for personnel management.'));
@@ -595,6 +609,21 @@ function AdminReportsPage() {
             <p className="small-muted">Workflow actions associated with tickets matching the current filters. Showing up to 200 most recent events.</p>
             <div className="report-table-scroll"><table className="report-table"><thead><tr><th>Time</th><th>Ticket</th><th>Action</th><th>Actor role</th><th>Department ID</th><th>Details</th></tr></thead><tbody>
               {(reports.auditRecords || []).length === 0 ? <tr><td colSpan="6" className="small-muted">No audit events for these filters.</td></tr> : reports.auditRecords.map((record, index) => <tr key={`${record.ticket_id}-${record.action}-${record.created_at}-${index}`}><td>{new Date(record.created_at).toLocaleString()}</td><td>{getCompleteTicketCode({ id: record.ticket_id, Department: { name: departments.find((department) => Number(department.id) === Number(record.department_id))?.name } })}</td><td>{record.action}</td><td>{record.actor_role}</td><td>{record.department_id}</td><td>{record.message}</td></tr>)}
+            </tbody></table></div>
+          </section>
+          <section className="institutional-card report-table-card">
+            <h3>Persistent audit trail</h3>
+            <p className="small-muted">Latest 200 recorded events. Actor role and name are snapshots from the time of the action. Audit history is read-only in this interface.</p>
+            <div className="report-table-scroll"><table className="report-table"><thead><tr><th>Timestamp</th><th>Actor</th><th>Role</th><th>Action</th><th>Affected record</th><th>Previous values</th><th>New values</th></tr></thead><tbody>
+              {auditLogs.length === 0 ? <tr><td colSpan="7" className="small-muted">No audit events recorded yet.</td></tr> : auditLogs.map((entry) => <tr key={entry.id}>
+                <td>{new Date(entry.created_at).toLocaleString()}</td>
+                <td>{entry.actor_name || (entry.actor_user_id ? `User ${entry.actor_user_id}` : 'System/unknown')}</td>
+                <td>{entry.actor_role || 'unknown'}</td>
+                <td>{entry.action}</td>
+                <td>{entry.entity_type}{entry.entity_id ? ` #${entry.entity_id}` : ''}</td>
+                <td><pre className="audit-values-cell">{entry.before_values ? JSON.stringify(entry.before_values, null, 2) : '—'}</pre></td>
+                <td><pre className="audit-values-cell">{entry.after_values ? JSON.stringify(entry.after_values, null, 2) : '—'}</pre></td>
+              </tr>)}
             </tbody></table></div>
           </section>
           <section className="institutional-card report-table-card">

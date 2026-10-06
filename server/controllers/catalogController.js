@@ -1,4 +1,5 @@
 const { Department, Service, Faq } = require('../models');
+const { recordAudit } = require('../utils/auditLog');
 
 const canonicalDepartments = [
   ['Basic Education Department', 'Basic Education Department'],
@@ -38,6 +39,18 @@ const findScopedCatalogItem = async (Model, id, req) => {
     return { item, forbidden: true };
   }
   return { item, forbidden: false };
+};
+
+const withAuditTransaction = async (sequelize, operation) => {
+  const transaction = await sequelize.transaction();
+  try {
+    const result = await operation(transaction);
+    await transaction.commit();
+    return result;
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
 };
 
 exports.getDepartments = async (req, res) => {
@@ -85,15 +98,19 @@ exports.createDepartment = async (req, res) => {
       || (parsedMapY != null && (!Number.isFinite(parsedMapY) || parsedMapY < 0 || parsedMapY > 100))) {
       return res.status(400).json({ message: 'Map coordinates must be percentages from 0 to 100.' });
     }
-    const department = await Department.create({
-      name,
-      description,
-      point_person,
-      contact_number,
-      location,
-      office_hours,
-      map_x: parsedMapX,
-      map_y: parsedMapY,
+    const department = await withAuditTransaction(Department.sequelize, async (transaction) => {
+      const created = await Department.create({
+        name,
+        description,
+        point_person,
+        contact_number,
+        location,
+        office_hours,
+        map_x: parsedMapX,
+        map_y: parsedMapY,
+      }, { transaction });
+      await recordAudit({ actor: req.user, action: 'catalog.department_created', entityType: 'department', entityId: created.id, departmentId: created.id, after: created.toJSON(), transaction });
+      return created;
     });
     return res.status(201).json(department);
   } catch (error) {
@@ -123,7 +140,11 @@ exports.updateDepartment = async (req, res) => {
         updates[coordinate] = parsed;
       }
     }
-    await department.update(updates);
+    await withAuditTransaction(Department.sequelize, async (transaction) => {
+      const before = department.toJSON();
+      await department.update(updates, { transaction });
+      await recordAudit({ actor: req.user, action: 'catalog.department_updated', entityType: 'department', entityId: department.id, departmentId: department.id, before, after: department.toJSON(), transaction });
+    });
     return res.json(department);
   } catch (error) {
     console.error(error);
@@ -141,7 +162,16 @@ exports.deleteDepartment = async (req, res) => {
     if (!isOwnDepartment(req.user, department.id)) {
       return res.status(403).json({ message: 'You may only delete your own department.' });
     }
-    await department.destroy();
+    const transaction = await Department.sequelize.transaction();
+    try {
+      const deletedDepartment = department.toJSON();
+      await recordAudit({ actor: req.user, action: 'catalog.department_deleted', entityType: 'department', entityId: department.id, departmentId: department.id, before: deletedDepartment, transaction });
+      await department.destroy({ transaction });
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
     return res.json({ message: 'Department deleted.' });
   } catch (error) {
     console.error(error);
@@ -179,7 +209,11 @@ exports.createService = async (req, res) => {
     }
     const department = await Department.findByPk(targetDepartmentId);
     if (!department) return res.status(400).json({ message: 'Selected department is invalid.' });
-    const service = await Service.create({ department_id: targetDepartmentId, name, requirements, processing_time });
+    const service = await withAuditTransaction(Service.sequelize, async (transaction) => {
+      const created = await Service.create({ department_id: targetDepartmentId, name, requirements, processing_time }, { transaction });
+      await recordAudit({ actor: req.user, action: 'catalog.service_created', entityType: 'service', entityId: created.id, departmentId: created.department_id, after: created.toJSON(), transaction });
+      return created;
+    });
     return res.status(201).json(service);
   } catch (error) {
     console.error(error);
@@ -198,7 +232,11 @@ exports.updateService = async (req, res) => {
     if (isDepartmentScopedAdmin(req.user) && req.body.department_id != null && !isOwnDepartment(req.user, req.body.department_id)) {
       return res.status(403).json({ message: 'You may only assign services to your own department.' });
     }
-    await service.update({ ...req.body, ...(isDepartmentScopedAdmin(req.user) ? { department_id: req.user.department_id } : {}) });
+    await withAuditTransaction(Service.sequelize, async (transaction) => {
+      const before = service.toJSON();
+      await service.update({ ...req.body, ...(isDepartmentScopedAdmin(req.user) ? { department_id: req.user.department_id } : {}) }, { transaction });
+      await recordAudit({ actor: req.user, action: 'catalog.service_updated', entityType: 'service', entityId: service.id, departmentId: service.department_id, before, after: service.toJSON(), transaction });
+    });
     return res.json(service);
   } catch (error) {
     console.error(error);
@@ -214,7 +252,16 @@ exports.deleteService = async (req, res) => {
       return res.status(404).json({ message: 'Service not found.' });
     }
     if (forbidden) return res.status(403).json({ message: 'You may only delete services in your own department.' });
-    await service.destroy();
+    const transaction = await Service.sequelize.transaction();
+    try {
+      const deletedService = service.toJSON();
+      await recordAudit({ actor: req.user, action: 'catalog.service_deleted', entityType: 'service', entityId: service.id, departmentId: service.department_id, before: deletedService, transaction });
+      await service.destroy({ transaction });
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
     return res.json({ message: 'Service deleted.' });
   } catch (error) {
     console.error(error);
@@ -252,7 +299,11 @@ exports.createFaq = async (req, res) => {
     }
     const department = await Department.findByPk(targetDepartmentId);
     if (!department) return res.status(400).json({ message: 'Selected department is invalid.' });
-    const faq = await Faq.create({ department_id: targetDepartmentId, question, answer, keywords });
+    const faq = await withAuditTransaction(Faq.sequelize, async (transaction) => {
+      const created = await Faq.create({ department_id: targetDepartmentId, question, answer, keywords }, { transaction });
+      await recordAudit({ actor: req.user, action: 'catalog.faq_created', entityType: 'faq', entityId: created.id, departmentId: created.department_id, after: created.toJSON(), transaction });
+      return created;
+    });
     return res.status(201).json(faq);
   } catch (error) {
     console.error(error);
@@ -271,7 +322,11 @@ exports.updateFaq = async (req, res) => {
     if (isDepartmentScopedAdmin(req.user) && req.body.department_id != null && !isOwnDepartment(req.user, req.body.department_id)) {
       return res.status(403).json({ message: 'You may only assign FAQs to your own department.' });
     }
-    await faq.update({ ...req.body, ...(isDepartmentScopedAdmin(req.user) ? { department_id: req.user.department_id } : {}) });
+    await withAuditTransaction(Faq.sequelize, async (transaction) => {
+      const before = faq.toJSON();
+      await faq.update({ ...req.body, ...(isDepartmentScopedAdmin(req.user) ? { department_id: req.user.department_id } : {}) }, { transaction });
+      await recordAudit({ actor: req.user, action: 'catalog.faq_updated', entityType: 'faq', entityId: faq.id, departmentId: faq.department_id, before, after: faq.toJSON(), transaction });
+    });
     return res.json(faq);
   } catch (error) {
     console.error(error);
@@ -287,7 +342,16 @@ exports.deleteFaq = async (req, res) => {
       return res.status(404).json({ message: 'FAQ not found.' });
     }
     if (forbidden) return res.status(403).json({ message: 'You may only delete FAQs in your own department.' });
-    await faq.destroy();
+    const transaction = await Faq.sequelize.transaction();
+    try {
+      const deletedFaq = faq.toJSON();
+      await recordAudit({ actor: req.user, action: 'catalog.faq_deleted', entityType: 'faq', entityId: faq.id, departmentId: faq.department_id, before: deletedFaq, transaction });
+      await faq.destroy({ transaction });
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
     return res.json({ message: 'FAQ deleted.' });
   } catch (error) {
     console.error(error);

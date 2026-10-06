@@ -130,6 +130,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    const currentToken = localStorage.getItem('assistdesk_token');
     const currentName = user?.name || localStorage.getItem('assistdesk_last_user_name');
     if (currentName) {
       persistWelcomeName(currentName.split(' ')[0]);
@@ -137,6 +138,16 @@ export const AuthProvider = ({ children }) => {
 
     sessionStorage.removeItem('assistdesk_show_welcome_splash');
     sessionStorage.removeItem('assistdesk_welcome_name');
+    if (currentToken) {
+      try {
+        await axios.post(`${API_BASE_URL}/api/auth/logout`, {}, {
+          headers: { Authorization: `Bearer ${currentToken}` },
+          timeout: 5000,
+        });
+      } catch (error) {
+        console.warn('Logout audit event could not be recorded.', error.message);
+      }
+    }
     localStorage.removeItem('assistdesk_token');
     setToken(null);
     setUser(null);

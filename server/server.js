@@ -219,6 +219,15 @@ async function ensureDepartmentMapColumns() {
   }
 }
 
+async function ensureAuditLogTable() {
+  await models.AuditLog.sync({ alter: false, force: false });
+  const queryInterface = sequelize.getQueryInterface();
+  const columns = await queryInterface.describeTable('audit_logs');
+  if (!columns.department_id) {
+    await queryInterface.addColumn('audit_logs', 'department_id', { type: DataTypes.INTEGER, allowNull: true });
+  }
+}
+
 const server = app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}.`);
 });
@@ -241,6 +250,7 @@ sequelize
   .then(() => ensureChatLogSourceColumns())
   .then(() => ensureTicketRoutingColumns())
   .then(() => ensureDepartmentMapColumns())
+  .then(() => ensureAuditLogTable())
   .then(() => {
     return backfillAdminTable();
   })

@@ -1,6 +1,7 @@
-const { User, Department, Ticket, TicketUpdate, Notification, ChatLog, Admin, PasswordResetToken, Announcement, Faq } = require('../models');
+const { User, Department, Ticket, TicketUpdate, Notification, ChatLog, Admin, PasswordResetToken, Announcement, Faq, AuditLog } = require('../models');
 const { notifyAdmins, moveStaffDepartmentRoom } = require('../utils/socket');
 const { addTicketNumber } = require('../utils/ticketNumber');
+const { recordAudit } = require('../utils/auditLog');
 const { Op } = require('sequelize');
 
 const buildTicketFilters = (query = {}) => {
@@ -274,6 +275,24 @@ exports.getReports = async (req, res) => {
   }
 };
 
+exports.getAuditLogs = async (req, res) => {
+  try {
+    const limitValue = Number(req.query.limit);
+    const limit = Number.isInteger(limitValue) && limitValue > 0 ? Math.min(limitValue, 500) : 200;
+    const offsetValue = Number(req.query.offset);
+    const offset = Number.isInteger(offsetValue) && offsetValue >= 0 ? Math.min(offsetValue, 100000) : 0;
+    const where = {};
+    if (req.user.department_id) where.department_id = req.user.department_id;
+    if (req.query.entity_type) where.entity_type = String(req.query.entity_type).slice(0, 60);
+    if (req.query.action) where.action = String(req.query.action).slice(0, 80);
+    const { count, rows } = await AuditLog.findAndCountAll({ where, order: [['created_at', 'DESC'], ['id', 'DESC']], limit, offset });
+    return res.json({ auditLogs: rows, total: count, limit, offset });
+  } catch (error) {
+    console.error('Audit log retrieval failed:', error);
+    return res.status(500).json({ message: 'Unable to load audit history.' });
+  }
+};
+
 exports.exportReportsCsv = async (req, res) => {
   try {
     const filterError = validateReportFilters(req.query);
@@ -353,7 +372,16 @@ exports.createAnnouncement = async (req, res) => {
       return res.status(400).json({ message: 'Title and content are required.' });
     }
 
-    const announcement = await Announcement.create({ title, content, created_by: req.user.id });
+    const transaction = await Announcement.sequelize.transaction();
+    let announcement;
+    try {
+      announcement = await Announcement.create({ title, content, created_by: req.user.id }, { transaction });
+      await recordAudit({ actor: req.user, action: 'announcement.created', entityType: 'announcement', entityId: announcement.id, after: { title: announcement.title, content: announcement.content }, transaction });
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
     notifyAdmins('announcementCreated', announcement);
     return res.status(201).json(announcement);
   } catch (error) {
@@ -372,11 +400,20 @@ exports.deleteUser = async (req, res) => {
       return res.status(403).json({ message: 'Administrator accounts cannot be terminated here.' });
     }
 
-    await Notification.destroy({ where: { user_id: user.id } });
-    await ChatLog.destroy({ where: { user_id: user.id } });
-    await Admin.destroy({ where: { user_id: user.id } });
-    await PasswordResetToken.destroy({ where: { email: user.email } });
-    await user.update({ account_status: 'terminated' });
+    const before = { name: user.name, email: user.email, role: user.role, department_id: user.department_id, account_status: user.account_status };
+    const transaction = await User.sequelize.transaction();
+    try {
+      await Notification.destroy({ where: { user_id: user.id }, transaction });
+      await ChatLog.destroy({ where: { user_id: user.id }, transaction });
+      await Admin.destroy({ where: { user_id: user.id }, transaction });
+      await PasswordResetToken.destroy({ where: { email: user.email }, transaction });
+      await user.update({ account_status: 'terminated' }, { transaction });
+      await recordAudit({ actor: req.user, action: 'account.deactivated', entityType: 'user', entityId: user.id, departmentId: user.department_id, before, after: { ...before, account_status: 'terminated' }, transaction });
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
 
     return res.json({ message: 'User account terminated successfully.' });
   } catch (error) {
@@ -398,7 +435,16 @@ exports.reactivateUser = async (req, res) => {
       return res.status(400).json({ message: 'Only terminated accounts can be reactivated.' });
     }
 
-    await user.update({ account_status: 'active' });
+    const before = { account_status: user.account_status };
+    const transaction = await User.sequelize.transaction();
+    try {
+      await user.update({ account_status: 'active' }, { transaction });
+      await recordAudit({ actor: req.user, action: 'account.reactivated', entityType: 'user', entityId: user.id, departmentId: user.department_id, before, after: { account_status: 'active' }, transaction });
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
     return res.json({ message: 'User account reactivated successfully.' });
   } catch (error) {
     console.error(error);
@@ -432,7 +478,15 @@ exports.updateUserDepartment = async (req, res) => {
     }
 
     const previousDepartmentId = user.department_id;
-    await user.update({ department_id: department.id });
+    const transaction = await User.sequelize.transaction();
+    try {
+      await user.update({ department_id: department.id }, { transaction });
+      await recordAudit({ actor: req.user, action: 'account.department_changed', entityType: 'user', entityId: user.id, departmentId: previousDepartmentId || department.id, before: { department_id: previousDepartmentId }, after: { department_id: department.id }, metadata: { target_user_role: user.role }, transaction });
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
     if (user.role === 'staff' && Number(previousDepartmentId) !== Number(department.id)) {
       moveStaffDepartmentRoom(user.id, previousDepartmentId, department.id);
     }
