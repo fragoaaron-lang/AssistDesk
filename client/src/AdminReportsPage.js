@@ -46,6 +46,7 @@ function AdminReportsPage() {
   const [auditLogs, setAuditLogs] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [reportFilters, setReportFilters] = useState({ start_date: '', end_date: '', department_id: '', category: '', priority: '', status: '' });
+  const [activeReportSection, setActiveReportSection] = useState('overview');
   const [message, setMessage] = useState('');
   const [showUserDirectory, setShowUserDirectory] = useState(() => new URLSearchParams(window.location.search).get('view') === 'users');
   const [showTerminatedUsers, setShowTerminatedUsers] = useState(false);
@@ -465,6 +466,28 @@ function AdminReportsPage() {
               </div>
               <p className="small-muted report-generated-meta">Generated {new Date(reports.generated_at).toLocaleString()} · Prepared by {reports.prepared_by} · Coverage: {reports.filters?.start_date || 'all available dates'} to {reports.filters?.end_date || 'present'}</p>
             </section>
+            <nav className="analytics-section-tabs" aria-label="Analytics report sections" role="tablist">
+              {[
+                ['overview', 'Overview'],
+                ['performance', 'Performance'],
+                ['tickets', 'Ticket records'],
+                ['audit', 'Audit & activity'],
+              ].map(([section, label]) => (
+                <button
+                  key={section}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeReportSection === section}
+                  className={`analytics-section-tab${activeReportSection === section ? ' is-active' : ''}`}
+                  onClick={() => setActiveReportSection(section)}
+                >
+                  {label}
+                </button>
+              ))}
+            </nav>
+            {activeReportSection === 'overview' && (
+              <section className="analytics-section-panel" role="tabpanel" aria-label="Analytics overview">
+                <div className="report-section-heading"><h3>Overview</h3><p className="small-muted">Ticket volume, departments, priority mix, common concerns, and assistant FAQ activity.</p></div>
             <section className="report-visual-grid">
           <div className="institutional-card report-bars-card">
             <h3>Tickets per department</h3>
@@ -597,6 +620,11 @@ function AdminReportsPage() {
             ) : <p className="small-muted">No department ticket data yet.</p>}
           </div>
           </section>
+              </section>
+            )}
+            {activeReportSection === 'performance' && (
+              <section className="analytics-section-panel" role="tabpanel" aria-label="Performance reports">
+                <div className="report-section-heading"><h3>Performance</h3><p className="small-muted">Average first response and resolution elapsed times, grouped by department.</p></div>
           <section className="institutional-card report-table-card">
             <h3>Response and resolution time by department</h3>
             <p className="small-muted">Elapsed time from ticket creation to the first staff/admin update, and to the first resolved/closed status update.</p>
@@ -604,6 +632,11 @@ function AdminReportsPage() {
               {(reports.responseAndResolutionByDepartment || []).length === 0 ? <tr><td colSpan="5" className="small-muted">No response or resolution data for these filters.</td></tr> : reports.responseAndResolutionByDepartment.map((row) => <tr key={row.department_id}><td>{row.department_name}</td><td>{row.responded_ticket_count}</td><td>{row.average_first_response_hours ?? 'N/A'}</td><td>{row.resolved_ticket_count}</td><td>{row.average_resolution_hours ?? 'N/A'}</td></tr>)}
             </tbody></table></div>
           </section>
+              </section>
+            )}
+            {activeReportSection === 'audit' && (
+              <section className="analytics-section-panel" role="tabpanel" aria-label="Audit and activity reports">
+                <div className="report-section-heading"><h3>Audit &amp; activity</h3><p className="small-muted">Ticket workflow actions and persistent account, catalog, and system audit history.</p></div>
           <section className="institutional-card report-table-card">
             <h3>Ticket audit activity</h3>
             <p className="small-muted">Workflow actions associated with tickets matching the current filters. Showing up to 200 most recent events.</p>
@@ -626,6 +659,11 @@ function AdminReportsPage() {
               </tr>)}
             </tbody></table></div>
           </section>
+              </section>
+            )}
+            {activeReportSection === 'tickets' && (
+              <section className="analytics-section-panel" role="tabpanel" aria-label="Ticket records">
+                <div className="report-section-heading"><h3>Ticket records</h3><p className="small-muted">Latest ticket records matching the applied filters.</p></div>
           <section className="institutional-card report-table-card">
           <h3>Ticket detail table</h3>
           <div className="report-table-scroll">
@@ -656,7 +694,9 @@ function AdminReportsPage() {
               </tbody>
             </table>
           </div>
-            </section>
+          </section>
+              </section>
+            )}
           </>
         )}
       </div>

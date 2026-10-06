@@ -1571,6 +1571,14 @@ button, input, select, textarea {
 .report-filter-summary { display: flex; flex-wrap: wrap; gap: 10px 20px; margin-top: 14px; color: var(--muted); font-size: 0.85rem; }
 .report-filter-summary strong { margin-left: 5px; color: var(--navy); font-size: 1rem; }
 .report-generated-meta { margin: 14px 0 0; }
+.analytics-section-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 6px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+.analytics-section-tab { min-height: 40px; padding: 8px 14px; border: 1px solid transparent; border-radius: 10px; background: transparent; color: var(--muted); font: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; }
+.analytics-section-tab:hover { background: rgba(12, 113, 128, 0.08); color: var(--navy); }
+.analytics-section-tab.is-active { border-color: rgba(12, 113, 128, 0.2); background: rgba(12, 113, 128, 0.12); color: var(--navy); box-shadow: 0 2px 7px rgba(15, 45, 82, 0.08); }
+.analytics-section-panel { display: grid; gap: 16px; }
+.report-section-heading { padding: 2px 2px 0; }
+.report-section-heading h3 { margin: 0 0 4px; color: var(--navy); }
+.report-section-heading p { margin: 0; }
 .audit-values-cell { max-width: 260px; max-height: 120px; overflow: auto; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 0.72rem/1.4 ui-monospace, SFMono-Regular, Consolas, monospace; }
 .report-chart:last-child { margin-bottom: 0; }
 .report-chart-title {
