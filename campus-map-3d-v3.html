@@ -196,13 +196,13 @@ function makeHeatDot(entry, index){
  return el;
 }
 function makeTicketPin(ticket, index){
+ const [name,subject,priority]=Array.isArray(ticket)?ticket:[ticket.name,ticket.subject,ticket.priority];
  const btn=document.createElement('button');
  btn.type='button';
- btn.className='ticket-pin '+ticket.priority;
- btn.textContent=ticket.priority[0].toUpperCase();
- btn.title=ticket.subject;
+ btn.className='ticket-pin '+priority;
+ btn.textContent=priority[0].toUpperCase();
+ btn.title=subject;
  btn.addEventListener('click',()=>{
-   const [name, subject, priority]=ticket;
    info.innerHTML='<b>'+name.replace(/\|/g,' ')+'</b><span>'+subject+' · '+priority.toUpperCase()+' priority</span>';
  });
  ticketLayer.appendChild(btn);
@@ -229,7 +229,7 @@ function syncLayers(){
    const p=worldPointFromBuildingEntry(match);
    v.copy(p).project(cam);
    if(v.z < -1 || v.z > 1) return;
-   const btn=makeTicketPin({subject:ticket[1],priority:ticket[2]}, index);
+  const btn=makeTicketPin({name:match[0],subject:ticket[1],priority:ticket[2]}, index);
    btn.style.left=(v.x*.5+.5)*innerWidth+'px';
    btn.style.top=(-v.y*.5+.5)*innerHeight+'px';
  });
@@ -250,6 +250,8 @@ cv.addEventListener('pointerup',e=>{if(!down||Math.hypot(e.clientX-down[0],e.cli
 const bl=document.getElementById('bl'),br=document.getElementById('br');
 bl.onclick=()=>{showL=!showL;bl.setAttribute('aria-pressed',showL)};
 br.onclick=()=>{ctl.autoRotate=!ctl.autoRotate;br.setAttribute('aria-pressed',ctl.autoRotate)};
+ctl.autoRotate = true;
+br.setAttribute('aria-pressed', 'true');
 document.getElementById('bz').onclick=()=>{cam.position.copy(home.p);ctl.target.copy(home.t)};
 function size(){R.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();syncLayers()}
 addEventListener('resize',size);size();

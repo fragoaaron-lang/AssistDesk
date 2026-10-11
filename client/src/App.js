@@ -38,9 +38,13 @@ function App() {
   }
 
   return (
-    <AuthProvider>
-      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <Routes>
+    <>
+      <div className="system-campus-backdrop" aria-hidden="true">
+        <iframe title="Campus 3D background" src="/campus-map-3d-v3.html" />
+      </div>
+      <AuthProvider>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <Routes>
           <Route
             path="/dashboard"
             element={
@@ -96,9 +100,10 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-        <ChatbotWidget />
-      </BrowserRouter>
-    </AuthProvider>
+          <ChatbotWidget />
+        </BrowserRouter>
+      </AuthProvider>
+    </>
   );
 }
 
