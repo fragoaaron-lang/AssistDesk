@@ -32,6 +32,35 @@ function DashboardPage() {
 
   const visibleDepartments = dashboard.departments || [];
 
+  const dashboardSummary = useMemo(() => {
+    const tickets = dashboard.tickets || [];
+    const activeTickets = tickets.length || visibleDepartments.reduce((total, department) => total + Number(department.ticket_count || 0), 0);
+    const urgentTickets = tickets.filter((ticket) => String(ticket.priority || '').toLowerCase() === 'urgent').length;
+    const liveDepartments = visibleDepartments.filter((department) => Number(department.ticket_count || 0) > 0).length;
+
+    return {
+      activeTickets,
+      urgentTickets,
+      liveDepartments,
+      totalDepartments: visibleDepartments.length,
+    };
+  }, [dashboard.tickets, visibleDepartments]);
+
+  const departmentQueue = useMemo(() =>
+    [...visibleDepartments]
+      .filter((department) => Number(department.ticket_count || 0) > 0)
+      .sort((a, b) => Number(b.ticket_count || 0) - Number(a.ticket_count || 0))
+      .slice(0, 4),
+    [visibleDepartments]
+  );
+
+  const dashboardHighlights = useMemo(() => {
+    const announcementList = (dashboard.announcements || []).slice(0, 3);
+    const serviceList = (dashboard.services || []).slice(0, 4);
+
+    return { announcementList, serviceList };
+  }, [dashboard.announcements, dashboard.services]);
+
   const getPriorityByIndex = (index) => ['low', 'medium', 'urgent'][index % 3];
 
   const mapTickets = useMemo(() => {
@@ -300,12 +329,125 @@ function DashboardPage() {
           </div>
         </aside>
 
+        <section className="dashboard-overview" aria-label="Dashboard status overview">
+          <div className="overview-intro">
+            <p className="eyebrow">Operations overview</p>
+            <h2>Campus support at a glance</h2>
+          </div>
+          <div className="overview-grid">
+            <article className="overview-stat primary">
+              <span className="overview-label">Open tickets</span>
+              <strong>{dashboardSummary.activeTickets}</strong>
+              <small>{dashboardSummary.urgentTickets} urgent items</small>
+            </article>
+            <article className="overview-stat">
+              <span className="overview-label">Active departments</span>
+              <strong>{dashboardSummary.liveDepartments}</strong>
+              <small>of {dashboardSummary.totalDepartments} monitored</small>
+            </article>
+            <article className="overview-stat">
+              <span className="overview-label">High priority</span>
+              <strong>{dashboardSummary.urgentTickets}</strong>
+              <small>need triage today</small>
+            </article>
+            <article className="overview-stat">
+              <span className="overview-label">Campus pulse</span>
+              <strong>{dashboardSummary.activeTickets > 0 ? 'Live' : 'Quiet'}</strong>
+              <small>{dashboardSummary.activeTickets > 0 ? 'Tickets are moving' : 'No open requests'}</small>
+            </article>
+          </div>
+        </section>
+
+        <section className="dashboard-queue" aria-label="Department queue summary">
+          <div className="queue-header">
+            <div>
+              <p className="eyebrow">Department queue</p>
+              <h3>Most active service points</h3>
+            </div>
+            <span className="queue-total">{dashboardSummary.liveDepartments} active</span>
+          </div>
+          <div className="queue-grid">
+            {departmentQueue.length > 0 ? (
+              departmentQueue.map((department) => {
+                const count = Number(department.ticket_count || 0);
+                const queueWidth = Math.min(100, 20 + count * 12);
+                return (
+                  <article key={`dept-queue-${department.id}`} className="queue-card">
+                    <div className="queue-card-topline">
+                      <strong>{department.name}</strong>
+                      <span>{count} tickets</span>
+                    </div>
+                    <div className="queue-meter" aria-hidden="true">
+                      <span style={{ width: `${queueWidth}%` }} />
+                    </div>
+                    <div className="queue-card-foot">
+                      <small>{count > 0 ? 'Monitoring live demand' : 'Idle'}</small>
+                      <em>{count >= 3 ? 'High demand' : count > 0 ? 'Steady' : 'Low'}</em>
+                    </div>
+                  </article>
+                );
+              })
+            ) : (
+              <div className="queue-empty">No active departments right now.</div>
+            )}
+          </div>
+        </section>
+
+        <section className="dashboard-detail-grid" aria-label="Operational details and announcements">
+          <article className="dashboard-focus-panel">
+            <div className="queue-header">
+              <div>
+                <p className="eyebrow">Latest update</p>
+                <h3>Announcements</h3>
+              </div>
+            </div>
+            <div className="updates-list">
+              {dashboardHighlights.announcementList.length > 0 ? (
+                dashboardHighlights.announcementList.map((announcement) => (
+                  <div key={announcement.id || announcement.title} className="update-item">
+                    <span className="update-dot" aria-hidden="true" />
+                    <div>
+                      <strong>{announcement.title || 'Campus update'}</strong>
+                      <p>{announcement.message || 'New support message posted by the administration.'}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="queue-empty">No announcements posted yet.</div>
+              )}
+            </div>
+          </article>
+
+          <article className="dashboard-focus-panel">
+            <div className="queue-header">
+              <div>
+                <p className="eyebrow">Service focus</p>
+                <h3>Available support areas</h3>
+              </div>
+            </div>
+            <div className="service-list">
+              {dashboardHighlights.serviceList.length > 0 ? (
+                dashboardHighlights.serviceList.map((service) => (
+                  <div key={service.id || service.name} className="service-item">
+                    <span className="service-pill">{service.category || 'Support'}</span>
+                    <strong>{service.name || 'Service'}</strong>
+                    <small>{service.description || 'Request support and stay informed.'}</small>
+                  </div>
+                ))
+              ) : (
+                <div className="queue-empty">No service categories available.</div>
+              )}
+            </div>
+          </article>
+        </section>
+
         <div className="institutional-card" style={{ marginBottom: '20px' }}>
           <div className="map-toolbar">
             <div>
               <h3>Campus 3D overview</h3>
-              <p className="map-subtitle">Ticket-volume heat clouds and priority pinpoints by department.</p>
+              <p className="map-subtitle">Ticket-volume heat clouds and priority pinpoints across departments.</p>
             </div>
+            <div className="map-toolbar-pill">Live map</div>
           </div>
           <div className="map-shell">
             <div className="map-frame campus-3d-frame">
