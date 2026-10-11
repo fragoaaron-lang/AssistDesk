@@ -2,7 +2,7 @@
 
 ## Map asset and network requirements
 
-The Dashboard's **Campus request forecast** panel displays the bundled image at `client/public/heatmap.jpg`, loaded locally from `/heatmap.jpg`. Its heat zones and priority markers are part of the static image; the panel's zoom controls do not require online map tiles or a geocoding service. The campus layout image remains at `client/public/schoolmap.png` for campus reference and the page backdrop. The repository does not identify the original creator or source of these images. Confirm and record their attribution/licensing separately before redistributing them outside this application.
+The Dashboard's **Campus request forecast** panel uses the campus layout image bundled at `client/public/schoolmap.png`, loaded locally from `/schoolmap.png`. The dashboard overlays ticket-volume heat spots and priority pins using department coordinates and current ticket data. It does not request online map tiles or a geocoding service. The repository does not identify the original creator or source of the image. Confirm and record its attribution/licensing separately before redistributing it outside this application.
 
 ## Coordinate format
 
@@ -23,4 +23,4 @@ Department records without confirmed locations should keep map coordinates blank
 
 ## Map capabilities and limitations
 
-The forecast panel currently shows the heat zones and priority markers baked into its static heatmap image; those image markers do not update from live tickets or department coordinates. The map does not calculate walking routes, use GPS, locate a user's device, or provide real-time person tracking.
+The dashboard overlays ticket pins and ticket-volume heat spots on the static campus image; it does not display department office pins or labels. Ticket and heat overlays are omitted when a department lacks coordinates. The map does not calculate walking routes, use GPS, locate a user's device, or provide real-time person tracking. Live updates refer only to application ticket events.
