@@ -4,8 +4,9 @@ const crypto = require('crypto');
 const { User, Department, PasswordResetToken } = require('../models');
 const { sendPasswordResetEmail, sendEmailVerificationEmail, generateVerificationCode } = require('../utils/email');
 const { recordAudit } = require('../utils/auditLog');
+const { getJwtSecret } = require('../config/security');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'assistdesk-secret';
+const JWT_SECRET = getJwtSecret();
 const JWT_EXPIRES_IN = '8h';
 
 const sanitizeUser = (user) => ({
@@ -156,7 +157,7 @@ exports.register = async (req, res) => {
     return res.status(201).json({ message: 'Registration saved. Check your email to activate your account.' });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: error.message || 'Registration failed.' });
+    return res.status(500).json({ message: 'Registration failed. Please try again later.' });
   }
 };
 

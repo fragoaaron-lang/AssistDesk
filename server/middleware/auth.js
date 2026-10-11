@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'assistdesk-secret';
+const { getJwtSecret } = require('../config/security');
+const JWT_SECRET = getJwtSecret();
 
 module.exports = async (req, res, next) => {
   const authHeader = req.headers.authorization;

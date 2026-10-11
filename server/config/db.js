@@ -39,7 +39,7 @@ if (DATABASE_URL) {
   // When using DATABASE_URL, allow SSL to be toggled via DB_SSL or PGSSLMODE.
   const useSsl = process.env.DB_SSL === 'true' || process.env.PGSSLMODE === 'require';
   const dialectOptions = useSsl
-    ? { ssl: { require: true, rejectUnauthorized: false } }
+    ? { ssl: { require: true, rejectUnauthorized: true } }
     : {};
 
   sequelize = new Sequelize(DATABASE_URL, {
@@ -55,9 +55,14 @@ if (DATABASE_URL) {
   const database = process.env.MYSQLDATABASE || process.env.DB_NAME || 'assistdesk';
   const port = Number(process.env.MYSQLPORT || process.env.DB_PORT || 3306);
 
+  if (process.env.NODE_ENV === 'production'
+    && (!host || !user || !password || !database)) {
+    throw new Error('Production database configuration is incomplete. Set DATABASE_URL or explicit database host, user, password, and database values.');
+  }
+
   const useSsl = process.env.DB_SSL === 'true' || process.env.PGSSLMODE === 'require';
   const dialectOptions = useSsl
-    ? { ssl: { require: true, rejectUnauthorized: false } }
+    ? { ssl: { require: true, rejectUnauthorized: true } }
     : {};
 
   sequelize = new Sequelize(database, user, password, {

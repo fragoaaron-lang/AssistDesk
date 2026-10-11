@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const { DataTypes } = require('sequelize');
 const sequelize = require('./config/db');
 const models = require('./models');
@@ -14,34 +15,54 @@ const adminRoutes = require('./routes/adminRoutes');
 const { createSocketServer } = require('./utils/socket');
 const { processMissedEtaTickets } = require('./controllers/ticketController');
 const seedDepartmentAdmins = require('./seed-department-admins');
+const { assertSecurityConfig, getAllowedOrigins } = require('./config/security');
+
+assertSecurityConfig();
 
 const app = express();
 const { Admin, User } = models;
 const PORT = process.env.PORT || 3001;
 let databaseReady = false;
-const allowedOrigins = [
-  process.env.CLIENT_URL,
-  process.env.FRONTEND_URL,
-  'https://assist-desk-ebon.vercel.app',
-  'http://localhost:3005',
-  'http://localhost:3000',
-].filter(Boolean);
+const allowedOrigins = new Set(getAllowedOrigins());
 
+app.disable('x-powered-by');
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      'script-src': ["'self'", "'sha256-XzOGgjZcZ1bP6o7VXBISodPowUTo/FxYmOcduy/b0+g='", 'https://cdn.jsdelivr.net'],
+      'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      'font-src': ["'self'", 'https://fonts.gstatic.com', 'data:'],
+      'img-src': ["'self'", 'data:', 'blob:', 'https:'],
+      'connect-src': ["'self'", 'https:', 'wss:'],
+      'frame-src': ["'self'"],
+      'object-src': ["'none'"],
+      'base-uri': ["'self'"],
+      'frame-ancestors': ["'self'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+}));
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow non-browser requests (no origin) and explicit allowed origins.
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin) {
       callback(null, true);
       return;
     }
 
-    // For disallowed origins, do not throw an error (which results in 500).
-    // Instead, deny CORS by calling back with null and false so the request
-    // proceeds but without CORS headers (the browser will block it).
-    console.warn('CORS: blocking origin', origin);
-    callback(null, false);
+    try {
+      if (allowedOrigins.has(new URL(origin).origin)) {
+        callback(null, true);
+        return;
+      }
+    } catch {
+      // Malformed origins are denied below.
+    }
+    const error = new Error('Origin not allowed by CORS.');
+    error.status = 403;
+    callback(error);
   },
-  credentials: true,
+  credentials: false,
 }));
 app.use(express.json({ limit: '5mb' }));
 
@@ -56,7 +77,6 @@ app.get('/health', (req, res) => {
   res.status(databaseReady ? 200 : 503).json({
     status: databaseReady ? 'ok' : 'starting',
     message: databaseReady ? 'AssistDesk API is running' : 'AssistDesk API is waiting for the database',
-    release: 'profile-picture-persistence',
   });
 });
 
@@ -65,7 +85,11 @@ const path = require('path');
 const fs = require('fs');
 const clientBuildPath = path.join(__dirname, '..', 'client', 'build');
 if (fs.existsSync(clientBuildPath)) {
-  app.use(express.static(clientBuildPath));
+  app.use(express.static(clientBuildPath, {
+    dotfiles: 'deny',
+    index: false,
+    redirect: false,
+  }));
 
   // Fallback to index.html for SPA routes (do not override /api or /health)
   app.use((req, res, next) => {
@@ -76,6 +100,14 @@ if (fs.existsSync(clientBuildPath)) {
     res.sendFile(path.join(clientBuildPath, 'index.html'));
   });
 }
+
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+  const status = Number.isInteger(err.status) && err.status >= 400 && err.status < 500 ? err.status : 500;
+  if (status >= 500) console.error('Unhandled request error:', err);
+  else console.warn('Rejected request:', { method: req.method, path: req.path, status });
+  return res.status(status).json({ message: status === 413 ? 'Request body is too large.' : 'Request could not be processed.' });
+});
 
 async function backfillAdminTable() {
   const adminUsers = await User.findAll({ where: { role: 'admin' } });
