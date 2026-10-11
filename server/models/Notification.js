@@ -37,5 +37,25 @@ module.exports = (sequelize, DataTypes) => {
     Notification.belongsTo(models.User, { foreignKey: 'user_id' });
   };
 
+  const queuePush = (notification) => {
+    setImmediate(() => {
+      require('../utils/pushNotifications')
+        .sendPushToUser(notification.user_id, notification)
+        .catch((error) => console.error(JSON.stringify({ event: 'push_delivery_failed', user_id: notification.user_id, error_name: error.name || 'Error' })));
+    });
+  };
+
+  Notification.addHook('afterCreate', (notification, options) => {
+    const dispatch = () => queuePush(notification);
+    if (options.transaction) options.transaction.afterCommit(dispatch);
+    else dispatch();
+  });
+
+  Notification.addHook('afterBulkCreate', (notifications, options) => {
+    const dispatch = () => notifications.forEach(queuePush);
+    if (options.transaction) options.transaction.afterCommit(dispatch);
+    else dispatch();
+  });
+
   return Notification;
 };

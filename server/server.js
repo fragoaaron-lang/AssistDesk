@@ -13,6 +13,7 @@ const aiRoutes = require('./routes/aiRoutes');
 const ticketRoutes = require('./routes/ticketRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const pushRoutes = require('./routes/pushRoutes');
 const { createSocketServer } = require('./utils/socket');
 const { processMissedEtaTickets } = require('./controllers/ticketController');
 const seedDepartmentAdmins = require('./seed-department-admins');
@@ -87,6 +88,7 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/push', pushRoutes);
 
 app.get('/health', (req, res) => {
   res.status(databaseReady ? 200 : 503).json({
