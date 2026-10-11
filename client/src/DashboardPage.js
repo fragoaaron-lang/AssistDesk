@@ -304,7 +304,7 @@ function DashboardPage() {
           <div className="map-toolbar">
             <div>
               <h3>Campus 3D overview</h3>
-              <p className="map-subtitle">Interactive campus view with building categories and labels. This replaces the legacy heatmap.</p>
+              <p className="map-subtitle">Ticket-volume heat clouds and priority pinpoints by department.</p>
             </div>
           </div>
           <div className="map-shell">

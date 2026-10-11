@@ -30,7 +30,7 @@ h1{font-size:16px;margin:0 0 8px;font-weight:700}
 #heatmap,#ticketLayer{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 #heatmap{z-index:2}
 #ticketLayer{z-index:3}
-.heat-dot{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(239,68,68,.92) 0%,rgba(249,115,22,.78) 30%,rgba(250,204,21,.48) 64%,rgba(250,204,21,0) 100%);filter:blur(4px);box-shadow:0 0 24px rgba(249,115,22,.3);pointer-events:none}
+.heat-dot{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(239,35,45,.98) 0%,rgba(255,91,23,.9) 24%,rgba(255,187,0,.66) 55%,rgba(255,196,0,0) 100%);filter:blur(8px);mix-blend-mode:screen;box-shadow:0 0 34px rgba(255,99,20,.58);pointer-events:none}
 .ticket-pin{position:absolute;transform:translate(-50%,-100%) rotate(-45deg);width:11px;height:11px;padding:0;border:2px solid #fff;border-radius:50% 50% 50% 0;box-shadow:0 1px 5px rgba(16,24,40,.55);pointer-events:auto;cursor:pointer}
 .ticket-pin::after{content:"";position:absolute;inset:3px;border-radius:50%;background:#fff;pointer-events:none}
 .ticket-pin.low{background:#34c759}.ticket-pin.medium{background:#3b82f6}.ticket-pin.urgent{background:#ef4444}
@@ -182,7 +182,7 @@ function makeHeatCloud(department,count){
  cloud.style.width=size+'px';
  cloud.style.height=size+'px';
  cloud.style.opacity=String(Math.min(.96,.78+count*.035));
- cloud.title=department.name+' · '+count+' active ticket'+(count===1?'':'s');
+ cloud.title=department.name+' · '+count+' ticket'+(count===1?'':'s');
  heatLayer.appendChild(cloud);
  return cloud;
 }
@@ -220,16 +220,16 @@ function setMapData(data){
  heatItems.length=0;ticketItems.length=0;
  heatLayer.replaceChildren();ticketLayer.replaceChildren();
  const departments=Array.isArray(data.departments)?data.departments:[];
- const activeTickets=(Array.isArray(data.tickets)?data.tickets:[])
-   .filter(ticket=>['open','pending','in_progress'].includes(ticket.status));
+ const allTickets=Array.isArray(data.tickets)?data.tickets:[];
+ const activeTickets=allTickets.filter(ticket=>['open','pending','in_progress'].includes(ticket.status));
  const departmentsById=new Map(departments.map(department=>[String(department.id),department]));
  const counts=new Map();
- activeTickets.forEach(ticket=>counts.set(String(ticket.department_id),(counts.get(String(ticket.department_id))||0)+1));
+ allTickets.forEach(ticket=>counts.set(String(ticket.department_id),(counts.get(String(ticket.department_id))||0)+1));
  departments.forEach(department=>{
    const count=counts.get(String(department.id))||0;
    const position=worldPointFromDepartment(department);
    if(!count||!position)return;
-   heatItems.push({el:makeHeatCloud(department,count),position});
+    heatItems.push({el:makeHeatCloud(department,count),position});
  });
  const ticketOffsets=new Map();
  activeTickets.forEach(ticket=>{
