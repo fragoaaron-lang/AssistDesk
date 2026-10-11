@@ -27,12 +27,23 @@ h1{font-size:16px;margin:0 0 8px;font-weight:700}
 #info{left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));padding:10px 14px;min-width:220px;max-width:calc(100% - 24px)}
 #info b{font-size:15px;display:block}
 #info span{font-size:12px;color:var(--mute)}
-@media (max-width:640px){#tools{top:auto;bottom:calc(12px + env(safe-area-inset-bottom,0px))} #info{bottom:calc(60px + env(safe-area-inset-bottom,0px))}}
+#heatmap,#ticketLayer{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.heat-dot{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(239,66,66,.7) 0%,rgba(239,166,66,.52) 25%,rgba(239,196,68,.18) 52%,rgba(239,196,68,0) 78%);filter:blur(9px);box-shadow:0 0 18px rgba(239,110,66,.15)}
+.ticket-pin{position:absolute;transform:translate(-50%,-100%);display:flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.9);box-shadow:0 4px 12px rgba(18,33,60,.28);pointer-events:auto;cursor:pointer;font-size:9px;font-weight:800;color:#fff;line-height:1}
+.ticket-pin.low{background:#34c759}.ticket-pin.medium{background:#3b82f6}.ticket-pin.urgent{background:#ef4444}
+#legend{right:12px;bottom:calc(70px + env(safe-area-inset-bottom,0px));padding:10px 12px;min-width:180px}
+#legend strong{display:block;font-size:12px;margin-bottom:8px}
+#legend .row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mute);margin-bottom:4px}
+#legend .sw{width:10px;height:10px;border-radius:50%}
+#legend .sw.low{background:#34c759}#legend .sw.medium{background:#3b82f6}#legend .sw.urgent{background:#ef4444}
+@media (max-width:640px){#tools{top:auto;bottom:calc(12px + env(safe-area-inset-bottom,0px))} #info{bottom:calc(60px + env(safe-area-inset-bottom,0px))} #legend{right:12px;bottom:calc(132px + env(safe-area-inset-bottom,0px))}}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 <div id="labels"></div>
+<div id="heatmap"></div>
+<div id="ticketLayer"></div>
 <div class="ui" id="top"><h1>Campus 3D Map</h1><div class="chips" id="chips"></div></div>
 <div class="ui" id="tools">
 <button class="btn" id="bl" aria-pressed="true">Road labels</button>
@@ -40,6 +51,7 @@ h1{font-size:16px;margin:0 0 8px;font-weight:700}
 <button class="btn" id="bz">Reset view</button>
 </div>
 <div class="ui" id="info"><b>Tap a building</b><span>Drag to rotate, scroll or pinch to zoom.</span></div>
+<div class="ui" id="legend"><strong>Active tickets</strong><div class="row"><span class="sw low"></span>Low</div><div class="row"><span class="sw medium"></span>Medium</div><div class="row"><span class="sw urgent"></span>Urgent</div></div>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script>
@@ -80,6 +92,17 @@ const B=[
 ['J.B. ANGELES BLDG.|(ADMIN BLDG.)','admin',698,748,1139,839,3],
 ['PARKING|AREA','park',698,839,1139,898,0],
 ['GUARD|HOUSE','health',567,952,660,1018,1]
+];
+const TICKETS=[
+['D.H. SORIANO|HALL (AVR)','Urgent Wi-Fi outage','urgent'],
+['INFORMATION & TECHNOLOGY|BLDG.','Laptop repair queue','medium'],
+['BUSINESS &|ACCOUNTANCY BLDG.','Finance portal issue','urgent'],
+['BASIC EDUCATION BLDG.','Classroom projector complaint','low'],
+['J.B. ANGELES BLDG.|(ADMIN BLDG.)','Document request slow','medium'],
+['MEDICAL / DENTAL|CLINIC','Maintenance request','low'],
+['BASIC EDUCATION|LIBRARY','Access card problem','medium'],
+['WORKSHOP','Equipment check-up','low'],
+['GUARD|HOUSE','Visitor pass issue','medium']
 ];
 const P=.06,FH=2.6;
 const cv=document.getElementById('c');
@@ -152,6 +175,56 @@ for(let x=600;x<860;x+=60)tree(x,670);
 [[1500,150],[1580,210],[1660,140],[1750,230],[1840,160],[1860,330],[1660,300],[1480,250]].forEach(p=>tree(...p));
 const labels=[],lab=document.getElementById('labels');
 [['MAIN GATE ENTRANCE',440,995],['← TO MORONG TOWN PROPER',130,1046],['TO TERESA, RIZAL →',1860,1046],['FLAG POLE',918,975]].forEach(([t,x,y])=>{const e=document.createElement('div');e.className='lbl';e.textContent=t;lab.appendChild(e);labels.push({e,pos:new THREE.Vector3(x*P,.3,y*P)})});
+const heatLayer=document.getElementById('heatmap');const ticketLayer=document.getElementById('ticketLayer');
+function worldPointFromBuildingEntry(entry){
+ const [name,c,x1,y1,x2,y2,f,x]=entry;
+ return new THREE.Vector3(((x1+x2)/2)*P,3.2,((y1+y2)/2)*P);
+}
+function makeHeatDot(entry,index){
+ const el=document.createElement('div');
+ el.className='heat-dot';
+ const size=20+(index%5)*10+(entry[1]==='park'?8:0);
+ el.style.width=size+'px';
+ el.style.height=size+'px';
+ el.style.opacity=String(0.3+(index%5)*0.13);
+ heatLayer.appendChild(el);
+ return el;
+}
+function makeTicketPin(ticket){
+ const btn=document.createElement('button');
+ btn.type='button';
+ btn.className='ticket-pin '+ticket.priority;
+ btn.title=ticket.subject;
+ btn.addEventListener('click',()=>{
+   const [name, subject, priority]=ticket;
+   info.innerHTML='<b>'+name.replace(/\|/g,' ')+'</b><span>'+subject+' · '+priority.toUpperCase()+' priority</span>';
+ });
+ ticketLayer.appendChild(btn);
+ return btn;
+}
+function syncLayers(){
+ heatLayer.innerHTML='';
+ ticketLayer.innerHTML='';
+ const v=new THREE.Vector3();
+ B.forEach((entry,index)=>{
+   const p=worldPointFromBuildingEntry(entry);
+   v.copy(p).project(cam);
+   if(v.z < -1 || v.z > 1) return;
+   const el=makeHeatDot(entry,index);
+   el.style.left=(v.x*.5+.5)*innerWidth+'px';
+   el.style.top=(-v.y*.5+.5)*innerHeight+'px';
+ });
+ TICKETS.forEach((ticket)=>{
+   const match=B.find(([name])=>name.toLowerCase()===ticket[0].toLowerCase());
+   if(!match) return;
+   const p=worldPointFromBuildingEntry(match);
+   v.copy(p).project(cam);
+   if(v.z < -1 || v.z > 1) return;
+   const btn=makeTicketPin(ticket);
+   btn.style.left=(v.x*.5+.5)*innerWidth+'px';
+   btn.style.top=(-v.y*.5+.5)*innerHeight+'px';
+ });
+}
 const act=new Set(Object.keys(CATS)),chips=document.getElementById('chips');
 Object.entries(CATS).forEach(([k,[n,c]])=>{const b=document.createElement('button');b.className='chip';b.innerHTML='<i style="background:'+c+'"></i>'+n;
  b.onclick=()=>{act.has(k)?act.delete(k):act.add(k);b.classList.toggle('off',!act.has(k));meshes.forEach(m=>m.visible=act.has(m.userData.c))};chips.appendChild(b)});
@@ -167,12 +240,13 @@ const bl=document.getElementById('bl'),br=document.getElementById('br');
 bl.onclick=()=>{showL=!showL;bl.setAttribute('aria-pressed',showL)};
 br.onclick=()=>{ctl.autoRotate=!ctl.autoRotate;br.setAttribute('aria-pressed',ctl.autoRotate)};
 document.getElementById('bz').onclick=()=>{cam.position.copy(home.p);ctl.target.copy(home.t)};
-function size(){R.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}
+function size(){R.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();syncLayers()}
 addEventListener('resize',size);size();
 const v=new THREE.Vector3();
 (function loop(){requestAnimationFrame(loop);ctl.update();R.render(S,cam);
  labels.forEach(l=>{v.copy(l.pos).project(cam);l.e.style.display=showL&&v.z<1?'block':'none';
-  l.e.style.left=(v.x*.5+.5)*innerWidth+'px';l.e.style.top=(-v.y*.5+.5)*innerHeight+'px'})})();
+  l.e.style.left=(v.x*.5+.5)*innerWidth+'px';l.e.style.top=(-v.y*.5+.5)*innerHeight+'px'});
+ syncLayers();})();
 </script>
 </body>
 </html>
