@@ -1,5 +1,5 @@
 const { User, Department, Ticket, TicketUpdate, Notification, ChatLog, Admin, PasswordResetToken, Announcement, Faq, AuditLog } = require('../models');
-const { notifyAdmins, moveStaffDepartmentRoom } = require('../utils/socket');
+const { notifyAdmins, disconnectUser } = require('../utils/socket');
 const { addTicketNumber } = require('../utils/ticketNumber');
 const { recordAudit } = require('../utils/auditLog');
 const { Op } = require('sequelize');
@@ -407,13 +407,14 @@ exports.deleteUser = async (req, res) => {
       await ChatLog.destroy({ where: { user_id: user.id }, transaction });
       await Admin.destroy({ where: { user_id: user.id }, transaction });
       await PasswordResetToken.destroy({ where: { email: user.email }, transaction });
-      await user.update({ account_status: 'terminated' }, { transaction });
+      await user.update({ account_status: 'terminated', session_version: Number(user.session_version || 0) + 1 }, { transaction });
       await recordAudit({ actor: req.user, action: 'account.deactivated', entityType: 'user', entityId: user.id, departmentId: user.department_id, before, after: { ...before, account_status: 'terminated' }, transaction });
       await transaction.commit();
     } catch (error) {
       await transaction.rollback();
       throw error;
     }
+    disconnectUser(user.id);
 
     return res.json({ message: 'User account terminated successfully.' });
   } catch (error) {
@@ -438,7 +439,7 @@ exports.reactivateUser = async (req, res) => {
     const before = { account_status: user.account_status };
     const transaction = await User.sequelize.transaction();
     try {
-      await user.update({ account_status: 'active' }, { transaction });
+      await user.update({ account_status: 'active', session_version: Number(user.session_version || 0) + 1 }, { transaction });
       await recordAudit({ actor: req.user, action: 'account.reactivated', entityType: 'user', entityId: user.id, departmentId: user.department_id, before, after: { account_status: 'active' }, transaction });
       await transaction.commit();
     } catch (error) {
@@ -480,16 +481,14 @@ exports.updateUserDepartment = async (req, res) => {
     const previousDepartmentId = user.department_id;
     const transaction = await User.sequelize.transaction();
     try {
-      await user.update({ department_id: department.id }, { transaction });
+      await user.update({ department_id: department.id, session_version: Number(user.session_version || 0) + 1 }, { transaction });
       await recordAudit({ actor: req.user, action: 'account.department_changed', entityType: 'user', entityId: user.id, departmentId: previousDepartmentId || department.id, before: { department_id: previousDepartmentId }, after: { department_id: department.id }, metadata: { target_user_role: user.role }, transaction });
       await transaction.commit();
     } catch (error) {
       await transaction.rollback();
       throw error;
     }
-    if (user.role === 'staff' && Number(previousDepartmentId) !== Number(department.id)) {
-      moveStaffDepartmentRoom(user.id, previousDepartmentId, department.id);
-    }
+    disconnectUser(user.id);
     return res.json({ message: 'User department updated successfully.', user: { id: user.id, role: user.role, department_id: department.id, department_name: department.name } });
   } catch (error) {
     console.error(error);

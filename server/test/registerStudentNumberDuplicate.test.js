@@ -27,7 +27,7 @@ test('register rejects duplicate student numbers', async () => {
       body: {
         name: 'Student Name Middle Last',
         email: 'newstudent@example.com',
-        password: 'Abcdef1!',
+        password: 'Abcdefghijk1!',
         role: 'student',
         department_id: 1,
         student_number: '2026-12345',
@@ -49,8 +49,8 @@ test('register rejects duplicate student numbers', async () => {
 
     await register(req, res);
 
-    assert.equal(res.statusCode, 409);
-    assert.match(res.data.message, /student number.*already/i);
+    assert.equal(res.statusCode, 202);
+    assert.match(res.data.message, /if eligible.*check your email/i);
   } finally {
     User.findOne = originalFindOne;
     Department.findByPk = originalFindByPk;

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from './config';
@@ -12,6 +12,18 @@ function ResetPasswordPage() {
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (!token) return;
+    let referrerPolicy = document.querySelector('meta[name="referrer"]');
+    if (!referrerPolicy) {
+      referrerPolicy = document.createElement('meta');
+      referrerPolicy.name = 'referrer';
+      document.head.appendChild(referrerPolicy);
+    }
+    referrerPolicy.setAttribute('content', 'no-referrer');
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }, [token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -51,4 +51,30 @@ function getAllowedOrigins(env = process.env) {
   }).filter(Boolean))];
 }
 
-module.exports = { assertSecurityConfig, getAllowedOrigins, getJwtSecret };
+function getFrontendUrl(env = process.env) {
+  const configuredUrl = env.FRONTEND_URL || env.CLIENT_URL || 'https://assist-desk-ebon.vercel.app';
+  let parsed;
+  try {
+    parsed = new URL(configuredUrl);
+  } catch {
+    throw new Error('Frontend URL must be an absolute HTTP(S) URL.');
+  }
+  if (!['http:', 'https:'].includes(parsed.protocol)
+    || (env.NODE_ENV === 'production' && parsed.protocol !== 'https:')) {
+    throw new Error('Production frontend URL must use HTTPS.');
+  }
+  return parsed.origin;
+}
+
+function getTrustProxyHops(env = process.env) {
+  const configuredHops = env.TRUST_PROXY_HOPS;
+  const hops = configuredHops == null || configuredHops === ''
+    ? (env.NODE_ENV === 'production' ? 1 : 0)
+    : Number(configuredHops);
+  if (!Number.isInteger(hops) || hops < 0 || hops > 3) {
+    throw new Error('TRUST_PROXY_HOPS must be an integer from 0 to 3.');
+  }
+  return hops;
+}
+
+module.exports = { assertSecurityConfig, getAllowedOrigins, getFrontendUrl, getJwtSecret, getTrustProxyHops };

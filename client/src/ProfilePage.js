@@ -12,7 +12,7 @@ const defaultPrefs = {
   accent: 'teal',
 };
 
-const PASSWORD_RULE_MESSAGE = 'Password must be at least 8 characters long and include an uppercase letter, lowercase letter, number, and special character.';
+const PASSWORD_RULE_MESSAGE = 'Password must be 12–72 characters long and include an uppercase letter, lowercase letter, number, and special character.';
 
 const getUserStorageKey = (user, suffix) => {
   const identifier = user?.id ?? user?.email ?? 'guest';
@@ -264,7 +264,7 @@ function ProfilePage() {
       return;
     }
 
-    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/.test(passwordForm.newPassword)) {
+    if (new TextEncoder().encode(passwordForm.newPassword).length > 72 || !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{12,72}$/.test(passwordForm.newPassword)) {
       setPasswordState({ status: 'error', message: 'new password is weak' });
       return;
     }

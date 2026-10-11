@@ -93,7 +93,6 @@ function App() {
           <Route path="/register" element={<Navigate to="/" replace />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/verify-email" element={<EmailVerificationPage />} />
-          <Route path="/verify-email/:verificationToken" element={<EmailVerificationPage />} />
           <Route path="/" element={<LandingPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

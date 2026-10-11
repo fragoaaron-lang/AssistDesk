@@ -3,6 +3,8 @@ name: Verify application
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   verify:
@@ -14,11 +16,22 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
 
-      - name: Check server syntax
+      - name: Install locked server dependencies
         run: |
-          cd server
-          npm ci
-          node --check server.js
-          node --check controllers/authController.js
+          npm ci --prefix server
+
+      - name: Install locked client dependencies
+        run: npm ci --prefix client
+
+      - name: Audit production dependencies
+        run: |
+          npm audit --prefix server --omit=dev --audit-level=high
+          npm audit --prefix client --omit=dev --audit-level=high
+
+      - name: Run server tests
+        run: npm test --prefix server
+
+      - name: Build client
+        run: npm run build --prefix client

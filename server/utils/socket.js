@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { Server } = require('socket.io');
+const { User } = require('../models');
 const { getAllowedOrigins, getJwtSecret } = require('../config/security');
 
 let io = null;
@@ -31,7 +32,7 @@ const createSocketServer = (server) => {
     },
   });
 
-  io.on('connection', (socket) => {
+  io.on('connection', async (socket) => {
     const token = socket.handshake.auth?.token;
     if (!token) {
       socket.disconnect(true);
@@ -39,18 +40,27 @@ const createSocketServer = (server) => {
     }
 
     try {
-      const payload = jwt.verify(token, JWT_SECRET);
-      socket.data.userId = payload.id;
-      socket.data.role = payload.role;
-      socket.data.departmentId = payload.department_id || null;
-      socket.join(`user_${payload.id}`);
-      if (payload.role === 'admin') {
+      const payload = jwt.verify(token, JWT_SECRET, {
+        algorithms: ['HS256'],
+        issuer: 'assistdesk',
+        audience: 'assistdesk-client',
+      });
+      const user = await User.findByPk(payload.id, { attributes: ['id', 'role', 'department_id', 'account_status', 'session_version'] });
+      if (!user || user.account_status !== 'active' || Number(payload.session_version || 0) !== Number(user.session_version || 0)) {
+        socket.disconnect(true);
+        return;
+      }
+      socket.data.userId = user.id;
+      socket.data.role = user.role;
+      socket.data.departmentId = user.department_id || null;
+      socket.join(`user_${user.id}`);
+      if (user.role === 'admin') {
         socket.join('admins');
-        if (payload.department_id) {
-          socket.join(`department_admin_${payload.department_id}`);
+        if (user.department_id) {
+          socket.join(`department_admin_${user.department_id}`);
         }
-      } else if (payload.role === 'staff' && payload.department_id) {
-        socket.join(`department_staff_${payload.department_id}`);
+      } else if (user.role === 'staff' && user.department_id) {
+        socket.join(`department_staff_${user.department_id}`);
       }
     } catch (error) {
       socket.disconnect(true);
@@ -92,6 +102,11 @@ const notifyAllUsers = (event, payload) => {
   io.emit(event, payload);
 };
 
+const disconnectUser = (userId) => {
+  if (!io || !userId) return;
+  io.in(`user_${userId}`).disconnectSockets(true);
+};
+
 module.exports = {
   createSocketServer,
   notifyUser,
@@ -100,4 +115,5 @@ module.exports = {
   notifyDepartmentStaff,
   moveStaffDepartmentRoom,
   notifyAllUsers,
+  disconnectUser,
 };

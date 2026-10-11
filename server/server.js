@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const crypto = require('crypto');
 const { DataTypes } = require('sequelize');
 const sequelize = require('./config/db');
 const models = require('./models');
@@ -15,7 +16,8 @@ const adminRoutes = require('./routes/adminRoutes');
 const { createSocketServer } = require('./utils/socket');
 const { processMissedEtaTickets } = require('./controllers/ticketController');
 const seedDepartmentAdmins = require('./seed-department-admins');
-const { assertSecurityConfig, getAllowedOrigins } = require('./config/security');
+const { apiRequestLimiter } = require('./middleware/rateLimits');
+const { assertSecurityConfig, getAllowedOrigins, getTrustProxyHops } = require('./config/security');
 
 assertSecurityConfig();
 
@@ -26,7 +28,9 @@ let databaseReady = false;
 const allowedOrigins = new Set(getAllowedOrigins());
 
 app.disable('x-powered-by');
+app.set('trust proxy', getTrustProxyHops());
 app.use(helmet({
+  referrerPolicy: { policy: 'no-referrer' },
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
@@ -64,7 +68,18 @@ app.use(cors({
   },
   credentials: false,
 }));
+app.use((req, res, next) => {
+  req.requestId = crypto.randomUUID();
+  res.setHeader('X-Request-Id', req.requestId);
+  if (req.path.startsWith('/api/')) res.setHeader('Cache-Control', 'no-store');
+  next();
+});
 app.use(express.json({ limit: '5mb' }));
+app.use('/api', (req, res, next) => {
+  if (!databaseReady) return res.status(503).json({ message: 'Service is temporarily unavailable. Please retry shortly.', request_id: req.requestId });
+  return next();
+});
+app.use('/api', apiRequestLimiter);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/catalog', catalogRoutes);
@@ -104,9 +119,12 @@ if (fs.existsSync(clientBuildPath)) {
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
   const status = Number.isInteger(err.status) && err.status >= 400 && err.status < 500 ? err.status : 500;
-  if (status >= 500) console.error('Unhandled request error:', err);
-  else console.warn('Rejected request:', { method: req.method, path: req.path, status });
-  return res.status(status).json({ message: status === 413 ? 'Request body is too large.' : 'Request could not be processed.' });
+  if (status >= 500) console.error(JSON.stringify({ event: 'request_error', request_id: req.requestId, method: req.method, path: req.path, status, error_name: err.name || 'Error' }));
+  else console.warn(JSON.stringify({ event: 'request_rejected', request_id: req.requestId, method: req.method, path: req.path, status }));
+  return res.status(status).json({
+    message: status === 413 ? 'Request body is too large.' : 'Request could not be processed.',
+    request_id: req.requestId,
+  });
 });
 
 async function backfillAdminTable() {
@@ -188,6 +206,18 @@ async function ensureUserProfileColumns() {
 
   if (sequelize.getDialect() === 'mysql') {
     await sequelize.query('ALTER TABLE users MODIFY COLUMN profile_picture MEDIUMTEXT NULL;');
+  }
+}
+
+async function ensureUserSessionVersionColumn() {
+  const queryInterface = sequelize.getQueryInterface();
+  const columns = await queryInterface.describeTable('users');
+  if (!columns.session_version) {
+    await queryInterface.addColumn('users', 'session_version', {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    });
   }
 }
 
@@ -279,6 +309,7 @@ sequelize
     return sequelize.sync({ alter: false, force: false });
   })
   .then(() => ensureUserProfileColumns())
+  .then(() => ensureUserSessionVersionColumn())
   .then(() => ensureChatLogSourceColumns())
   .then(() => ensureTicketRoutingColumns())
   .then(() => ensureDepartmentMapColumns())
@@ -296,14 +327,19 @@ sequelize
     console.log(`Server running on http://localhost:${PORT}`);
 
     const etaMonitorIntervalMs = Number(process.env.ETA_MONITOR_INTERVAL_MS || 60000);
+    let etaMonitorRunning = false;
     const runEtaMonitor = async () => {
+      if (etaMonitorRunning) return;
+      etaMonitorRunning = true;
       try {
         const escalatedCount = await processMissedEtaTickets();
         if (escalatedCount > 0) {
           console.log(`Escalated ${escalatedCount} overdue ticket(s) to urgent priority.`);
         }
       } catch (error) {
-        console.error('ETA monitor failed:', error.message);
+        console.error(JSON.stringify({ event: 'eta_monitor_failed', error_name: error.name || 'Error' }));
+      } finally {
+        etaMonitorRunning = false;
       }
     };
 

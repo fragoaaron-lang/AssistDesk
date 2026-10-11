@@ -1,10 +1,11 @@
 const express = require('express');
 const ticketController = require('../controllers/ticketController');
 const authMiddleware = require('../middleware/auth');
+const { ticketCreationLimiter } = require('../middleware/rateLimits');
 
 const router = express.Router();
 
-router.post('/', authMiddleware, ticketController.createTicket);
+router.post('/', authMiddleware, ticketCreationLimiter, ticketController.createTicket);
 router.get('/', authMiddleware, ticketController.getTickets);
 router.get('/:id/assignees', authMiddleware, ticketController.getTicketAssignees);
 router.put('/:id/assignment', authMiddleware, ticketController.updateTicketAssignment);

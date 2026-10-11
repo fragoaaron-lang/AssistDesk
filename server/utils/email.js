@@ -1,16 +1,19 @@
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const { getFrontendUrl } = require('../config/security');
 
 const generateVerificationCode = () => String(crypto.randomInt(10000000, 100000000));
+const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (character) => ({
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+}[character]));
 
 const buildResetLink = (token) => {
-  const baseUrl = (process.env.FRONTEND_URL || process.env.CLIENT_URL || 'https://assist-desk-ebon.vercel.app').replace(/\/$/, '');
+  const baseUrl = getFrontendUrl();
   return `${baseUrl}/reset-password?token=${encodeURIComponent(token)}`;
-};
-
-const buildEmailVerificationLink = (token) => {
-  const baseUrl = (process.env.FRONTEND_URL || process.env.CLIENT_URL || 'https://assist-desk-ebon.vercel.app').replace(/\/$/, '');
-  return `${baseUrl}/verify-email/${encodeURIComponent(token)}`;
 };
 
 const sendEmail = async ({ to, subject, html }) => {
@@ -87,7 +90,7 @@ const createTransporter = () => {
     port: Number(process.env.MAIL_PORT || 587),
     secure: String(process.env.MAIL_SECURE || 'false') === 'true',
     auth: { user: username, pass: password },
-    tls: { rejectUnauthorized: false },
+    tls: { rejectUnauthorized: true },
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 15000,
@@ -101,7 +104,7 @@ const sendEmailVerificationEmail = async ({ to, code, userName }) => {
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937;">
         <h2 style="margin-bottom: 12px;">Verify your email address</h2>
-        <p>Hello ${userName || 'there'},</p>
+        <p>Hello ${escapeHtml(userName || 'there')},</p>
         <p>Your AssistDesk verification code is:</p>
         <p style="font-size: 28px; font-weight: 700; letter-spacing: 4px; margin: 18px 0; color: #0f172a;">${code}</p>
         <p>Enter this 8-digit code in the AssistDesk verification page to activate your account.</p>
@@ -118,13 +121,13 @@ const sendPasswordResetEmail = async ({ to, token, userName }) => {
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937;">
         <h2 style="margin-bottom: 12px;">Reset your password</h2>
-        <p>Hello ${userName || 'there'},</p>
+        <p>Hello ${escapeHtml(userName || 'there')},</p>
         <p>We received a request to reset your AssistDesk password.</p>
         <p>
-          <a href="${resetLink}" style="display: inline-block; background: #0f172a; color: #fff; padding: 10px 16px; text-decoration: none; border-radius: 8px;">Reset Password</a>
+          <a href="${escapeHtml(resetLink)}" style="display: inline-block; background: #0f172a; color: #fff; padding: 10px 16px; text-decoration: none; border-radius: 8px;">Reset Password</a>
         </p>
         <p>If the button does not work, copy and paste this link into your browser:</p>
-        <p>${resetLink}</p>
+        <p>${escapeHtml(resetLink)}</p>
         <p>This link will expire in 1 hour.</p>
       </div>
       `,
@@ -141,8 +144,8 @@ const sendTicketEtaExpiredEmail = async ({ to, userName, ticketSubject, ticketId
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 680px; margin: 0 auto;">
         <h2 style="margin-bottom: 12px; color: #b91c1c;">Ticket ETA missed</h2>
-        <p>Hello ${userName || 'there'},</p>
-        <p>The request <strong>${ticketSubject}</strong> was not resolved before its ETA of <strong>${etaLabel}</strong>.</p>
+        <p>Hello ${escapeHtml(userName || 'there')},</p>
+        <p>The request <strong>${escapeHtml(ticketSubject)}</strong> was not resolved before its ETA of <strong>${escapeHtml(etaLabel)}</strong>.</p>
         <p>As a result, the ticket has been automatically escalated to <strong>urgent</strong> priority and requires immediate attention.</p>
         <p>Please review the ticket and take the next action without delay.</p>
       </div>
@@ -156,5 +159,5 @@ module.exports = {
   sendTicketEtaExpiredEmail,
   generateVerificationCode,
   buildResetLink,
-  buildEmailVerificationLink,
+  escapeHtml,
 };

@@ -4,10 +4,12 @@ const crypto = require('crypto');
 const { User, Department, PasswordResetToken } = require('../models');
 const { sendPasswordResetEmail, sendEmailVerificationEmail, generateVerificationCode } = require('../utils/email');
 const { recordAudit } = require('../utils/auditLog');
+const { disconnectUser } = require('../utils/socket');
 const { getJwtSecret } = require('../config/security');
 
 const JWT_SECRET = getJwtSecret();
-const JWT_EXPIRES_IN = '8h';
+const JWT_EXPIRES_IN = process.env.NODE_ENV === 'production' ? '1h' : (process.env.JWT_EXPIRES_IN || '1h');
+const DUMMY_PASSWORD_HASH = bcrypt.hashSync(crypto.randomBytes(32).toString('hex'), 12);
 
 const sanitizeUser = (user) => ({
   id: user.id,
@@ -24,7 +26,7 @@ const sanitizeUser = (user) => ({
     .match(/<([^>]+)>/)?.[1] || process.env.APPEAL_CONTACT_EMAIL || process.env.MAIL_USER || process.env.MAIL_FROM || null,
 });
 
-const PASSWORD_POLICY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+const PASSWORD_POLICY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{12,128}$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const STUDENT_NUMBER_PATTERN = /^(\d{4})-\d{5}$/;
 const PUBLIC_ROLES = ['student', 'faculty', 'staff'];
@@ -51,23 +53,25 @@ const STAFF_DEPARTMENTS = [
 const TCC_INSTITUTION_NAMES = ['tcc', 'tomas claudio colleges'];
 
 const validatePassword = (password) => {
-  if (!PASSWORD_POLICY.test(password)) {
-    return 'Password must be at least 8 characters long and include an uppercase letter, lowercase letter, number, and special character.';
+  if (typeof password !== 'string' || Buffer.byteLength(password, 'utf8') > 72 || !PASSWORD_POLICY.test(password)) {
+    return 'Password must be 12–72 characters long and include an uppercase letter, lowercase letter, number, and special character.';
   }
 
   return null;
 };
 
 const signToken = (user) =>
-  jwt.sign({ id: user.id, role: user.role, department_id: user.department_id || null }, JWT_SECRET, {
+  jwt.sign({ id: user.id, role: user.role, department_id: user.department_id || null, session_version: Number(user.session_version) || 0 }, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN,
+    issuer: 'assistdesk',
+    audience: 'assistdesk-client',
   });
 
 exports.register = async (req, res) => {
   try {
     const { name, email, password, role = 'student', department_id, student_number } = req.body;
 
-    if (!name || !email || !password) {
+    if (typeof name !== 'string' || typeof email !== 'string' || typeof password !== 'string' || !name.trim() || !email.trim() || !password) {
       return res.status(400).json({ message: 'Name, email, and password are required.' });
     }
 
@@ -115,7 +119,7 @@ exports.register = async (req, res) => {
 
     const existingUser = await User.findOne({ where: { email: normalizedEmail } });
     if (existingUser) {
-      return res.status(409).json({ message: 'Email already registered.' });
+      return res.status(202).json({ message: 'If eligible, check your email to complete registration.' });
     }
 
     if (role === 'student') {
@@ -123,11 +127,11 @@ exports.register = async (req, res) => {
         where: { student_number: String(student_number || '').trim() },
       });
       if (existingStudentNumberUser) {
-        return res.status(409).json({ message: 'This student number is already in use by another account.' });
+        return res.status(202).json({ message: 'If eligible, check your email to complete registration.' });
       }
     }
 
-    const password_hash = await bcrypt.hash(password, 10);
+    const password_hash = await bcrypt.hash(password, 12);
     const verificationCode = generateVerificationCode();
     const user = await User.create({
       name: normalizedName,
@@ -137,7 +141,7 @@ exports.register = async (req, res) => {
       department_id: departmentId,
       student_number: role === 'student' ? student_number.trim() : null,
       account_status: 'pending_verification',
-      verification_token: verificationCode,
+      verification_token: crypto.createHash('sha256').update(verificationCode).digest('hex'),
     });
     try {
       await sendEmailVerificationEmail({ to: user.email, code: verificationCode, userName: user.name });
@@ -156,7 +160,7 @@ exports.register = async (req, res) => {
 
     return res.status(201).json({ message: 'Registration saved. Check your email to activate your account.' });
   } catch (error) {
-    console.error(error);
+    console.error(JSON.stringify({ event: 'registration_failed', request_id: req.requestId, error_name: error.name || 'Error' }));
     return res.status(500).json({ message: 'Registration failed. Please try again later.' });
   }
 };
@@ -175,12 +179,19 @@ exports.verifyEmail = async (req, res) => {
       include: [{ model: Department }],
     });
     if (!user) {
-      return res.status(400).json({ message: 'This account is not waiting for verification.' });
+      return res.status(400).json({ message: 'Verification could not be completed. Check the email and code, or request a new code.' });
     }
 
     const storedCode = String(user.verification_token || '').trim();
-    if (!storedCode || submittedCode !== storedCode) {
-      return res.status(400).json({ message: 'The verification code is incorrect or has expired.' });
+    const validCodeFormat = /^\d{8}$/.test(submittedCode);
+    const submittedCodeHash = validCodeFormat ? crypto.createHash('sha256').update(submittedCode).digest('hex') : '';
+    const storedCodeHash = /^[a-f0-9]{64}$/i.test(storedCode) ? storedCode : '';
+    const isHashedCodeMatch = Boolean(storedCodeHash && validCodeFormat
+      && crypto.timingSafeEqual(Buffer.from(submittedCodeHash), Buffer.from(storedCodeHash)));
+    const isLegacyCodeMatch = Boolean(/^\d{8}$/.test(storedCode) && validCodeFormat
+      && crypto.timingSafeEqual(Buffer.from(submittedCode), Buffer.from(storedCode)));
+    if (!validCodeFormat || (!isHashedCodeMatch && !isLegacyCodeMatch)) {
+      return res.status(400).json({ message: 'Verification could not be completed. Check the email and code, or request a new code.' });
     }
 
     const transaction = await User.sequelize.transaction();
@@ -206,7 +217,7 @@ exports.verifyEmail = async (req, res) => {
 
     return res.status(200).json({ message: 'Email verified. Registration complete.', token, user: sanitizeUser(user) });
   } catch (error) {
-    console.error(error);
+    console.error(JSON.stringify({ event: 'email_verification_failed', request_id: req.requestId, error_name: error.name || 'Error' }));
     return res.status(500).json({ message: 'Unable to verify email address.' });
   }
 };
@@ -220,15 +231,15 @@ exports.resendEmailVerification = async (req, res) => {
 
     const user = await User.findOne({ where: { email: normalizedEmail } });
     if (user?.account_status === 'pending_verification') {
-      const verificationCode = user.verification_token || generateVerificationCode();
-      await user.update({ verification_token: verificationCode });
+      const verificationCode = generateVerificationCode();
+      await user.update({ verification_token: crypto.createHash('sha256').update(verificationCode).digest('hex') });
       await sendEmailVerificationEmail({ to: user.email, code: verificationCode, userName: user.name });
       await recordAudit({ actor: user, action: 'account.verification_resent', entityType: 'user', entityId: user.id, departmentId: user.department_id });
     }
 
     return res.json({ message: 'If the account is waiting for verification, a new email has been sent.' });
   } catch (error) {
-    console.error(error);
+    console.error(JSON.stringify({ event: 'verification_resend_failed', request_id: req.requestId, error_name: error.name || 'Error' }));
     return res.status(500).json({ message: 'Unable to resend the verification email.' });
   }
 };
@@ -237,13 +248,15 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
+    if (typeof email !== 'string' || typeof password !== 'string' || !email.trim() || !password
+      || Buffer.byteLength(password, 'utf8') > 72 || email.length > 150) {
       return res.status(400).json({ message: 'Email and password are required.' });
     }
 
     const normalizedEmail = email.trim().toLowerCase();
     const user = await User.findOne({ where: { email: normalizedEmail }, include: [{ model: Department }] });
     if (!user) {
+      await bcrypt.compare(password, DUMMY_PASSWORD_HASH);
       await recordAudit({ actor: { name: normalizedEmail, role: 'anonymous' }, action: 'auth.login_failed', entityType: 'authentication_attempt', metadata: { attempted_email: normalizedEmail, reason: 'unknown_account' } });
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
@@ -256,7 +269,7 @@ exports.login = async (req, res) => {
 
     if (user.account_status === 'pending_verification') {
       await recordAudit({ actor: user, action: 'auth.login_denied', entityType: 'user', entityId: user.id, metadata: { reason: 'pending_verification' } });
-      return res.status(403).json({ message: 'Please verify your email address before signing in.' });
+      return res.status(401).json({ message: 'Invalid email or password.' });
     } else if (user.account_status !== 'active' && user.account_status !== 'terminated') {
       await recordAudit({ actor: user, action: 'auth.login_denied', entityType: 'user', entityId: user.id, metadata: { reason: 'inactive_account', account_status: user.account_status } });
       return res.status(403).json({ message: 'This account is not active.' });
@@ -271,17 +284,26 @@ exports.login = async (req, res) => {
       user: sanitizeUser(user),
     });
   } catch (error) {
-    console.error(error);
+    console.error(JSON.stringify({ event: 'login_failed', request_id: req.requestId, error_name: error.name || 'Error' }));
     return res.status(500).json({ message: 'Login failed.' });
   }
 };
 
 exports.logout = async (req, res) => {
   try {
-    await recordAudit({ actor: req.user, action: 'auth.logout', entityType: 'user', entityId: req.user.id, departmentId: req.user.department_id });
+    const transaction = await User.sequelize.transaction();
+    try {
+      await User.increment('session_version', { by: 1, where: { id: req.user.id }, transaction });
+      await recordAudit({ actor: req.user, action: 'auth.logout', entityType: 'user', entityId: req.user.id, departmentId: req.user.department_id, transaction });
+      await transaction.commit();
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+    disconnectUser(req.user.id);
     return res.json({ message: 'Logout recorded.' });
   } catch (error) {
-    console.error('Logout audit recording failed:', error.message);
+    console.error(JSON.stringify({ event: 'logout_audit_failed', request_id: req.requestId, error_name: error.name || 'Error' }));
     return res.status(500).json({ message: 'Unable to record logout.' });
   }
 };
@@ -295,7 +317,7 @@ exports.getMe = async (req, res) => {
 
     return res.json({ user: sanitizeUser(user) });
   } catch (error) {
-    console.error(error);
+    console.error(JSON.stringify({ event: 'profile_load_failed', request_id: req.requestId, error_name: error.name || 'Error' }));
     return res.status(500).json({ message: 'Unable to load profile.' });
   }
 };
@@ -303,32 +325,34 @@ exports.getMe = async (req, res) => {
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    if (!email) {
+    if (typeof email !== 'string' || !email.trim() || email.length > 150 || !EMAIL_PATTERN.test(email.trim())) {
       return res.status(400).json({ message: 'Email is required.' });
     }
 
     const normalizedEmail = String(email).trim().toLowerCase();
     const user = await User.findOne({ where: { email: normalizedEmail } });
     if (!user) {
-      return res.status(404).json({ message: 'User not found.' });
+      return res.json({ message: 'If an eligible account exists, password reset instructions will be sent.' });
     }
 
-    const token = crypto.randomBytes(32).toString('hex');
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const token = crypto.createHash('sha256').update(rawToken).digest('hex');
     const expires_at = new Date(Date.now() + 60 * 60 * 1000);
 
     await PasswordResetToken.destroy({ where: { email: normalizedEmail } });
     await PasswordResetToken.create({ email: normalizedEmail, token, expires_at });
     await recordAudit({ actor: user, action: 'account.password_reset_requested', entityType: 'user', entityId: user.id, departmentId: user.department_id, metadata: { expires_at: expires_at.toISOString() } });
 
-    await sendPasswordResetEmail({
-      to: normalizedEmail,
-      token,
-      userName: user.name,
-    });
+    try {
+      await sendPasswordResetEmail({ to: normalizedEmail, token: rawToken, userName: user.name });
+    } catch (emailError) {
+      await PasswordResetToken.destroy({ where: { token } });
+      console.error(JSON.stringify({ event: 'password_reset_email_failed', request_id: req.requestId, user_id: user.id, error_name: emailError.name || 'Error' }));
+    }
 
-    return res.json({ message: 'Password reset instructions have been sent to your email.' });
+    return res.json({ message: 'If an eligible account exists, password reset instructions will be sent.' });
   } catch (error) {
-    console.error(error);
+    console.error(JSON.stringify({ event: 'password_reset_request_failed', request_id: req.requestId, error_name: error.name || 'Error' }));
     return res.status(500).json({ message: 'Unable to process password reset.' });
   }
 };
@@ -345,32 +369,50 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ message: passwordError });
     }
 
-    const resetRecord = await PasswordResetToken.findOne({ where: { token } });
-    if (!resetRecord) {
+    if (typeof token !== 'string' || !/^[a-f0-9]{64}$/i.test(token)) {
       return res.status(400).json({ message: 'Invalid or expired reset token.' });
     }
-
-    if (new Date(resetRecord.expires_at) < new Date()) {
-      await resetRecord.destroy();
-      return res.status(400).json({ message: 'Reset token has expired.' });
-    }
-
-    const password_hash = await bcrypt.hash(newPassword, 10);
-    const user = await User.findOne({ where: { email: resetRecord.email } });
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const password_hash = await bcrypt.hash(newPassword, 12);
     const transaction = await User.sequelize.transaction();
     try {
-      await User.update({ password_hash }, { where: { email: resetRecord.email }, transaction });
-      if (user) await recordAudit({ actor: user, action: 'account.password_reset', entityType: 'user', entityId: user.id, departmentId: user.department_id, metadata: { method: 'email_token' }, transaction });
-      await resetRecord.destroy({ transaction });
+      const resetRecord = await PasswordResetToken.findOne({
+        where: { token: tokenHash },
+        transaction,
+        lock: transaction.LOCK.UPDATE,
+      });
+      if (!resetRecord) {
+        await transaction.rollback();
+        return res.status(400).json({ message: 'Invalid or expired reset token.' });
+      }
+      if (new Date(resetRecord.expires_at) < new Date()) {
+        await resetRecord.destroy({ transaction });
+        await transaction.commit();
+        return res.status(400).json({ message: 'Invalid or expired reset token.' });
+      }
+
+      const user = await User.findOne({ where: { email: resetRecord.email }, transaction, lock: transaction.LOCK.UPDATE });
+      if (!user) {
+        await resetRecord.destroy({ transaction });
+        await transaction.commit();
+        return res.status(400).json({ message: 'Invalid or expired reset token.' });
+      }
+
+      await user.update({ password_hash }, { transaction });
+      await User.increment('session_version', { by: 1, where: { id: user.id }, transaction });
+      await PasswordResetToken.destroy({ where: { email: resetRecord.email }, transaction });
+      await recordAudit({ actor: user, action: 'account.password_reset', entityType: 'user', entityId: user.id, departmentId: user.department_id, metadata: { method: 'email_token' }, transaction });
+      await recordAudit({ actor: user, action: 'auth.sessions_revoked', entityType: 'user', entityId: user.id, departmentId: user.department_id, metadata: { reason: 'password_reset' }, transaction });
       await transaction.commit();
     } catch (error) {
       await transaction.rollback();
       throw error;
     }
+    disconnectUser(user.id);
 
     return res.json({ message: 'Password reset successful.' });
   } catch (error) {
-    console.error(error);
+    console.error(JSON.stringify({ event: 'password_reset_failed', request_id: req.requestId, error_name: error.name || 'Error' }));
     return res.status(500).json({ message: 'Unable to reset password.' });
   }
 };
@@ -398,20 +440,24 @@ exports.changePassword = async (req, res) => {
       return res.status(401).json({ message: 'Current password is incorrect.' });
     }
 
-    const password_hash = await bcrypt.hash(newPassword, 10);
+    const password_hash = await bcrypt.hash(newPassword, 12);
     const transaction = await User.sequelize.transaction();
     try {
       await user.update({ password_hash }, { transaction });
+      await User.increment('session_version', { by: 1, where: { id: user.id }, transaction });
+      await PasswordResetToken.destroy({ where: { email: user.email }, transaction });
       await recordAudit({ actor: user, action: 'account.password_changed', entityType: 'user', entityId: user.id, departmentId: user.department_id, metadata: { method: 'self_service' }, transaction });
+      await recordAudit({ actor: user, action: 'auth.sessions_revoked', entityType: 'user', entityId: user.id, departmentId: user.department_id, metadata: { reason: 'password_changed' }, transaction });
       await transaction.commit();
     } catch (error) {
       await transaction.rollback();
       throw error;
     }
+    disconnectUser(user.id);
 
     return res.json({ message: 'Password changed successfully.' });
   } catch (error) {
-    console.error(error);
+    console.error(JSON.stringify({ event: 'password_change_failed', request_id: req.requestId, error_name: error.name || 'Error' }));
     return res.status(500).json({ message: 'Unable to change password.' });
   }
 };
@@ -436,7 +482,7 @@ exports.deleteAccount = async (req, res) => {
 
     const previousValues = { name: user.name, email: user.email, role: user.role, department_id: user.department_id, account_status: user.account_status };
     const models = require('../models');
-    const anonymizedPasswordHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
+    const anonymizedPasswordHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 12);
     const transaction = await models.sequelize.transaction();
     try {
       await models.Notification.destroy({ where: { user_id: user.id }, transaction });
@@ -469,9 +515,11 @@ exports.deleteAccount = async (req, res) => {
       throw error;
     }
 
+    disconnectUser(user.id);
+
     return res.json({ message: 'Account deleted successfully.' });
   } catch (error) {
-    console.error(error);
+    console.error(JSON.stringify({ event: 'account_self_delete_failed', request_id: req.requestId, error_name: error.name || 'Error' }));
     return res.status(500).json({ message: 'Unable to delete account.' });
   }
 };
@@ -524,7 +572,7 @@ exports.updateProfile = async (req, res) => {
       user: sanitizeUser(user),
     });
   } catch (error) {
-    console.error(error);
+    console.error(JSON.stringify({ event: 'profile_update_failed', request_id: req.requestId, error_name: error.name || 'Error' }));
     return res.status(500).json({ message: 'Unable to update profile.' });
   }
 };

@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
-const { getAllowedOrigins, getJwtSecret } = require('../config/security');
+const { getAllowedOrigins, getFrontendUrl, getJwtSecret, getTrustProxyHops } = require('../config/security');
 
 test('production requires a unique, sufficiently long JWT secret', () => {
   assert.throws(() => getJwtSecret({ NODE_ENV: 'production' }), /must be configured in production/);
@@ -41,6 +41,18 @@ test('development origins include local frontend ports', () => {
   assert.ok(origins.includes('http://localhost:3005'));
 });
 
+test('frontend reset links require HTTPS in production and discard paths', () => {
+  assert.equal(getFrontendUrl({ NODE_ENV: 'production', FRONTEND_URL: 'https://portal.example.test/subpath' }), 'https://portal.example.test');
+  assert.throws(() => getFrontendUrl({ NODE_ENV: 'production', FRONTEND_URL: 'http://portal.example.test' }), /must use HTTPS/);
+});
+
+test('trusted proxy configuration is bounded and environment-aware', () => {
+  assert.equal(getTrustProxyHops({ NODE_ENV: 'development' }), 0);
+  assert.equal(getTrustProxyHops({ NODE_ENV: 'production' }), 1);
+  assert.equal(getTrustProxyHops({ NODE_ENV: 'production', TRUST_PROXY_HOPS: '2' }), 2);
+  assert.throws(() => getTrustProxyHops({ NODE_ENV: 'production', TRUST_PROXY_HOPS: '4' }), /integer from 0 to 3/);
+});
+
 test('deployment CSP hashes the campus map script instead of allowing inline scripts', () => {
   const workspace = path.resolve(__dirname, '..');
   const mapHtml = fs.readFileSync(path.join(workspace, '../client/public/campus-map-3d-v3.html'), 'utf8');
@@ -54,9 +66,15 @@ test('deployment CSP hashes the campus map script instead of allowing inline scr
   const cspHash = `'sha256-${digest}'`;
   const vercelConfig = fs.readFileSync(path.join(workspace, '../client/vercel.json'), 'utf8');
   const expressConfig = fs.readFileSync(path.join(workspace, 'server.js'), 'utf8');
+  const externalScripts = [...mapHtml.matchAll(/<script\b([^>]*)\bsrc="([^"]+)"([^>]*)><\/script>/gi)];
 
   assert.ok(vercelConfig.includes(cspHash), 'Vercel CSP hash must match the inline campus map script');
   assert.ok(expressConfig.includes(cspHash), 'Express CSP hash must match the inline campus map script');
   assert.equal(vercelConfig.includes("script-src 'self' 'unsafe-inline'"), false);
   assert.equal(expressConfig.includes("'script-src-attr': [\"'unsafe-inline'\"]"), false);
+  assert.ok(externalScripts.length > 0);
+  externalScripts.forEach(([, before, , after]) => {
+    assert.match(`${before} ${after}`, /integrity="sha384-[A-Za-z0-9+/=]+"/);
+    assert.match(`${before} ${after}`, /crossorigin="anonymous"/);
+  });
 });

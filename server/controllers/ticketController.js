@@ -4,6 +4,8 @@ const { addTicketNumber } = require('../utils/ticketNumber');
 const { sendTicketEtaExpiredEmail } = require('../utils/email');
 const { inferDepartment } = require('../utils/departmentRouting');
 const { recordAudit } = require('../utils/auditLog');
+const { validateImageDataUrl } = require('../utils/inputValidation');
+const { Op } = require('sequelize');
 
 const withTicketTransaction = async (operation) => {
   const transaction = await Ticket.sequelize.transaction();
@@ -76,7 +78,12 @@ const mapPriorityToDatabase = (priority) => {
 
 exports.processMissedEtaTickets = async () => {
   try {
-    const tickets = await Ticket.findAll({
+    const candidates = await Ticket.findAll({
+      where: {
+        priority: { [Op.ne]: 'urgent' },
+        status: { [Op.notIn]: ['resolved', 'closed'] },
+        estimated_completion_at: { [Op.lte]: new Date() },
+      },
       include: [
         { model: Department, attributes: ['id', 'name'] },
         { model: User, attributes: ['id', 'name', 'email', 'role', 'department_id'] },
@@ -84,38 +91,23 @@ exports.processMissedEtaTickets = async () => {
       order: [['estimated_completion_at', 'ASC']],
     });
 
-    const expiredTickets = tickets.filter((ticket) => {
-      if (ticket.priority === 'urgent') return false;
-      if (['resolved', 'closed'].includes(ticket.status)) return false;
-      if (!ticket.estimated_completion_at) return false;
-      return new Date(ticket.estimated_completion_at) <= new Date();
-    });
+    let escalatedCount = 0;
+    for (const candidate of candidates) {
+      const escalation = await withTicketTransaction(async (transaction) => {
+        const ticket = await Ticket.findByPk(candidate.id, { transaction, lock: transaction.LOCK.UPDATE });
+        if (!ticket || ticket.priority === 'urgent' || ['resolved', 'closed'].includes(ticket.status)
+          || !ticket.estimated_completion_at || new Date(ticket.estimated_completion_at) > new Date()) return null;
 
-    for (const ticket of expiredTickets) {
-      const submitter = ticket.User || await User.findByPk(ticket.user_id, { attributes: ['id', 'name', 'email', 'role', 'department_id'] });
-      const departmentAdmins = await User.findAll({
-        where: { role: 'admin', department_id: ticket.department_id },
-        attributes: ['id', 'name', 'email'],
-      });
-      const fallbackAdmins = departmentAdmins.length > 0 ? departmentAdmins : await User.findAll({
-        where: { role: 'admin' },
-        attributes: ['id', 'name', 'email'],
-      });
-      const adminRecipients = [...new Map((fallbackAdmins || []).map((admin) => [admin.email, admin])).values()];
-
-      const previousPriority = ticket.priority;
-      const previousStatus = ticket.status;
-      ticket.priority = 'urgent';
-      ticket.updated_at = new Date();
-
-      const escalationMessage = `ETA expired for ticket "${ticket.subject}" and priority was automatically set to urgent.`;
-      const escalatedBy = adminRecipients[0]?.id || submitter?.id || ticket.user_id;
-      await withTicketTransaction(async (transaction) => {
+        const previousPriority = ticket.priority;
+        const previousStatus = ticket.status;
+        ticket.priority = 'urgent';
+        ticket.updated_at = new Date();
+        const escalationMessage = `ETA expired for ticket "${ticket.subject}" and priority was automatically set to urgent.`;
         await ticket.save({ transaction });
         await TicketUpdate.create({
           ticket_id: ticket.id,
           message: escalationMessage,
-          updated_by: escalatedBy,
+          updated_by: ticket.user_id,
           action: 'system_priority_escalated',
           department_id: ticket.department_id,
         }, { transaction });
@@ -130,7 +122,22 @@ exports.processMissedEtaTickets = async () => {
           metadata: { department_id: ticket.department_id, estimated_completion_at: ticket.estimated_completion_at },
           transaction,
         });
+        return { ticket, previousPriority, previousStatus };
       });
+      if (!escalation) continue;
+
+      escalatedCount += 1;
+      const { ticket } = escalation;
+      const submitter = candidate.User || await User.findByPk(ticket.user_id, { attributes: ['id', 'name', 'email', 'role', 'department_id'] });
+      const departmentAdmins = await User.findAll({
+        where: { role: 'admin', department_id: ticket.department_id },
+        attributes: ['id', 'name', 'email'],
+      });
+      const fallbackAdmins = departmentAdmins.length > 0 ? departmentAdmins : await User.findAll({
+        where: { role: 'admin' },
+        attributes: ['id', 'name', 'email'],
+      });
+      const adminRecipients = [...new Map((fallbackAdmins || []).map((admin) => [admin.email, admin])).values()];
 
       await Notification.create({
         user_id: ticket.user_id,
@@ -163,7 +170,7 @@ exports.processMissedEtaTickets = async () => {
           });
         }
       } catch (emailError) {
-        console.error('User ETA expiry email failed:', emailError.message);
+          console.error(JSON.stringify({ event: 'eta_expiry_email_failed', ticket_id: ticket.id, recipient_type: 'requester', error_name: emailError.name || 'Error' }));
       }
 
       for (const admin of adminRecipients) {
@@ -177,26 +184,43 @@ exports.processMissedEtaTickets = async () => {
             eta: ticket.estimated_completion_at,
           });
         } catch (emailError) {
-          console.error(`Admin ETA expiry email failed for ${admin.email}:`, emailError.message);
+          console.error(JSON.stringify({ event: 'eta_expiry_email_failed', ticket_id: ticket.id, recipient_type: 'administrator', error_name: emailError.name || 'Error' }));
         }
       }
     }
 
-    return expiredTickets.length;
+    return escalatedCount;
   } catch (error) {
-    console.error('ETA expiry processing failed:', error.message, error.stack);
+    console.error(JSON.stringify({ event: 'eta_expiry_processing_failed', error_name: error.name || 'Error' }));
     return 0;
   }
 };
 
 exports.createTicket = async (req, res) => {
   try {
-    const { subject, description, category = 'Other', priority = 'medium', department_id: selectedDepartmentId, estimated_completion_at, attachment_data, attachment_name, attachment_type } = req.body;
-    if (!String(subject || '').trim() || !String(description || '').trim()) {
+    const { subject, description, category = 'Other', priority = 'medium', department_id: selectedDepartmentId, attachment_data, attachment_name, attachment_type } = req.body || {};
+    if (typeof subject !== 'string' || typeof description !== 'string' || !subject.trim() || !description.trim()) {
       return res.status(400).json({ message: 'Subject and description are required.' });
+    }
+    if (subject.trim().length > 200 || description.trim().length > 10000 || typeof category !== 'string' || category.length > 80) {
+      return res.status(400).json({ message: 'Subject, description, or category exceeds the allowed length.' });
     }
     if (!['low', 'medium', 'urgent'].includes(priority)) {
       return res.status(400).json({ message: 'Priority must be low, medium, or urgent.' });
+    }
+    if (selectedDepartmentId != null && selectedDepartmentId !== ''
+      && (!/^\d+$/.test(String(selectedDepartmentId)) || Number(selectedDepartmentId) < 1)) {
+      return res.status(400).json({ message: 'Selected department is invalid.' });
+    }
+
+    const hasAttachmentFields = attachment_data != null || attachment_name != null || attachment_type != null;
+    let validatedAttachment = null;
+    if (hasAttachmentFields) {
+      try {
+        validatedAttachment = validateImageDataUrl(attachment_data, attachment_name, attachment_type);
+      } catch (validationError) {
+        return res.status(400).json({ message: validationError.message });
+      }
     }
 
     const requester = await User.findByPk(req.user.id, { include: [{ model: Department }] });
@@ -223,6 +247,9 @@ exports.createTicket = async (req, res) => {
       return res.status(403).json({ message: 'Students can only submit tickets to their own college department.' });
     }
     const isMaintenanceDepartment = resolvedDepartment?.name?.toLowerCase().includes('maintenance');
+    if (isMaintenanceDepartment && !validatedAttachment) {
+      return res.status(400).json({ message: 'Maintenance requests require a JPEG, PNG, or WEBP photo.' });
+    }
     // Map new priority names to old database values temporarily
     const databasePriority = mapPriorityToDatabase(priority);
 
@@ -233,13 +260,13 @@ exports.createTicket = async (req, res) => {
         department_id: resolvedDepartmentId,
         subject: String(subject).trim(),
         description: String(description).trim(),
-        attachment_data: attachment_data || null,
-        attachment_name: attachment_name || null,
-        attachment_type: attachment_type || null,
+        attachment_data: validatedAttachment?.data || null,
+        attachment_name: validatedAttachment?.name || null,
+        attachment_type: validatedAttachment?.type || null,
         category,
         priority: databasePriority,
         status: 'open',
-        estimated_completion_at: estimated_completion_at || getEstimatedCompletion(databasePriority),
+        estimated_completion_at: getEstimatedCompletion(databasePriority),
         routing_method: selectedDepartment ? 'user_selected' : 'automatic',
         suggested_department_id: routing.suggested_department_id,
         routing_confidence: routing.confidence,
@@ -266,26 +293,28 @@ exports.createTicket = async (req, res) => {
       });
     });
 
-    await Notification.create({
-      user_id: ticket.user_id,
-      message: `Your ticket "${subject}" has been created and routed to the assigned department.`,
-    });
+    try {
+      await Notification.create({
+        user_id: ticket.user_id,
+        message: `Your ticket "${subject}" has been created and routed to the assigned department.`,
+      });
 
-    const adminUsers = await User.findAll({ where: { role: 'admin', department_id: resolvedDepartmentId } });
-    if (adminUsers.length > 0) {
-      await Notification.bulkCreate(
-        adminUsers.map((admin) => ({
+      const adminUsers = await User.findAll({ where: { role: 'admin', department_id: resolvedDepartmentId } });
+      if (adminUsers.length > 0) {
+        await Notification.bulkCreate(adminUsers.map((admin) => ({
           user_id: admin.id,
           message: `New ticket submitted: "${subject}".`,
-        }))
-      );
-    }
-    const departmentStaff = await User.findAll({ where: { role: 'staff', department_id: resolvedDepartmentId, account_status: 'active' } });
-    if (departmentStaff.length > 0) {
-      await Notification.bulkCreate(departmentStaff.map((staffMember) => ({
-        user_id: staffMember.id,
-        message: `New ticket in your department: "${subject}".`,
-      })));
+        })));
+      }
+      const departmentStaff = await User.findAll({ where: { role: 'staff', department_id: resolvedDepartmentId, account_status: 'active' } });
+      if (departmentStaff.length > 0) {
+        await Notification.bulkCreate(departmentStaff.map((staffMember) => ({
+          user_id: staffMember.id,
+          message: `New ticket in your department: "${subject}".`,
+        })));
+      }
+    } catch (notificationError) {
+      console.error(JSON.stringify({ event: 'ticket_notification_failed', ticket_id: ticket.id, error_name: notificationError.name || 'Error' }));
     }
 
     notifyUser(ticket.user_id, 'ticketCreated', { ticket });
@@ -293,11 +322,9 @@ exports.createTicket = async (req, res) => {
     notifyDepartmentStaff(resolvedDepartmentId, 'ticketCreated', { ticket });
     notifyAdmins('ticketCreated', { ticket });
 
-    await exports.processMissedEtaTickets();
-
     return res.status(201).json(ticket);
   } catch (error) {
-    console.error('Ticket creation error:', error.message, error.stack);
+    console.error(JSON.stringify({ event: 'ticket_creation_failed', request_id: req.requestId, error_name: error.name || 'Error' }));
     return res.status(500).json({ message: 'Unable to create ticket.' });
   }
 };
@@ -409,19 +436,21 @@ exports.updateTicketStatus = async (req, res) => {
     });
     addTicketNumber(ticket);
 
-    await Notification.create({
-      user_id: ticket.user_id,
-      message: `Your ticket "${ticket.subject}" status changed to ${status}.`,
-    });
+    try {
+      await Notification.create({
+        user_id: ticket.user_id,
+        message: `Your ticket "${ticket.subject}" status changed to ${status}.`,
+      });
 
-    const adminUsers = await User.findAll({ where: { role: 'admin', department_id: ticket.department_id } });
-    if (adminUsers.length > 0) {
-      await Notification.bulkCreate(
-        adminUsers.map((admin) => ({
+      const adminUsers = await User.findAll({ where: { role: 'admin', department_id: ticket.department_id } });
+      if (adminUsers.length > 0) {
+        await Notification.bulkCreate(adminUsers.map((admin) => ({
           user_id: admin.id,
           message: `Ticket "${ticket.subject}" status updated to ${status}.`,
-        }))
-      );
+        })));
+      }
+    } catch (notificationError) {
+      console.error(JSON.stringify({ event: 'ticket_notification_failed', ticket_id: ticket.id, error_name: notificationError.name || 'Error' }));
     }
 
     notifyUser(ticket.user_id, 'ticketStatusUpdated', { ticket });
@@ -438,7 +467,7 @@ exports.updateTicketStatus = async (req, res) => {
 
 exports.updateTicketEta = async (req, res) => {
   try {
-    const { estimated_completion_at: estimatedCompletionAt } = req.body;
+    const { estimated_completion_at: estimatedCompletionAt } = req.body || {};
     const ticket = await Ticket.findByPk(req.params.id);
     if (!ticket) {
       return res.status(404).json({ message: 'Ticket not found.' });
@@ -446,8 +475,10 @@ exports.updateTicketEta = async (req, res) => {
     if (!canManageTicket(req.user, ticket)) return res.status(403).json({ message: 'Only authorized department staff can set the estimated completion time.' });
 
     const eta = new Date(estimatedCompletionAt);
-    if (!estimatedCompletionAt || Number.isNaN(eta.getTime())) {
-      return res.status(400).json({ message: 'A valid estimated completion time is required.' });
+    const now = Date.now();
+    if (!estimatedCompletionAt || Number.isNaN(eta.getTime())
+      || eta.getTime() <= now || eta.getTime() > now + 365 * 24 * 60 * 60 * 1000) {
+      return res.status(400).json({ message: 'ETA must be a valid future date within the next 365 days.' });
     }
 
     const previousEta = ticket.estimated_completion_at;
@@ -482,8 +513,6 @@ exports.updateTicketEta = async (req, res) => {
     });
     notifyUser(ticket.user_id, 'ticketEtaUpdated', { ticket, update });
     notifyDepartmentStaff(ticket.department_id, 'ticketEtaUpdated', { ticket, update });
-
-    await exports.processMissedEtaTickets();
 
     return res.json({ ticket, update });
   } catch (error) {
@@ -772,8 +801,8 @@ exports.updateTicketEta = async (req, res) => {
 
 exports.addTicketUpdate = async (req, res) => {
   try {
-    const { message } = req.body;
-    if (!message || !String(message).trim()) {
+    const { message } = req.body || {};
+    if (typeof message !== 'string' || !message.trim() || message.trim().length > 5000) {
       return res.status(400).json({ message: 'An update message is required.' });
     }
     const ticket = await Ticket.findByPk(req.params.id);

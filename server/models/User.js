@@ -57,6 +57,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
         defaultValue: null,
       },
+        session_version: {
+          type: DataTypes.INTEGER,
+          allowNull: false,
+          defaultValue: 0,
+        },
       marker_positions: {
         type: DataTypes.JSON,
         allowNull: true,

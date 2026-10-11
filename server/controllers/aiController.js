@@ -473,9 +473,9 @@ const handleTicketCommand = async (message, userId) => {
 
 exports.askAssistant = async (req, res) => {
   try {
-    const { message, assistant_name: requestedAssistantName } = req.body;
-    if (!message) {
-      return res.status(400).json({ message: 'A message is required.' });
+    const { message, assistant_name: requestedAssistantName } = req.body || {};
+    if (typeof message !== 'string' || !message.trim() || message.length > 2000) {
+      return res.status(400).json({ message: 'Message must be a non-empty string of at most 2000 characters.' });
     }
 
     const commandResult = await handleTicketCommand(message, req.user.id);

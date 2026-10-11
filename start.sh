@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 
 # Root start script used by Railpack to run the app
-# Installs server deps and starts the server from the `server/` folder
+# Reproducibly installs dependencies and starts the server from the `server/` folder
 
 set -euo pipefail
 
 echo "Installing server dependencies..."
-npm install --prefix server --no-fund --no-audit
+npm ci --prefix server --omit=dev --no-fund --no-audit
  
 if [ -d "client" ]; then
 	echo "Installing client dependencies..."
-	npm install --prefix client --no-fund --no-audit || true
+	npm ci --prefix client --no-fund --no-audit
 	echo "Building client..."
-	npm --prefix client run build || true
+	npm --prefix client run build
 fi
 
 echo "Starting server..."

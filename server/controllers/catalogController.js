@@ -22,6 +22,17 @@ const canonicalDepartments = [
   ['IT Department', 'Information Technology Department'],
 ];
 
+const pickFields = (source, fields) => Object.fromEntries(
+  fields.filter((field) => Object.prototype.hasOwnProperty.call(source || {}, field))
+    .map((field) => [field, source[field]])
+);
+
+const hasInvalidTextField = (values, limits) => Object.entries(limits).some(([field, maximum]) => (
+  Object.prototype.hasOwnProperty.call(values, field)
+  && values[field] != null
+  && (typeof values[field] !== 'string' || values[field].length > maximum)
+));
+
 const parsePagination = (req) => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 10;
@@ -129,7 +140,10 @@ exports.updateDepartment = async (req, res) => {
     if (!isOwnDepartment(req.user, department.id)) {
       return res.status(403).json({ message: 'You may only edit your own department.' });
     }
-    const updates = { ...req.body };
+    const updates = pickFields(req.body, ['name', 'description', 'point_person', 'contact_number', 'location', 'office_hours', 'map_x', 'map_y']);
+    if (hasInvalidTextField(updates, { name: 100, description: 10000, point_person: 100, contact_number: 50, location: 150, office_hours: 100 })) {
+      return res.status(400).json({ message: 'A department field has an invalid type or exceeds its maximum length.' });
+    }
     for (const coordinate of ['map_x', 'map_y']) {
       if (Object.prototype.hasOwnProperty.call(updates, coordinate)) {
         const value = updates[coordinate];
@@ -234,13 +248,17 @@ exports.updateService = async (req, res) => {
     }
     await withAuditTransaction(Service.sequelize, async (transaction) => {
       const before = service.toJSON();
-      await service.update({ ...req.body, ...(isDepartmentScopedAdmin(req.user) ? { department_id: req.user.department_id } : {}) }, { transaction });
+      const updates = pickFields(req.body, ['department_id', 'name', 'requirements', 'processing_time']);
+      if (hasInvalidTextField(updates, { name: 150, requirements: 10000, processing_time: 100 })) {
+        throw Object.assign(new Error('Invalid service field length or type.'), { status: 400 });
+      }
+      await service.update({ ...updates, ...(isDepartmentScopedAdmin(req.user) ? { department_id: req.user.department_id } : {}) }, { transaction });
       await recordAudit({ actor: req.user, action: 'catalog.service_updated', entityType: 'service', entityId: service.id, departmentId: service.department_id, before, after: service.toJSON(), transaction });
     });
     return res.json(service);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: 'Unable to update service.' });
+    return res.status(error.status || 500).json({ message: error.status === 400 ? error.message : 'Unable to update service.' });
   }
 };
 
@@ -324,13 +342,17 @@ exports.updateFaq = async (req, res) => {
     }
     await withAuditTransaction(Faq.sequelize, async (transaction) => {
       const before = faq.toJSON();
-      await faq.update({ ...req.body, ...(isDepartmentScopedAdmin(req.user) ? { department_id: req.user.department_id } : {}) }, { transaction });
+      const updates = pickFields(req.body, ['department_id', 'question', 'answer', 'keywords']);
+      if (hasInvalidTextField(updates, { question: 255, answer: 20000, keywords: 2000 })) {
+        throw Object.assign(new Error('Invalid FAQ field length or type.'), { status: 400 });
+      }
+      await faq.update({ ...updates, ...(isDepartmentScopedAdmin(req.user) ? { department_id: req.user.department_id } : {}) }, { transaction });
       await recordAudit({ actor: req.user, action: 'catalog.faq_updated', entityType: 'faq', entityId: faq.id, departmentId: faq.department_id, before, after: faq.toJSON(), transaction });
     });
     return res.json(faq);
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: 'Unable to update FAQ.' });
+    return res.status(error.status || 500).json({ message: error.status === 400 ? error.message : 'Unable to update FAQ.' });
   }
 };
 

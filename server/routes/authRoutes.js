@@ -1,17 +1,17 @@
 const express = require('express');
 const authController = require('../controllers/authController');
 const authMiddleware = require('../middleware/auth');
+const { accountRecoveryLimiter, loginLimiter, registrationLimiter } = require('../middleware/rateLimits');
 
 const router = express.Router();
 
-router.post('/register', authController.register);
-router.post('/verify-email', authController.verifyEmail);
-router.get('/verify-email/:verification_token', authController.verifyEmail);
-router.post('/resend-email-verification', authController.resendEmailVerification);
-router.post('/login', authController.login);
+router.post('/register', registrationLimiter, authController.register);
+router.post('/verify-email', accountRecoveryLimiter, authController.verifyEmail);
+router.post('/resend-email-verification', accountRecoveryLimiter, authController.resendEmailVerification);
+router.post('/login', loginLimiter, authController.login);
 router.post('/logout', authMiddleware, authController.logout);
-router.post('/forgot-password', authController.forgotPassword);
-router.post('/reset-password', authController.resetPassword);
+router.post('/forgot-password', accountRecoveryLimiter, authController.forgotPassword);
+router.post('/reset-password', accountRecoveryLimiter, authController.resetPassword);
 router.post('/change-password', authMiddleware, authController.changePassword);
 router.delete('/delete-account', authMiddleware, authController.deleteAccount);
 router.post('/profile', authMiddleware, authController.updateProfile);
