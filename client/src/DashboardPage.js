@@ -11,7 +11,6 @@ function DashboardPage() {
   const { user, token } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dashboard, setDashboard] = useState({ departments: [], services: [], announcements: [], stats: {} });
-  const [zoomLevel, setZoomLevel] = useState(1);
   const [selectedMapTicket, setSelectedMapTicket] = useState(null);
   const [hoveredMapTicket, setHoveredMapTicket] = useState(null);
   const [showWelcomeSplash, setShowWelcomeSplash] = useState(() => sessionStorage.getItem('assistdesk_show_welcome_splash') === 'true');
@@ -276,96 +275,18 @@ function DashboardPage() {
         <div className="institutional-card" style={{ marginBottom: '20px' }}>
           <div className="map-toolbar">
             <div>
-              <h3>Campus request forecast</h3>
-              <p className="map-subtitle">Live ticket activity and priority on the campus map. No GPS or route navigation.</p>
-            </div>
-            <div className="actions">
-              <button className="institutional-btn small secondary" onClick={() => setZoomLevel((value) => Math.max(0.8, value - 0.2))}>−</button>
-              <button className="institutional-btn small secondary" onClick={() => setZoomLevel(1)}>Reset</button>
-              <button className="institutional-btn small secondary" onClick={() => setZoomLevel((value) => Math.min(2.2, value + 0.2))}>+</button>
+              <h3>Campus 3D overview</h3>
+              <p className="map-subtitle">Interactive campus view with building categories and labels. This replaces the legacy heatmap.</p>
             </div>
           </div>
           <div className="map-shell">
-            <div
-              className="map-frame"
-            >
-              <div
-                className="map-image"
-                style={{ transform: `scale(${zoomLevel})` }}
-              >
-                <img src="/schoolmap.png" alt="Campus map with live ticket heat zones and priority markers" />
-                <div className="heatmap-layer" aria-hidden="true">
-                  {visibleDepartments.filter((dept) => Number(dept.ticket_count || 0) > 0 && getBuildingPosition(dept)).map((dept) => {
-                    const pos = getBuildingPosition(dept);
-                    const ticketCount = Number(dept.ticket_count || 0);
-                    return (
-                      <span
-                        key={`heat-${dept.id}`}
-                        className="heatmap-spot"
-                        style={{
-                          left: `${pos.x}%`,
-                          top: `${pos.y}%`,
-                          '--heat-opacity': getHeatStrength(ticketCount),
-                          '--heat-size': `${Math.min(34, 16 + ticketCount * 2)}%`,
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-                <div className="ticket-pin-layer">
-                  {mapTickets.map((ticket, index) => {
-                    const departmentTicketIndex = mapTickets
-                      .slice(0, index)
-                      .filter((item) => Number(item.department_id) === Number(ticket.department_id))
-                      .length;
-                    const pos = getTicketPosition(ticket, departmentTicketIndex);
-                    if (!pos) return null;
-                    return (
-                      <button
-                        type="button"
-                        key={`ticket-pin-${ticket.id}`}
-                        className={`ticket-pin ${ticket.priority || 'medium'}`}
-                        style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-                        aria-label={`${getTicketCode(ticket)}: ${getTicketMapSubject(ticket)}. ${getTicketHoverDescription(ticket)} Status: ${ticket.status || 'open'}`}
-                        onMouseEnter={() => setHoveredMapTicket(ticket)}
-                        onMouseLeave={() => setHoveredMapTicket(null)}
-                        onFocus={() => setHoveredMapTicket(ticket)}
-                        onBlur={() => setHoveredMapTicket(null)}
-                        onClick={() => { setHoveredMapTicket(null); setSelectedMapTicket(ticket); }}
-                      />
-                    );
-                  })}
-                  {hoveredMapTicket && (() => {
-                    const hoveredIndex = mapTickets.findIndex((ticket) => ticket.id === hoveredMapTicket.id);
-                    const hoveredDepartmentTicketIndex = mapTickets
-                      .slice(0, hoveredIndex)
-                      .filter((item) => Number(item.department_id) === Number(hoveredMapTicket.department_id))
-                      .length;
-                    const hoveredPosition = getTicketPosition(hoveredMapTicket, hoveredDepartmentTicketIndex);
-                    if (!hoveredPosition) return null;
-                    return (
-                      <div className="map-ticket-hover-card" style={{ left: `${hoveredPosition.x}%`, top: `${hoveredPosition.y}%` }} role="status">
-                        {renderMapTicketSummary(hoveredMapTicket, true)}
-                      </div>
-                    );
-                  })()}
-                </div>
-              </div>
-              <div className="heatmap-legend" role="region" aria-label="Map legend">
-                <strong>Priority level</strong>
-                <span>
-                  <span className="legend-swatch low" aria-hidden="true"></span>
-                  Low
-                </span>
-                <span>
-                  <span className="legend-swatch medium" aria-hidden="true"></span>
-                  Medium
-                </span>
-                <span>
-                  <span className="legend-swatch urgent" aria-hidden="true"></span>
-                  Urgent
-                </span>
-              </div>
+            <div className="map-frame campus-3d-frame">
+              <iframe
+                src="/campus-map-3d-v3.html"
+                title="Campus 3D map"
+                className="campus-map-embed"
+                loading="lazy"
+              />
             </div>
           </div>
         </div>
