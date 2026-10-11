@@ -4,36 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 
-const playLoginBell = () => {
-  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-  if (!AudioContextClass) return;
-
-  try {
-    const context = new AudioContextClass();
-    const oscillator = context.createOscillator();
-    const gainNode = context.createGain();
-
-    oscillator.type = 'triangle';
-    oscillator.frequency.setValueAtTime(880, context.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(660, context.currentTime + 0.2);
-
-    gainNode.gain.setValueAtTime(0.0001, context.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.13, context.currentTime + 0.02);
-    gainNode.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.42);
-
-    oscillator.connect(gainNode);
-    gainNode.connect(context.destination);
-
-    oscillator.start();
-    oscillator.stop(context.currentTime + 0.45);
-    oscillator.onended = () => {
-      context.close();
-    };
-  } catch (error) {
-    console.warn('Unable to play login bell sound.', error);
-  }
-};
-
 function LoginPage({ modal = false, onSwitch }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -66,8 +36,7 @@ function LoginPage({ modal = false, onSwitch }) {
       setWelcomeName(firstName);
       sessionStorage.setItem('assistdesk_show_welcome_splash', 'true');
       sessionStorage.setItem('assistdesk_welcome_name', firstName);
-      playLoginBell();
-      await new Promise((resolve) => window.setTimeout(resolve, 1200));
+      sessionStorage.setItem('assistdesk_play_login_sound', 'true');
       navigate('/dashboard');
     } catch (error) {
       if (error.response?.status === 403 && error.response?.data?.message === 'Please verify your email address before signing in.') {

@@ -14,29 +14,29 @@ body{background:radial-gradient(circle at 50% 30%,var(--bg1),var(--bg2));color:v
 #labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .lbl{position:absolute;transform:translate(-50%,-50%);font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;letter-spacing:.03em}
 .ui{position:absolute;background:var(--panel);border:1px solid var(--line);border-radius:12px;backdrop-filter:blur(8px)}
-#top{left:12px;top:calc(12px + env(safe-area-inset-top,0px));padding:10px 12px;max-width:calc(100% - 24px)}
+#top{left:12px;top:calc(12px + env(safe-area-inset-top,0px));padding:10px 12px;max-width:calc(100% - 24px);display:none}
 h1{font-size:16px;margin:0 0 8px;font-weight:700}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:4px 10px 4px 8px;font:inherit;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px}
 .chip i{width:10px;height:10px;border-radius:3px;display:inline-block}
 .chip.off{opacity:.4}
 .chip:focus-visible,.btn:focus-visible{outline:2px solid #3f8cf0;outline-offset:2px}
-#tools{right:12px;top:calc(12px + env(safe-area-inset-top,0px));padding:6px;display:flex;gap:6px}
+#tools{right:12px;top:calc(12px + env(safe-area-inset-top,0px));padding:6px;display:none;gap:6px}
 .btn{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:6px 10px;font:inherit;font-size:12px;cursor:pointer}
 .btn[aria-pressed="true"]{background:#3f8cf0;color:#fff;border-color:#3f8cf0}
-#info{left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));padding:10px 14px;min-width:220px;max-width:calc(100% - 24px)}
+#info{left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));padding:10px 14px;min-width:220px;max-width:calc(100% - 24px);display:none}
 #info b{font-size:15px;display:block}
 #info span{font-size:12px;color:var(--mute)}
-#heatmap,#ticketLayer{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+#heatmap,#ticketLayer{position:absolute;inset:0;pointer-events:none;overflow:hidden;display:none}
 .heat-dot{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,87,34,.82) 0%,rgba(255,153,0,.72) 18%,rgba(255,194,0,.45) 42%,rgba(255,194,0,.16) 58%,rgba(255,194,0,0) 78%);filter:blur(5px);box-shadow:0 0 24px rgba(255,120,40,.38),0 0 56px rgba(255,150,0,.2);opacity:1}
 .ticket-pin{position:absolute;transform:translate(-50%,-100%);display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:3px solid rgba(255,255,255,.9);box-shadow:0 0 0 2px rgba(16,24,40,.18),0 8px 18px rgba(18,33,60,.35);pointer-events:auto;cursor:pointer;font-size:9px;font-weight:800;color:#fff;line-height:1}
 .ticket-pin.low{background:#34c759}.ticket-pin.medium{background:#3b82f6}.ticket-pin.urgent{background:#ef4444}
-#legend{right:12px;bottom:calc(70px + env(safe-area-inset-bottom,0px));padding:10px 12px;min-width:180px}
+#legend{right:12px;bottom:calc(70px + env(safe-area-inset-bottom,0px));padding:10px 12px;min-width:180px;display:none}
 #legend strong{display:block;font-size:12px;margin-bottom:8px}
 #legend .row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mute);margin-bottom:4px}
 #legend .sw{width:10px;height:10px;border-radius:50%}
 #legend .sw.low{background:#34c759}#legend .sw.medium{background:#3b82f6}#legend .sw.urgent{background:#ef4444}
-@media (max-width:640px){#tools{top:auto;bottom:calc(12px + env(safe-area-inset-bottom,0px))} #info{bottom:calc(60px + env(safe-area-inset-bottom,0px))} #legend{right:12px;bottom:calc(132px + env(safe-area-inset-bottom,0px))}}
+@media (max-width:640px){#tools{top:auto;bottom:calc(12px + env(safe-area-inset-bottom,0px));display:none} #info{bottom:calc(60px + env(safe-area-inset-bottom,0px));display:none} #legend{right:12px;bottom:calc(132px + env(safe-area-inset-bottom,0px));display:none}}
 </style>
 </head>
 <body>
@@ -179,7 +179,7 @@ for(let x=600;x<860;x+=60)tree(x,670);
 [[1500,150],[1580,210],[1660,140],[1750,230],[1840,160],[1860,330],[1660,300],[1480,250]].forEach(p=>tree(...p));
 // road labels (html)
 const labels=[],lab=document.getElementById('labels');
-[['MAIN GATE ENTRANCE',440,995],['← TO MORONG TOWN PROPER',130,1046],['TO TERESA, RIZAL →',1860,1046],['FLAG POLE',918,975]].forEach(([t,x,y])=>{const e=document.createElement('div');e.className='lbl';e.textContent=t;lab.appendChild(e);labels.push({e,pos:new THREE.Vector3(x*P,.3,y*P)})});
+// background mode: hide all campus labels so the map acts purely as ambient scenery.
 const heatLayer=document.getElementById('heatmap');const ticketLayer=document.getElementById('ticketLayer');
 function worldPointFromBuildingEntry(entry){
  const [name,c,x1,y1,x2,y2,f,x]=entry;
@@ -257,7 +257,7 @@ function size(){R.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/in
 addEventListener('resize',size);size();
 const v=new THREE.Vector3();
 (function loop(){requestAnimationFrame(loop);ctl.update();R.render(S,cam);
- labels.forEach(l=>{v.copy(l.pos).project(cam);l.e.style.display=showL&&v.z<1?'block':'none';
+ labels.forEach(l=>{v.copy(l.pos).project(cam);l.e.style.display='none';
   l.e.style.left=(v.x*.5+.5)*innerWidth+'px';l.e.style.top=(-v.y*.5+.5)*innerHeight+'px'});
  syncLayers();})();
 </script>

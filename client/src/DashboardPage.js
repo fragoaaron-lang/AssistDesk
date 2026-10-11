@@ -6,6 +6,7 @@ import { getSocket } from './socket';
 import HeaderProfile from './HeaderProfile';
 import LogoutButton from './LogoutButton';
 import SidebarProfile from './SidebarProfile';
+import { playLoginBell } from './audioUtils';
 
 function DashboardPage() {
   const { user, token } = useAuth();
@@ -81,6 +82,13 @@ function DashboardPage() {
     try {
       const dashboardRes = await axios.get(`${API_BASE_URL}/api/dashboard`, { headers: { Authorization: `Bearer ${token}` } });
       setDashboard(dashboardRes.data);
+
+      if (sessionStorage.getItem('assistdesk_play_login_sound') === 'true') {
+        window.setTimeout(() => {
+          playLoginBell({ duration: 0.9 });
+          sessionStorage.removeItem('assistdesk_play_login_sound');
+        }, 350);
+      }
     } catch (error) {
       console.error('Error loading dashboard:', error);
     }
@@ -391,54 +399,6 @@ function DashboardPage() {
               <div className="queue-empty">No active departments right now.</div>
             )}
           </div>
-        </section>
-
-        <section className="dashboard-detail-grid" aria-label="Operational details and announcements">
-          <article className="dashboard-focus-panel">
-            <div className="queue-header">
-              <div>
-                <p className="eyebrow">Latest update</p>
-                <h3>Announcements</h3>
-              </div>
-            </div>
-            <div className="updates-list">
-              {dashboardHighlights.announcementList.length > 0 ? (
-                dashboardHighlights.announcementList.map((announcement) => (
-                  <div key={announcement.id || announcement.title} className="update-item">
-                    <span className="update-dot" aria-hidden="true" />
-                    <div>
-                      <strong>{announcement.title || 'Campus update'}</strong>
-                      <p>{announcement.message || 'New support message posted by the administration.'}</p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="queue-empty">No announcements posted yet.</div>
-              )}
-            </div>
-          </article>
-
-          <article className="dashboard-focus-panel">
-            <div className="queue-header">
-              <div>
-                <p className="eyebrow">Service focus</p>
-                <h3>Available support areas</h3>
-              </div>
-            </div>
-            <div className="service-list">
-              {dashboardHighlights.serviceList.length > 0 ? (
-                dashboardHighlights.serviceList.map((service) => (
-                  <div key={service.id || service.name} className="service-item">
-                    <span className="service-pill">{service.category || 'Support'}</span>
-                    <strong>{service.name || 'Service'}</strong>
-                    <small>{service.description || 'Request support and stay informed.'}</small>
-                  </div>
-                ))
-              ) : (
-                <div className="queue-empty">No service categories available.</div>
-              )}
-            </div>
-          </article>
         </section>
 
         <div className="institutional-card" style={{ marginBottom: '20px' }}>
