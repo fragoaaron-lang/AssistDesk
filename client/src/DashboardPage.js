@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
@@ -12,8 +12,6 @@ function DashboardPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dashboard, setDashboard] = useState({ departments: [], services: [], announcements: [], stats: {} });
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [selectedMapTicket, setSelectedMapTicket] = useState(null);
-  const [hoveredMapTicket, setHoveredMapTicket] = useState(null);
   const [showWelcomeSplash, setShowWelcomeSplash] = useState(() => sessionStorage.getItem('assistdesk_show_welcome_splash') === 'true');
 
   useEffect(() => {
@@ -31,25 +29,6 @@ function DashboardPage() {
   const welcomeName = (sessionStorage.getItem('assistdesk_welcome_name') || user?.name || 'User').split(' ')[0];
 
   const visibleDepartments = dashboard.departments || [];
-
-  const getPriorityByIndex = (index) => {
-    const priorities = ['low', 'medium', 'urgent'];
-    return priorities[index % 3];
-  };
-
-  const mapTickets = useMemo(() => {
-    if (dashboard.tickets && dashboard.tickets.length > 0) return dashboard.tickets;
-
-    return visibleDepartments.flatMap((department) => (
-      Array.from({ length: Number(department.ticket_count || 0) }, (_, index) => ({
-        id: `department-${department.id}-ticket-${index}`,
-        department_id: department.id,
-        subject: `Ticket ${index + 1} - ${department.name}`,
-        priority: getPriorityByIndex(index),
-        status: 'open',
-      }))
-    ));
-  }, [dashboard.tickets, visibleDepartments]);
 
   const loadData = async () => {
     try {
@@ -96,48 +75,6 @@ function DashboardPage() {
     if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || x > 100 || y < 0 || y > 100) return null;
     return { x, y };
   };
-
-  const getTicketPosition = (ticket, departmentTicketIndex) => {
-    const department = (dashboard.departments || []).find((item) => Number(item.id) === Number(ticket.department_id));
-    const basePosition = getBuildingPosition(department);
-    if (!basePosition) return null;
-    const angle = departmentTicketIndex * 2.39996;
-    const radius = departmentTicketIndex === 0 ? 0 : Math.min(7, 2.5 + departmentTicketIndex * 0.8);
-    return {
-      x: basePosition.x + Math.cos(angle) * radius,
-      y: basePosition.y + Math.sin(angle) * radius,
-    };
-  };
-
-  const getTicketHoverDescription = (ticket) => {
-    const subject = String(ticket.subject || '').replace(/\s+/g, ' ').trim();
-    const normalizedSubject = subject.toLowerCase();
-    if (normalizedSubject === 'general request' || normalizedSubject.includes('administrative')) {
-      return 'Current general issue';
-    }
-    return subject || 'Current general issue';
-  };
-
-  const getTicketMapSubject = (ticket) => {
-    const subject = String(ticket.subject || '').trim().toLowerCase();
-    return subject === 'general request' || subject.includes('administrative')
-      ? 'Current general issue'
-      : ticket.subject;
-  };
-
-  const getTicketCode = (ticket) => ticket.ticket_code || `#${ticket.id}`;
-
-  const renderMapTicketSummary = (ticket, compact = false) => (
-    <>
-      <div className="map-ticket-summary-topline">
-        <strong>{getTicketCode(ticket)}</strong>
-        <span className={`map-ticket-status ${ticket.status || 'open'}`}>{ticket.status || 'open'}</span>
-      </div>
-      <strong className="map-ticket-summary-subject">{getTicketMapSubject(ticket)}</strong>
-      <span className="map-ticket-summary-description">{getTicketHoverDescription(ticket)}</span>
-      {!compact && ticket.description && <p>{ticket.description}</p>}
-    </>
-  );
 
 
   if (showWelcomeSplash && user?.account_status !== 'terminated') {
@@ -287,7 +224,7 @@ function DashboardPage() {
           <div className="map-toolbar">
             <div>
               <h3>Campus request forecast</h3>
-              <p className="map-subtitle">Ticket activity and priority distribution on the bundled campus map. No GPS or route navigation.</p>
+              <p className="map-subtitle">Heat zones and priority markers on the bundled heatmap. No GPS or route navigation.</p>
             </div>
             <div className="actions">
               <button className="institutional-btn small secondary" onClick={() => setZoomLevel((value) => Math.max(0.8, value - 0.2))}>−</button>
@@ -303,66 +240,7 @@ function DashboardPage() {
                 className="map-image"
                 style={{ transform: `scale(${zoomLevel})` }}
               >
-                <img src="/schoolmap.png" alt="Campus map" />
-                <div className="heatmap-layer" aria-hidden="true">
-                  {visibleDepartments.filter((dept) => Number(dept.ticket_count || 0) > 0 && getBuildingPosition(dept)).map((dept) => {
-                    const pos = getBuildingPosition(dept);
-                    const ticketCount = Number(dept.ticket_count || 0);
-                    return (
-                      <span
-                        key={`heat-${dept.id}`}
-                        className="heatmap-spot"
-                        style={{
-                          left: `${pos.x}%`,
-                          top: `${pos.y}%`,
-                          '--heat-opacity': getHeatStrength(ticketCount),
-                          '--heat-size': `${Math.min(34, 16 + ticketCount * 2)}%`,
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-                <div className="ticket-pin-layer">
-                  {mapTickets.map((ticket, index) => {
-                    const departmentTicketIndex = mapTickets
-                      .slice(0, index)
-                      .filter((item) => Number(item.department_id) === Number(ticket.department_id))
-                      .length;
-                    const pos = getTicketPosition(ticket, departmentTicketIndex);
-                    if (!pos) return null;
-                    return (
-                      <button
-                        type="button"
-                        key={`ticket-pin-${ticket.id}`}
-                        className={`ticket-pin ${ticket.priority || 'medium'}`}
-                        style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-                        aria-label={`${getTicketCode(ticket)}: ${getTicketMapSubject(ticket)}. ${getTicketHoverDescription(ticket)} Status: ${ticket.status || 'open'}`}
-                        onMouseEnter={() => setHoveredMapTicket(ticket)}
-                        onMouseLeave={() => setHoveredMapTicket(null)}
-                        onFocus={() => setHoveredMapTicket(ticket)}
-                        onBlur={() => setHoveredMapTicket(null)}
-                        onClick={() => { setHoveredMapTicket(null); setSelectedMapTicket(ticket); }}
-                      />
-                    );
-                  })}
-                  {hoveredMapTicket && (() => {
-                    const hoveredIndex = mapTickets.findIndex((ticket) => ticket.id === hoveredMapTicket.id);
-                    const hoveredDepartmentTicketIndex = mapTickets
-                      .slice(0, hoveredIndex)
-                      .filter((item) => Number(item.department_id) === Number(hoveredMapTicket.department_id))
-                      .length;
-                    const hoveredPosition = getTicketPosition(hoveredMapTicket, hoveredDepartmentTicketIndex);
-                    return (
-                      <div
-                        className="map-ticket-hover-card"
-                        style={{ left: `${hoveredPosition.x}%`, top: `${hoveredPosition.y}%` }}
-                        role="status"
-                      >
-                        {renderMapTicketSummary(hoveredMapTicket, true)}
-                      </div>
-                    );
-                  })()}
-                </div>
+                <img src="/heatmap.jpg" alt="Campus request heatmap with activity zones and priority markers" />
               </div>
               <div className="heatmap-legend" role="region" aria-label="Map legend">
                 <strong>Priority level</strong>
@@ -383,20 +261,6 @@ function DashboardPage() {
           </div>
         </div>
 
-        {selectedMapTicket && (
-          <div className="map-ticket-detail-backdrop" role="presentation" onClick={() => setSelectedMapTicket(null)}>
-            <div className="map-ticket-detail" role="dialog" aria-modal="true" aria-labelledby="map-ticket-detail-title" onClick={(event) => event.stopPropagation()}>
-              <button type="button" className="map-ticket-detail-close" onClick={() => setSelectedMapTicket(null)} aria-label="Close ticket summary">×</button>
-              <p className="small-muted">Ticket details</p>
-              <h3 id="map-ticket-detail-title">{getTicketMapSubject(selectedMapTicket)}</h3>
-              <div className="map-ticket-detail-meta">
-                <span>ID: {getTicketCode(selectedMapTicket)}</span>
-                <span>Status: {selectedMapTicket.status || 'open'}</span>
-              </div>
-              <p>{getTicketHoverDescription(selectedMapTicket)}</p>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
