@@ -27,9 +27,9 @@ h1{font-size:16px;margin:0 0 8px;font-weight:700}
 #info{left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));padding:10px 14px;min-width:220px;max-width:calc(100% - 24px)}
 #info b{font-size:15px;display:block}
 #info span{font-size:12px;color:var(--mute)}
-#heatmap,#ticketLayer{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.heat-dot{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,87,34,.82) 0%,rgba(255,153,0,.72) 18%,rgba(255,194,0,.45) 42%,rgba(255,194,0,.16) 58%,rgba(255,194,0,0) 78%);filter:blur(5px);box-shadow:0 0 24px rgba(255,120,40,.38),0 0 56px rgba(255,150,0,.2);opacity:1}
-.ticket-pin{position:absolute;transform:translate(-50%,-100%);display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:3px solid rgba(255,255,255,.9);box-shadow:0 0 0 2px rgba(16,24,40,.18),0 8px 18px rgba(18,33,60,.35);pointer-events:auto;cursor:pointer;font-size:9px;font-weight:800;color:#fff;line-height:1}
+#ticketLayer{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.ticket-pin{position:absolute;transform:translate(-50%,-100%) rotate(-45deg);width:11px;height:11px;padding:0;border:2px solid #fff;border-radius:50% 50% 50% 0;box-shadow:0 1px 5px rgba(16,24,40,.55);pointer-events:auto;cursor:pointer}
+.ticket-pin::after{content:"";position:absolute;inset:3px;border-radius:50%;background:#fff;pointer-events:none}
 .ticket-pin.low{background:#34c759}.ticket-pin.medium{background:#3b82f6}.ticket-pin.urgent{background:#ef4444}
 #legend{right:12px;bottom:calc(70px + env(safe-area-inset-bottom,0px));padding:10px 12px;min-width:180px}
 #legend strong{display:block;font-size:12px;margin-bottom:8px}
@@ -42,7 +42,6 @@ h1{font-size:16px;margin:0 0 8px;font-weight:700}
 <body>
 <canvas id="c"></canvas>
 <div id="labels"></div>
-<div id="heatmap"></div>
 <div id="ticketLayer"></div>
 <div class="ui" id="top"><h1>Campus 3D Map</h1><div class="chips" id="chips"></div></div>
 <div class="ui" id="tools">
@@ -164,33 +163,21 @@ for(let x=600;x<860;x+=60)tree(x,670);
 [[1500,150],[1580,210],[1660,140],[1750,230],[1840,160],[1860,330],[1660,300],[1480,250]].forEach(p=>tree(...p));
 const labels=[],lab=document.getElementById('labels');
 [['MAIN GATE ENTRANCE',440,995],['← TO MORONG TOWN PROPER',130,1046],['TO TERESA, RIZAL →',1860,1046],['FLAG POLE',918,975]].forEach(([t,x,y])=>{const e=document.createElement('div');e.className='lbl';e.textContent=t;lab.appendChild(e);labels.push({e,pos:new THREE.Vector3(x*P,.3,y*P)})});
-const heatLayer=document.getElementById('heatmap');const ticketLayer=document.getElementById('ticketLayer');
-const heatItems=[],ticketItems=[];
+const ticketLayer=document.getElementById('ticketLayer');
+const ticketItems=[];
 function worldPointFromDepartment(department){
  if(department.map_x==null||department.map_x===''||department.map_y==null||department.map_y==='')return null;
  const x=Number(department.map_x),y=Number(department.map_y);
  if(!Number.isFinite(x)||!Number.isFinite(y)||x<0||x>100||y<0||y>100)return null;
  return new THREE.Vector3(x/100*2048*P,3.2,y/100*1095*P);
 }
-function makeHeatDot(department,count){
- const el=document.createElement('div');
- el.className='heat-dot';
- const size=Math.min(96,30+Math.sqrt(count)*18);
- el.style.width=size+'px';
- el.style.height=size+'px';
- el.style.opacity=String(Math.min(.95,.42+count*.09));
- el.title=department.name+' · '+count+' active ticket'+(count===1?'':'s');
- heatLayer.appendChild(el);
- return el;
-}
-function makeTicketPin(ticket,department,position){
+function makeTicketPin(ticket,department,position,offsetX,offsetY){
  const btn=document.createElement('button');
  btn.type='button';
  const priority=['low','medium','urgent'].includes(ticket.priority)?ticket.priority:'medium';
  btn.className='ticket-pin '+priority;
  btn.title=(ticket.ticket_code||'Ticket')+' · '+ticket.subject;
  btn.setAttribute('aria-label',btn.title+' at '+department.name);
- btn.textContent=priority[0].toUpperCase();
  btn.addEventListener('click',()=>{
    const heading=document.createElement('b');
    heading.textContent=department.name;
@@ -199,36 +186,27 @@ function makeTicketPin(ticket,department,position){
    info.replaceChildren(heading,detail);
  });
  ticketLayer.appendChild(btn);
- return {el:btn,position};
+ return {el:btn,position,offsetX,offsetY};
 }
 function syncLayers(){
  const v=new THREE.Vector3();
- const positionItem=({el,position})=>{
+ const positionItem=({el,position,offsetX,offsetY})=>{
    v.copy(position).project(cam);
    const visible=v.z>-1&&v.z<1&&Math.abs(v.x)<=1.1&&Math.abs(v.y)<=1.1;
    el.style.display=visible?'':'none';
    if(!visible)return;
-   el.style.left=(v.x*.5+.5)*innerWidth+'px';
-   el.style.top=(-v.y*.5+.5)*innerHeight+'px';
+   el.style.left=((v.x*.5+.5)*innerWidth+(offsetX||0))+'px';
+   el.style.top=((-v.y*.5+.5)*innerHeight+(offsetY||0))+'px';
  };
- heatItems.forEach(positionItem);
  ticketItems.forEach(positionItem);
 }
 function setMapData(data){
- heatItems.length=0;ticketItems.length=0;
- heatLayer.replaceChildren();ticketLayer.replaceChildren();
+ ticketItems.length=0;
+ ticketLayer.replaceChildren();
  const departments=Array.isArray(data.departments)?data.departments:[];
  const activeTickets=(Array.isArray(data.tickets)?data.tickets:[])
    .filter(ticket=>['open','pending','in_progress'].includes(ticket.status));
  const departmentsById=new Map(departments.map(department=>[String(department.id),department]));
- const counts=new Map();
- activeTickets.forEach(ticket=>counts.set(String(ticket.department_id),(counts.get(String(ticket.department_id))||0)+1));
- departments.forEach(department=>{
-   const count=counts.get(String(department.id))||0;
-   const position=worldPointFromDepartment(department);
-   if(!count||!position)return;
-   heatItems.push({el:makeHeatDot(department,count),position});
- });
  const ticketOffsets=new Map();
  activeTickets.forEach(ticket=>{
    const department=departmentsById.get(String(ticket.department_id));
@@ -236,10 +214,8 @@ function setMapData(data){
    if(!department||!base)return;
    const index=ticketOffsets.get(String(ticket.department_id))||0;
    ticketOffsets.set(String(ticket.department_id),index+1);
-   const angle=index*2.39996,radius=index===0?0:Math.min(1.2,.22+index*.08);
-   const position=base.clone();
-   position.x+=Math.cos(angle)*radius;position.z+=Math.sin(angle)*radius;
-   ticketItems.push(makeTicketPin(ticket,department,position));
+  const angle=index*2.39996,radius=index===0?0:Math.min(7,2.5+index*.45);
+  ticketItems.push(makeTicketPin(ticket,department,base,Math.cos(angle)*radius,Math.sin(angle)*radius));
  });
  syncLayers();
 }
