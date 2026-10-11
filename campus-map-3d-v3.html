@@ -28,8 +28,8 @@ h1{font-size:16px;margin:0 0 8px;font-weight:700}
 #info b{font-size:15px;display:block}
 #info span{font-size:12px;color:var(--mute)}
 #heatmap,#ticketLayer{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.heat-dot{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(239,66,66,.7) 0%,rgba(239,166,66,.52) 25%,rgba(239,196,68,.18) 52%,rgba(239,196,68,0) 78%);filter:blur(9px);box-shadow:0 0 18px rgba(239,110,66,.15)}
-.ticket-pin{position:absolute;transform:translate(-50%,-100%);display:flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.9);box-shadow:0 4px 12px rgba(18,33,60,.28);pointer-events:auto;cursor:pointer;font-size:9px;font-weight:800;color:#fff;line-height:1}
+.heat-dot{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,87,34,.82) 0%,rgba(255,153,0,.72) 18%,rgba(255,194,0,.45) 42%,rgba(255,194,0,.16) 58%,rgba(255,194,0,0) 78%);filter:blur(5px);box-shadow:0 0 24px rgba(255,120,40,.38),0 0 56px rgba(255,150,0,.2);opacity:1}
+.ticket-pin{position:absolute;transform:translate(-50%,-100%);display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:3px solid rgba(255,255,255,.9);box-shadow:0 0 0 2px rgba(16,24,40,.18),0 8px 18px rgba(18,33,60,.35);pointer-events:auto;cursor:pointer;font-size:9px;font-weight:800;color:#fff;line-height:1}
 .ticket-pin.low{background:#34c759}.ticket-pin.medium{background:#3b82f6}.ticket-pin.urgent{background:#ef4444}
 #legend{right:12px;bottom:calc(70px + env(safe-area-inset-bottom,0px));padding:10px 12px;min-width:180px}
 #legend strong{display:block;font-size:12px;margin-bottom:8px}
@@ -188,10 +188,10 @@ function worldPointFromBuildingEntry(entry){
 function makeHeatDot(entry, index){
  const el=document.createElement('div');
  el.className='heat-dot';
- const size=20 + (index % 5) * 10 + (entry[1] === 'park' ? 8 : 0);
+ const size=28 + (index % 5) * 12 + (entry[1] === 'park' ? 12 : 0);
  el.style.width=size+'px';
  el.style.height=size+'px';
- el.style.opacity=String(0.3 + (index % 5) * 0.13);
+ el.style.opacity=String(0.55 + (index % 5) * 0.15);
  heatLayer.appendChild(el);
  return el;
 }
@@ -199,7 +199,7 @@ function makeTicketPin(ticket, index){
  const btn=document.createElement('button');
  btn.type='button';
  btn.className='ticket-pin '+ticket.priority;
- btn.textContent='';
+ btn.textContent=ticket.priority[0].toUpperCase();
  btn.title=ticket.subject;
  btn.addEventListener('click',()=>{
    const [name, subject, priority]=ticket;
