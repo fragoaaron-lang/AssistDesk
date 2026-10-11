@@ -117,6 +117,15 @@ exports.register = async (req, res) => {
       return res.status(409).json({ message: 'Email already registered.' });
     }
 
+    if (role === 'student') {
+      const existingStudentNumberUser = await User.findOne({
+        where: { student_number: String(student_number || '').trim() },
+      });
+      if (existingStudentNumberUser) {
+        return res.status(409).json({ message: 'This student number is already in use by another account.' });
+      }
+    }
+
     const password_hash = await bcrypt.hash(password, 10);
     const verificationCode = generateVerificationCode();
     const user = await User.create({
