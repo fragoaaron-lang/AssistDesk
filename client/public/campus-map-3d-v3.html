@@ -93,17 +93,6 @@ const B=[
 ['PARKING|AREA','park',698,839,1139,898,0],
 ['GUARD|HOUSE','health',567,952,660,1018,1]
 ];
-const TICKETS=[
-['D.H. SORIANO|HALL (AVR)','Urgent Wi-Fi outage','urgent'],
-['INFORMATION & TECHNOLOGY|BLDG.','Laptop repair queue','medium'],
-['BUSINESS &|ACCOUNTANCY BLDG.','Finance portal issue','urgent'],
-['BASIC EDUCATION BLDG.','Classroom projector complaint','low'],
-['J.B. ANGELES BLDG.|(ADMIN BLDG.)','Document request slow','medium'],
-['MEDICAL / DENTAL|CLINIC','Maintenance request','low'],
-['BASIC EDUCATION|LIBRARY','Access card problem','medium'],
-['WORKSHOP','Equipment check-up','low'],
-['GUARD|HOUSE','Visitor pass issue','medium']
-];
 const P=.06,FH=2.6;
 const cv=document.getElementById('c');
 const R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
@@ -176,56 +165,88 @@ for(let x=600;x<860;x+=60)tree(x,670);
 const labels=[],lab=document.getElementById('labels');
 [['MAIN GATE ENTRANCE',440,995],['← TO MORONG TOWN PROPER',130,1046],['TO TERESA, RIZAL →',1860,1046],['FLAG POLE',918,975]].forEach(([t,x,y])=>{const e=document.createElement('div');e.className='lbl';e.textContent=t;lab.appendChild(e);labels.push({e,pos:new THREE.Vector3(x*P,.3,y*P)})});
 const heatLayer=document.getElementById('heatmap');const ticketLayer=document.getElementById('ticketLayer');
-function worldPointFromBuildingEntry(entry){
- const [name,c,x1,y1,x2,y2,f,x]=entry;
- return new THREE.Vector3(((x1+x2)/2)*P,3.2,((y1+y2)/2)*P);
+const heatItems=[],ticketItems=[];
+function worldPointFromDepartment(department){
+ if(department.map_x==null||department.map_x===''||department.map_y==null||department.map_y==='')return null;
+ const x=Number(department.map_x),y=Number(department.map_y);
+ if(!Number.isFinite(x)||!Number.isFinite(y)||x<0||x>100||y<0||y>100)return null;
+ return new THREE.Vector3(x/100*2048*P,3.2,y/100*1095*P);
 }
-function makeHeatDot(entry,index){
+function makeHeatDot(department,count){
  const el=document.createElement('div');
  el.className='heat-dot';
- const size=28 + (index % 5) * 12 + (entry[1] === 'park' ? 12 : 0);
+ const size=Math.min(96,30+Math.sqrt(count)*18);
  el.style.width=size+'px';
  el.style.height=size+'px';
- el.style.opacity=String(0.55 + (index % 5) * 0.15);
+ el.style.opacity=String(Math.min(.95,.42+count*.09));
+ el.title=department.name+' · '+count+' active ticket'+(count===1?'':'s');
  heatLayer.appendChild(el);
  return el;
 }
-function makeTicketPin(ticket){
+function makeTicketPin(ticket,department,position){
  const btn=document.createElement('button');
  btn.type='button';
- btn.className='ticket-pin '+ticket.priority;
- btn.title=ticket.subject;
- btn.textContent=ticket.priority[0].toUpperCase();
+ const priority=['low','medium','urgent'].includes(ticket.priority)?ticket.priority:'medium';
+ btn.className='ticket-pin '+priority;
+ btn.title=(ticket.ticket_code||'Ticket')+' · '+ticket.subject;
+ btn.setAttribute('aria-label',btn.title+' at '+department.name);
+ btn.textContent=priority[0].toUpperCase();
  btn.addEventListener('click',()=>{
-   const [name, subject, priority]=ticket;
-   info.innerHTML='<b>'+name.replace(/\|/g,' ')+'</b><span>'+subject+' · '+priority.toUpperCase()+' priority</span>';
+   const heading=document.createElement('b');
+   heading.textContent=department.name;
+   const detail=document.createElement('span');
+   detail.textContent=(ticket.ticket_code||'Ticket')+' · '+ticket.subject+' · '+ticket.status.replace('_',' ')+' · '+priority.toUpperCase()+' priority';
+   info.replaceChildren(heading,detail);
  });
  ticketLayer.appendChild(btn);
- return btn;
+ return {el:btn,position};
 }
 function syncLayers(){
- heatLayer.innerHTML='';
- ticketLayer.innerHTML='';
  const v=new THREE.Vector3();
- B.forEach((entry,index)=>{
-   const p=worldPointFromBuildingEntry(entry);
-   v.copy(p).project(cam);
-   if(v.z < -1 || v.z > 1) return;
-   const el=makeHeatDot(entry,index);
+ const positionItem=({el,position})=>{
+   v.copy(position).project(cam);
+   const visible=v.z>-1&&v.z<1&&Math.abs(v.x)<=1.1&&Math.abs(v.y)<=1.1;
+   el.style.display=visible?'':'none';
+   if(!visible)return;
    el.style.left=(v.x*.5+.5)*innerWidth+'px';
    el.style.top=(-v.y*.5+.5)*innerHeight+'px';
- });
- TICKETS.forEach((ticket)=>{
-   const match=B.find(([name])=>name.toLowerCase()===ticket[0].toLowerCase());
-   if(!match) return;
-   const p=worldPointFromBuildingEntry(match);
-   v.copy(p).project(cam);
-   if(v.z < -1 || v.z > 1) return;
-   const btn=makeTicketPin(ticket);
-   btn.style.left=(v.x*.5+.5)*innerWidth+'px';
-   btn.style.top=(-v.y*.5+.5)*innerHeight+'px';
- });
+ };
+ heatItems.forEach(positionItem);
+ ticketItems.forEach(positionItem);
 }
+function setMapData(data){
+ heatItems.length=0;ticketItems.length=0;
+ heatLayer.replaceChildren();ticketLayer.replaceChildren();
+ const departments=Array.isArray(data.departments)?data.departments:[];
+ const activeTickets=(Array.isArray(data.tickets)?data.tickets:[])
+   .filter(ticket=>['open','pending','in_progress'].includes(ticket.status));
+ const departmentsById=new Map(departments.map(department=>[String(department.id),department]));
+ const counts=new Map();
+ activeTickets.forEach(ticket=>counts.set(String(ticket.department_id),(counts.get(String(ticket.department_id))||0)+1));
+ departments.forEach(department=>{
+   const count=counts.get(String(department.id))||0;
+   const position=worldPointFromDepartment(department);
+   if(!count||!position)return;
+   heatItems.push({el:makeHeatDot(department,count),position});
+ });
+ const ticketOffsets=new Map();
+ activeTickets.forEach(ticket=>{
+   const department=departmentsById.get(String(ticket.department_id));
+   const base=department&&worldPointFromDepartment(department);
+   if(!department||!base)return;
+   const index=ticketOffsets.get(String(ticket.department_id))||0;
+   ticketOffsets.set(String(ticket.department_id),index+1);
+   const angle=index*2.39996,radius=index===0?0:Math.min(1.2,.22+index*.08);
+   const position=base.clone();
+   position.x+=Math.cos(angle)*radius;position.z+=Math.sin(angle)*radius;
+   ticketItems.push(makeTicketPin(ticket,department,position));
+ });
+ syncLayers();
+}
+addEventListener('message',event=>{
+ if(event.origin!==location.origin||event.source!==parent||event.data?.type!=='assistdesk:campus-map-data')return;
+ setMapData(event.data);
+});
 const act=new Set(Object.keys(CATS)),chips=document.getElementById('chips');
 Object.entries(CATS).forEach(([k,[n,c]])=>{const b=document.createElement('button');b.className='chip';b.innerHTML='<i style="background:'+c+'"></i>'+n;
  b.onclick=()=>{act.has(k)?act.delete(k):act.add(k);b.classList.toggle('off',!act.has(k));meshes.forEach(m=>m.visible=act.has(m.userData.c))};chips.appendChild(b)});

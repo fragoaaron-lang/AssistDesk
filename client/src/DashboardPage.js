@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
@@ -14,6 +14,7 @@ function DashboardPage() {
   const [selectedMapTicket, setSelectedMapTicket] = useState(null);
   const [hoveredMapTicket, setHoveredMapTicket] = useState(null);
   const [showWelcomeSplash, setShowWelcomeSplash] = useState(() => sessionStorage.getItem('assistdesk_show_welcome_splash') === 'true');
+  const campusMapFrame = useRef(null);
 
   useEffect(() => {
     if (!showWelcomeSplash) return;
@@ -55,6 +56,33 @@ function DashboardPage() {
       console.error('Error loading dashboard:', error);
     }
   };
+
+  const syncCampusMap = useCallback(() => {
+    const frame = campusMapFrame.current;
+    if (!frame?.contentWindow) return;
+
+    frame.contentWindow.postMessage({
+      type: 'assistdesk:campus-map-data',
+      departments: visibleDepartments.map((department) => ({
+        id: Number(department.id),
+        name: String(department.name || ''),
+        map_x: department.map_x,
+        map_y: department.map_y,
+      })),
+      tickets: (dashboard.tickets || []).map((ticket) => ({
+        id: String(ticket.id),
+        ticket_code: String(ticket.ticket_code || `#${ticket.id}`),
+        department_id: Number(ticket.department_id),
+        subject: String(ticket.subject || 'Ticket'),
+        priority: String(ticket.priority || 'medium'),
+        status: String(ticket.status || 'open'),
+      })),
+    }, window.location.origin);
+  }, [dashboard, visibleDepartments]);
+
+  useEffect(() => {
+    syncCampusMap();
+  }, [syncCampusMap]);
 
   useEffect(() => {
     if (!token || user?.account_status === 'terminated') return;
@@ -282,10 +310,12 @@ function DashboardPage() {
           <div className="map-shell">
             <div className="map-frame campus-3d-frame">
               <iframe
+                ref={campusMapFrame}
                 src="/campus-map-3d-v3.html"
                 title="Campus 3D map"
                 className="campus-map-embed"
                 loading="lazy"
+                onLoad={syncCampusMap}
               />
             </div>
           </div>
