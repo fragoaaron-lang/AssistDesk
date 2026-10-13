@@ -198,7 +198,7 @@ const getGeminiResponse = async (query, faqs, services, departments) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       system_instruction: {
-        parts: [{ text: 'You are AssistDesk, a friendly Tomas Claudio Colleges (TCC) support assistant. Only answer questions about TCC, its campus, academic programs, departments, services, school processes, or support tickets. If asked about anything outside this school-related scope, politely say you can only help with TCC questions. Use only supplied context for TCC facts and say when information is unavailable. Never claim to have performed an action you cannot perform.' }],
+        parts: [{ text: 'You are AssistDesk, a friendly assistant for Tomas Claudio Colleges (TCC) students. Help with TCC campus and service information, studying, learning concepts, homework guidance, writing, and everyday student-life questions. Politely decline topics unrelated to school or student life. For TCC-specific facts, use only the supplied context; if it does not contain the answer, say so and suggest contacting the relevant school office instead of guessing. You may explain general academic concepts using your knowledge. Never claim to have performed an action you cannot perform.' }],
       },
       contents: [{ role: 'user', parts: [{ text: `School context:\n${context}\n\nStudent question: ${query}` }] }],
       generationConfig: { temperature: 0.4, maxOutputTokens: 300 },
@@ -263,6 +263,25 @@ const buildResponse = async (query) => {
   const isConfidentMatch = Boolean(best && best.score >= 5 && !isAmbiguous);
 
   if (!isConfidentMatch) {
+    if (process.env.GEMINI_API_KEY && typeof fetch === 'function') {
+      try {
+        const generalStudentHelp = await getGeminiResponse(query, faqs, services, await Department.findAll());
+        if (generalStudentHelp) {
+          return {
+            ai_response: generalStudentHelp,
+            matched_department: null,
+            department_details: null,
+            service_details: null,
+            source: { type: 'AI', label: 'Student help' },
+            clarification_required: false,
+            escalation_available: false,
+          };
+        }
+      } catch (error) {
+        console.error(JSON.stringify({ event: 'student_help_generation_failed', error_name: error.name || 'Error' }));
+      }
+    }
+
     const clarificationOptions = rankedMatches
       .filter((match) => match.score > 0)
       .slice(0, 3)

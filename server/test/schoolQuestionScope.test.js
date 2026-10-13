@@ -16,6 +16,21 @@ test('allows questions about TCC, its campus, and school support', () => {
   schoolQuestions.forEach((question) => assert.equal(isSchoolRelatedQuestion(question), true, question));
 });
 
+test('allows everyday academic and student-life questions', () => {
+  const studentQuestions = [
+    'Can you explain photosynthesis?',
+    'Help me solve this algebra equation.',
+    'Can you proofread my essay?',
+    'Translate this paragraph into Filipino.',
+    'How can I make a study plan for exams?',
+    'How can I stop procrastinating and focus?',
+    'How do I organize my day as a student?',
+    'Can you help me prepare a resume for an internship?',
+  ];
+
+  studentQuestions.forEach((question) => assert.equal(isSchoolRelatedQuestion(question), true, question));
+});
+
 test('keeps brief conversational messages available', () => {
   ['Hello', 'Thank you', 'What can you do?'].forEach((message) => {
     assert.equal(isSchoolRelatedQuestion(message), true, message);
@@ -32,5 +47,5 @@ test('blocks questions unrelated to school', () => {
   ];
 
   unrelatedQuestions.forEach((question) => assert.equal(isSchoolRelatedQuestion(question), false, question));
-  assert.match(OUT_OF_SCOPE_RESPONSE, /only answer questions related to Tomas Claudio Colleges/i);
+  assert.match(OUT_OF_SCOPE_RESPONSE, /unrelated to school or student life/i);
 });
