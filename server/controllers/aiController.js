@@ -80,6 +80,30 @@ const scoreFaq = (query, faq, departmentIntent) => {
   return questionScore * 4 + keywordScore + specificQuestionScore + departmentScore;
 };
 
+const rankKnowledgeMatches = (query, faqs, services, searchTerms = '') => {
+  const retrievalQuery = [query, searchTerms].filter(Boolean).join(' ');
+  const departmentIntent = getDepartmentIntent(query);
+  const scoredFaqs = faqs.map((faq) => ({
+    item: faq,
+    score: scoreFaq(retrievalQuery, faq, departmentIntent),
+    sourceType: 'faq',
+  }));
+  const scoredServices = services.map((service) => ({
+    item: service,
+    score: scoreText(retrievalQuery, `${service.name} ${service.requirements || ''} ${service.processing_time || ''}`)
+      + (departmentIntent
+        ? (departmentMatchesIntent(service.Department, departmentIntent) ? 100 : -100)
+        : 0),
+    sourceType: 'service',
+  }));
+  return [...scoredFaqs, ...scoredServices].sort((first, second) => second.score - first.score);
+};
+
+const splitCompoundQuestion = (query) => String(query || '')
+  .split(/\s+(?:and|also)\s+(?=(?:how|where|what|who|when|can|do|is|are|does|should|could|will|which)\b)/i)
+  .map((part) => part.replace(/^[\s,;]+|[\s,;]+$/g, '').trim())
+  .filter(Boolean);
+
 const getLocalConversationResponse = (query) => {
   const normalizedQuery = normalize(query);
   const now = new Date();
@@ -227,7 +251,6 @@ const buildResponse = async (query, suggestedQuestionKeywords = '') => {
   const faqs = await Faq.findAll({ include: [{ model: Department }] });
   const services = await Service.findAll({ include: [{ model: Department }] });
   const normalizedQuery = normalize(query);
-  const retrievalQuery = [query, suggestedQuestionKeywords].filter(Boolean).join(' ');
   const departmentIntent = getDepartmentIntent(query);
   const exactFaq = faqs.find((faq) => normalize(faq.question) === normalizedQuery);
 
@@ -238,27 +261,65 @@ const buildResponse = async (query, suggestedQuestionKeywords = '') => {
     }
   }
 
-  const scoredFaqs = faqs
-    .map((faq) => ({
-      item: faq,
-      score: scoreFaq(retrievalQuery, faq, departmentIntent),
-    }))
-    .sort((a, b) => b.score - a.score);
+  const rankedMatches = rankKnowledgeMatches(query, faqs, services, suggestedQuestionKeywords);
 
-  const scoredServices = services
-    .map((service) => ({
-      item: service,
-      score: scoreText(retrievalQuery, `${service.name} ${service.requirements || ''} ${service.processing_time || ''}`)
-        + (departmentIntent
-          ? (departmentMatchesIntent(service.Department, departmentIntent) ? 100 : -100)
-          : 0),
-    }))
-    .sort((a, b) => b.score - a.score);
+  const questionParts = splitCompoundQuestion(query);
+  if (questionParts.length > 1) {
+    const partMatches = questionParts.flatMap((part) => {
+      const [bestMatch, secondBestMatch] = rankKnowledgeMatches(part, faqs, services);
+      if (!bestMatch || bestMatch.score < 5) return [];
+      const matches = [bestMatch];
+      if (secondBestMatch && secondBestMatch.score >= 5 && secondBestMatch.score >= bestMatch.score * 0.5) {
+        matches.push(secondBestMatch);
+      }
+      return matches;
+    });
+    const distinctPartMatches = [...new Map(partMatches.map((match) => [
+      `${match.sourceType}:${match.item.id}`,
+      match,
+    ])).values()];
 
-  const rankedMatches = [
-    ...scoredFaqs.map((match) => ({ ...match, sourceType: 'faq' })),
-    ...scoredServices.map((match) => ({ ...match, sourceType: 'service' })),
-  ].sort((first, second) => second.score - first.score);
+    if (distinctPartMatches.length > 1) {
+      const firstMatch = distinctPartMatches[0];
+      const firstDepartment = firstMatch.item.Department || await findDepartmentForIntent(await Department.findAll(), getDepartmentIntent(questionParts[0]));
+      const combinedAnswer = distinctPartMatches.map((match) => {
+        const label = match.sourceType === 'faq' ? match.item.question : match.item.name;
+        const answer = match.sourceType === 'faq'
+          ? match.item.answer
+          : [match.item.name, match.item.requirements, match.item.processing_time && `Processing time: ${match.item.processing_time}`]
+            .filter(Boolean)
+            .join('. ');
+        return `${label}: ${answer}`;
+      }).join('\n\n');
+      return {
+        ai_response: combinedAnswer,
+        matched_department: firstDepartment?.id || null,
+        matched_faq_id: firstMatch.sourceType === 'faq' ? firstMatch.item.id : null,
+        matched_service_id: firstMatch.sourceType === 'service' ? firstMatch.item.id : null,
+        source: {
+          type: distinctPartMatches.every((match) => match.sourceType === 'faq') ? 'FAQ' : 'Knowledge base',
+          id: firstMatch.item.id,
+          label: distinctPartMatches.map((match) => match.sourceType === 'faq' ? match.item.question : match.item.name).join(' + '),
+          department: firstDepartment?.name || null,
+        },
+        clarification_required: false,
+        escalation_available: false,
+        department_details: firstDepartment ? {
+          id: firstDepartment.id,
+          name: firstDepartment.name,
+          point_person: firstDepartment.point_person,
+          location: firstDepartment.location,
+          office_hours: firstDepartment.office_hours,
+        } : null,
+        service_details: firstMatch.sourceType === 'service' ? {
+          name: firstMatch.item.name,
+          requirements: firstMatch.item.requirements,
+          processing_time: firstMatch.item.processing_time,
+        } : null,
+      };
+    }
+  }
+
   const best = rankedMatches[0];
   const secondBest = rankedMatches[1];
   const isAmbiguous = Boolean(best && secondBest && best.score >= 5 && best.score - secondBest.score < 2);
