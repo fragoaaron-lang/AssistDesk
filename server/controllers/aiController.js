@@ -84,7 +84,7 @@ const getLocalConversationResponse = (query) => {
   const now = new Date();
   const greetingPattern = /(?:^|\s)(hi|hii|hey|hello|good morning|good afternoon|good evening)(?:\s|$)/;
 
-  if (/\b(what is your name|who are you|what should i call you)\b/.test(normalizedQuery)) {
+  if (/\b(what are you|what is your name|who are you|what should i call you)\b/.test(normalizedQuery)) {
     return 'I am AssistDesk, your campus support assistant. How can I help you today?';
   }
 

@@ -10,8 +10,9 @@ const studentHelpPatterns = [
 ];
 
 const conversationalPatterns = [
-  /^(hi|hello|hey|good morning|good afternoon|good evening|thanks|thank you|thx|who are you|what is your name|what can you do|how can you help|help me|help)$/,
+  /^(hi|hello|hey|good morning|good afternoon|good evening|thanks|thank you|thx|who are you|what are you|what is your name|what can you do|how can you help|help me|help)$/,
   /^(what is assistdesk|what is this app|what is this for)$/,
+  /^(what is today|what day is it|what day is today|what is the date|what is today s date|what time is it|what is the current time|current time|today s date)$/,
 ];
 
 const normalizeForScope = (value) => String(value || '')

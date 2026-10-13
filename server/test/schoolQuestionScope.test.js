@@ -32,8 +32,14 @@ test('allows everyday academic and student-life questions', () => {
 });
 
 test('keeps brief conversational messages available', () => {
-  ['Hello', 'Thank you', 'What can you do?'].forEach((message) => {
+  ['Hello', 'Thank you', 'What can you do?', 'What are you?'].forEach((message) => {
     assert.equal(isSchoolRelatedQuestion(message), true, message);
+  });
+});
+
+test('allows simple everyday date and time questions', () => {
+  ['What is today?', 'What day is it?', 'What is the date?', 'What time is it?'].forEach((question) => {
+    assert.equal(isSchoolRelatedQuestion(question), true, question);
   });
 });
 
