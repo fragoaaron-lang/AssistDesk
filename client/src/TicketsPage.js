@@ -241,6 +241,14 @@ function TicketsPage() {
   const [routingReason, setRoutingReason] = useState('');
   const uploadErrorTimeoutRef = useRef(null);
 
+  useEffect(() => {
+    const hasTicketOverlay = Boolean(selectedTicket || previewImage)
+      || ['loading', 'success'].includes(submissionState.status);
+    document.body.classList.toggle('ticket-dialog-open', hasTicketOverlay);
+
+    return () => document.body.classList.remove('ticket-dialog-open');
+  }, [selectedTicket, previewImage, submissionState.status]);
+
   const toDateTimeLocal = (value) => {
     if (!value) return '';
     const date = new Date(value);
@@ -259,7 +267,7 @@ function TicketsPage() {
     const res = await axios.get(`${API_BASE_URL}/api/tickets`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    setTickets(res.data);
+    setTickets(Array.isArray(res.data) ? res.data : []);
   };
 
   const reloadSelectedTicket = async (ticketId) => {
@@ -352,20 +360,32 @@ function TicketsPage() {
     setExpandedRoles((current) => ({ ...current, [roleName]: current[roleName] !== true }));
   };
 
-  const renderAdminTicketButton = (ticket) => (
-    <button type="button" className="admin-ticket-id-button" onClick={() => {
+  const renderTicketButton = (ticket) => (
+    <button key={ticket.id} type="button" className="ticket-record-button" onClick={() => {
       setSelectedTicket(ticket);
       setEtaDraft(toDateTimeLocal(ticket.estimated_completion_at));
       setUpdateMessage('');
       setRoutingSelection(String(ticket.department_id));
       setRoutingReason('');
       setAssignmentSelection(ticket.assigned_user_id ? String(ticket.assigned_user_id) : '');
-      axios.get(`${API_BASE_URL}/api/tickets/${ticket.id}/assignees`, { headers: { Authorization: `Bearer ${token}` } })
-        .then((response) => setStaffOptions(response.data.assignees || []))
-        .catch(() => setStaffOptions([]));
+      if (isTicketManager) {
+        axios.get(`${API_BASE_URL}/api/tickets/${ticket.id}/assignees`, { headers: { Authorization: `Bearer ${token}` } })
+          .then((response) => setStaffOptions(response.data.assignees || []))
+          .catch(() => setStaffOptions([]));
+      } else {
+        setStaffOptions([]);
+      }
       setTicketActionState('idle');
     }}>
-      {ticket.ticket_code || `#${ticket.id}`}
+      <span className="ticket-record-topline">
+        <strong>{ticket.ticket_code || `#${ticket.id}`}</strong>
+        <span className={`ticket-record-priority ${String(ticket.priority || 'medium').toLowerCase()}`}>{ticket.priority || 'medium'}</span>
+      </span>
+      <span className="ticket-record-subject">{ticket.subject || 'Request details unavailable'}</span>
+      <span className="ticket-record-meta">
+        <span className={`ticket-record-status ${String(ticket.status || 'open').toLowerCase().replace(/_/g, '-')}`}>{String(ticket.status || 'open').replace(/_/g, ' ')}</span>
+        <time dateTime={ticket.created_at || undefined}>{ticket.created_at ? new Date(ticket.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Date unavailable'}</time>
+      </span>
     </button>
   );
 
@@ -620,7 +640,7 @@ function TicketsPage() {
   };
 
   return (
-    <div className="app-shell">
+    <div className="app-shell ticket-page">
       <div className="page-shell">
         <div className={`mobile-menu-backdrop ${mobileMenuOpen ? 'show' : ''}`} onClick={() => setMobileMenuOpen(false)} />
         <header className="page-header">
@@ -720,29 +740,56 @@ function TicketsPage() {
         </div>
 
         {user?.role !== 'admin' && (
-          <div className={`institutional-card ticket-form-card ${submissionState.status === 'loading' ? 'is-submitting' : ''}`} style={{ marginBottom: '20px' }}>
-            <h3>Create a new request</h3>
-            <form onSubmit={createTicket} aria-busy={submissionState.status === 'loading'}>
-              <select className="institutional-select" value={form.department_id} onChange={(e) => handleDepartmentChange(e.target.value)}>
-                <option value="">Select a department</option>
-                {availableDepartments.map((department) => (
-                  <option key={department.id} value={department.id}>{getDepartmentDisplayName(department)}</option>
-                ))}
-              </select>
-              <select className="institutional-select" value={form.category} onChange={(e) => handleGeneralIssueChange(e.target.value)} required>
-                <option value="">Select a general issue{selectedDepartment ? ` for ${getDepartmentDisplayName(selectedDepartment)}` : ''}</option>
-                {Object.keys(generalIssueOptions).map((category) => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-              <p className="helper-text">{selectedDepartment ? `Issue categories are tailored for ${getDepartmentDisplayName(selectedDepartment)}.` : 'Choose a broad concern category; automatic routing will use it with your description.'}</p>
-              <select className="institutional-select" value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} required disabled={!form.category}>
-                <option value="">Select a specific issue or request</option>
-                {specificIssueOptions.map((subject) => (
-                  <option key={subject} value={subject}>{subject}</option>
-                ))}
-              </select>
-              <textarea className="institutional-textarea" placeholder="Current general issue" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
+          <div id="ticket-request-form" className={`institutional-card ticket-form-card ${submissionState.status === 'loading' ? 'is-submitting' : ''}`} style={{ marginBottom: '20px' }}>
+            <div className="ticket-form-heading">
+              <div>
+                <h3>Create a new request</h3>
+                <p>Share what happened so the right department can follow up.</p>
+              </div>
+            </div>
+            <form className="ticket-request-form" onSubmit={createTicket} aria-busy={submissionState.status === 'loading'}>
+              <div className="ticket-field-grid">
+                <label className="ticket-form-field" htmlFor="ticket-department">
+                  <span>Department <small>Optional</small></span>
+                  <select id="ticket-department" className="institutional-select" value={form.department_id} onChange={(e) => handleDepartmentChange(e.target.value)}>
+                    <option value="">Choose a department</option>
+                    {availableDepartments.map((department) => (
+                      <option key={department.id} value={department.id}>{getDepartmentDisplayName(department)}</option>
+                    ))}
+                  </select>
+                </label>
+                <div className="ticket-form-field">
+                  <label htmlFor="ticket-category">General issue</label>
+                  <select id="ticket-category" className="institutional-select" value={form.category} onChange={(e) => handleGeneralIssueChange(e.target.value)} required>
+                    <option value="">Choose a category</option>
+                    {Object.keys(generalIssueOptions).map((category) => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                  <small className="ticket-field-hint">{selectedDepartment ? `Categories tailored for ${getDepartmentDisplayName(selectedDepartment)}.` : 'Choose a broad category to help route your request.'}</small>
+                </div>
+                <label className="ticket-form-field" htmlFor="ticket-subject">
+                  <span>Specific issue</span>
+                  <select id="ticket-subject" className="institutional-select" value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} required disabled={!form.category}>
+                    <option value="">Choose an issue</option>
+                    {specificIssueOptions.map((subject) => (
+                      <option key={subject} value={subject}>{subject}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="ticket-form-field" htmlFor="ticket-priority">
+                  <span>Priority</span>
+                  <select id="ticket-priority" className="institutional-select" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </label>
+              </div>
+              <label className="ticket-form-field ticket-description-field" htmlFor="ticket-description">
+                <span>Describe the issue</span>
+                <textarea id="ticket-description" className="institutional-textarea" placeholder="What happened? Include the location or details that may help." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
+              </label>
               {isMaintenanceDepartment && (
                 <div className={`ticket-image-upload ${attachment ? 'has-file' : ''}`} onPaste={handleAttachmentPaste} tabIndex="0">
                   <div className="ticket-image-upload-heading">
@@ -769,22 +816,28 @@ function TicketsPage() {
                   )}
                 </div>
               )}
-              <select className="institutional-select" value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="urgent">Urgent</option>
-              </select>
               <button className="institutional-btn ticket-submit-button" type="submit" disabled={submissionState.status === 'loading'}>
                 {submissionState.status === 'loading' && <span className="ticket-submit-spinner" aria-hidden="true" />}
-                {submissionState.status === 'loading' ? 'Creating Ticket...' : 'Create Ticket'}
+                {submissionState.status === 'loading' ? 'Submitting…' : 'Create Ticket'}
               </button>
             </form>
           </div>
         )}
 
-        <div className="institutional-card">
-          <h3>Recent tickets</h3>
-          {isTicketManager ? (
+        <div className="institutional-card ticket-list-card">
+          <div className="ticket-section-heading">
+            <div>
+              <h3>Recent tickets</h3>
+              <p>{isTicketManager ? 'Select a request to review details and manage its progress.' : 'Choose a department to follow the status of your requests.'}</p>
+            </div>
+            <span className="ticket-list-count">{tickets.length} {tickets.length === 1 ? 'ticket' : 'tickets'}</span>
+          </div>
+          {tickets.length === 0 ? (
+            <div className="ticket-empty-state" role="status">
+              <strong>{isTicketManager ? 'No tickets to review' : 'No requests yet'}</strong>
+              <p>{isTicketManager ? 'New requests will appear here when they are submitted.' : 'Create a request above to start tracking progress with your support department.'}</p>
+            </div>
+          ) : isTicketManager ? (
             <div className="list-stack admin-ticket-folders">
               {adminRoleGroups.map((roleGroup) => (
                 <section key={roleGroup.key} className="ticket-department-group">
@@ -802,9 +855,9 @@ function TicketsPage() {
                             <span>{departmentGroup.name}</span>
                             <span className="ticket-department-count">{departmentGroup.tickets.length}</span>
                           </button>
-                          {expandedDepartments[`admin-${departmentGroup.key}`] === true && <div className="admin-ticket-id-list">{departmentGroup.tickets.map(renderAdminTicketButton)}</div>}
+                          {expandedDepartments[`admin-${departmentGroup.key}`] === true && <div className="ticket-record-list">{departmentGroup.tickets.map(renderTicketButton)}</div>}
                         </section>
-                      )) : <div className="admin-ticket-id-list">{roleGroup.tickets.map(renderAdminTicketButton)}</div>}
+                      )) : <div className="ticket-record-list">{roleGroup.tickets.map(renderTicketButton)}</div>}
                     </div>
                   )}
                 </section>
@@ -826,8 +879,8 @@ function TicketsPage() {
                 </button>
                 {expandedDepartments[departmentGroup.name] === true && (
                   <div className="ticket-department-contents">
-                    <div className="admin-ticket-id-list">
-                      {departmentGroup.tickets.map(renderAdminTicketButton)}
+                    <div className="ticket-record-list">
+                      {departmentGroup.tickets.map(renderTicketButton)}
                     </div>
                   </div>
                 )}
