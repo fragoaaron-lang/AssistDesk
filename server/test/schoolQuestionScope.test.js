@@ -5,6 +5,7 @@ const normalizeFaqQuery = require('../utils/normalizeFaqQuery');
 const isTorRequest = require('../utils/isTorRequest');
 const isClassScheduleRequest = require('../utils/isClassScheduleRequest');
 const isRegistrarDocumentRequest = require('../utils/isRegistrarDocumentRequest');
+const isStudentIdRequest = require('../utils/isStudentIdRequest');
 const { getClassScheduleFollowupQuery, getDepartmentScheduleAnswer, SCHEDULE_PROMPT } = require('../utils/classScheduleFollowup');
 
 test('allows questions about TCC, its campus, and school support', () => {
@@ -70,6 +71,14 @@ test('recognizes COR and COE requests and normalizes full document names', () =>
   assert.equal(isRegistrarDocumentRequest('How do I request a Certificate of Registration?'), 'cor');
   assert.equal(normalizeFaqQuery('Certificate of Enrollment'), normalizeFaqQuery('COE'));
   assert.equal(normalizeFaqQuery('Certificate of Registration'), normalizeFaqQuery('COR'));
+});
+
+test('recognizes student ID questions without treating unrelated IDs as school questions', () => {
+  ['Where to get my ID?', 'How do I replace my student ID?', 'My school ID was lost'].forEach((question) => {
+    assert.equal(isStudentIdRequest(question), true, question);
+    assert.equal(isSchoolRelatedQuestion(question), true, question);
+  });
+  assert.equal(isStudentIdRequest('Where do I get an ID for a software license?'), false);
 });
 
 test('allows everyday academic and student-life questions', () => {

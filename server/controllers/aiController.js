@@ -7,6 +7,7 @@ const normalizeFaqQuery = require('../utils/normalizeFaqQuery');
 const isTorRequest = require('../utils/isTorRequest');
 const isClassScheduleRequest = require('../utils/isClassScheduleRequest');
 const isRegistrarDocumentRequest = require('../utils/isRegistrarDocumentRequest');
+const isStudentIdRequest = require('../utils/isStudentIdRequest');
 const { getClassScheduleFollowupQuery, getDepartmentScheduleAnswer, SCHEDULE_PROMPT } = require('../utils/classScheduleFollowup');
 
 const normalize = (text) =>
@@ -257,6 +258,25 @@ const buildResponse = async (query, suggestedQuestionKeywords = '') => {
     const localResponse = getLocalConversationResponse(query);
     if (localResponse) {
       return { ai_response: localResponse, matched_department: null, department_details: null, service_details: null };
+    }
+
+    if (isStudentIdRequest(query)) {
+      const osa = findDepartmentForIntent(await Department.findAll(), 'osa');
+      return {
+        ai_response: 'If you are a college student, a new student ID is obtained at Dante’s Photo Image Studio in Morong Proper; the initial ID is charged once during enrollment. For a lost ID, have a replacement photo taken there and pay the replacement fee. Basic Education students should ask their adviser, who will announce the section photo schedule and ID release. For your specific case, contact the Office of Student Affairs.',
+        matched_department: osa?.id || null,
+        department_details: osa ? {
+          id: osa.id,
+          name: osa.name,
+          point_person: osa.point_person,
+          location: osa.location,
+          office_hours: osa.office_hours,
+        } : null,
+        service_details: null,
+        source: null,
+        clarification_required: false,
+        escalation_available: false,
+      };
     }
 
     const registrarDocumentType = isRegistrarDocumentRequest(query);
