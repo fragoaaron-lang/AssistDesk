@@ -6,6 +6,9 @@
   --cream: #f7f3e8;
   --surface: #ffffff;
   --surface-soft: #f3f7fb;
+  --surface-raised: #ffffff;
+  --surface-input: #fbfdff;
+  --page-background: #f3f7fb;
   --text: #163548;
   --muted: #5f7482;
   --border: #dce6ee;
@@ -20,6 +23,9 @@ body.dark-mode {
   --cream: #18232d;
   --surface: #15212b;
   --surface-soft: #1d2b36;
+  --surface-raised: #1b2a35;
+  --surface-input: #101b24;
+  --page-background: #0d1822;
   --text: #e8ecf1;
   --muted: #aebbc6;
   --border: #344856;
@@ -47,8 +53,30 @@ body[data-accent='gold'] {
   --gold: #d4a017;
 }
 
+body.dark-mode[data-accent='teal'] {
+  --navy: #163b5c;
+  --navy-deep: #081522;
+  --teal: #55c9bd;
+  --gold: #f4c540;
+}
+
+body.dark-mode[data-accent='navy'] {
+  --navy: #173c5b;
+  --navy-deep: #081522;
+  --teal: #79b9e7;
+  --gold: #f4c540;
+}
+
+body.dark-mode[data-accent='gold'] {
+  --navy: #344966;
+  --navy-deep: #101923;
+  --teal: #edbd68;
+  --gold: #f4c540;
+}
+
 body.dark-mode {
-  background: linear-gradient(135deg, #0d1822 0%, #172531 100%);
+  color-scheme: dark;
+  background: linear-gradient(135deg, var(--page-background), #172531);
 }
 
 * { box-sizing: border-box; }
@@ -59,11 +87,13 @@ body {
   font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(135deg, #f3f7fb 0%, #eef4f8 100%);
   color: var(--text);
+  color-scheme: light;
 }
 
 #root {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   isolation: isolate;
 }
 
@@ -1708,6 +1738,7 @@ button, input, select, textarea {
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 .report-status-bars-card { grid-column: 1 / -1; }
 .report-status-legend {
@@ -1780,6 +1811,7 @@ button, input, select, textarea {
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 .report-visual-grid {
   display: grid;
@@ -2884,7 +2916,8 @@ body.dark-mode .map-toolbar {
 
 body.dark-mode .queue-card,
 body.dark-mode .update-item,
-body.dark-mode .service-item {
+body.dark-mode .service-item,
+body.dark-mode .queue-empty {
   background: linear-gradient(180deg, rgba(21, 34, 43, 0.98), rgba(16, 28, 37, 0.92));
   border-color: rgba(102, 124, 138, 0.3);
 }
@@ -4265,3 +4298,570 @@ body.dark-mode .heatmap-legend {
 body.dark-mode .ticket-pin { border-color: #f4fbff; box-shadow: 0 2px 9px rgba(0,0,0,0.65); }
 body.dark-mode .ticket-pin::after { background: #f4fbff; }
 body.dark-mode .ticket-legend-swatch { border-color: #f4fbff; }
+
+/* Responsive app shell: safe areas, fluid content, and touch-sized controls. */
+html {
+  scroll-padding-top: 88px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  overflow-x: clip;
+  -webkit-tap-highlight-color: rgba(31, 111, 120, 0.16);
+}
+
+button,
+input,
+select,
+textarea,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid var(--teal);
+  outline-offset: 3px;
+}
+
+.app-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+}
+
+.page-shell,
+.institutional-card,
+.dashboard-overview,
+.overview-grid,
+.queue-grid,
+.map-shell,
+.analytics-section-panel,
+.report-visual-grid,
+.user-directory-card {
+  min-width: 0;
+}
+
+.report-table-scroll,
+.ticket-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.mobile-menu-drawer {
+  left: env(safe-area-inset-left);
+  width: min(320px, calc(100vw - env(safe-area-inset-left) - 24px));
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-bottom: max(18px, env(safe-area-inset-bottom));
+}
+
+.notification-dropdown {
+  max-width: calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right));
+  max-height: min(420px, calc(100dvh - 100px));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.notification-push-toggle,
+.notification-delete-btn,
+.mobile-menu-close,
+.mobile-menu-toggle,
+.user-directory-close-button,
+.user-directory-archive-button,
+.ticket-detail-close,
+.ticket-image-lightbox-close {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.ticket-detail-modal,
+.user-directory-archive-modal,
+.ticket-image-lightbox {
+  max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.chatbot-widget {
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+.chatbot-panel {
+  max-height: calc(100dvh - 96px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+body.dark-mode {
+  color-scheme: dark;
+  background-color: var(--page-background);
+  scrollbar-color: #526b78 #14232d;
+}
+
+body:not(.dark-mode) {
+  scrollbar-color: #9badb8 #eef3f6;
+}
+
+body.dark-mode ::selection {
+  background: rgba(85, 201, 189, 0.34);
+  color: #f3fbfb;
+}
+
+body:not(.dark-mode) ::selection {
+  background: rgba(31, 111, 120, 0.22);
+  color: #082038;
+}
+
+body.dark-mode .metric-card,
+body.dark-mode .catalog-faq-folder,
+body.dark-mode .catalog-faq-item,
+body.dark-mode .verification-step,
+body.dark-mode .verification-failure,
+body.dark-mode .facial-id-capture,
+body.dark-mode .account-deletion-panel,
+body.dark-mode .secondary-action-button,
+body.dark-mode .user-directory-close-button,
+body.dark-mode .report-priority-pie-center,
+body.dark-mode .report-donut::before,
+body.dark-mode .ticket-update-item,
+body.dark-mode .ticket-progress-container,
+body.dark-mode .map-ticket-hover-card,
+body.dark-mode .map-ticket-detail,
+body.dark-mode .ticket-attachment-image {
+  background: var(--surface-raised) !important;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+body.dark-mode .catalog-faq-item p,
+body.dark-mode .report-card-heading span,
+body.dark-mode .report-section-heading p,
+body.dark-mode .ticket-progress-hint,
+body.dark-mode .ticket-progress-label,
+body.dark-mode .ticket-update-item-meta,
+body.dark-mode .facial-id-copy small,
+body.dark-mode .verification-step small,
+body.dark-mode .account-deletion-text small {
+  color: var(--muted);
+}
+
+body.dark-mode .profile-name,
+body.dark-mode .profile-save-dialog h4,
+body.dark-mode .institutional-card h3,
+body.dark-mode .institutional-card h4,
+body.dark-mode .report-table th,
+body.dark-mode .report-section-heading h3,
+body.dark-mode .report-faq-bar-label strong,
+body.dark-mode .report-priority-legend-button,
+body.dark-mode .ticket-progress-step.active .ticket-progress-label,
+body.dark-mode .ticket-eta-form label,
+body.dark-mode .ticket-update-form label {
+  color: var(--text);
+}
+
+body.dark-mode .select-row select,
+body.dark-mode .report-donut::before {
+  background: var(--surface-input);
+}
+
+body.dark-mode .profile-upload-button,
+body.dark-mode .analytics-section-tabs,
+body.dark-mode .analytics-section-tab.is-active,
+body.dark-mode .report-priority-legend-button.is-selected,
+body.dark-mode .report-priority-legend-button:hover,
+body.dark-mode .report-priority-legend-button:focus-visible {
+  background: var(--surface-soft);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+body.dark-mode .profile-upload-button {
+  background: #17363b;
+  border-color: #356b6c;
+  color: #a5e1db;
+}
+
+body.dark-mode .report-donut span,
+body.dark-mode .report-priority-pie-center,
+body.dark-mode .report-department-bar-value,
+body.dark-mode .report-status-bar-column strong {
+  color: var(--text);
+}
+
+body.dark-mode .report-priority-pie-track {
+  stroke: #344856;
+}
+
+body.dark-mode .ticket-progress-step.completed .ticket-progress-label {
+  color: #75d9bc;
+}
+
+body.dark-mode .ticket-progress-dot {
+  background: var(--surface-raised);
+}
+
+body.dark-mode .landing-services,
+body.dark-mode .landing-feature,
+body.dark-mode .auth-modal,
+body.dark-mode .auth-modal-content .auth-form,
+body.dark-mode .auth-card {
+  background: var(--surface) !important;
+  color: var(--text);
+}
+
+body.dark-mode .landing-section-heading h2,
+body.dark-mode .landing-feature h3,
+body.dark-mode .auth-form h3 {
+  color: var(--text);
+}
+
+body.dark-mode .landing-feature p {
+  color: var(--muted);
+}
+
+body.dark-mode .auth-modal-close {
+  background: #263946;
+  color: var(--text);
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    padding-inline: max(14px, env(safe-area-inset-left)) max(14px, env(safe-area-inset-right));
+  }
+
+  .page-header {
+    top: max(8px, env(safe-area-inset-top));
+  }
+
+  .overview-grid,
+  .queue-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .campus-3d-frame {
+    height: min(68dvh, 680px);
+  }
+
+  .campus-map-embed {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  }
+
+  .page-header {
+    top: max(6px, env(safe-area-inset-top));
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .header-brand {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .header-brand > div:last-child {
+    min-width: 0;
+  }
+
+  .header-brand h1 {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .header-brand p {
+    max-width: 28vw;
+  }
+
+  .header-actions {
+    gap: 5px;
+  }
+
+  .header-actions .notification-button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .page-intro,
+  .overview-intro,
+  .report-card-heading,
+  .profile-summary-row,
+  .profile-section-header {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .page-intro h2 {
+    font-size: clamp(1.25rem, 5vw, 1.65rem);
+    overflow-wrap: anywhere;
+  }
+
+  .institutional-card {
+    padding: clamp(14px, 4vw, 18px);
+  }
+
+  .overview-grid {
+    gap: 10px;
+  }
+
+  .overview-stat {
+    padding: 14px;
+    border-radius: 15px;
+  }
+
+  .overview-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+  }
+
+  .queue-grid {
+    gap: 9px;
+  }
+
+  .queue-card {
+    padding: 12px 10px;
+  }
+
+  .map-toolbar .actions {
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  }
+
+  .campus-3d-frame {
+    height: min(66dvh, 560px);
+    min-height: 360px;
+  }
+
+  .campus-map-embed {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .ticket-progress-step.interactive {
+    width: auto;
+    min-width: 44px;
+    flex: 1 1 0;
+  }
+
+  .ticket-progress-label {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .ticket-detail-modal,
+  .user-directory-archive-modal {
+    width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    padding: 16px;
+  }
+
+  .ticket-detail-modal-backdrop,
+  .ticket-modal-backdrop,
+  .profile-save-dialog-backdrop {
+    align-items: start;
+    padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    overflow-y: auto;
+  }
+
+  .ticket-notice {
+    margin: auto 0;
+    width: 100%;
+    padding: 20px 16px;
+  }
+
+  .profile-save-dialog-actions,
+  .notification-confirm-actions {
+    flex-wrap: wrap;
+  }
+
+  .profile-save-dialog-actions > *,
+  .notification-confirm-actions > * {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .notification-dropdown {
+    position: fixed;
+    top: calc(env(safe-area-inset-top) + 66px);
+    right: max(12px, env(safe-area-inset-right));
+    width: min(360px, calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+    max-height: calc(100dvh - 86px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+
+  .chatbot-widget {
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  .chatbot-panel {
+    width: min(420px, calc(100vw - 24px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+    height: min(620px, calc(100dvh - 92px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));
+    max-height: calc(100dvh - 92px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+
+  .chatbot-launcher,
+  .chatbot-input button,
+  .chatbot-faq-list button,
+  .chatbot-faq-toggle {
+    min-height: 44px;
+  }
+
+  .department-map-coordinate-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  input,
+  textarea,
+  select,
+  .institutional-input,
+  .institutional-textarea,
+  .institutional-select {
+    max-width: 100%;
+    font-size: 16px;
+  }
+
+  .institutional-btn,
+  .analytics-section-tab,
+  .report-filter-actions button,
+  .inline-actions button {
+    min-height: 44px;
+  }
+
+  .mobile-menu-drawer .nav-links a,
+  .mobile-menu-drawer .nav-links .header-nav-button {
+    min-height: 48px;
+  }
+
+  body.dark-mode .system-campus-backdrop {
+    opacity: 0.12;
+  }
+}
+
+@media (max-width: 390px) {
+  .app-shell {
+    padding-inline: max(8px, env(safe-area-inset-left)) max(8px, env(safe-area-inset-right));
+  }
+
+  .page-header {
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .header-brand {
+    gap: 7px;
+  }
+
+  .header-brand .brand-badge {
+    width: 38px;
+    height: 38px;
+  }
+
+  .header-brand h1 {
+    font-size: 0.94rem;
+  }
+
+  .header-actions .institutional-btn.small {
+    padding-inline: 8px;
+    font-size: 0.72rem;
+  }
+
+  .institutional-card {
+    padding: 12px;
+  }
+
+  .overview-grid,
+  .queue-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .queue-card-topline {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .queue-card-foot {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .department-map-coordinate-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .campus-3d-frame {
+    min-height: 320px;
+  }
+}
+
+@media (max-width: 340px) {
+  .overview-grid,
+  .queue-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .header-brand p {
+    display: none;
+  }
+
+  .page-header .mobile-menu-toggle {
+    width: 40px;
+    min-width: 40px;
+  }
+
+  .header-actions .notification-button {
+    width: 40px;
+    min-width: 40px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .mobile-menu-drawer {
+    padding-top: max(10px, env(safe-area-inset-top));
+  }
+
+  .chatbot-panel {
+    height: calc(100dvh - 72px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    max-height: calc(100dvh - 72px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+}
+
+@media (pointer: coarse) {
+  .institutional-btn,
+  .mobile-menu-toggle,
+  .mobile-menu-close,
+  .notification-button,
+  .analytics-section-tab,
+  .ticket-progress-step.interactive,
+  .report-priority-legend-button {
+    min-height: 44px;
+  }
+
+  .ticket-progress-step.interactive {
+    min-width: 44px;
+  }
+}
+
+@media (hover: none) {
+  .chatbot-launcher:hover,
+  .institutional-btn:hover,
+  .report-priority-legend-button:hover,
+  .notification-button:hover {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-menu-drawer {
+    transition: none;
+  }
+}

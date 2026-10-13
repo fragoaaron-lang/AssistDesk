@@ -98,6 +98,9 @@ function ProfilePage() {
     } else {
       document.body.classList.remove('dark-mode');
     }
+    document.documentElement.style.colorScheme = prefs.darkMode ? 'dark' : 'light';
+    const themeColor = document.querySelector('meta[name="theme-color"]');
+    if (themeColor) themeColor.setAttribute('content', prefs.darkMode ? '#0d1822' : '#0f2d52');
   }, [prefs.darkMode]);
 
   useEffect(() => {

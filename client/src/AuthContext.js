@@ -14,18 +14,27 @@ const persistWelcomeName = (name) => {
 };
 
 const applySavedTheme = (currentUser) => {
-  if (!currentUser) {
-    document.body.classList.remove('dark-mode');
-    return;
+  let preferences = {};
+  try {
+    if (currentUser) {
+      const key = `assistdesk_profile_prefs_${currentUser.id ?? currentUser.email}`;
+      preferences = JSON.parse(localStorage.getItem(key) || '{}');
+    }
+  } catch (error) {
+    preferences = {};
   }
 
-  const key = `assistdesk_profile_prefs_${currentUser.id ?? currentUser.email}`;
-  try {
-    const preferences = JSON.parse(localStorage.getItem(key) || '{}');
-    document.body.classList.toggle('dark-mode', preferences.darkMode === true);
-  } catch (error) {
-    document.body.classList.remove('dark-mode');
+  const isDarkMode = preferences.darkMode === true;
+  document.body.classList.toggle('dark-mode', isDarkMode);
+  if (['teal', 'navy', 'gold'].includes(preferences.accent)) {
+    document.body.dataset.accent = preferences.accent;
+  } else {
+    document.body.dataset.accent = 'teal';
   }
+  document.documentElement.style.colorScheme = isDarkMode ? 'dark' : 'light';
+
+  const themeColor = document.querySelector('meta[name="theme-color"]');
+  if (themeColor) themeColor.setAttribute('content', isDarkMode ? '#0d1822' : '#0f2d52');
 };
 
 export const AuthProvider = ({ children }) => {
