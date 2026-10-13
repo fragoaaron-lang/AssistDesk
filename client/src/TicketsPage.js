@@ -227,6 +227,7 @@ function TicketsPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [tickets, setTickets] = useState([]);
   const [departments, setDepartments] = useState([]);
+  const [issueGroups, setIssueGroups] = useState([]);
   const [form, setForm] = useState({ subject: '', description: '', category: '', priority: 'medium', department_id: '' });
   const [attachment, setAttachment] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
@@ -288,10 +289,23 @@ function TicketsPage() {
     setDepartments(options);
   };
 
+  const loadIssueGroups = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/catalog/issues`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setIssueGroups(Array.isArray(response.data.generalIssues) ? response.data.generalIssues : []);
+    } catch (error) {
+      console.error('Unable to load catalog issue options:', error);
+      setIssueGroups([]);
+    }
+  };
+
   useEffect(() => {
     if (token) {
       loadTickets();
       loadDepartments();
+      loadIssueGroups();
     }
   }, [token]);
 
@@ -306,8 +320,6 @@ function TicketsPage() {
   }, [token]);
 
   const selectedDepartment = departments.find((department) => String(department.id) === String(form.department_id));
-  const generalIssueOptions = getDepartmentIssueOptions(selectedDepartment);
-  const specificIssueOptions = generalIssueOptions[form.category] || [];
   const studentCollegeKey = getCollegeDepartmentKey(user?.department_name);
   const availableDepartments = isCollegeStudent(user)
     ? departments.filter((department) => {
@@ -315,6 +327,16 @@ function TicketsPage() {
       return !collegeKey || collegeKey === studentCollegeKey;
     })
     : departments;
+  const visibleIssueGroups = issueGroups.filter((group) => (
+    (!form.department_id || Number(group.department_id) === Number(form.department_id))
+      && availableDepartments.some((department) => Number(department.id) === Number(group.department_id))
+  ));
+  const generalIssueOptions = visibleIssueGroups.reduce((options, group) => {
+    const specificNames = (group.specificIssues || []).map((specificIssue) => specificIssue.name);
+    options[group.name] = [...new Set([...(options[group.name] || []), ...specificNames])];
+    return options;
+  }, { ...getDepartmentIssueOptions(selectedDepartment) });
+  const specificIssueOptions = generalIssueOptions[form.category] || [];
   const visibleTickets = tickets.filter((ticket) => (
     (!statusFilter || String(ticket.status || '').toLowerCase() === statusFilter)
       && (!priorityFilter || String(ticket.priority || '').toLowerCase() === priorityFilter)

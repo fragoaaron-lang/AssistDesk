@@ -5319,6 +5319,34 @@ body.dark-mode .ticket-status-badge.closed { background: #303b44; border-color: 
   gap: 8px;
 }
 
+.catalog-issue-specific-form {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.catalog-issue-groups {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.catalog-issue-group {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+}
+
+.catalog-issue-children {
+  display: grid;
+  gap: 7px;
+  padding-left: clamp(12px, 3vw, 28px);
+}
+
+.catalog-issue-empty {
+  margin-left: clamp(12px, 3vw, 28px);
+}
+
 .catalog-record {
   display: flex;
   min-width: 0;

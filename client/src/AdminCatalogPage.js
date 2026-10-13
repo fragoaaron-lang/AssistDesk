@@ -11,12 +11,17 @@ function AdminCatalogPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [departments, setDepartments] = useState([]);
   const [services, setServices] = useState([]);
+  const [issueGroups, setIssueGroups] = useState([]);
   const [faqs, setFaqs] = useState([]);
   const [departmentForm, setDepartmentForm] = useState({ name: '', description: '', point_person: '', contact_number: '', location: '', office_hours: '', map_x: '', map_y: '' });
   const [serviceForm, setServiceForm] = useState({ department_id: '', name: '', requirements: '', processing_time: '' });
+  const [generalIssueForm, setGeneralIssueForm] = useState({ department_id: '', name: '' });
+  const [specificIssueForm, setSpecificIssueForm] = useState({ general_issue_id: '', name: '' });
   const [faqForm, setFaqForm] = useState({ department_id: '', question: '', answer: '', keywords: '' });
   const [editingDepartmentId, setEditingDepartmentId] = useState(null);
   const [editingServiceId, setEditingServiceId] = useState(null);
+  const [editingGeneralIssueId, setEditingGeneralIssueId] = useState(null);
+  const [editingSpecificIssueId, setEditingSpecificIssueId] = useState(null);
   const [editingFaqId, setEditingFaqId] = useState(null);
   const [message, setMessage] = useState('');
 
@@ -39,13 +44,15 @@ function AdminCatalogPage() {
   });
 
   const loadData = async () => {
-    const [deptRes, serviceRes, faqRes] = await Promise.all([
+    const [deptRes, serviceRes, issueRes, faqRes] = await Promise.all([
       api.get('/departments/manage'),
       api.get('/services'),
+      api.get('/issues'),
       api.get('/faqs'),
     ]);
     setDepartments(deptRes.data.departments || []);
     setServices(serviceRes.data.services || []);
+    setIssueGroups(issueRes.data.generalIssues || []);
     setFaqs(faqRes.data.faqs || []);
   };
 
@@ -72,6 +79,48 @@ function AdminCatalogPage() {
     setEditingServiceId(null);
     setServiceForm({ department_id: isDepartmentScopedAdmin ? String(user.department_id) : '', name: '', requirements: '', processing_time: '' });
     loadData();
+  };
+
+  const saveGeneralIssue = async (e) => {
+    e.preventDefault();
+    const payload = isDepartmentScopedAdmin
+      ? { ...generalIssueForm, department_id: String(user.department_id) }
+      : generalIssueForm;
+    try {
+      if (editingGeneralIssueId) await api.put(`/issues/${editingGeneralIssueId}`, payload);
+      else await api.post('/issues', payload);
+      setEditingGeneralIssueId(null);
+      setGeneralIssueForm({ department_id: '', name: '' });
+      setMessage('General issue saved.');
+      await loadData();
+    } catch (error) {
+      setMessage(error.response?.data?.message || 'Unable to save general issue.');
+    }
+  };
+
+  const saveSpecificIssue = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingSpecificIssueId) await api.put(`/specific-issues/${editingSpecificIssueId}`, { name: specificIssueForm.name });
+      else await api.post(`/issues/${specificIssueForm.general_issue_id}/specific`, { name: specificIssueForm.name });
+      setEditingSpecificIssueId(null);
+      setSpecificIssueForm({ general_issue_id: '', name: '' });
+      setMessage('Specific issue saved.');
+      await loadData();
+    } catch (error) {
+      setMessage(error.response?.data?.message || 'Unable to save specific issue.');
+    }
+  };
+
+  const deleteIssueItem = async (path, id, label) => {
+    if (!window.confirm(`Delete ${label}?${path === 'issues' ? ' Its specific issues will also be deleted.' : ''}`)) return;
+    try {
+      await api.delete(`/${path}/${id}`);
+      setMessage(`${label} deleted.`);
+      await loadData();
+    } catch (error) {
+      setMessage(error.response?.data?.message || `Unable to delete ${label}.`);
+    }
   };
 
   const createFaq = async (e) => {
@@ -225,6 +274,63 @@ function AdminCatalogPage() {
                 <button className="institutional-btn small danger" type="button" onClick={() => deleteCatalogItem('services', service.id, service.name)}>Delete</button>
               </div>
             </div>)}
+          </div>
+        </div>
+
+        <div className="institutional-card catalog-section-card" style={{ marginBottom: '20px' }}>
+          <div className="catalog-section-heading">
+            <div>
+              <h3>{editingGeneralIssueId || editingSpecificIssueId ? 'Edit Issue Options' : 'General and Specific Issues'}</h3>
+              <p>Manage the issue categories and selectable concerns shown on the ticket request form.</p>
+            </div>
+          </div>
+          <form className="catalog-form-grid" onSubmit={saveGeneralIssue}>
+            {isDepartmentScopedAdmin ? (
+              <label className="catalog-field">Department<input className="institutional-input" value={getDepartmentNameById(user.department_id)} readOnly /></label>
+            ) : (
+              <label className="catalog-field">Department<select className="institutional-select" value={generalIssueForm.department_id} onChange={(e) => setGeneralIssueForm({ ...generalIssueForm, department_id: e.target.value })} required>
+                <option value="">Select department</option>{departments.map((department) => <option key={department.id} value={department.id}>{department.display_name || department.name}</option>)}
+              </select></label>
+            )}
+            <label className="catalog-field">General issue<input className="institutional-input" placeholder="e.g. Enrollment and registration" value={generalIssueForm.name} onChange={(e) => setGeneralIssueForm({ ...generalIssueForm, name: e.target.value })} required maxLength="100" /></label>
+            <button className="institutional-btn" type="submit">{editingGeneralIssueId ? 'Update General Issue' : 'Add General Issue'}</button>
+            {editingGeneralIssueId && <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingGeneralIssueId(null); setGeneralIssueForm({ department_id: '', name: '' }); }}>Cancel edit</button>}
+          </form>
+
+          <form className="catalog-form-grid catalog-issue-specific-form" onSubmit={saveSpecificIssue}>
+            <label className="catalog-field">General issue<select className="institutional-select" value={specificIssueForm.general_issue_id} onChange={(e) => setSpecificIssueForm({ ...specificIssueForm, general_issue_id: e.target.value })} required disabled={Boolean(editingSpecificIssueId) || issueGroups.length === 0}>
+              <option value="">Select a general issue</option>{issueGroups.map((group) => <option key={group.id} value={group.id}>{group.name} — {group.Department?.display_name || group.Department?.name || 'Department'}</option>)}
+            </select></label>
+            <label className="catalog-field">Specific issue<input className="institutional-input" placeholder="e.g. Add or drop a subject" value={specificIssueForm.name} onChange={(e) => setSpecificIssueForm({ ...specificIssueForm, name: e.target.value })} required maxLength="150" /></label>
+            <button className="institutional-btn" type="submit" disabled={!editingSpecificIssueId && issueGroups.length === 0}>{editingSpecificIssueId ? 'Update Specific Issue' : 'Add Specific Issue'}</button>
+            {editingSpecificIssueId && <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingSpecificIssueId(null); setSpecificIssueForm({ general_issue_id: '', name: '' }); }}>Cancel edit</button>}
+          </form>
+
+          <div className="catalog-issue-groups" aria-label="General and specific issue list">
+            {issueGroups.length === 0 ? <p className="catalog-empty-state">No issue categories have been added yet.</p> : issueGroups.map((group) => (
+              <section className="catalog-issue-group" key={group.id}>
+                <div className="catalog-record">
+                  <div className="catalog-record-copy"><strong>{group.name}</strong><span>{group.Department?.display_name || group.Department?.name || 'Department unavailable'}</span><small>{(group.specificIssues || []).length} specific issues</small></div>
+                  <div className="inline-actions">
+                    <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingGeneralIssueId(group.id); setEditingSpecificIssueId(null); setGeneralIssueForm({ department_id: String(group.department_id), name: group.name || '' }); }}>Edit</button>
+                    <button className="institutional-btn small danger" type="button" onClick={() => deleteIssueItem('issues', group.id, group.name)}>Delete</button>
+                  </div>
+                </div>
+                {(group.specificIssues || []).length > 0 ? (
+                  <div className="catalog-issue-children">
+                    {group.specificIssues.map((specificIssue) => (
+                      <div className="catalog-record" key={specificIssue.id}>
+                        <div className="catalog-record-copy"><strong>{specificIssue.name}</strong></div>
+                        <div className="inline-actions">
+                          <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingSpecificIssueId(specificIssue.id); setEditingGeneralIssueId(null); setSpecificIssueForm({ general_issue_id: String(group.id), name: specificIssue.name || '' }); }}>Edit</button>
+                          <button className="institutional-btn small danger" type="button" onClick={() => deleteIssueItem('specific-issues', specificIssue.id, specificIssue.name)}>Delete</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : <p className="catalog-empty-state catalog-issue-empty">No specific issues yet.</p>}
+              </section>
+            ))}
           </div>
         </div>
 
