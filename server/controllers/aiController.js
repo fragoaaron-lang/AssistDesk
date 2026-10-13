@@ -2,6 +2,7 @@ const { Faq, Service, Department, User, ChatLog, Ticket, TicketUpdate, Notificat
 const { notifyUser, notifyAdmins, notifyDepartmentAdmins, notifyDepartmentStaff } = require('../utils/socket');
 const { addTicketNumber } = require('../utils/ticketNumber');
 const { inferDepartment } = require('../utils/departmentRouting');
+const { isSchoolRelatedQuestion, OUT_OF_SCOPE_RESPONSE } = require('../utils/schoolQuestionScope');
 
 const normalize = (text) =>
   String(text || '')
@@ -197,7 +198,7 @@ const getGeminiResponse = async (query, faqs, services, departments) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       system_instruction: {
-        parts: [{ text: 'You are AssistDesk, a friendly student help center assistant. Answer everyday questions naturally and briefly. For campus facts, use only the supplied context and say you do not have that information when it is missing. Never claim to have performed an action you cannot perform.' }],
+        parts: [{ text: 'You are AssistDesk, a friendly Tomas Claudio Colleges (TCC) support assistant. Only answer questions about TCC, its campus, academic programs, departments, services, school processes, or support tickets. If asked about anything outside this school-related scope, politely say you can only help with TCC questions. Use only supplied context for TCC facts and say when information is unavailable. Never claim to have performed an action you cannot perform.' }],
       },
       contents: [{ role: 'user', parts: [{ text: `School context:\n${context}\n\nStudent question: ${query}` }] }],
       generationConfig: { temperature: 0.4, maxOutputTokens: 300 },
@@ -210,6 +211,18 @@ const getGeminiResponse = async (query, faqs, services, departments) => {
 };
 
 const buildResponse = async (query) => {
+  if (!isSchoolRelatedQuestion(query)) {
+    return {
+      ai_response: OUT_OF_SCOPE_RESPONSE,
+      matched_department: null,
+      department_details: null,
+      service_details: null,
+      source: null,
+      clarification_required: false,
+      escalation_available: false,
+    };
+  }
+
   const faqs = await Faq.findAll({ include: [{ model: Department }] });
   const services = await Service.findAll({ include: [{ model: Department }] });
   const normalizedQuery = normalize(query);
