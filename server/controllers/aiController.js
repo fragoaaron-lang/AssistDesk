@@ -5,6 +5,7 @@ const { inferDepartment } = require('../utils/departmentRouting');
 const { isSchoolRelatedQuestion, OUT_OF_SCOPE_RESPONSE } = require('../utils/schoolQuestionScope');
 const normalizeFaqQuery = require('../utils/normalizeFaqQuery');
 const isTorRequest = require('../utils/isTorRequest');
+const isClassScheduleRequest = require('../utils/isClassScheduleRequest');
 
 const normalize = (text) =>
   String(text || '')
@@ -254,6 +255,18 @@ const buildResponse = async (query, suggestedQuestionKeywords = '') => {
     const localResponse = getLocalConversationResponse(query);
     if (localResponse) {
       return { ai_response: localResponse, matched_department: null, department_details: null, service_details: null };
+    }
+
+    if (isClassScheduleRequest(query)) {
+      return {
+        ai_response: 'Class schedules are department-specific. They are usually shared during enrollment or by your adviser or dean’s office; some departments also post them on a bulletin board, group chat, or official page. Check your department’s latest announcement, or tell me your program so I can point you to the relevant department information.',
+        matched_department: null,
+        department_details: null,
+        service_details: null,
+        source: null,
+        clarification_required: false,
+        escalation_available: false,
+      };
     }
 
     if (isTorRequest(query)) {

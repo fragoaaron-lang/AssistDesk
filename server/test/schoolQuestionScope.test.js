@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const { isSchoolRelatedQuestion, OUT_OF_SCOPE_RESPONSE } = require('../utils/schoolQuestionScope');
 const normalizeFaqQuery = require('../utils/normalizeFaqQuery');
 const isTorRequest = require('../utils/isTorRequest');
+const isClassScheduleRequest = require('../utils/isClassScheduleRequest');
 
 test('allows questions about TCC, its campus, and school support', () => {
   const schoolQuestions = [
@@ -30,6 +31,12 @@ test('recognizes common TOR request wording without treating unrelated TOR menti
   ['Where can I get my TOR?', 'How do I request my Transcript of Records?', 'Where do I claim my transcript?']
     .forEach((question) => assert.equal(isTorRequest(question), true, question));
   assert.equal(isTorRequest('What does TOR mean in a game?'), false);
+});
+
+test('recognizes student class-schedule requests but leaves exam schedules separate', () => {
+  ['How to get my schedule?', 'Where can I find my class timetable?', 'How do I check my class schedule?']
+    .forEach((question) => assert.equal(isClassScheduleRequest(question), true, question));
+  assert.equal(isClassScheduleRequest('When is the exam schedule?'), false);
 });
 
 test('allows everyday academic and student-life questions', () => {
