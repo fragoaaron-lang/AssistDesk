@@ -284,6 +284,70 @@ const FAQ_GROUPS = [
       { text: 'When are the entrance exams or admission deadlines?', keywords: 'entrance exam admission deadline application dates admissions' },
     ],
   },
+  {
+    title: 'Before Classes Start',
+    questions: [
+      { text: 'What are the steps to enroll as a new student?', keywords: 'new student freshman enrollment admission registration steps registrar guidance requirements' },
+      { text: 'What documents do I need to submit, and are photocopies okay?', keywords: 'new student admission enrollment documents requirements photocopies original copies registrar' },
+      { text: 'When is the orientation, and is it required?', keywords: 'new student freshman orientation date schedule required attendance OSA' },
+      { text: 'How do I get my student ID?', keywords: 'new student student ID school ID get obtain release OSA' },
+      { text: 'How do I activate my student portal and school email account?', keywords: 'new student activate portal account login school email password IT technical support' },
+      { text: 'When do classes start?', keywords: 'class start date first day classes academic calendar semester' },
+    ],
+  },
+  {
+    title: 'Courses and Schedules',
+    questions: [
+      { text: 'How many units can I take in a semester?', keywords: 'maximum units semester subject load credit units registrar adviser' },
+      { text: 'What is a prerequisite, and how do I know which subjects I can take?', keywords: 'prerequisite subject subjects curriculum checklist adviser enrollment' },
+      { text: 'Who is my academic adviser, and how do I contact them?', keywords: 'academic adviser advisor contact dean department faculty' },
+      { text: 'Can I change my schedule after enrolling?', keywords: 'change class schedule subject load add drop subject enrollment revision registrar adviser' },
+      { text: 'How do I read my curriculum or checklist of subjects?', keywords: 'curriculum checklist subjects program course adviser department' },
+    ],
+  },
+  {
+    title: 'Rules and Policies',
+    questions: [
+      { text: 'What is the grading system, and what is the passing grade?', keywords: 'grading system passing grade grades GPA GWA registrar' },
+      { text: 'What happens if I fail a subject?', keywords: 'failed failing subject grade retake repeat adviser registrar' },
+      { text: 'What are the school rules on cheating and plagiarism?', keywords: 'school rules cheating plagiarism academic integrity student affairs OSA' },
+    ],
+  },
+  {
+    title: 'Campus Life and Services',
+    questions: [
+      { text: 'Where are the library, clinic, guidance office, and cafeteria?', keywords: 'campus locations library clinic guidance office canteen cafeteria student services' },
+      { text: 'Is there a dormitory or nearby boarding house recommendation?', keywords: 'dormitory boarding house housing accommodation near campus student affairs' },
+      { text: 'Is there a school shuttle or parking area?', keywords: 'campus shuttle transportation parking area location' },
+    ],
+  },
+  {
+    title: 'Health and Support',
+    questions: [
+      { text: 'Where can I get counseling or talk to someone about stress or adjustment problems?', keywords: 'guidance counseling stress adjustment problems mental health student support' },
+      { text: 'Is there a school insurance?', keywords: 'school student insurance coverage clinic enrollment fees' },
+      { text: 'Who do I report to if I experience bullying or harassment?', keywords: 'bullying harassment report student safety OSA guidance incident report' },
+    ],
+  },
+  {
+    title: 'Online Systems',
+    questions: [
+      { text: 'How do I log in to the online learning platform?', keywords: 'online learning platform LMS login account IT department' },
+      { text: 'What do I do if I forgot my password?', keywords: 'forgot password reset student portal school account login IT' },
+      { text: 'Where do I submit assignments online?', keywords: 'submit assignments online learning platform LMS course teacher' },
+    ],
+  },
+  {
+    title: 'Common New-Student Questions',
+    questions: [
+      { text: 'What if I’m missing some requirements?', keywords: 'missing incomplete admission enrollment requirements documents registrar' },
+      { text: 'What if I enrolled late?', keywords: 'late enrollment enroll registration deadline class start registrar' },
+      { text: 'Can I shift to another course if I change my mind?', keywords: 'shift course change program transfer adviser dean registrar' },
+      { text: 'How do I make friends or meet my classmates?', keywords: 'new student meet classmates make friends orientation clubs student organizations' },
+      { text: 'What if I can’t afford to pay on time?', keywords: 'cannot afford pay on time tuition fees installment financial assistance accounting scholarship' },
+      { text: 'How do I get my grades?', keywords: 'grades grade evaluation transcript registrar student portal' },
+    ],
+  },
   ...[
     ['BSCS Department', 'CS'],
     ['BSA / BSBA Department', 'CBA'],

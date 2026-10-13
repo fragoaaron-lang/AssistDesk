@@ -114,6 +114,16 @@ test('allows school topics from the expanded suggested-question catalog', () => 
     'Is there a canteen or dormitory information?',
     'What events are coming up this month?',
     'How do I apply for clearance?',
+    'When is the orientation, and is it required?',
+    'How do I activate my student portal and school email account?',
+    'How many units can I take in a semester?',
+    'What is a prerequisite, and how do I know which subjects I can take?',
+    'What are the school rules on cheating and plagiarism?',
+    'Who do I report to if I experience bullying or harassment?',
+    'Where do I submit assignments online?',
+    'Can I shift to another course if I change my mind?',
+    'How do I make friends or meet my classmates?',
+    'What if I cannot afford to pay on time?',
   ];
 
   suggestedQuestions.forEach((question) => assert.equal(isSchoolRelatedQuestion(question), true, question));
