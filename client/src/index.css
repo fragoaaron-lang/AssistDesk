@@ -3955,7 +3955,8 @@ body.dark-mode .map-ticket-detail-close {
 
 .catalog-faq-item {
   padding: 10px 12px;
-  border-left: 3px solid var(--teal);
+  border: 1px solid var(--border);
+  border-radius: 10px;
   background: #f7fbff;
 }
 
@@ -5187,5 +5188,409 @@ body.dark-mode .ticket-status-badge.closed { background: #303b44; border-color: 
   .ticket-detail-meta {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
+  }
+}
+
+/* Profile, catalog, analytics, and user-management polish. */
+.profile-section-card {
+  min-width: 0;
+}
+
+.profile-section-heading-copy {
+  margin-bottom: 14px;
+}
+
+.profile-section-heading-copy h3 {
+  margin: 0 0 4px;
+  color: var(--navy);
+}
+
+.profile-section-heading-copy p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.profile-summary-row {
+  padding-top: 3px;
+}
+
+.profile-avatar {
+  width: 76px;
+  height: 76px;
+  flex: 0 0 76px;
+  box-shadow: 0 8px 20px rgba(8, 32, 56, 0.14);
+}
+
+.profile-name {
+  overflow-wrap: anywhere;
+}
+
+.preference-row {
+  min-height: 58px;
+  padding: 14px 2px;
+}
+
+.preference-row > span:first-child {
+  min-width: 0;
+  font-weight: 600;
+}
+
+.preference-row input[type='checkbox'] {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  accent-color: var(--teal);
+}
+
+.preference-switch {
+  min-width: 84px;
+  min-height: 44px;
+  justify-content: flex-end;
+  padding: 4px;
+}
+
+.select-row select {
+  min-height: 44px;
+}
+
+.delete-account-field > label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--navy);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.catalog-section-card {
+  min-width: 0;
+}
+
+.catalog-section-heading {
+  margin-bottom: 16px;
+}
+
+.catalog-section-heading h3 {
+  margin: 0 0 4px;
+}
+
+.catalog-section-heading p {
+  max-width: 68ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.catalog-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 16px;
+  align-items: end;
+}
+
+.catalog-field {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+  color: var(--navy);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.catalog-field .institutional-input,
+.catalog-field .institutional-select,
+.catalog-field .institutional-textarea {
+  min-width: 0;
+  margin-bottom: 10px;
+}
+
+.catalog-field-wide {
+  grid-column: 1 / -1;
+}
+
+.catalog-field-wide .institutional-textarea {
+  min-height: 116px;
+}
+
+.catalog-form-grid > .institutional-btn {
+  justify-self: start;
+  margin-bottom: 10px;
+}
+
+.catalog-form-grid .department-map-coordinate-fields {
+  grid-column: 1 / -1;
+}
+
+.catalog-record-list {
+  display: grid;
+  gap: 8px;
+}
+
+.catalog-record {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+
+.catalog-record-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.catalog-record-copy strong {
+  color: var(--navy);
+  overflow-wrap: anywhere;
+}
+
+.catalog-record-copy span,
+.catalog-record-copy small {
+  color: var(--muted);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.catalog-record .inline-actions {
+  flex: 0 0 auto;
+  margin-top: 0;
+}
+
+.catalog-empty-state {
+  margin: 0;
+  padding: 14px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.catalog-feedback {
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.admin-feedback {
+  margin: 0 0 14px;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.user-directory-archive-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 79;
+  display: grid;
+  place-items: center;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  overflow-y: auto;
+  background: rgba(8, 32, 56, 0.64);
+}
+
+.user-directory-archive-modal {
+  position: relative;
+  inset: auto;
+  width: min(1100px, 100%);
+  max-height: min(88vh, 900px);
+  transform: none;
+  box-shadow: 0 24px 70px rgba(8, 32, 56, 0.3);
+}
+
+.user-directory-header-actions .user-directory-archive-button {
+  width: auto;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  color: #a33232;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.analytics-loading-shell {
+  display: grid;
+  min-height: 100vh;
+  min-height: 100dvh;
+  place-items: center;
+}
+
+.analytics-loading {
+  width: min(460px, 100%);
+  padding: clamp(24px, 6vw, 40px);
+  text-align: center;
+}
+
+.analytics-loading h1 {
+  margin: 0 0 8px;
+  color: var(--navy);
+  font-size: clamp(1.2rem, 4vw, 1.55rem);
+}
+
+.analytics-loading p {
+  margin: 0 auto 16px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.analytics-loading-indicator {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  margin: 0 auto 16px;
+  border: 3px solid var(--border);
+  border-top-color: var(--teal);
+  border-radius: 50%;
+  color: #a33232;
+  font-size: 1.1rem;
+  font-weight: 800;
+  animation: ticket-spin 0.9s linear infinite;
+}
+
+.analytics-loading-indicator.has-error {
+  border-color: #e6a4a4;
+  background: #fff3f3;
+  animation: none;
+}
+
+.analytics-loading-indicator.has-error::before {
+  content: none;
+}
+
+body.dark-mode .profile-section-heading-copy h3,
+body.dark-mode .catalog-section-heading h3,
+body.dark-mode .catalog-record-copy strong,
+body.dark-mode .delete-account-field > label,
+body.dark-mode .analytics-loading h1 {
+  color: var(--text);
+}
+
+body.dark-mode .profile-section-heading-copy p,
+body.dark-mode .catalog-section-heading p,
+body.dark-mode .catalog-record-copy span,
+body.dark-mode .catalog-record-copy small,
+body.dark-mode .analytics-loading p {
+  color: var(--muted);
+}
+
+body.dark-mode .catalog-record,
+body.dark-mode .catalog-feedback,
+body.dark-mode .admin-feedback {
+  border-color: var(--border);
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+body.dark-mode .catalog-empty-state {
+  border-color: var(--border);
+  color: var(--muted);
+}
+
+body.dark-mode .user-directory-archive-backdrop {
+  background: rgba(2, 8, 13, 0.78);
+}
+
+body.dark-mode .user-directory-header-actions .user-directory-archive-button {
+  border-color: #71383a;
+  background: #291b1d;
+  color: #ffb2b2;
+}
+
+body.dark-mode .analytics-loading-indicator.has-error {
+  border-color: #71383a;
+  background: #291b1d;
+  color: #ffb2b2;
+}
+
+body.dark-mode .report-filter-summary strong {
+  color: var(--text);
+}
+
+body.dark-mode .report-table tbody tr:hover {
+  background: rgba(85, 201, 189, 0.07);
+}
+
+@media (max-width: 640px) {
+  .profile-summary-row {
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .profile-user-meta {
+    min-width: 0;
+  }
+
+  .preference-row {
+    gap: 10px;
+  }
+
+  .catalog-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .catalog-field-wide,
+  .catalog-form-grid .department-map-coordinate-fields {
+    grid-column: auto;
+  }
+
+  .catalog-record {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .catalog-record .inline-actions {
+    width: 100%;
+  }
+
+  .catalog-record .inline-actions > button {
+    flex: 1 1 0;
+  }
+
+  .user-directory-archive-backdrop {
+    place-items: start center;
+  }
+
+  .user-directory-archive-modal {
+    width: 100%;
+    max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    padding: 16px;
+  }
+
+  .analytics-section-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .analytics-section-tab {
+    flex: 0 0 auto;
+  }
+
+  .report-filter-actions > button {
+    flex: 1 1 120px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .analytics-loading-indicator:not(.has-error) {
+    animation-duration: 2.5s;
   }
 }

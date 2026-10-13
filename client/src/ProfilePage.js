@@ -464,8 +464,8 @@ function ProfilePage() {
           </div>
         </div>
 
-        <div className="institutional-card profile-card" style={{ marginBottom: '20px' }}>
-          <h3>Account profile</h3>
+        <div className="institutional-card profile-card profile-section-card" style={{ marginBottom: '20px' }}>
+          <div className="profile-section-heading-copy"><h3>Account profile</h3><p>Your name and contact information used for support requests.</p></div>
           <div className="profile-summary-row">
             <div className="profile-avatar profile-avatar-upload">
               {profilePhoto ? (
@@ -494,9 +494,9 @@ function ProfilePage() {
         </div>
 
         {showSaveDialog && (
-          <div className="profile-save-dialog-backdrop" onClick={() => setShowSaveDialog(false)}>
-            <div className="profile-save-dialog" onClick={(event) => event.stopPropagation()}>
-              <h4>Save changes?</h4>
+          <div className="profile-save-dialog-backdrop" role="presentation" onClick={() => setShowSaveDialog(false)}>
+            <div className="profile-save-dialog" role="dialog" aria-modal="true" aria-labelledby="profile-save-title" onClick={(event) => event.stopPropagation()}>
+              <h4 id="profile-save-title">Save changes?</h4>
               <p>Do you want to apply these profile updates?</p>
               <div className="profile-save-dialog-actions">
                 <button type="button" className="secondary-action-button" onClick={handleCancelChanges}>Cancel</button>
@@ -509,12 +509,12 @@ function ProfilePage() {
         )}
 
         {showSuccessDialog && (
-          <div className="profile-save-dialog-backdrop" onClick={() => setShowSuccessDialog(false)}>
-            <div className="profile-save-dialog success-dialog" onClick={(event) => event.stopPropagation()}>
+          <div className="profile-save-dialog-backdrop" role="presentation" onClick={() => setShowSuccessDialog(false)}>
+            <div className="profile-save-dialog success-dialog" role="dialog" aria-modal="true" aria-labelledby="profile-save-result-title" onClick={(event) => event.stopPropagation()}>
               <div className={`success-dialog-icon ${saveState.status === 'success' ? '' : 'error-dialog-icon'}`} aria-hidden="true">
                 {saveState.status === 'success' ? '✓' : '×'}
               </div>
-              <h4>{saveState.status === 'success' ? 'Profile saved successfully.' : 'Unable to save profile changes.'}</h4>
+              <h4 id="profile-save-result-title">{saveState.status === 'success' ? 'Profile saved successfully.' : 'Unable to save profile changes.'}</h4>
               <p>{saveState.status === 'success' ? 'Your updates are now applied.' : saveState.message || 'Please try again.'}</p>
               <div className="profile-save-dialog-actions">
                 <button type="button" className="institutional-btn small" onClick={() => setShowSuccessDialog(false)}>
@@ -526,16 +526,18 @@ function ProfilePage() {
         )}
 
         {showDeleteDialog && (
-          <div className="profile-save-dialog-backdrop" onClick={closeDeleteDialog}>
-            <div className="profile-save-dialog delete-dialog" onClick={(event) => event.stopPropagation()}>
-              <h4>Delete account?</h4>
+            <div className="profile-save-dialog-backdrop" role="presentation" onClick={closeDeleteDialog}>
+            <div className="profile-save-dialog delete-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-account-title" onClick={(event) => event.stopPropagation()}>
+              <h4 id="delete-account-title">Delete account?</h4>
               <p>This will permanently delete your account and all associated activity. This cannot be undone.</p>
 
               <div className="delete-account-field">
+                <label htmlFor="delete-account-password">Current password</label>
                 <input
+                  id="delete-account-password"
                   type="password"
                   className="institutional-input"
-                  placeholder="Enter current password"
+                  autoComplete="current-password"
                   value={deletePassword}
                   onChange={(e) => setDeletePassword(e.target.value)}
                   autoFocus
@@ -565,8 +567,8 @@ function ProfilePage() {
           </div>
         )}
 
-        <div className="institutional-card" style={{ marginBottom: '20px' }}>
-          <h3>Personalization</h3>
+        <div className="institutional-card profile-section-card" style={{ marginBottom: '20px' }}>
+          <div className="profile-section-heading-copy"><h3>Personalization</h3><p>Adjust how AssistDesk is displayed and how updates reach you.</p></div>
 
           <label className="preference-row">
             <span>Compact dashboard view</span>
@@ -589,6 +591,7 @@ function ProfilePage() {
               type="button"
               className={`preference-switch ${prefs.darkMode ? 'on' : ''}`}
               role="switch"
+              aria-label="Dark mode"
               aria-checked={prefs.darkMode}
               onClick={() => updatePreference('darkMode', !prefs.darkMode)}
             >
@@ -608,9 +611,9 @@ function ProfilePage() {
 
         </div>
 
-        <div className="institutional-card" id="security">
+        <div className="institutional-card profile-section-card" id="security">
           <div className="profile-section-header">
-            <h3>Security</h3>
+            <div className="profile-section-heading-copy"><h3>Security</h3><p>Keep your account credentials up to date.</p></div>
           </div>
 
           <div className="profile-security-body">
@@ -631,6 +634,7 @@ function ProfilePage() {
                     <input
                       className="institutional-input"
                       type={showPasswordFields.oldPassword ? 'text' : 'password'}
+                      aria-label="Current password"
                       placeholder="Current password"
                       value={passwordForm.oldPassword}
                       onChange={(e) => setPasswordForm((current) => ({ ...current, oldPassword: e.target.value }))}
@@ -650,6 +654,7 @@ function ProfilePage() {
                     <input
                       className="institutional-input"
                       type={showPasswordFields.newPassword ? 'text' : 'password'}
+                      aria-label="New password"
                       placeholder="New password"
                       value={passwordForm.newPassword}
                       onChange={(e) => setPasswordForm((current) => ({ ...current, newPassword: e.target.value }))}
@@ -669,6 +674,7 @@ function ProfilePage() {
                     <input
                       className="institutional-input"
                       type={showPasswordFields.confirmPassword ? 'text' : 'password'}
+                      aria-label="Confirm new password"
                       placeholder="Confirm new password"
                       value={passwordForm.confirmPassword}
                       onChange={(e) => setPasswordForm((current) => ({ ...current, confirmPassword: e.target.value }))}
@@ -683,7 +689,7 @@ function ProfilePage() {
                       <span className="password-eye" aria-hidden="true" />
                     </button>
                   </div>
-                  <p className="helper-text">Use 8+ characters with uppercase, lowercase, number, and symbol.</p>
+                  <p className="helper-text">{PASSWORD_RULE_MESSAGE}</p>
                   <button className="institutional-btn" type="submit">Update password</button>
                 </form>
                 {passwordState.message && (
@@ -696,7 +702,7 @@ function ProfilePage() {
           </div>
         </div>
 
-        <div className="institutional-card account-deletion-card">
+        <div className="institutional-card account-deletion-card profile-section-card">
           <div className="account-deletion-panel">
             <div className="account-deletion-text">
               <span className="account-deletion-title">Delete your account</span>

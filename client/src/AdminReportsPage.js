@@ -43,6 +43,8 @@ function AdminReportsPage() {
   const { token, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [reports, setReports] = useState(null);
+  const [reportsLoading, setReportsLoading] = useState(true);
+  const [reportsLoadError, setReportsLoadError] = useState('');
   const [auditLogs, setAuditLogs] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [reportFilters, setReportFilters] = useState({ start_date: '', end_date: '', department_id: '', category: '', priority: '', status: '' });
@@ -60,6 +62,8 @@ function AdminReportsPage() {
   );
 
   const loadReports = async (filters = reportFilters) => {
+    setReportsLoading(true);
+    setReportsLoadError('');
     try {
       const res = await axios.get(`${API_BASE_URL}/api/admin/reports`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -67,7 +71,11 @@ function AdminReportsPage() {
       });
       setReports(res.data);
     } catch (error) {
-      setMessage('Unable to load reports.');
+      const errorMessage = error.response?.data?.message || 'Unable to load reports.';
+      setReportsLoadError(errorMessage);
+      setMessage(errorMessage);
+    } finally {
+      setReportsLoading(false);
     }
   };
 
@@ -242,7 +250,16 @@ function AdminReportsPage() {
   };
 
   if (!reports) {
-    return <div style={{ padding: '2rem', fontFamily: 'Arial' }}>Loading Data Analytics...</div>;
+    return (
+      <main className="app-shell analytics-loading-shell">
+        <section className="institutional-card analytics-loading" role={reportsLoadError ? 'alert' : 'status'} aria-live="polite" aria-busy={reportsLoading}>
+          <div className={`analytics-loading-indicator ${reportsLoadError ? 'has-error' : ''}`} aria-hidden="true">{reportsLoadError ? '!' : ''}</div>
+          <h1>{reportsLoadError ? 'Analytics could not load' : 'Loading Data Analytics'}</h1>
+          <p>{reportsLoadError || 'Fetching ticket trends and current service activity.'}</p>
+          {reportsLoadError && <button type="button" className="institutional-btn" onClick={() => loadReports()}>Try again</button>}
+        </section>
+      </main>
+    );
   }
 
   return (
@@ -320,7 +337,7 @@ function AdminReportsPage() {
             <p>{showUserDirectory ? 'Manage active and terminated user accounts.' : 'Monitor service trends, support demand, and operational activity.'}</p>
           </div>
         </div>
-        {message && <p>{message}</p>}
+        {message && <p className="admin-feedback" role="status" aria-live="polite">{message}</p>}
 
         {showUserDirectory && (
           <section className="institutional-card user-directory-card">
@@ -337,7 +354,7 @@ function AdminReportsPage() {
                   aria-label="Open terminated accounts archive"
                   title="Open terminated accounts archive"
                 >
-                  🗑
+                  Archive
                 </button>
               </div>
             </div>
@@ -393,7 +410,8 @@ function AdminReportsPage() {
         )}
 
         {showUserDirectory && showTerminatedUsers && (
-          <section className="institutional-card user-directory-archive-modal" role="dialog" aria-modal="true" aria-labelledby="terminated-accounts-title">
+          <div className="user-directory-archive-backdrop" onMouseDown={() => setShowTerminatedUsers(false)}>
+          <section className="institutional-card user-directory-archive-modal" role="dialog" aria-modal="true" aria-labelledby="terminated-accounts-title" onMouseDown={(event) => event.stopPropagation()}>
             <div className="report-card-heading">
               <div>
                 <h3 id="terminated-accounts-title">Terminated accounts</h3>
@@ -441,6 +459,7 @@ function AdminReportsPage() {
               ))}
             </div>
           </section>
+          </div>
         )}
 
         {!showUserDirectory && (
