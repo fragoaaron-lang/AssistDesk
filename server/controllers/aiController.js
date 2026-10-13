@@ -7,7 +7,7 @@ const normalizeFaqQuery = require('../utils/normalizeFaqQuery');
 const isTorRequest = require('../utils/isTorRequest');
 const isClassScheduleRequest = require('../utils/isClassScheduleRequest');
 const isRegistrarDocumentRequest = require('../utils/isRegistrarDocumentRequest');
-const { getClassScheduleFollowupQuery, SCHEDULE_PROMPT } = require('../utils/classScheduleFollowup');
+const { getClassScheduleFollowupQuery, getDepartmentScheduleAnswer, SCHEDULE_PROMPT } = require('../utils/classScheduleFollowup');
 
 const normalize = (text) =>
   String(text || '')
@@ -26,7 +26,7 @@ const departmentAliases = [
   { id: 'hm', terms: ['hospitality management', 'bshm', 'charm', 'hm department'] },
   { id: 'pt', terms: ['physical therapy', 'bspt', 'pt department'] },
   { id: 'nursing', terms: ['nursing', 'bsn'] },
-  { id: 'education', terms: ['education department', 'educ department', 'beed', 'bsed'] },
+  { id: 'education', terms: ['education department', 'college of education', 'education', 'educ department', 'beed', 'bsed'] },
   { id: 'maintenance', terms: ['maintenance'] },
   { id: 'clinic', terms: ['clinic'] },
   { id: 'accounting', terms: ['accounting department', 'accounting'] },
@@ -282,16 +282,37 @@ const buildResponse = async (query, suggestedQuestionKeywords = '') => {
       };
     }
 
-    if (isClassScheduleRequest(query) && !departmentIntent) {
-      return {
-        ai_response: SCHEDULE_PROMPT,
-        matched_department: null,
-        department_details: null,
-        service_details: null,
-        source: null,
-        clarification_required: false,
-        escalation_available: false,
-      };
+    if (isClassScheduleRequest(query)) {
+      const scheduleAnswer = getDepartmentScheduleAnswer(departmentIntent);
+      if (scheduleAnswer) {
+        const department = findDepartmentForIntent(await Department.findAll(), departmentIntent);
+        return {
+          ai_response: scheduleAnswer,
+          matched_department: department?.id || null,
+          department_details: department ? {
+            id: department.id,
+            name: department.name,
+            point_person: department.point_person,
+            location: department.location,
+            office_hours: department.office_hours,
+          } : null,
+          service_details: null,
+          source: null,
+          clarification_required: false,
+          escalation_available: false,
+        };
+      }
+      if (!departmentIntent) {
+        return {
+          ai_response: SCHEDULE_PROMPT,
+          matched_department: null,
+          department_details: null,
+          service_details: null,
+          source: null,
+          clarification_required: false,
+          escalation_available: false,
+        };
+      }
     }
 
     if (isTorRequest(query)) {

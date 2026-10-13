@@ -5,7 +5,7 @@ const normalizeFaqQuery = require('../utils/normalizeFaqQuery');
 const isTorRequest = require('../utils/isTorRequest');
 const isClassScheduleRequest = require('../utils/isClassScheduleRequest');
 const isRegistrarDocumentRequest = require('../utils/isRegistrarDocumentRequest');
-const { getClassScheduleFollowupQuery, SCHEDULE_PROMPT } = require('../utils/classScheduleFollowup');
+const { getClassScheduleFollowupQuery, getDepartmentScheduleAnswer, SCHEDULE_PROMPT } = require('../utils/classScheduleFollowup');
 
 test('allows questions about TCC, its campus, and school support', () => {
   const schoolQuestions = [
@@ -54,6 +54,13 @@ test('resolves a department reply after the class-schedule clarification', () =>
   );
   assert.equal(getClassScheduleFollowupQuery('computer science', 'How can I help?'), null);
   assert.equal(getClassScheduleFollowupQuery('something unrelated', SCHEDULE_PROMPT), null);
+});
+
+test('provides known program-specific class schedule guidance', () => {
+  assert.match(getDepartmentScheduleAnswer('cs'), /BSCS page/i);
+  assert.match(getDepartmentScheduleAnswer('basic'), /advisers/i);
+  assert.match(getDepartmentScheduleAnswer('nursing'), /Dean’s Office/i);
+  assert.equal(getDepartmentScheduleAnswer('registrar'), null);
 });
 
 test('recognizes COR and COE requests and normalizes full document names', () => {
