@@ -7,6 +7,7 @@ const normalizeFaqQuery = require('../utils/normalizeFaqQuery');
 const isTorRequest = require('../utils/isTorRequest');
 const isClassScheduleRequest = require('../utils/isClassScheduleRequest');
 const isRegistrarDocumentRequest = require('../utils/isRegistrarDocumentRequest');
+const { getClassScheduleFollowupQuery, SCHEDULE_PROMPT } = require('../utils/classScheduleFollowup');
 
 const normalize = (text) =>
   String(text || '')
@@ -281,9 +282,9 @@ const buildResponse = async (query, suggestedQuestionKeywords = '') => {
       };
     }
 
-    if (isClassScheduleRequest(query)) {
+    if (isClassScheduleRequest(query) && !departmentIntent) {
       return {
-        ai_response: 'Class schedules are department-specific. They are usually shared during enrollment or by your adviser or dean’s office; some departments also post them on a bulletin board, group chat, or official page. Check your department’s latest announcement, or tell me your program so I can point you to the relevant department information.',
+        ai_response: SCHEDULE_PROMPT,
         matched_department: null,
         department_details: null,
         service_details: null,
@@ -634,8 +635,16 @@ exports.askAssistant = async (req, res) => {
       .slice(0, 80)
       .join(' ')
       .slice(0, 500);
+    const conversationContext = Array.isArray(req.body?.conversation_context)
+      ? req.body.conversation_context
+        .filter((entry) => entry && ['user', 'assistant'].includes(entry.role) && typeof entry.text === 'string')
+        .slice(-4)
+      : [];
+    const previousAssistantMessage = [...conversationContext].reverse()
+      .find((entry) => entry.role === 'assistant')?.text;
+    const scheduleFollowupQuery = getClassScheduleFollowupQuery(message, previousAssistantMessage);
     const commandResult = await handleTicketCommand(message, req.user.id);
-    const result = commandResult || await buildResponse(message, suggestedQuestionKeywords);
+    const result = commandResult || await buildResponse(scheduleFollowupQuery || message, suggestedQuestionKeywords);
 
     const assistantName = ['Alex', 'Maya'].includes(requestedAssistantName) ? requestedAssistantName : 'Assistant';
     result.ai_response = result.ai_response

@@ -387,6 +387,7 @@ function ChatbotWidget() {
           user_id: user.id,
           assistant_name: getAssistantName(),
           suggested_question_keywords: suggestedQuestionKeywords,
+          conversation_context: history.slice(-4).map(({ role, text: entryText }) => ({ role, text: entryText })),
         }, { headers: { Authorization: `Bearer ${token}` } }),
         new Promise((resolve) => window.setTimeout(resolve, 1400)),
       ]);
