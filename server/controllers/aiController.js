@@ -84,7 +84,7 @@ const getLocalConversationResponse = (query) => {
   const now = new Date();
   const greetingPattern = /(?:^|\s)(hi|hii|hey|hello|good morning|good afternoon|good evening)(?:\s|$)/;
 
-  if (/\b(what are y[o]{1,3}u|what is your name|who are you|what should i call you)\b/.test(normalizedQuery)) {
+  if (/\b(who are you|what are y[o]{1,3}u|what is your name|what should i call you|tell me about yourself|what do you do|what is your role|are you (?:an? )?(?:ai|bot|human|assistant))\b/.test(normalizedQuery)) {
     return 'I am AssistDesk, your campus support assistant. How can I help you today?';
   }
 
@@ -210,7 +210,7 @@ const getGeminiResponse = async (query, faqs, services, departments) => {
   return data.candidates?.[0]?.content?.parts?.map((part) => part.text).join('').trim() || null;
 };
 
-const buildResponse = async (query) => {
+const buildResponse = async (query, suggestedQuestionKeywords = '') => {
   if (!isSchoolRelatedQuestion(query)) {
     return {
       ai_response: OUT_OF_SCOPE_RESPONSE,
@@ -226,6 +226,7 @@ const buildResponse = async (query) => {
   const faqs = await Faq.findAll({ include: [{ model: Department }] });
   const services = await Service.findAll({ include: [{ model: Department }] });
   const normalizedQuery = normalize(query);
+  const retrievalQuery = [query, suggestedQuestionKeywords].filter(Boolean).join(' ');
   const departmentIntent = getDepartmentIntent(query);
   const exactFaq = faqs.find((faq) => normalize(faq.question) === normalizedQuery);
 
@@ -239,14 +240,14 @@ const buildResponse = async (query) => {
   const scoredFaqs = faqs
     .map((faq) => ({
       item: faq,
-      score: scoreFaq(query, faq, departmentIntent),
+      score: scoreFaq(retrievalQuery, faq, departmentIntent),
     }))
     .sort((a, b) => b.score - a.score);
 
   const scoredServices = services
     .map((service) => ({
       item: service,
-      score: scoreText(query, `${service.name} ${service.requirements || ''} ${service.processing_time || ''}`)
+      score: scoreText(retrievalQuery, `${service.name} ${service.requirements || ''} ${service.processing_time || ''}`)
         + (departmentIntent
           ? (departmentMatchesIntent(service.Department, departmentIntent) ? 100 : -100)
           : 0),
@@ -510,8 +511,17 @@ exports.askAssistant = async (req, res) => {
       return res.status(400).json({ message: 'Message must be a non-empty string of at most 2000 characters.' });
     }
 
+    const rawSuggestedKeywords = req.body?.suggested_question_keywords;
+    const suggestedQuestionKeywords = (Array.isArray(rawSuggestedKeywords)
+      ? rawSuggestedKeywords.filter((keyword) => typeof keyword === 'string').slice(0, 24).join(' ')
+      : typeof rawSuggestedKeywords === 'string' ? rawSuggestedKeywords : '')
+      .trim()
+      .split(/\s+/)
+      .slice(0, 80)
+      .join(' ')
+      .slice(0, 500);
     const commandResult = await handleTicketCommand(message, req.user.id);
-    const result = commandResult || await buildResponse(message);
+    const result = commandResult || await buildResponse(message, suggestedQuestionKeywords);
 
     const assistantName = ['Alex', 'Maya'].includes(requestedAssistantName) ? requestedAssistantName : 'Assistant';
     result.ai_response = result.ai_response

@@ -32,7 +32,16 @@ test('allows everyday academic and student-life questions', () => {
 });
 
 test('keeps brief conversational messages available', () => {
-  ['Hello', 'Thank you', 'What can you do?', 'What are you?', 'What are yoou?'].forEach((message) => {
+  [
+    'Hello',
+    'Thank you',
+    'What can you do?',
+    'What are you?',
+    'What are yoou?',
+    'That is who are you',
+    'Are you an AI?',
+    'Tell me about yourself',
+  ].forEach((message) => {
     assert.equal(isSchoolRelatedQuestion(message), true, message);
   });
 });
@@ -41,6 +50,24 @@ test('allows simple everyday date and time questions', () => {
   ['What is today?', 'What day is it?', 'What is the date?', 'What time is it?'].forEach((question) => {
     assert.equal(isSchoolRelatedQuestion(question), true, question);
   });
+});
+
+test('allows school topics from the expanded suggested-question catalog', () => {
+  const suggestedQuestions = [
+    'What are the enrollment deadlines?',
+    'What payment methods are accepted?',
+    'Who do I contact about financial assistance?',
+    'What is the passing grade, and how is GPA computed?',
+    'When are the exam schedules?',
+    'What should I do if a class is cancelled?',
+    'How do I file an excuse letter for an absence?',
+    'How do I connect to the school Wi-Fi?',
+    'Is there a canteen or dormitory information?',
+    'What events are coming up this month?',
+    'How do I apply for clearance?',
+  ];
+
+  suggestedQuestions.forEach((question) => assert.equal(isSchoolRelatedQuestion(question), true, question));
 });
 
 test('blocks questions unrelated to school', () => {

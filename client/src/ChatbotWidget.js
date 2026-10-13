@@ -192,6 +192,98 @@ const FAQ_GROUPS = [
       'Where is the principal\'s office located?',
     ],
   },
+  {
+    title: 'Enrollment and Registration',
+    questions: [
+      { text: 'How do I enroll for the next semester?', keywords: 'enrollment registration next semester returning freshman process registrar' },
+      { text: 'What are the enrollment deadlines?', keywords: 'enrollment registration deadline dates academic calendar registrar' },
+      { text: 'How do I add, drop, or change a subject?', keywords: 'registrar adding dropping changing subjects course subject load revision adviser dean' },
+      { text: 'What documents do I need to submit for enrollment?', keywords: 'enrollment requirements documents freshman transferee transfer Form 138 TOR admission' },
+      { text: 'How can I check if my enrollment is confirmed?', keywords: 'enrollment registration status confirmed enrolled registrar' },
+    ],
+  },
+  {
+    title: 'Fees and Payments',
+    questions: [
+      { text: 'How much is the tuition and other fees this term?', keywords: 'tuition fees this term assessment accounting cashier enrollment' },
+      { text: 'What payment methods are accepted?', keywords: 'payment methods cash e-wallet card online accounting tuition fees' },
+      { text: 'Can I pay in installments?', keywords: 'tuition installment payment plan minimum schedule accounting' },
+      { text: 'Where do I get my official receipt?', keywords: 'official receipt payment proof cashier accounting fees' },
+      { text: 'What happens if I miss a payment deadline?', keywords: 'miss payment deadline late fees outstanding balance enrollment accounting' },
+    ],
+  },
+  {
+    title: 'Scholarships and Financial Aid',
+    questions: [
+      { text: 'What scholarships are available, and how do I apply?', keywords: 'scholarships financial aid apply eligibility honors discounts accounting' },
+      { text: 'What are the requirements to keep my scholarship?', keywords: 'scholarship requirements maintain eligibility grades academic standing renewal' },
+      { text: 'Who do I contact about financial assistance?', keywords: 'financial assistance scholarship contact accounting guidance office' },
+    ],
+  },
+  {
+    title: 'Grades and Records',
+    questions: [
+      { text: 'How do I check my grades online?', keywords: 'check grades online grade evaluation student portal registrar' },
+      { text: 'How do I request my transcript of records or certificate of enrollment?', keywords: 'request transcript of records TOR certificate of enrollment CoE registrar documents' },
+      { text: 'How long does it take to process a document request?', keywords: 'document request processing time release date claim slip registrar transcript' },
+      { text: 'How do I file a grade correction or appeal?', keywords: 'grade correction appeal petition submitted grades registrar evidence' },
+      { text: 'What is the passing grade, and how is GPA computed?', keywords: 'passing grade GPA GWA grading computation grades registrar' },
+    ],
+  },
+  {
+    title: 'Schedules and Classes',
+    questions: [
+      { text: 'Where can I see my class schedule and room assignments?', keywords: 'class schedule room assignments subject load adviser department' },
+      { text: 'When are the exam schedules?', keywords: 'exam examination schedule dates midterm final registrar department' },
+      { text: 'What should I do if a class is cancelled?', keywords: 'cancelled canceled class announcement schedule professor department OSA' },
+      { text: 'How do I contact my professor or adviser?', keywords: 'contact professor adviser faculty department office' },
+    ],
+  },
+  {
+    title: 'Attendance and Policies',
+    questions: [
+      { text: 'What is the attendance policy?', keywords: 'attendance policy absence school rules adviser student' },
+      { text: 'How do I file an excuse letter for an absence?', keywords: 'excuse letter absence attendance adviser teacher basic education' },
+      { text: 'What is the dress code or uniform policy?', keywords: 'dress code uniform policy school rules student affairs' },
+      { text: 'What are the rules on late submissions and make-up exams?', keywords: 'late submission make up makeup exams assignments academic policy' },
+    ],
+  },
+  {
+    title: 'Student Accounts and Tech',
+    questions: [
+      { text: 'I forgot my student portal password. How do I reset it?', keywords: 'forgot reset student portal password account login' },
+      { text: 'How do I connect to the school Wi-Fi?', keywords: 'school wifi internet connection network IT department' },
+      { text: 'How do I access the online learning platform?', keywords: 'online learning platform LMS student account login IT' },
+      { text: 'Who do I contact for technical problems?', keywords: 'technical support problems IT department computer internet help' },
+    ],
+  },
+  {
+    title: 'Campus Services',
+    questions: [
+      { text: 'What are the library hours, and how do I borrow books?', keywords: 'library hours schedule borrow books library card' },
+      { text: 'Where is the clinic, and what are its hours?', keywords: 'clinic location office hours medical dental school clinic' },
+      { text: 'How do I get or replace my student ID?', keywords: 'student ID school ID replacement lost OSA registrar' },
+      { text: 'Where can I find the guidance office or counseling services?', keywords: 'guidance office location counseling services counselor student support' },
+      { text: 'Is there a canteen or dormitory information?', keywords: 'canteen campus food dormitory housing student affairs' },
+    ],
+  },
+  {
+    title: 'Activities and Events',
+    questions: [
+      { text: 'What clubs or organizations can I join?', keywords: 'student clubs organizations activities join OSA student affairs' },
+      { text: 'What events are coming up this month?', keywords: 'upcoming events activities announcements calendar campus OSA' },
+      { text: 'How do I apply for a leadership role in student council?', keywords: 'student council leadership role election party list OSA' },
+    ],
+  },
+  {
+    title: 'Graduation and Admissions',
+    questions: [
+      { text: 'What are the requirements for graduation?', keywords: 'graduation requirements clearance transcript fees registrar accounting' },
+      { text: 'How do I apply for clearance?', keywords: 'clearance graduation registrar accounting library request' },
+      { text: 'How do I apply as a new or transfer student?', keywords: 'admission application new freshman transfer student requirements' },
+      { text: 'When are the entrance exams or admission deadlines?', keywords: 'entrance exam admission deadline application dates admissions' },
+    ],
+  },
   ...[
     ['BSCS Department', 'CS'],
     ['BSA / BSBA Department', 'CBA'],
@@ -276,7 +368,13 @@ function ChatbotWidget() {
 
   const sendMessage = async (event, selectedQuestion = null) => {
     event?.preventDefault();
-    const text = (selectedQuestion || message).trim();
+    const selectedText = selectedQuestion && typeof selectedQuestion === 'object'
+      ? selectedQuestion.text
+      : selectedQuestion;
+    const text = String(selectedText || message).trim();
+    const suggestedQuestionKeywords = selectedQuestion && typeof selectedQuestion === 'object'
+      ? selectedQuestion.keywords
+      : undefined;
     if (!text || sending) return;
 
     setHistory((current) => [...current, { role: 'user', text }]);
@@ -288,6 +386,7 @@ function ChatbotWidget() {
           message: text,
           user_id: user.id,
           assistant_name: getAssistantName(),
+          suggested_question_keywords: suggestedQuestionKeywords,
         }, { headers: { Authorization: `Bearer ${token}` } }),
         new Promise((resolve) => window.setTimeout(resolve, 1400)),
       ]);
@@ -417,7 +516,10 @@ function ChatbotWidget() {
                     <details key={group.title} className="chatbot-faq-group">
                       <summary>{group.title}</summary>
                       <div className="chatbot-faq-group-questions">
-                        {group.questions.map((question) => <button type="button" key={question} onClick={() => { setShowFaqs(false); sendMessage(null, question); }}>{question}</button>)}
+                        {group.questions.map((question) => {
+                          const questionText = typeof question === 'string' ? question : question.text;
+                          return <button type="button" key={questionText} onClick={() => { setShowFaqs(false); sendMessage(null, question); }}>{questionText}</button>;
+                        })}
                       </div>
                     </details>
                   ))}

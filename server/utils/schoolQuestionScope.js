@@ -2,6 +2,7 @@ const schoolContextPatterns = [
   /\b(tomas claudio colleges?|\btcc\b|school|campus|college|university|academic|academics|education|educational|student|students|pupil|pupils|faculty|teacher|teachers|professor|professors|class|classes|classmate|classmates|schoolwork|homework|coursework|schoolwork|school rules|school policy|school policies|school office|school service|school services)\b/,
   /\b(department|registrar|enrollment|enrolment|admission|admissions|tuition|school fee|school fees|grades?|grading|semester|term|subject load|class schedule|classroom|lecture|thesis|transcript|diploma|scholarship|school id|student id|library card|campus map|campus security|student affairs|guidance office|school clinic|school library|school account|library|clinic|maintenance|accounting|cashier|guidance|dean|principal|registrar|faculty|professor|teacher|ticket|support request|school document|reset my password|password reset)\b/,
   /\b(osa|bs\s?cs|bscs|bsa|bsba|bscrim|bshm|bspt|bsn|beed|bsed|jhs|shs|form 137|form 138|good moral|transcript of records|tor|certificate of enrollment)\b/,
+  /\b(student council|student organization|student organizations|club|clubs|school event|school events|campus event|campus events|events coming up|coming up this month|canteen|dormitory|school wifi|wifi|wi fi|online learning platform|payment method|payment methods|payment deadline|payment deadlines|attendance policy|excuse letter|dress code|uniform policy|make up exam|makeup exam|grade correction|passing grade|gpa|gwa|room assignment|entrance exam|entrance exams|admission deadline|admission deadlines|graduation requirement|graduation requirements|school clearance|apply for clearance|document request|financial assistance|financial aid|office hours)\b/,
 ];
 
 const studentHelpPatterns = [
@@ -10,10 +11,12 @@ const studentHelpPatterns = [
 ];
 
 const conversationalPatterns = [
-  /^(hi|hello|hey|good morning|good afternoon|good evening|thanks|thank you|thx|who are you|what are y[o]{1,3}u|what is your name|what can you do|how can you help|help me|help)$/,
+  /^(hi|hello|hey|good morning|good afternoon|thanks|thank you|thx|what can you do|how can you help|help me|help)$/,
   /^(what is assistdesk|what is this app|what is this for)$/,
   /^(what is today|what day is it|what day is today|what is the date|what is today s date|what time is it|what is the current time|current time|today s date)$/,
 ];
+
+const identityQuestionPattern = /\b(who are you|what are y[o]{1,3}u|what is your name|what should i call you|tell me about yourself|what do you do|what is your role|are you (?:an? )?(?:ai|bot|human|assistant))\b/;
 
 const normalizeForScope = (value) => String(value || '')
   .toLowerCase()
@@ -24,6 +27,7 @@ const normalizeForScope = (value) => String(value || '')
 const isSchoolRelatedQuestion = (value) => {
   const normalized = normalizeForScope(value);
   if (!normalized) return false;
+  if (identityQuestionPattern.test(normalized)) return true;
   if (conversationalPatterns.some((pattern) => pattern.test(normalized))) return true;
   return schoolContextPatterns.some((pattern) => pattern.test(normalized))
     || studentHelpPatterns.some((pattern) => pattern.test(normalized));
