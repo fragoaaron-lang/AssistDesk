@@ -4,6 +4,7 @@ const { isSchoolRelatedQuestion, OUT_OF_SCOPE_RESPONSE } = require('../utils/sch
 const normalizeFaqQuery = require('../utils/normalizeFaqQuery');
 const isTorRequest = require('../utils/isTorRequest');
 const isClassScheduleRequest = require('../utils/isClassScheduleRequest');
+const isRegistrarDocumentRequest = require('../utils/isRegistrarDocumentRequest');
 
 test('allows questions about TCC, its campus, and school support', () => {
   const schoolQuestions = [
@@ -37,6 +38,15 @@ test('recognizes student class-schedule requests but leaves exam schedules separ
   ['How to get my schedule?', 'Where can I find my class timetable?', 'How do I check my class schedule?']
     .forEach((question) => assert.equal(isClassScheduleRequest(question), true, question));
   assert.equal(isClassScheduleRequest('When is the exam schedule?'), false);
+});
+
+test('recognizes COR and COE requests and normalizes full document names', () => {
+  assert.equal(isRegistrarDocumentRequest('Where to get COR?'), 'cor');
+  assert.equal(isRegistrarDocumentRequest('Where to get COE?'), 'coe');
+  assert.equal(isRegistrarDocumentRequest('How do I request my Certificate of Enrollment?'), 'coe');
+  assert.equal(isRegistrarDocumentRequest('How do I request a Certificate of Registration?'), 'cor');
+  assert.equal(normalizeFaqQuery('Certificate of Enrollment'), normalizeFaqQuery('COE'));
+  assert.equal(normalizeFaqQuery('Certificate of Registration'), normalizeFaqQuery('COR'));
 });
 
 test('allows everyday academic and student-life questions', () => {

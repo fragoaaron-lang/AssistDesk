@@ -6,6 +6,7 @@ const { isSchoolRelatedQuestion, OUT_OF_SCOPE_RESPONSE } = require('../utils/sch
 const normalizeFaqQuery = require('../utils/normalizeFaqQuery');
 const isTorRequest = require('../utils/isTorRequest');
 const isClassScheduleRequest = require('../utils/isClassScheduleRequest');
+const isRegistrarDocumentRequest = require('../utils/isRegistrarDocumentRequest');
 
 const normalize = (text) =>
   String(text || '')
@@ -255,6 +256,29 @@ const buildResponse = async (query, suggestedQuestionKeywords = '') => {
     const localResponse = getLocalConversationResponse(query);
     if (localResponse) {
       return { ai_response: localResponse, matched_department: null, department_details: null, service_details: null };
+    }
+
+    const registrarDocumentType = isRegistrarDocumentRequest(query);
+    if (registrarDocumentType) {
+      const registrar = findDepartmentForIntent(await Department.findAll(), 'registrar');
+      const answer = registrarDocumentType === 'coe'
+        ? 'Request your Certificate of Enrollment (COE) from the Registrar. Fill out the request form available outside the Registrar window. The Registrar will verify your enrollment; if you are enrolled, it can be issued even if you have an outstanding balance. If you are not enrolled, settle any remaining balance before claiming it.'
+        : 'For a Certificate of Registration (COR), contact or visit the Registrar Office in the Administration Building and ask for the current COR request procedure. The available school information does not specify the COR requirements, so the Registrar can confirm what you need to submit.';
+      return {
+        ai_response: answer,
+        matched_department: registrar?.id || null,
+        department_details: registrar ? {
+          id: registrar.id,
+          name: registrar.name,
+          point_person: registrar.point_person,
+          location: registrar.location,
+          office_hours: registrar.office_hours,
+        } : null,
+        service_details: null,
+        source: null,
+        clarification_required: false,
+        escalation_available: false,
+      };
     }
 
     if (isClassScheduleRequest(query)) {
