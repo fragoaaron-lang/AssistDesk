@@ -35,7 +35,13 @@ test('recognizes common TOR request wording without treating unrelated TOR menti
 });
 
 test('recognizes student class-schedule requests but leaves exam schedules separate', () => {
-  ['How to get my schedule?', 'Where can I find my class timetable?', 'How do I check my class schedule?']
+  [
+    'How to get my schedule?',
+    'Where can I find my class timetable?',
+    'How do I check my class schedule?',
+    'Where to get my schedule?',
+    'Where is my schedule?',
+  ]
     .forEach((question) => assert.equal(isClassScheduleRequest(question), true, question));
   assert.equal(isClassScheduleRequest('When is the exam schedule?'), false);
 });
