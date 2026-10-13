@@ -13,17 +13,17 @@ body{background:radial-gradient(circle at 50% 30%,var(--bg1),var(--bg2));color:v
 #c{position:absolute;inset:0;width:100%;height:100%;display:block}
 #labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .lbl{position:absolute;transform:translate(-50%,-50%);font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;letter-spacing:.03em}
-.ui{position:absolute;background:var(--panel);border:1px solid var(--line);border-radius:12px;backdrop-filter:blur(8px)}
-#top{left:12px;top:calc(12px + env(safe-area-inset-top,0px));padding:10px 12px;max-width:calc(100% - 24px)}
+.ui{position:absolute;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:12px;backdrop-filter:blur(8px)}
+#top{left:12px;top:calc(12px + env(safe-area-inset-top,0px));padding:10px 12px;width:max-content;max-width:min(620px,calc(100vw - 420px));box-sizing:border-box}
 h1{font-size:16px;margin:0 0 8px;font-weight:700}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:4px 10px 4px 8px;font:inherit;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:6px}
 .chip i{width:10px;height:10px;border-radius:3px;display:inline-block}
 .chip.off{opacity:.4}
 .chip:focus-visible,.btn:focus-visible{outline:2px solid #3f8cf0;outline-offset:2px}
-#tools{right:12px;top:calc(12px + env(safe-area-inset-top,0px));padding:6px;display:flex;gap:6px}
+#tools{right:12px;top:calc(12px + env(safe-area-inset-top,0px));padding:6px;display:flex;gap:6px;box-sizing:border-box}
 .btn{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:6px 10px;font:inherit;font-size:12px;cursor:pointer}
-.btn[aria-pressed="true"]{background:#3f8cf0;color:#fff;border-color:#3f8cf0}
+.btn[aria-pressed="true"]{background:#1769c2;color:#fff;border-color:#1769c2}
 #info{left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));padding:10px 14px;min-width:220px;max-width:calc(100% - 24px)}
 #info b{font-size:15px;display:block}
 #info span{font-size:12px;color:var(--mute)}
@@ -39,7 +39,26 @@ h1{font-size:16px;margin:0 0 8px;font-weight:700}
 #legend .row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mute);margin-bottom:4px}
 #legend .sw{width:10px;height:10px;border-radius:50%}
 #legend .sw.low{background:#34c759}#legend .sw.medium{background:#3b82f6}#legend .sw.urgent{background:#ef4444}
-@media (max-width:640px){#tools{top:auto;bottom:calc(12px + env(safe-area-inset-bottom,0px))} #info{bottom:calc(60px + env(safe-area-inset-bottom,0px))} #legend{right:12px;bottom:calc(132px + env(safe-area-inset-bottom,0px))}}
+@media (max-width:760px){
+  #top{left:8px;right:8px;top:calc(8px + env(safe-area-inset-top,0px));width:auto;max-width:none;padding:8px 10px}
+  h1{font-size:14px;margin-bottom:6px}
+  .chips{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-inline:contain;padding:0 0 3px;scrollbar-width:thin}
+  .chip{flex:0 0 auto;min-height:34px;padding:6px 9px;font-size:11px}
+  #tools{left:50%;right:auto;top:auto;bottom:calc(8px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:max-content;max-width:calc(100% - 16px);justify-content:center;gap:4px;padding:4px}
+  .btn{min-height:40px;padding:7px 9px;font-size:11px;white-space:nowrap}
+  #info{left:8px;bottom:calc(60px + env(safe-area-inset-bottom,0px));width:min(48%,220px);min-width:0;max-width:48%;padding:8px 10px}
+  #info b{font-size:13px;line-height:1.25}
+  #info span{display:-webkit-box;overflow:hidden;font-size:11px;line-height:1.3;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+  #legend{right:8px;bottom:calc(60px + env(safe-area-inset-bottom,0px));width:min(44%,190px);min-width:0;padding:8px 9px}
+  #legend strong{font-size:11px;margin-bottom:5px}
+  #legend .row{gap:5px;margin-bottom:2px;font-size:11px}
+}
+@media (max-width:380px){
+  #info{width:44%;max-width:44%;padding:7px 8px}
+  #legend{width:48%;padding:7px 8px}
+  #legend .row{gap:4px;font-size:11px}
+  .btn{padding-inline:7px;font-size:11px}
+}
 </style>
 </head>
 <body>
