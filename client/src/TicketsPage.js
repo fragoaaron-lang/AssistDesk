@@ -410,7 +410,8 @@ function TicketsPage() {
         <strong>{ticket.ticket_code || `#${ticket.id}`}</strong>
         <span className={`ticket-record-priority ${String(ticket.priority || 'medium').toLowerCase()}`}>{ticket.priority || 'medium'}</span>
       </span>
-      <span className="ticket-record-subject">{ticket.subject || 'Request details unavailable'}</span>
+      <span className="ticket-record-issue"><small>General issue</small><strong>{ticket.category || 'Other'}</strong></span>
+      <span className="ticket-record-issue"><small>Specific issue</small><strong className="ticket-record-subject">{ticket.subject || 'Request details unavailable'}</strong></span>
       <span className="ticket-record-meta">
         <span className={`ticket-record-status ${String(ticket.status || 'open').toLowerCase().replace(/_/g, '-')}`}>{String(ticket.status || 'open').replace(/_/g, ' ')}</span>
         <time dateTime={ticket.created_at || undefined}>{ticket.created_at ? new Date(ticket.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Date unavailable'}</time>
@@ -928,7 +929,10 @@ function TicketsPage() {
                 </div>
                 <button type="button" className="ticket-detail-close" onClick={() => setSelectedTicket(null)} aria-label="Close ticket details">×</button>
               </div>
-              <h4>{selectedTicket.subject}</h4>
+              <div className="ticket-detail-issues" aria-label="Ticket issue details">
+                <div><span>General issue</span><strong>{selectedTicket.category || 'Other'}</strong></div>
+                <div><span>Specific issue</span><strong>{selectedTicket.subject || 'Request details unavailable'}</strong></div>
+              </div>
               <TicketProgressBar
                 status={selectedTicket.status}
                 canUpdate={isTicketManager}
@@ -944,7 +948,6 @@ function TicketsPage() {
                 <div><strong>Routing mode:</strong> {selectedTicket.routing_method || 'manual'}</div>
                 <div><strong>Routing confidence:</strong> {selectedTicket.routing_confidence == null ? 'Not recorded' : `${Math.round(selectedTicket.routing_confidence * 100)}% (heuristic)`}</div>
                 <div><strong>Original suggestion:</strong> {departments.find((department) => Number(department.id) === Number(selectedTicket.suggested_department_id))?.name || 'Not available'}</div>
-                <div><strong>Category:</strong> {selectedTicket.category || 'Other'}</div>
                 <div><strong>Priority:</strong> {selectedTicket.priority}</div>
                 <div><strong>Estimated completion:</strong> {formatDateTime(selectedTicket.estimated_completion_at)}</div>
               </div>

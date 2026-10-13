@@ -3546,6 +3546,9 @@ body.dark-mode .map-ticket-detail-close {
 .ticket-record-topline,
 .ticket-record-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
 .ticket-record-topline strong { color: var(--navy); font-size: 0.8rem; letter-spacing: 0.025em; }
+.ticket-record-issue { display: grid; min-width: 0; gap: 2px; }
+.ticket-record-issue > small { color: var(--muted); font-size: 0.66rem; font-weight: 600; line-height: 1.25; }
+.ticket-record-issue > strong { min-width: 0; color: var(--text); font-size: 0.8rem; font-weight: 650; line-height: 1.3; overflow-wrap: anywhere; }
 .ticket-record-subject { display: -webkit-box; overflow: hidden; color: var(--text); font-size: 0.88rem; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
 .ticket-record-priority,
 .ticket-record-status { display: inline-flex; align-items: center; width: fit-content; max-width: 100%; padding: 3px 8px; border-radius: 999px; font-size: 0.68rem; font-weight: 700; line-height: 1.25; text-transform: capitalize; }
@@ -3582,6 +3585,10 @@ body.dark-mode .map-ticket-detail-close {
 .ticket-detail-modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
 .ticket-detail-modal-header h3 { margin: 2px 0 14px; color: var(--navy); }
 .ticket-detail-modal h4 { margin: 0 0 10px; color: var(--navy); }
+.ticket-detail-issues { display: grid; gap: 10px; margin-bottom: 14px; }
+.ticket-detail-issues > div { display: grid; gap: 3px; }
+.ticket-detail-issues span { color: var(--muted); font-size: 0.75rem; font-weight: 650; }
+.ticket-detail-issues strong { color: var(--text); font-size: 0.94rem; overflow-wrap: anywhere; }
 .ticket-detail-close { border: 0; background: transparent; color: var(--navy); font-size: 1.8rem; line-height: 1; cursor: pointer; }
 .ticket-detail-meta { display: grid; gap: 6px; margin: 14px 0; color: var(--muted); }
 
