@@ -3,6 +3,7 @@ import { useAuth } from './AuthContext';
 import { API_BASE_URL } from './config';
 import HeaderProfile from './HeaderProfile';
 import LogoutButton from './LogoutButton';
+import PhoneAlertsControl from './PhoneAlertsControl';
 
 const defaultPrefs = {
   compactMode: false,
@@ -584,6 +585,8 @@ function ProfilePage() {
             <span>Push alerts</span>
             <input type="checkbox" checked={prefs.pushAlerts} onChange={(e) => updatePreference('pushAlerts', e.target.checked)} />
           </label>
+
+          <PhoneAlertsControl />
 
           <div className="preference-row">
             <span>Dark mode</span>

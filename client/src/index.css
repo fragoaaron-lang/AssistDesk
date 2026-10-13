@@ -3305,44 +3305,6 @@ body.dark-mode .map-ticket-detail-close {
   color: var(--navy);
 }
 
-.notification-push-settings {
-  display: grid;
-  gap: 5px;
-  margin: 0 -0.15rem 0.55rem;
-  padding: 0.15rem 0.15rem 0.7rem;
-  border-bottom: 1px solid #eef2f7;
-}
-
-.notification-push-toggle {
-  justify-self: start;
-  min-height: 36px;
-  padding: 7px 11px;
-  border: 1px solid rgba(31, 111, 120, 0.32);
-  border-radius: 8px;
-  background: #eff8f8;
-  color: var(--teal);
-  font: inherit;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.notification-push-toggle:disabled {
-  opacity: 0.65;
-  cursor: wait;
-}
-
-.notification-push-settings span,
-.notification-push-settings small {
-  color: var(--muted);
-  font-size: 0.7rem;
-  line-height: 1.4;
-}
-
-.notification-push-settings small {
-  color: var(--teal);
-}
-
 .notification-empty {
   padding: 12px 8px 8px;
   color: var(--muted);
@@ -4273,12 +4235,6 @@ body.dark-mode .notification-dropdown-header {
   border-bottom-color: var(--border);
   color: #dfeaf5;
 }
-body.dark-mode .notification-push-settings { border-bottom-color: var(--border); }
-body.dark-mode .notification-push-toggle {
-  background: #17363b;
-  border-color: #356b6c;
-  color: #a5e1db;
-}
 body.dark-mode .notification-bell-item {
   border-bottom-color: var(--border);
 }
@@ -4412,7 +4368,6 @@ a {
   overscroll-behavior: contain;
 }
 
-.notification-push-toggle,
 .notification-delete-btn,
 .mobile-menu-close,
 .mobile-menu-toggle,
@@ -5250,6 +5205,27 @@ body.dark-mode .ticket-status-badge.closed { background: #303b44; border-color: 
 .preference-row > span:first-child {
   min-width: 0;
   font-weight: 600;
+}
+
+.phone-alerts-copy {
+  display: grid;
+  gap: 3px;
+}
+
+.phone-alerts-copy small {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.phone-alerts-copy small[role='status'] {
+  color: var(--teal);
+}
+
+.phone-alerts-row .preference-switch:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .preference-row input[type='checkbox'] {
