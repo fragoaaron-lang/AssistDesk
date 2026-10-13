@@ -32,7 +32,7 @@ test('allows everyday academic and student-life questions', () => {
 });
 
 test('keeps brief conversational messages available', () => {
-  ['Hello', 'Thank you', 'What can you do?', 'What are you?'].forEach((message) => {
+  ['Hello', 'Thank you', 'What can you do?', 'What are you?', 'What are yoou?'].forEach((message) => {
     assert.equal(isSchoolRelatedQuestion(message), true, message);
   });
 });
