@@ -35,7 +35,8 @@ function DashboardPage() {
 
   const dashboardSummary = useMemo(() => {
     const tickets = dashboard.tickets || [];
-    const activeTickets = tickets.length || visibleDepartments.reduce((total, department) => total + Number(department.ticket_count || 0), 0);
+    const openTicketCount = tickets.filter((ticket) => String(ticket.status || '').toLowerCase() === 'open').length;
+    const activeTickets = tickets.length ? openTicketCount : visibleDepartments.reduce((total, department) => total + Number(department.ticket_count || 0), 0);
     const urgentTickets = tickets.filter((ticket) => String(ticket.priority || '').toLowerCase() === 'urgent').length;
     const liveDepartments = visibleDepartments.filter((department) => Number(department.ticket_count || 0) > 0).length;
 
@@ -343,30 +344,30 @@ function DashboardPage() {
             <h2>Campus support at a glance</h2>
           </div>
           <div className="overview-grid">
-            <article className="overview-stat primary">
+            <a className="overview-stat primary" href="/tickets?status=open" aria-label={`View ${dashboardSummary.activeTickets} open tickets`}>
               <span className="overview-label">Open tickets</span>
               <strong>{dashboardSummary.activeTickets}</strong>
               <small>{dashboardSummary.urgentTickets} urgent items</small>
-            </article>
-            <article className="overview-stat">
+            </a>
+            <a className="overview-stat" href="/dashboard#department-queue" aria-label={`View active departments, ${dashboardSummary.liveDepartments} of ${dashboardSummary.totalDepartments}`}>
               <span className="overview-label">Active departments</span>
               <strong>{dashboardSummary.liveDepartments}</strong>
               <small>of {dashboardSummary.totalDepartments} monitored</small>
-            </article>
-            <article className="overview-stat">
+            </a>
+            <a className="overview-stat" href="/tickets?priority=urgent" aria-label={`View ${dashboardSummary.urgentTickets} urgent tickets needing triage`}>
               <span className="overview-label">High priority</span>
               <strong>{dashboardSummary.urgentTickets}</strong>
               <small>need triage today</small>
-            </article>
-            <article className="overview-stat">
+            </a>
+            <a className="overview-stat" href="/dashboard#campus-map" aria-label="View the live campus ticket map">
               <span className="overview-label">Campus pulse</span>
               <strong>{dashboardSummary.activeTickets > 0 ? 'Live' : 'Quiet'}</strong>
               <small>{dashboardSummary.activeTickets > 0 ? 'Tickets are moving' : 'No open requests'}</small>
-            </article>
+            </a>
           </div>
         </section>
 
-        <section className="dashboard-queue" aria-label="Department queue summary">
+        <section id="department-queue" className="dashboard-queue" aria-label="Department queue summary">
           <div className="queue-header">
             <div>
               <p className="eyebrow">Department queue</p>
@@ -401,7 +402,7 @@ function DashboardPage() {
           </div>
         </section>
 
-        <div className="institutional-card" style={{ marginBottom: '20px' }}>
+        <div id="campus-map" className="institutional-card" style={{ marginBottom: '20px' }}>
           <div className="map-toolbar">
             <div>
               <h3>Campus 3D overview</h3>

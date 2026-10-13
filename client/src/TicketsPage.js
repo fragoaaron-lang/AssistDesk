@@ -220,6 +220,9 @@ const deduplicateDepartments = (records) => {
 
 function TicketsPage() {
   const { token, user } = useAuth();
+  const searchParams = new URLSearchParams(window.location.search);
+  const statusFilter = ['open', 'pending', 'in_progress', 'resolved', 'closed'].includes(searchParams.get('status')) ? searchParams.get('status') : '';
+  const priorityFilter = ['low', 'medium', 'urgent'].includes(searchParams.get('priority')) ? searchParams.get('priority') : '';
   const isTicketManager = ['admin', 'staff'].includes(user?.role);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [tickets, setTickets] = useState([]);
@@ -312,6 +315,10 @@ function TicketsPage() {
       return !collegeKey || collegeKey === studentCollegeKey;
     })
     : departments;
+  const visibleTickets = tickets.filter((ticket) => (
+    (!statusFilter || String(ticket.status || '').toLowerCase() === statusFilter)
+      && (!priorityFilter || String(ticket.priority || '').toLowerCase() === priorityFilter)
+  ));
 
   const isMaintenanceDepartment = selectedDepartment?.name?.toLowerCase().includes('maintenance');
   const getDepartmentFolder = (department) => {
@@ -320,7 +327,7 @@ function TicketsPage() {
     return { key: key || 'unassigned', name: name.toLowerCase().includes('maintenance') ? 'Maintenance Department' : name };
   };
 
-  const groupedTickets = Object.values(tickets.reduce((groups, ticket) => {
+  const groupedTickets = Object.values(visibleTickets.reduce((groups, ticket) => {
     const requesterDepartment = ticket.User?.Department;
     const department = isTicketManager
       ? requesterDepartment
@@ -338,7 +345,7 @@ function TicketsPage() {
   }, {})).sort((first, second) => first.name.localeCompare(second.name));
 
   const adminRoleGroups = ['student', 'faculty', 'staff', 'unassigned'].map((role) => {
-    const roleTickets = tickets.filter((ticket) => ticket.User?.role === role || (!ticket.User?.role && role === 'unassigned'));
+    const roleTickets = visibleTickets.filter((ticket) => ticket.User?.role === role || (!ticket.User?.role && role === 'unassigned'));
     if (role !== 'student') return { key: role, name: role[0].toUpperCase() + role.slice(1), tickets: roleTickets, departments: [] };
     const departmentsByKey = roleTickets.reduce((groups, ticket) => {
       const { key, name } = getDepartmentFolder(ticket.User?.Department);
@@ -827,15 +834,15 @@ function TicketsPage() {
         <div className="institutional-card ticket-list-card">
           <div className="ticket-section-heading">
             <div>
-              <h3>Recent tickets</h3>
+              <h3>{priorityFilter === 'urgent' ? 'Urgent tickets' : statusFilter === 'open' ? 'Open tickets' : 'Recent tickets'}</h3>
               <p>{isTicketManager ? 'Select a request to review details and manage its progress.' : 'Choose a department to follow the status of your requests.'}</p>
             </div>
-            <span className="ticket-list-count">{tickets.length} {tickets.length === 1 ? 'ticket' : 'tickets'}</span>
+            <span className="ticket-list-count">{visibleTickets.length} {visibleTickets.length === 1 ? 'ticket' : 'tickets'}</span>
           </div>
-          {tickets.length === 0 ? (
+          {visibleTickets.length === 0 ? (
             <div className="ticket-empty-state" role="status">
-              <strong>{isTicketManager ? 'No tickets to review' : 'No requests yet'}</strong>
-              <p>{isTicketManager ? 'New requests will appear here when they are submitted.' : 'Create a request above to start tracking progress with your support department.'}</p>
+              <strong>{statusFilter || priorityFilter ? 'No matching tickets' : isTicketManager ? 'No tickets to review' : 'No requests yet'}</strong>
+              <p>{statusFilter || priorityFilter ? 'Try viewing all tickets or check back when matching requests arrive.' : isTicketManager ? 'New requests will appear here when they are submitted.' : 'Create a request above to start tracking progress with your support department.'}</p>
             </div>
           ) : isTicketManager ? (
             <div className="list-stack admin-ticket-folders">

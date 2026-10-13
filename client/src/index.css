@@ -2559,6 +2559,21 @@ button, input, select, textarea {
   border-radius: 18px;
   background: linear-gradient(135deg, rgba(255,255,255,0.96), rgba(236,244,250,0.9));
   box-shadow: 0 10px 32px rgba(15, 59, 91, 0.08);
+  color: inherit;
+  text-decoration: none;
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+a.overview-stat:hover {
+  transform: translateY(-2px);
+  border-color: rgba(31, 111, 120, 0.48);
+  box-shadow: 0 14px 34px rgba(15, 59, 91, 0.14);
+  text-decoration: none;
+}
+
+a.overview-stat:focus-visible {
+  outline: 3px solid var(--teal);
+  outline-offset: 3px;
 }
 
 .overview-stat.primary {
