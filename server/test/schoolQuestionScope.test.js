@@ -5,6 +5,7 @@ const { isSchoolRelatedQuestion, OUT_OF_SCOPE_RESPONSE } = require('../utils/sch
 test('allows questions about TCC, its campus, and school support', () => {
   const schoolQuestions = [
     'What is the enrollment process at TCC?',
+    'How do I enroll?',
     'Where is the library?',
     'How do I reset my school password?',
     'Can I check my ticket status?',

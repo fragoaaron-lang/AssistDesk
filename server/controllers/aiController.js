@@ -14,6 +14,7 @@ const normalize = (text) =>
 const tokenize = (text) => normalize(text).split(' ').filter(Boolean);
 
 const normalizeFaqQuery = (text) => normalize(text)
+  .replace(/\b(enroll(?:ment|ments|ing|ed)?|enrol(?:ment|ments|ling|led)?)\b/g, ' enrollment ')
   .replace(/computer science/g, ' cs bscs ')
   .replace(/basic education/g, ' basic education ')
   .replace(/criminal justice|criminology/g, ' crim bscrim ')
