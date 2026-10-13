@@ -1,6 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { isSchoolRelatedQuestion, OUT_OF_SCOPE_RESPONSE } = require('../utils/schoolQuestionScope');
+const normalizeFaqQuery = require('../utils/normalizeFaqQuery');
+const isTorRequest = require('../utils/isTorRequest');
 
 test('allows questions about TCC, its campus, and school support', () => {
   const schoolQuestions = [
@@ -15,6 +17,19 @@ test('allows questions about TCC, its campus, and school support', () => {
   ];
 
   schoolQuestions.forEach((question) => assert.equal(isSchoolRelatedQuestion(question), true, question));
+});
+
+test('normalizes TOR phrasing so it matches transcript FAQs', () => {
+  assert.equal(
+    normalizeFaqQuery('Where can I get my transcript of records?'),
+    normalizeFaqQuery('Where can I get my TOR?')
+  );
+});
+
+test('recognizes common TOR request wording without treating unrelated TOR mentions as requests', () => {
+  ['Where can I get my TOR?', 'How do I request my Transcript of Records?', 'Where do I claim my transcript?']
+    .forEach((question) => assert.equal(isTorRequest(question), true, question));
+  assert.equal(isTorRequest('What does TOR mean in a game?'), false);
 });
 
 test('allows everyday academic and student-life questions', () => {

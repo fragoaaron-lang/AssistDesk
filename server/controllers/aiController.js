@@ -3,6 +3,8 @@ const { notifyUser, notifyAdmins, notifyDepartmentAdmins, notifyDepartmentStaff 
 const { addTicketNumber } = require('../utils/ticketNumber');
 const { inferDepartment } = require('../utils/departmentRouting');
 const { isSchoolRelatedQuestion, OUT_OF_SCOPE_RESPONSE } = require('../utils/schoolQuestionScope');
+const normalizeFaqQuery = require('../utils/normalizeFaqQuery');
+const isTorRequest = require('../utils/isTorRequest');
 
 const normalize = (text) =>
   String(text || '')
@@ -12,15 +14,6 @@ const normalize = (text) =>
     .trim();
 
 const tokenize = (text) => normalize(text).split(' ').filter(Boolean);
-
-const normalizeFaqQuery = (text) => normalize(text)
-  .replace(/\b(enroll(?:ment|ments|ing|ed)?|enrol(?:ment|ments|ling|led)?)\b/g, ' enrollment ')
-  .replace(/computer science/g, ' cs bscs ')
-  .replace(/basic education/g, ' basic education ')
-  .replace(/criminal justice|criminology/g, ' crim bscrim ')
-  .replace(/hospitality management/g, ' hm bshm ')
-  .replace(/physical therapy/g, ' pt bspt ')
-  .replace(/information technology|it department/g, ' it ');
 
 const departmentAliases = [
   { id: 'basic', terms: ['basic education', 'elementary', 'jhs', 'shs'] },
@@ -34,7 +27,7 @@ const departmentAliases = [
   { id: 'maintenance', terms: ['maintenance'] },
   { id: 'clinic', terms: ['clinic'] },
   { id: 'accounting', terms: ['accounting department', 'accounting'] },
-  { id: 'registrar', terms: ['registrar office', 'registrar department', 'registrar', 'transcript of records'] },
+  { id: 'registrar', terms: ['registrar office', 'registrar department', 'registrar', 'transcript of records', 'tor'] },
   { id: 'osa', terms: ['office of the student affairs', 'office of student affairs', 'student affairs', 'osa'] },
   { id: 'guidance', terms: ['guidance'] },
   { id: 'library', terms: ['library'] },
@@ -68,9 +61,11 @@ const scoreFaq = (query, faq, departmentIntent) => {
   const normalizedQuery = normalizeFaqQuery(query);
   const normalizedQuestion = normalizeFaqQuery(faq.question);
   if (normalizedQuery === normalizedQuestion) return 1000;
-  const questionScore = scoreText(normalizedQuery, normalizedQuestion);
+  const genericWords = new Set(['a', 'an', 'and', 'are', 'can', 'do', 'does', 'for', 'get', 'how', 'i', 'in', 'is', 'it', 'me', 'my', 'of', 'or', 'the', 'to', 'was', 'what', 'when', 'where', 'which', 'who', 'you', 'your']);
+  const specificQuery = tokenize(normalizedQuery).filter((token) => !genericWords.has(token)).join(' ');
+  const specificQuestion = tokenize(normalizedQuestion).filter((token) => !genericWords.has(token)).join(' ');
+  const questionScore = scoreText(specificQuery, specificQuestion);
   const keywordScore = scoreText(normalizedQuery, faq.keywords || '');
-  const genericWords = new Set(['where', 'can', 'i', 'get', 'the', 'a', 'is', 'of', 'to', 'in', 'my', 'who', 'what', 'or', 'and']);
   const specificQuestionScore = tokenize(normalizedQuestion).filter((token) => !genericWords.has(token)).reduce((score, token) => (
     normalizedQuery.includes(token) ? score + 3 : score
   ), 0);
@@ -252,12 +247,32 @@ const buildResponse = async (query, suggestedQuestionKeywords = '') => {
   const services = await Service.findAll({ include: [{ model: Department }] });
   const normalizedQuery = normalize(query);
   const departmentIntent = getDepartmentIntent(query);
-  const exactFaq = faqs.find((faq) => normalize(faq.question) === normalizedQuery);
+  const normalizedFaqQuestion = normalizeFaqQuery(query);
+  const exactFaq = faqs.find((faq) => normalizeFaqQuery(faq.question) === normalizedFaqQuestion);
 
   if (!exactFaq) {
     const localResponse = getLocalConversationResponse(query);
     if (localResponse) {
       return { ai_response: localResponse, matched_department: null, department_details: null, service_details: null };
+    }
+
+    if (isTorRequest(query)) {
+      const registrar = findDepartmentForIntent(await Department.findAll(), 'registrar');
+      return {
+        ai_response: 'Request your Transcript of Records (TOR) from the Registrar Office at Window 1 or 3. Complete the request form at the Registrar window; they will provide a claim slip with the projected release date.',
+        matched_department: registrar?.id || null,
+        department_details: registrar ? {
+          id: registrar.id,
+          name: registrar.name,
+          point_person: registrar.point_person,
+          location: registrar.location,
+          office_hours: registrar.office_hours,
+        } : null,
+        service_details: null,
+        source: null,
+        clarification_required: false,
+        escalation_available: false,
+      };
     }
   }
 
