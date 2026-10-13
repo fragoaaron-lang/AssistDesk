@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { getSocket } from './socket';
 import axios from 'axios';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
+import { queueNotificationChimes } from './audioUtils';
 
 const base64UrlToBytes = (value) => {
   const padding = '='.repeat((4 - (value.length % 4)) % 4);
@@ -21,18 +22,46 @@ function NotificationBell() {
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
   const [pushStatus, setPushStatus] = useState('');
+  const seenNotificationIdsRef = useRef(null);
+  const notificationRequestIdRef = useRef(0);
   const supportsPush = typeof window !== 'undefined'
     && 'Notification' in window
     && 'serviceWorker' in navigator
     && 'PushManager' in window;
 
   const loadNotifications = async () => {
+    const requestId = notificationRequestIdRef.current + 1;
+    notificationRequestIdRef.current = requestId;
     try {
       const res = await axios.get(`${API_BASE_URL}/api/dashboard/notifications`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setNotifications(res.data || []);
+      if (requestId !== notificationRequestIdRef.current) return;
+
+      const nextNotifications = Array.isArray(res.data) ? res.data : [];
+      setNotifications(nextNotifications);
+      if (seenNotificationIdsRef.current === null) {
+        seenNotificationIdsRef.current = new Set(nextNotifications.map((notification) => String(notification.id)));
+        return;
+      }
+
+      const newNotifications = [...nextNotifications]
+        .sort((first, second) => new Date(first.created_at) - new Date(second.created_at))
+        .filter((notification) => {
+          const id = String(notification.id);
+          if (seenNotificationIdsRef.current.has(id)) return false;
+          seenNotificationIdsRef.current.add(id);
+          return true;
+        });
+
+      if (seenNotificationIdsRef.current.size > 1000) {
+        seenNotificationIdsRef.current = new Set([...seenNotificationIdsRef.current].slice(-500));
+      }
+      if (newNotifications.length > 0 && document.visibilityState === 'visible') {
+        queueNotificationChimes(newNotifications.length);
+      }
     } catch (err) {
+      if (requestId !== notificationRequestIdRef.current) return;
       console.error('Unable to load notifications', err);
       setNotifications([]);
     }
@@ -65,6 +94,8 @@ function NotificationBell() {
   };
 
   useEffect(() => {
+    seenNotificationIdsRef.current = null;
+    notificationRequestIdRef.current += 1;
     if (!token) {
       setNotifications([]);
       return;
