@@ -343,11 +343,11 @@ function TicketsPage() {
   }, { ...getDepartmentIssueOptions(selectedDepartment) });
   const specificIssueOptions = generalIssueOptions[form.category] || [];
   const visibleTickets = tickets.filter((ticket) => (
-    (isTicketManager
+    (ticketView === 'all'
       ? (!statusFilter || String(ticket.status || '').toLowerCase() === statusFilter)
-      : ticketView === 'all'
-        || (ticketView === 'resolved' && ['resolved', 'closed'].includes(String(ticket.status || '').toLowerCase()))
-        || (ticketView === 'active' && !['resolved', 'closed'].includes(String(ticket.status || '').toLowerCase())))
+      : ticketView === 'resolved'
+        ? ['resolved', 'closed'].includes(String(ticket.status || '').toLowerCase())
+        : !['resolved', 'closed'].includes(String(ticket.status || '').toLowerCase()))
       && (!priorityFilter || String(ticket.priority || '').toLowerCase() === priorityFilter)
   ));
 
@@ -872,34 +872,32 @@ function TicketsPage() {
         <div className="institutional-card ticket-list-card">
           <div className="ticket-section-heading">
             <div>
-              <h3>{priorityFilter === 'urgent' ? 'Urgent tickets' : !isTicketManager && ticketView === 'resolved' ? 'Resolved requests' : !isTicketManager && ticketView === 'active' ? 'Active requests' : statusFilter === 'open' ? 'Open tickets' : 'Recent tickets'}</h3>
+              <h3>{priorityFilter === 'urgent' ? 'Urgent tickets' : ticketView === 'resolved' ? (isTicketManager ? 'Resolved tickets' : 'Resolved requests') : ticketView === 'active' ? (isTicketManager ? 'Active tickets' : 'Active requests') : statusFilter === 'open' ? 'Open tickets' : 'Recent tickets'}</h3>
               <p>{isTicketManager ? 'Select a request to review details and manage its progress.' : 'Choose a department to follow the status of your requests.'}</p>
             </div>
             <span className="ticket-list-count">{visibleTickets.length} {visibleTickets.length === 1 ? 'ticket' : 'tickets'}</span>
           </div>
-          {!isTicketManager && (
-            <div className="ticket-view-tabs" role="group" aria-label="Filter your requests">
-              {[
-                ['all', 'All requests'],
-                ['active', 'Active'],
-                ['resolved', 'Resolved'],
-              ].map(([view, label]) => (
-                <button
-                  key={view}
-                  type="button"
-                  className={`ticket-view-tab${ticketView === view ? ' active' : ''}`}
-                  aria-pressed={ticketView === view}
-                  onClick={() => setTicketView(view)}
-                >
-                  {label}<span>{ticketViewCounts[view]}</span>
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="ticket-view-tabs" role="group" aria-label={isTicketManager ? 'Filter tickets by status' : 'Filter your requests'}>
+            {[
+              ['all', isTicketManager ? 'All tickets' : 'All requests'],
+              ['active', 'Active'],
+              ['resolved', 'Resolved'],
+            ].map(([view, label]) => (
+              <button
+                key={view}
+                type="button"
+                className={`ticket-view-tab${ticketView === view ? ' active' : ''}`}
+                aria-pressed={ticketView === view}
+                onClick={() => setTicketView(view)}
+              >
+                {label}<span>{ticketViewCounts[view]}</span>
+              </button>
+            ))}
+          </div>
           {visibleTickets.length === 0 ? (
             <div className="ticket-empty-state" role="status">
-              <strong>{statusFilter || priorityFilter ? 'No matching tickets' : isTicketManager ? 'No tickets to review' : 'No requests yet'}</strong>
-              <p>{statusFilter || priorityFilter ? 'Try viewing all tickets or check back when matching requests arrive.' : isTicketManager ? 'New requests will appear here when they are submitted.' : 'Create a request above to start tracking progress with your support department.'}</p>
+              <strong>{ticketView === 'resolved' ? (isTicketManager ? 'No resolved tickets' : 'No resolved requests') : ticketView === 'active' ? (isTicketManager ? 'No active tickets' : 'No active requests') : statusFilter || priorityFilter ? 'No matching tickets' : isTicketManager ? 'No tickets to review' : 'No requests yet'}</strong>
+              <p>{ticketView !== 'all' ? 'Tickets in this status group will appear here when available.' : statusFilter || priorityFilter ? 'Try adjusting the status or priority filter.' : isTicketManager ? 'New requests will appear here when they are submitted.' : 'Create a request above to start tracking progress with your support department.'}</p>
             </div>
           ) : isTicketManager ? (
             <div className="list-stack admin-ticket-folders">
