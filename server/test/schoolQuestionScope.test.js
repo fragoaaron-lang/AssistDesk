@@ -107,6 +107,12 @@ test('recognizes department location questions and answers from directory data',
     ])?.id,
     44
   );
+  assert.equal(
+    findDepartmentByName('where is libriary', [
+      { id: 4, name: 'Library', location: 'Administration Building' },
+    ])?.id,
+    4
+  );
   assert.match(getDepartmentLocationAnswer({ name: 'Library', location: null }), /confirmed location/i);
 });
 
