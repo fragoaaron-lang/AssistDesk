@@ -1870,19 +1870,21 @@ button, input, select, textarea {
   align-self: start;
   height: fit-content;
   min-height: 0;
+  min-width: 0;
 }
 .report-priority-chart-layout {
   display: grid;
-  grid-template-columns: minmax(150px, 180px) minmax(0, 1fr);
+  grid-template-columns: minmax(112px, 136px) minmax(0, 1fr);
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   min-height: 0;
-  padding: 4px 0 10px;
+  padding: 4px 0 8px;
 }
 .report-priority-pie {
   display: block;
-  width: clamp(128px, 18vw, 176px);
-  height: clamp(128px, 18vw, 176px);
+  width: clamp(112px, 11vw, 136px);
+  height: clamp(112px, 11vw, 136px);
+  max-width: 100%;
   flex: 0 0 auto;
   overflow: visible;
 }
@@ -1906,8 +1908,8 @@ button, input, select, textarea {
 .report-priority-slice.is-muted { opacity: 0.32; }
 .report-priority-chart-wrap {
   position: relative;
-  width: clamp(128px, 18vw, 176px);
-  height: clamp(128px, 18vw, 176px);
+  width: clamp(112px, 11vw, 136px);
+  height: clamp(112px, 11vw, 136px);
   flex: 0 0 auto;
 }
 .report-priority-chart-wrap .report-priority-pie {
@@ -1916,7 +1918,7 @@ button, input, select, textarea {
 }
 .report-priority-pie-center {
   position: absolute;
-  inset: 40px;
+  inset: clamp(30px, 2.4vw, 34px);
   display: flex;
   flex-direction: column;
   align-items: center;
