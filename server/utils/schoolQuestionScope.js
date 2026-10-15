@@ -21,10 +21,16 @@ const conversationalPatterns = [
 
 const identityQuestionPattern = /\b(who are you|what are y[o]{1,3}u|what is your name|what should i call you|tell me about yourself|what do you do|what is your role|are you (?:an? )?(?:ai|bot|human|assistant))\b/;
 const studentIdQuestionPattern = /\b(?:where|how)\s+(?:do i|can i|to)?\s*(?:get|find|replace|renew|obtain|apply for|request|claim)?\s*(?:my|a|the)?\s*(?:student|school)?\s*id\b/;
+const shortSchoolQuestionPattern = /^(?:tuition|fees?|grades?|enroll(?:ment)?|enrol(?:ment)?|schedule|id|documents?|requirements|admission|library|registrar|uniform)(?:\s+(?:po|ba|please|please help))?$/;
+const taglishSchoolQuestionPattern = /\b(?:saan|nasaan|paano|magkano|kailan|ano|sino|pwede|puwede|pede)\b.*\b(?:enroll(?:ment)?|enrol(?:ment)?|tuition|fees?|grades?|schedule|registrar|library|student id|requirements|documents?|campus|office)\b/;
+const studentDistressPattern = /\b(?:i feel|i am|i'm|im|feeling|sobrang|masyado)\b.{0,50}\b(?:distressed|overwhelmed|anxious|anxiety|stressed|stress|sad|depressed|panic|takot|nahihirapan|pagod)\b/i;
 
 const isSchoolRelatedQuestion = (value) => {
   const normalized = normalizeStudentQuery(value);
   if (!normalized) return false;
+  if (shortSchoolQuestionPattern.test(normalized)) return true;
+  if (taglishSchoolQuestionPattern.test(normalized)) return true;
+  if (studentDistressPattern.test(normalized)) return true;
   if (identityQuestionPattern.test(normalized)) return true;
   if (studentIdQuestionPattern.test(normalized)) return true;
   if (conversationalPatterns.some((pattern) => pattern.test(normalized))) return true;
@@ -32,6 +38,6 @@ const isSchoolRelatedQuestion = (value) => {
     || studentHelpPatterns.some((pattern) => pattern.test(normalized));
 };
 
-const OUT_OF_SCOPE_RESPONSE = 'I can help with TCC, studying, learning, and everyday student-life questions. I can’t help with topics unrelated to school or student life.';
+const OUT_OF_SCOPE_RESPONSE = 'I can help students, parents, and applicants with TCC enrollment, fees, schedules, grades, documents, policies, and campus services. I can’t help with topics unrelated to school or student life.';
 
 module.exports = { isSchoolRelatedQuestion, OUT_OF_SCOPE_RESPONSE };

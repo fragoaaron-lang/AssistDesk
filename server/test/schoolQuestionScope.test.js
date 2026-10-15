@@ -7,6 +7,8 @@ const isClassScheduleRequest = require('../utils/isClassScheduleRequest');
 const isRegistrarDocumentRequest = require('../utils/isRegistrarDocumentRequest');
 const isStudentIdRequest = require('../utils/isStudentIdRequest');
 const { isDepartmentLocationRequest, findDepartmentByName, getDepartmentLocationAnswer } = require('../utils/departmentLocation');
+const { isFilipinoOrTaglish } = require('../utils/responseLanguage');
+const assistantSystemInstruction = require('../utils/assistantSystemInstruction');
 const { getClassScheduleFollowupQuery, getDepartmentScheduleAnswer, SCHEDULE_PROMPT } = require('../utils/classScheduleFollowup');
 
 test('allows questions about TCC, its campus, and school support', () => {
@@ -91,6 +93,21 @@ test('understands minor typos and common shorthand in student questions', () => 
     normalizeFaqQuery('ere to get my id?'),
     normalizeFaqQuery('where to get my id?')
   );
+  assert.equal(normalizeFaqQuery('inrol po ako'), normalizeFaqQuery('enrollment po ako'));
+});
+
+test('accepts short Filipino and Taglish school questions and identifies response language', () => {
+  ['tuition?', 'grades po', 'saan ang registrar?', 'paano mag-enroll sa TCC?'].forEach((question) => {
+    assert.equal(isSchoolRelatedQuestion(question), true, question);
+  });
+  assert.equal(isFilipinoOrTaglish('Saan ang registrar?'), true);
+  assert.equal(isFilipinoOrTaglish('Where is the Registrar?'), false);
+});
+
+test('recognizes distressed students as in-scope and provides the Guidance route in policy', () => {
+  assert.equal(isSchoolRelatedQuestion('I feel overwhelmed and stressed'), true);
+  assert.match(assistantSystemInstruction, /respond with care/i);
+  assert.match(assistantSystemInstruction, /Guidance Office/i);
 });
 
 test('recognizes department location questions and answers from directory data', () => {

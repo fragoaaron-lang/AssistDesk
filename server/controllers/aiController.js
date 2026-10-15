@@ -11,6 +11,8 @@ const isStudentIdRequest = require('../utils/isStudentIdRequest');
 const { getClassScheduleFollowupQuery, getDepartmentScheduleAnswer, SCHEDULE_PROMPT } = require('../utils/classScheduleFollowup');
 const normalizeStudentQuery = require('../utils/normalizeStudentQuery');
 const { isDepartmentLocationRequest, findDepartmentByName, getDepartmentLocationAnswer } = require('../utils/departmentLocation');
+const ASSISTANT_SYSTEM_INSTRUCTION = require('../utils/assistantSystemInstruction');
+const { isFilipinoOrTaglish } = require('../utils/responseLanguage');
 
 const normalize = normalizeStudentQuery;
 
@@ -104,6 +106,10 @@ const getLocalConversationResponse = (query) => {
   const normalizedQuery = normalize(query);
   const now = new Date();
   const greetingPattern = /(?:^|\s)(hi|hii|hey|hello|good morning|good afternoon|good evening)(?:\s|$)/;
+
+  if (/\b(?:i feel|i am|i m|im|feeling|sobrang|masyado)\b.{0,50}\b(?:distressed|overwhelmed|anxious|anxiety|stressed|stress|sad|depressed|panic|takot|nahihirapan|pagod)\b/.test(normalizedQuery)) {
+    return 'I’m sorry you’re going through this. Please reach out to the TCC Guidance Office or someone you trust. If you may be in immediate danger, contact local emergency services or a trusted adult now.';
+  }
 
   if (/\b(who are you|what are y[o]{1,3}u|what is your name|what should i call you|tell me about yourself|what do you do|what is your role|are you (?:an? )?(?:ai|bot|human|assistant))\b/.test(normalizedQuery)) {
     return 'I am AssistDesk, your campus support assistant. How can I help you today?';
@@ -209,7 +215,7 @@ const getGeminiResponse = async (query, faqs, services, departments) => {
   const context = [
     ...faqs.map((faq) => `FAQ [${faq.Department?.name || 'General'}] Q: ${faq.question} A: ${faq.answer}`),
     ...services.map((service) => `Service [${service.Department?.name || 'General'}] ${service.name}: ${service.requirements || ''} ${service.processing_time || ''}`),
-    ...departments.map((department) => `Department: ${department.name}; location: ${department.location || 'not listed'}; point person: ${department.point_person || 'not listed'}`),
+    ...departments.map((department) => `Department: ${department.name}; location: ${department.location || 'not listed'}; point person: ${department.point_person || 'not listed'}; contact: ${department.contact_number || 'not listed'}; office hours: ${department.office_hours || 'not listed'}`),
     ...schoolKnowledgeBase.map(([question, answer]) => `School fact Q: ${question} A: ${answer}`),
   ].join('\n');
 
@@ -219,7 +225,7 @@ const getGeminiResponse = async (query, faqs, services, departments) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       system_instruction: {
-        parts: [{ text: 'You are AssistDesk, a friendly assistant for Tomas Claudio Colleges (TCC) students. Help with TCC campus and service information, studying, learning concepts, homework guidance, writing, and everyday student-life questions. Politely decline topics unrelated to school or student life. For TCC-specific facts, use only the supplied context; if it does not contain the answer, say so and suggest contacting the relevant school office instead of guessing. You may explain general academic concepts using your knowledge. Never claim to have performed an action you cannot perform.' }],
+        parts: [{ text: ASSISTANT_SYSTEM_INSTRUCTION }],
       },
       contents: [{ role: 'user', parts: [{ text: `School context:\n${context}\n\nStudent question: ${query}` }] }],
       generationConfig: { temperature: 0.4, maxOutputTokens: 300 },
@@ -227,6 +233,28 @@ const getGeminiResponse = async (query, faqs, services, departments) => {
   });
 
   if (!response.ok) throw new Error(`Gemini request failed with status ${response.status}`);
+  const data = await response.json();
+  return data.candidates?.[0]?.content?.parts?.map((part) => part.text).join('').trim() || null;
+};
+
+const getLocalizedGroundedResponse = async (query, officialAnswer) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || typeof fetch !== 'function') return null;
+
+  const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      system_instruction: {
+        parts: [{ text: `${ASSISTANT_SYSTEM_INSTRUCTION}\n\nFor this task, translate or briefly restate the official answer in the language used by the student. Use only the supplied answer. Preserve names, numbers, dates, and qualifications exactly; do not add facts. Return only the answer text.` }],
+      },
+      contents: [{ role: 'user', parts: [{ text: `Student question: ${query}\nOfficial answer: ${officialAnswer}` }] }],
+      generationConfig: { temperature: 0.1, maxOutputTokens: 300 },
+    }),
+  });
+
+  if (!response.ok) throw new Error(`Gemini localization failed with status ${response.status}`);
   const data = await response.json();
   return data.candidates?.[0]?.content?.parts?.map((part) => part.text).join('').trim() || null;
 };
@@ -709,6 +737,14 @@ exports.askAssistant = async (req, res) => {
     const scheduleFollowupQuery = getClassScheduleFollowupQuery(message, previousAssistantMessage);
     const commandResult = await handleTicketCommand(message, req.user.id);
     const result = commandResult || await buildResponse(scheduleFollowupQuery || message, suggestedQuestionKeywords);
+    if (!commandResult && isFilipinoOrTaglish(message)) {
+      try {
+        const localizedResponse = await getLocalizedGroundedResponse(message, result.ai_response);
+        if (localizedResponse) result.ai_response = localizedResponse;
+      } catch (error) {
+        console.error(JSON.stringify({ event: 'student_help_localization_failed', error_name: error.name || 'Error' }));
+      }
+    }
 
     const assistantName = ['Alex', 'Maya'].includes(requestedAssistantName) ? requestedAssistantName : 'Assistant';
     result.ai_response = result.ai_response

@@ -8,6 +8,7 @@ const normalizeStudentQuery = (value) => String(value || '')
   .replace(/\b(?:ur)\b/g, 'your')
   .replace(/\b(?:pls|plz)\b/g, 'please')
   .replace(/\bthx\b/g, 'thanks')
+  .replace(/\binrol(?:ment)?\b/g, 'enrollment')
   .replace(/\s+/g, ' ')
   .trim();
 
