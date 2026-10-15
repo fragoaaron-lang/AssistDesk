@@ -1,4 +1,4 @@
-const normalize = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+const normalize = require('./normalizeStudentQuery');
 
 const isStudentIdRequest = (value) => {
   const query = normalize(value);

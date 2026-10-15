@@ -81,6 +81,17 @@ test('recognizes student ID questions without treating unrelated IDs as school q
   assert.equal(isStudentIdRequest('Where do I get an ID for a software license?'), false);
 });
 
+test('understands minor typos and common shorthand in student questions', () => {
+  ['ere to get my id?', 'whr to get my ID?', 'wher can u get ur student id pls?'].forEach((question) => {
+    assert.equal(isStudentIdRequest(question), true, question);
+    assert.equal(isSchoolRelatedQuestion(question), true, question);
+  });
+  assert.equal(
+    normalizeFaqQuery('ere to get my id?'),
+    normalizeFaqQuery('where to get my id?')
+  );
+});
+
 test('allows everyday academic and student-life questions', () => {
   const studentQuestions = [
     'Can you explain photosynthesis?',

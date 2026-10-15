@@ -1,3 +1,5 @@
+const normalizeStudentQuery = require('./normalizeStudentQuery');
+
 const schoolContextPatterns = [
   /\b(tomas claudio colleges?|\btcc\b|school|campus|college|university|academic|academics|education|educational|student|students|pupil|pupils|faculty|teacher|teachers|professor|professors|class|classes|classmate|classmates|schoolwork|homework|coursework|schoolwork|school rules|school policy|school policies|school office|school service|school services)\b/,
   /\b(department|registrar|enroll(?:ment|ments|ing|ed)?|enrol(?:ment|ments|ling|led)?|admission|admissions|tuition|school fee|school fees|grades?|grading|semester|term|subject load|class schedule|schedule|timetable|classroom|lecture|thesis|transcript|diploma|scholarship|school id|student id|student identification|id card|id replacement|library card|campus map|campus security|student affairs|guidance office|school clinic|school library|school account|student portal|school email|orientation|photocopies|photocopy|units|unit load|prerequisite|curriculum|cafeteria|canteen|dormitory|boarding house|shuttle|transportation|insurance|bullying|harassment|plagiarism|cheating|assignment|assignments|online learning platform|learning platform|academic adviser|academic advisor|counseling|counselling|adviser|advisor|library|clinic|maintenance|accounting|cashier|guidance|dean|principal|registrar|faculty|professor|teacher|ticket|support request|school document|reset my password|password reset)\b/,
@@ -20,14 +22,8 @@ const conversationalPatterns = [
 const identityQuestionPattern = /\b(who are you|what are y[o]{1,3}u|what is your name|what should i call you|tell me about yourself|what do you do|what is your role|are you (?:an? )?(?:ai|bot|human|assistant))\b/;
 const studentIdQuestionPattern = /\b(?:where|how)\s+(?:do i|can i|to)?\s*(?:get|find|replace|renew|obtain|apply for|request|claim)?\s*(?:my|a|the)?\s*(?:student|school)?\s*id\b/;
 
-const normalizeForScope = (value) => String(value || '')
-  .toLowerCase()
-  .replace(/[^a-z0-9\s]/g, ' ')
-  .replace(/\s+/g, ' ')
-  .trim();
-
 const isSchoolRelatedQuestion = (value) => {
-  const normalized = normalizeForScope(value);
+  const normalized = normalizeStudentQuery(value);
   if (!normalized) return false;
   if (identityQuestionPattern.test(normalized)) return true;
   if (studentIdQuestionPattern.test(normalized)) return true;

@@ -9,13 +9,9 @@ const isClassScheduleRequest = require('../utils/isClassScheduleRequest');
 const isRegistrarDocumentRequest = require('../utils/isRegistrarDocumentRequest');
 const isStudentIdRequest = require('../utils/isStudentIdRequest');
 const { getClassScheduleFollowupQuery, getDepartmentScheduleAnswer, SCHEDULE_PROMPT } = require('../utils/classScheduleFollowup');
+const normalizeStudentQuery = require('../utils/normalizeStudentQuery');
 
-const normalize = (text) =>
-  String(text || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+const normalize = normalizeStudentQuery;
 
 const tokenize = (text) => normalize(text).split(' ').filter(Boolean);
 

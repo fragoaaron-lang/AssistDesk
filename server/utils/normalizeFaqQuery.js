@@ -1,8 +1,6 @@
-const normalizeFaqQuery = (text) => String(text || '')
-  .toLowerCase()
-  .replace(/[^a-z0-9\s]/g, ' ')
-  .replace(/\s+/g, ' ')
-  .trim()
+const normalizeStudentQuery = require('./normalizeStudentQuery');
+
+const normalizeFaqQuery = (text) => normalizeStudentQuery(text)
   .replace(/\bcertificate of enrollment\b/g, ' coe ')
   .replace(/\bcertificate of registration\b/g, ' cor ')
   .replace(/\b(?:enroll(?:ment|ments|ing|ed)?|enrol(?:ment|ments|ling|led)?)\b/g, ' enrollment ')
