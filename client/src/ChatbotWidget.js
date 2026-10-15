@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
+import { useLocation } from 'react-router-dom';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 
@@ -370,6 +371,7 @@ const FAQ_GROUPS = [
 
 function ChatbotWidget() {
   const { token, user } = useAuth();
+  const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [showFaqs, setShowFaqs] = useState(true);
@@ -385,7 +387,12 @@ function ChatbotWidget() {
   }, [history, sending, open]);
 
   useEffect(() => {
+    if (pathname === '/') setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
     const handleAnsweredTicketQuestion = (event) => {
+      if (pathname === '/') return;
       const question = String(event.detail?.question || '').trim();
       const response = event.detail?.response;
       if (!question || !response?.ai_response || !response?.source) return;
@@ -410,7 +417,7 @@ function ChatbotWidget() {
 
     window.addEventListener('assistdesk:ai-question-answered', handleAnsweredTicketQuestion);
     return () => window.removeEventListener('assistdesk:ai-question-answered', handleAnsweredTicketQuestion);
-  }, []);
+  }, [pathname]);
 
   if (!token || !user || user.account_status === 'terminated') return null;
 
