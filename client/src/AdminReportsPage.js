@@ -60,6 +60,7 @@ function AdminReportsPage() {
   const getReportParams = (filters = reportFilters) => Object.fromEntries(
     Object.entries(filters).filter(([, value]) => value !== '')
   );
+  const appliedFilterCount = Object.values(reports?.filters || {}).filter(Boolean).length;
 
   const loadReports = async (filters = reportFilters) => {
     setReportsLoading(true);
@@ -465,19 +466,29 @@ function AdminReportsPage() {
         {!showUserDirectory && (
           <>
             <section className="institutional-card report-filter-card" aria-label="Report filters">
-              <div className="report-card-heading">
-                <div><h3>Report filters</h3><span>Filters apply to ticket metrics, timing summaries, audit events, and CSV export.</span></div>
+              <div className="report-toolbar">
+                <div className="report-toolbar-copy">
+                  <h3>Analytics scope</h3>
+                  <span>Filters affect metrics, ticket records, audit events, and CSV export.</span>
+                </div>
                 <button type="button" className="institutional-btn small secondary" onClick={exportReportCsv}>Export CSV</button>
               </div>
-              <form className="report-filter-form" onSubmit={applyReportFilters}>
-                <label>From<input className="institutional-input" type="date" value={reportFilters.start_date} onChange={(event) => setReportFilters((current) => ({ ...current, start_date: event.target.value }))} /></label>
-                <label>To<input className="institutional-input" type="date" value={reportFilters.end_date} onChange={(event) => setReportFilters((current) => ({ ...current, end_date: event.target.value }))} /></label>
-                <label>Department<select className="institutional-select" value={reportFilters.department_id} onChange={(event) => setReportFilters((current) => ({ ...current, department_id: event.target.value }))}><option value="">All departments</option>{departments.map((department) => <option key={department.id} value={department.id}>{department.display_name || department.name}</option>)}</select></label>
-                <label>Category<select className="institutional-select" value={reportFilters.category} onChange={(event) => setReportFilters((current) => ({ ...current, category: event.target.value }))}><option value="">All categories</option>{(reports.availableCategories || []).map((category) => <option key={category} value={category}>{category}</option>)}</select></label>
-                <label>Priority<select className="institutional-select" value={reportFilters.priority} onChange={(event) => setReportFilters((current) => ({ ...current, priority: event.target.value }))}><option value="">All priorities</option>{['low', 'medium', 'urgent'].map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
-                <label>Status<select className="institutional-select" value={reportFilters.status} onChange={(event) => setReportFilters((current) => ({ ...current, status: event.target.value }))}><option value="">All statuses</option>{['open', 'pending', 'in_progress', 'resolved', 'closed'].map((value) => <option key={value} value={value}>{value.replace('_', ' ')}</option>)}</select></label>
-                <div className="report-filter-actions"><button className="institutional-btn small" type="submit">Apply filters</button><button className="institutional-btn small secondary" type="button" onClick={resetReportFilters}>Reset</button></div>
-              </form>
+              <details className="report-filter-disclosure">
+                <summary>
+                  <span className="report-filter-disclosure-label">Filters</span>
+                  <span className="report-filter-count">{appliedFilterCount ? `${appliedFilterCount} applied` : 'None applied'}</span>
+                  <svg className="report-filter-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg>
+                </summary>
+                <form className="report-filter-form" onSubmit={applyReportFilters}>
+                  <label>From<input className="institutional-input" type="date" value={reportFilters.start_date} onChange={(event) => setReportFilters((current) => ({ ...current, start_date: event.target.value }))} /></label>
+                  <label>To<input className="institutional-input" type="date" value={reportFilters.end_date} onChange={(event) => setReportFilters((current) => ({ ...current, end_date: event.target.value }))} /></label>
+                  <label>Department<select className="institutional-select" value={reportFilters.department_id} onChange={(event) => setReportFilters((current) => ({ ...current, department_id: event.target.value }))}><option value="">All departments</option>{departments.map((department) => <option key={department.id} value={department.id}>{department.display_name || department.name}</option>)}</select></label>
+                  <label>Category<select className="institutional-select" value={reportFilters.category} onChange={(event) => setReportFilters((current) => ({ ...current, category: event.target.value }))}><option value="">All categories</option>{(reports.availableCategories || []).map((category) => <option key={category} value={category}>{category}</option>)}</select></label>
+                  <label>Priority<select className="institutional-select" value={reportFilters.priority} onChange={(event) => setReportFilters((current) => ({ ...current, priority: event.target.value }))}><option value="">All priorities</option>{['low', 'medium', 'urgent'].map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
+                  <label>Status<select className="institutional-select" value={reportFilters.status} onChange={(event) => setReportFilters((current) => ({ ...current, status: event.target.value }))}><option value="">All statuses</option>{['open', 'pending', 'in_progress', 'resolved', 'closed'].map((value) => <option key={value} value={value}>{value.replace('_', ' ')}</option>)}</select></label>
+                  <div className="report-filter-actions"><button className="institutional-btn small" type="submit">Apply filters</button><button className="institutional-btn small secondary" type="button" onClick={resetReportFilters}>Reset</button></div>
+                </form>
+              </details>
               <div className="report-filter-summary" aria-label="Filtered ticket totals">
                 <span>Total tickets <strong>{Object.values(reports.ticketCountsByStatus || []).reduce((sum, row) => sum + Number(row.count || 0), 0)}</strong></span>
                 <span>Assigned <strong>{reports.assignmentCounts?.assigned ?? 0}</strong></span>
