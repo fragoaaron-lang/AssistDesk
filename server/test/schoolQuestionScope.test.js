@@ -6,6 +6,7 @@ const isTorRequest = require('../utils/isTorRequest');
 const isClassScheduleRequest = require('../utils/isClassScheduleRequest');
 const isRegistrarDocumentRequest = require('../utils/isRegistrarDocumentRequest');
 const isStudentIdRequest = require('../utils/isStudentIdRequest');
+const { isDepartmentLocationRequest, findDepartmentByName, getDepartmentLocationAnswer } = require('../utils/departmentLocation');
 const { getClassScheduleFollowupQuery, getDepartmentScheduleAnswer, SCHEDULE_PROMPT } = require('../utils/classScheduleFollowup');
 
 test('allows questions about TCC, its campus, and school support', () => {
@@ -90,6 +91,23 @@ test('understands minor typos and common shorthand in student questions', () => 
     normalizeFaqQuery('ere to get my id?'),
     normalizeFaqQuery('where to get my id?')
   );
+});
+
+test('recognizes department location questions and answers from directory data', () => {
+  ['Where is the Registrar?', 'Where can I find the Library?', 'What is the location of Accounting?']
+    .forEach((question) => assert.equal(isDepartmentLocationRequest(question), true, question));
+  assert.equal(isDepartmentLocationRequest('How do I request documents from the Registrar?'), false);
+  assert.equal(
+    getDepartmentLocationAnswer({ name: 'Registrar Office', location: 'Administration Building (J.B. Angeles Building)' }),
+    'Registrar Office is located at Administration Building (J.B. Angeles Building).'
+  );
+  assert.equal(
+    findDepartmentByName('Where is the Law department?', [
+      { id: 44, name: 'College of Law', location: 'Law Building' },
+    ])?.id,
+    44
+  );
+  assert.match(getDepartmentLocationAnswer({ name: 'Library', location: null }), /confirmed location/i);
 });
 
 test('allows everyday academic and student-life questions', () => {

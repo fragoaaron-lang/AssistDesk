@@ -10,6 +10,7 @@ const isRegistrarDocumentRequest = require('../utils/isRegistrarDocumentRequest'
 const isStudentIdRequest = require('../utils/isStudentIdRequest');
 const { getClassScheduleFollowupQuery, getDepartmentScheduleAnswer, SCHEDULE_PROMPT } = require('../utils/classScheduleFollowup');
 const normalizeStudentQuery = require('../utils/normalizeStudentQuery');
+const { isDepartmentLocationRequest, findDepartmentByName, getDepartmentLocationAnswer } = require('../utils/departmentLocation');
 
 const normalize = normalizeStudentQuery;
 
@@ -230,8 +231,28 @@ const getGeminiResponse = async (query, faqs, services, departments) => {
   return data.candidates?.[0]?.content?.parts?.map((part) => part.text).join('').trim() || null;
 };
 
+const buildDepartmentLocationResult = (department) => ({
+  ai_response: getDepartmentLocationAnswer(department),
+  matched_department: department.id,
+  department_details: {
+    id: department.id,
+    name: department.name,
+    point_person: department.point_person,
+    location: department.location,
+    office_hours: department.office_hours,
+  },
+  service_details: null,
+  source: null,
+  clarification_required: false,
+  escalation_available: false,
+});
+
 const buildResponse = async (query, suggestedQuestionKeywords = '') => {
-  if (!isSchoolRelatedQuestion(query)) {
+  const isLocationQuery = isDepartmentLocationRequest(query);
+  const departments = isLocationQuery ? await Department.findAll() : null;
+  const namedLocationDepartment = isLocationQuery ? findDepartmentByName(query, departments) : null;
+
+  if (!isSchoolRelatedQuestion(query) && !namedLocationDepartment) {
     return {
       ai_response: OUT_OF_SCOPE_RESPONSE,
       matched_department: null,
@@ -243,10 +264,16 @@ const buildResponse = async (query, suggestedQuestionKeywords = '') => {
     };
   }
 
+  if (namedLocationDepartment) return buildDepartmentLocationResult(namedLocationDepartment);
+
   const faqs = await Faq.findAll({ include: [{ model: Department }] });
   const services = await Service.findAll({ include: [{ model: Department }] });
   const normalizedQuery = normalize(query);
   const departmentIntent = getDepartmentIntent(query);
+  if (isLocationQuery) {
+    const locationDepartment = findDepartmentForIntent(departments || await Department.findAll(), departmentIntent);
+    if (locationDepartment) return buildDepartmentLocationResult(locationDepartment);
+  }
   const normalizedFaqQuestion = normalizeFaqQuery(query);
   const exactFaq = faqs.find((faq) => normalizeFaqQuery(faq.question) === normalizedFaqQuestion);
 
