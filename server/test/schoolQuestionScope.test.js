@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { isSchoolRelatedQuestion, OUT_OF_SCOPE_RESPONSE } = require('../utils/schoolQuestionScope');
 const normalizeFaqQuery = require('../utils/normalizeFaqQuery');
+const normalizeStudentQuery = require('../utils/normalizeStudentQuery');
 const isTorRequest = require('../utils/isTorRequest');
 const isClassScheduleRequest = require('../utils/isClassScheduleRequest');
 const isRegistrarDocumentRequest = require('../utils/isRegistrarDocumentRequest');
@@ -96,6 +97,19 @@ test('understands minor typos and common shorthand in student questions', () => 
   assert.equal(normalizeFaqQuery('inrol po ako'), normalizeFaqQuery('enrollment po ako'));
 });
 
+test('corrects multiple independent typos in school questions conservatively', () => {
+  [
+    ['whre is the mentenance', 'where is the maintenance'],
+    ['where is the miantenance', 'where is the maintenance'],
+    ['where is the libriary', 'where is the library'],
+    ['inrolment requirments', 'enrollment requirements'],
+  ].forEach(([question, expected]) => {
+    assert.equal(normalizeStudentQuery(question), expected, question);
+    assert.equal(isSchoolRelatedQuestion(question), true, question);
+  });
+  assert.equal(normalizeStudentQuery('where is the xyzzy'), 'where is the xyzzy');
+});
+
 test('accepts short Filipino and Taglish school questions and identifies response language', () => {
   ['tuition?', 'grades po', 'saan ang registrar?', 'paano mag-enroll sa TCC?'].forEach((question) => {
     assert.equal(isSchoolRelatedQuestion(question), true, question);
@@ -129,6 +143,12 @@ test('recognizes department location questions and answers from directory data',
       { id: 4, name: 'Library', location: 'Administration Building' },
     ])?.id,
     4
+  );
+  assert.equal(
+    findDepartmentByName('whre is the mentenance', [
+      { id: 3, name: 'Maintenance Department', location: 'Near the SHS Building' },
+    ])?.id,
+    3
   );
   assert.match(getDepartmentLocationAnswer({ name: 'Library', location: null }), /confirmed location/i);
 });
