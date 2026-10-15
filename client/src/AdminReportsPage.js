@@ -483,6 +483,25 @@ function AdminReportsPage() {
 
         {!showUserDirectory && (
           <>
+            <nav className="analytics-section-tabs" aria-label="Analytics report sections" role="tablist">
+              {[
+                ['overview', 'Overview'],
+                ['performance', 'Performance'],
+                ['tickets', 'Ticket records'],
+                ['audit', 'Audit & activity'],
+              ].map(([section, label]) => (
+                <button
+                  key={section}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeReportSection === section}
+                  className={`analytics-section-tab${activeReportSection === section ? ' is-active' : ''}`}
+                  onClick={() => setActiveReportSection(section)}
+                >
+                  {label}
+                </button>
+              ))}
+            </nav>
             <section className="institutional-card report-filter-card" aria-label="Report filters">
               <div className="report-toolbar">
                 <div className="report-toolbar-copy">
@@ -521,25 +540,6 @@ function AdminReportsPage() {
                 </div>
               ))}
             </section>
-            <nav className="analytics-section-tabs" aria-label="Analytics report sections" role="tablist">
-              {[
-                ['overview', 'Overview'],
-                ['performance', 'Performance'],
-                ['tickets', 'Ticket records'],
-                ['audit', 'Audit & activity'],
-              ].map(([section, label]) => (
-                <button
-                  key={section}
-                  type="button"
-                  role="tab"
-                  aria-selected={activeReportSection === section}
-                  className={`analytics-section-tab${activeReportSection === section ? ' is-active' : ''}`}
-                  onClick={() => setActiveReportSection(section)}
-                >
-                  {label}
-                </button>
-              ))}
-            </nav>
             {activeReportSection === 'overview' && (
               <section className="analytics-section-panel" role="tabpanel" aria-label="Analytics overview">
                 <div className="report-section-heading"><h3>Overview</h3><p className="small-muted">Ticket volume, departments, priority mix, common concerns, and assistant FAQ activity.</p></div>

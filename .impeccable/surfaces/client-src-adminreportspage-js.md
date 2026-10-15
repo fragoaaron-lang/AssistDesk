@@ -20,7 +20,7 @@ OWN-WORLD: Preserve the existing AssistDesk navy, teal, white, neutral surfaces,
 
 STORY: Admin sees a current-scope ticket summary and the highest-signal priority distribution, then chooses Overview, Performance, Ticket records, or Audit & activity. Filters and CSV export remain globally available.
 
-FIRST VIEWPORT: Keep the existing top navigation and page title. Place a slim scope/filter/export row beneath it, followed by four live summary figures. Below, show an Overview plate grid led by ticket priorities and department volume, with remaining overview charts aligned as secondary plates; use existing real API values and explicit empty states.
+FIRST VIEWPORT: Keep the existing top navigation and page title. Put Overview, Performance, Ticket records, and Audit & activity immediately beneath the title; follow with the slim scope/filter/export row and four live summary figures. Below, show an Overview plate grid led by ticket priorities and department volume, with remaining overview charts aligned as secondary plates; use existing real API values and explicit empty states.
 
 FORM: Assigned grounded candidate #5 from concept seed c5b000b1, Report Plate Index / design annual plate section. Its index/plate composition becomes panel alignment and subtle registration marks, not editorial navigation. Signature move: a restrained registration crosshair at report-plate corners, used consistently and never obscuring content or controls.
 
