@@ -526,11 +526,6 @@ function AdminReportsPage() {
                   <div className="report-filter-actions"><button className="institutional-btn small" type="submit">Apply filters</button><button className="institutional-btn small secondary" type="button" onClick={resetReportFilters}>Reset</button></div>
                 </form>
               </details>
-              <div className="report-filter-summary" aria-label="Assignment totals">
-                <span>Assigned <strong>{reports.assignmentCounts?.assigned ?? 0}</strong></span>
-                <span>Unassigned <strong>{reports.assignmentCounts?.unassigned ?? 0}</strong></span>
-              </div>
-              <p className="small-muted report-generated-meta">Generated {new Date(reports.generated_at).toLocaleString()} · Prepared by {reports.prepared_by} · Coverage: {reports.filters?.start_date || 'all available dates'} to {reports.filters?.end_date || 'present'}</p>
             </section>
             <section className="analytics-summary-strip" aria-label="Ticket health summary">
               {analyticsSummary.map((item) => (
