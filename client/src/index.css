@@ -871,6 +871,9 @@ button, input, select, textarea {
 
 .profile-card {
   position: relative;
+  background: linear-gradient(135deg, #ffffff 0%, #fbfdff 100%);
+  border: 1px solid rgba(31, 111, 120, 0.1);
+  box-shadow: 0 12px 28px rgba(15, 45, 82, 0.05);
 }
 
 .profile-card-actions {
@@ -1492,10 +1495,10 @@ button, input, select, textarea {
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
-  padding: 14px 16px;
-  border: 1px solid #f0c8c8;
-  border-radius: 12px;
-  background: #fff7f7;
+  padding: 16px 18px;
+  border: 1px solid rgba(180, 35, 24, 0.14);
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fffaf9 0%, #fff5f3 100%);
 }
 
 .account-deletion-text {
@@ -5384,6 +5387,11 @@ body.dark-mode .ticket-status-badge.closed { background: #303b44; border-color: 
 /* Profile, catalog, analytics, and user-management polish. */
 .profile-section-card {
   min-width: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 250, 252, 0.96));
+  border: 1px solid rgba(31, 111, 120, 0.09);
+  border-radius: 18px;
+  box-shadow: 0 12px 26px rgba(15, 45, 82, 0.05);
+  padding: 18px 20px;
 }
 
 .profile-section-heading-copy {
@@ -5393,6 +5401,7 @@ body.dark-mode .ticket-status-badge.closed { background: #303b44; border-color: 
 .profile-section-heading-copy h3 {
   margin: 0 0 4px;
   color: var(--navy);
+  font-size: 1.08rem;
 }
 
 .profile-section-heading-copy p {
@@ -5419,7 +5428,11 @@ body.dark-mode .ticket-status-badge.closed { background: #303b44; border-color: 
 
 .preference-row {
   min-height: 58px;
-  padding: 14px 2px;
+  padding: 14px 10px;
+  margin: 0 -10px;
+  border-bottom: 1px solid rgba(220, 230, 238, 0.9);
+  background: rgba(15, 45, 82, 0.01);
+  border-radius: 10px;
 }
 
 .preference-row > span:first-child {
