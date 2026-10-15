@@ -1592,6 +1592,19 @@ button, input, select, textarea {
   color: var(--muted);
 }
 
+.analytics-page-intro {
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.analytics-page-intro h2 {
+  margin-bottom: 3px;
+  font-size: clamp(1.55rem, 2.2vw, 2rem);
+  letter-spacing: -0.035em;
+}
+
+.analytics-page-intro p { font-size: 0.88rem; }
+
 .institutional-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1628,7 +1641,7 @@ button, input, select, textarea {
 }
 
 .report-chart { margin-bottom: 1.25rem; }
-.report-filter-card { margin-bottom: 16px; padding: 16px 20px; }
+.report-filter-card { margin-bottom: 14px; padding: 10px 0 12px; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; box-shadow: none; }
 .report-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .report-toolbar-copy { min-width: 0; }
 .report-toolbar-copy h3 { margin: 0 0 3px; color: var(--navy); font-size: 1rem; }
@@ -1649,14 +1662,25 @@ button, input, select, textarea {
 .report-filter-summary { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; color: var(--muted); font-size: 0.76rem; }
 .report-filter-summary strong { margin-left: 4px; color: var(--navy); font-size: 0.82rem; font-variant-numeric: tabular-nums; }
 .report-generated-meta { margin: 9px 0 0; font-size: 0.72rem; }
-.analytics-section-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 6px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
-.analytics-section-tab { min-height: 40px; padding: 8px 14px; border: 1px solid transparent; border-radius: 10px; background: transparent; color: var(--muted); font: inherit; font-size: 0.88rem; font-weight: 700; cursor: pointer; }
-.analytics-section-tab:hover { background: rgba(12, 113, 128, 0.08); color: var(--navy); }
-.analytics-section-tab.is-active { border-color: rgba(12, 113, 128, 0.2); background: rgba(12, 113, 128, 0.12); color: var(--navy); box-shadow: 0 2px 7px rgba(15, 45, 82, 0.08); }
-.analytics-section-panel { display: grid; gap: 16px; }
+.analytics-summary-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 0 0 18px; overflow: hidden; border-radius: 12px; background: var(--navy); color: #fff; }
+.analytics-summary-item { position: relative; display: grid; gap: 6px; min-width: 0; padding: 14px 20px; border-right: 1px solid rgba(255,255,255,.18); }
+.analytics-summary-item:last-child { border-right: 0; }
+.analytics-summary-item span { color: rgba(255,255,255,.75); font-size: .74rem; font-weight: 650; }
+.analytics-summary-item strong { color: #fff; font-size: clamp(1.35rem, 2vw, 1.8rem); font-variant-numeric: tabular-nums; line-height: 1; }
+.analytics-summary-item.urgent strong { color: #ffb49a; }
+.analytics-section-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 17px; padding: 0 8px; border-bottom: 1px solid var(--border); background: transparent; }
+.analytics-section-tab { position: relative; min-height: 42px; padding: 9px 14px 11px; border: 0; border-radius: 0; background: transparent; color: var(--muted); font: inherit; font-size: 0.84rem; font-weight: 650; cursor: pointer; }
+.analytics-section-tab:hover { color: var(--navy); background: rgba(12, 113, 128, 0.05); }
+.analytics-section-tab.is-active { color: var(--teal); box-shadow: inset 0 -2px 0 var(--teal); }
+.analytics-section-panel { display: grid; gap: 18px; }
 .report-section-heading { padding: 2px 2px 0; }
-.report-section-heading h3 { margin: 0 0 4px; color: var(--navy); }
+.report-section-heading h3 { margin: 0 0 4px; color: var(--navy); font-size: 1.12rem; letter-spacing: -.02em; }
 .report-section-heading p { margin: 0; }
+.analytics-section-panel .report-plate { position: relative; border-color: var(--border); border-radius: 11px; box-shadow: none; }
+.analytics-section-panel .report-plate::before,
+.analytics-section-panel .report-plate::after { position: absolute; width: 8px; height: 8px; content: ''; background: linear-gradient(var(--teal),var(--teal)) center/1px 8px no-repeat, linear-gradient(90deg,var(--teal),var(--teal)) center/8px 1px no-repeat; opacity: .52; pointer-events: none; }
+.analytics-section-panel .report-plate::before { top: 7px; left: 7px; }
+.analytics-section-panel .report-plate::after { right: 7px; bottom: 7px; }
 .audit-values-cell { max-width: 260px; max-height: 120px; overflow: auto; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 0.72rem/1.4 ui-monospace, SFMono-Regular, Consolas, monospace; }
 .report-chart:last-child { margin-bottom: 0; }
 .report-chart-title {
@@ -1688,7 +1712,7 @@ button, input, select, textarea {
 .report-chart-bar.requester { background: var(--navy); }
 .report-chart-bar.concern { background: #d97745; }
 .report-chart-bar.faq { background: linear-gradient(90deg, #55c9bd, #1687c9); }
-.report-most-faq-card { grid-column: 1 / -1; }
+.report-most-faq-card { grid-column: auto; }
 .report-faq-bar-chart { display: grid; gap: 14px; }
 .report-faq-bar-row { min-width: 0; }
 .report-faq-bar-label {
@@ -1753,7 +1777,7 @@ button, input, select, textarea {
   -webkit-line-clamp: 2;
   line-clamp: 2;
 }
-.report-status-bars-card { grid-column: 1 / -1; }
+.report-status-bars-card { grid-column: auto; }
 .report-status-legend {
   display: flex;
   flex-wrap: wrap;
@@ -1828,7 +1852,7 @@ button, input, select, textarea {
 }
 .report-visual-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.7fr) repeat(2, minmax(180px, 0.8fr));
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
   gap: 16px;
   margin-bottom: 1.5rem;
 }
@@ -5648,7 +5672,11 @@ body.dark-mode .report-table tbody tr:hover {
 }
 
 @media (max-width: 640px) {
-  .report-filter-card { padding: 14px; }
+  .report-filter-card { padding: 8px 0 10px; }
+  .analytics-summary-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .analytics-summary-item { padding: 12px 14px; }
+  .analytics-summary-item:nth-child(2) { border-right: 0; }
+  .analytics-summary-item:nth-child(-n+2) { border-bottom: 1px solid rgba(255,255,255,.18); }
   .report-toolbar { align-items: flex-start; gap: 12px; }
   .report-toolbar-copy span { display: block; max-width: 38ch; }
   .report-toolbar > button { min-height: 36px; padding-inline: 10px; }

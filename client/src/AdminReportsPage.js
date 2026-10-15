@@ -228,6 +228,24 @@ function AdminReportsPage() {
     count: Number(reports?.ticketCountsByPriority?.find((row) => row.priority === priority)?.count) || 0,
     color: priorityColors[priority],
   }));
+  const getCountForStatuses = (statuses) => (reports?.ticketCountsByStatus || [])
+    .filter((row) => statuses.includes(row.status))
+    .reduce((sum, row) => sum + (Number(row.count) || 0), 0);
+  const analyticsSummary = [
+    { label: 'Tickets in scope', value: Object.values(reports?.ticketCountsByStatus || []).reduce((sum, row) => sum + (Number(row.count) || 0), 0), tone: 'total' },
+    { label: 'Active', value: getCountForStatuses(['open', 'pending', 'in_progress']), tone: 'active' },
+    { label: 'Resolved', value: getCountForStatuses(['resolved', 'closed']), tone: 'resolved' },
+    { label: 'Urgent', value: priorityData.find((item) => item.name === 'urgent')?.count || 0, tone: 'urgent' },
+  ];
+  const activityByDate = new Map((reports?.monthlyTicketCounts || []).map((item) => [item.date, Number(item.count) || 0]));
+  const reportAnchorDate = new Date(reports?.generated_at || Date.now());
+  const recentDailyActivity = Array.from({ length: 14 }, (_, index) => {
+    const date = new Date(reportAnchorDate);
+    date.setUTCDate(date.getUTCDate() - (13 - index));
+    const dateKey = date.toISOString().slice(0, 10);
+    return { date: dateKey, count: activityByDate.get(dateKey) || 0 };
+  });
+  const recentDailyTotal = recentDailyActivity.reduce((sum, item) => sum + item.count, 0);
   const priorityTotal = priorityData.reduce((total, item) => total + item.count, 0);
   const priorityCircumference = 2 * Math.PI * 58;
   const selectedPriority = priorityData.find((item) => item.name === (hoveredPriority || activePriority));
@@ -332,7 +350,7 @@ function AdminReportsPage() {
           </div>
         </aside>
 
-        <div className="page-intro">
+        <div className={`page-intro${showUserDirectory ? '' : ' analytics-page-intro'}`}>
           <div>
             <h2>{showUserDirectory ? 'Users' : 'Data Analytics'}</h2>
             <p>{showUserDirectory ? 'Manage active and terminated user accounts.' : 'Monitor service trends, support demand, and operational activity.'}</p>
@@ -489,12 +507,19 @@ function AdminReportsPage() {
                   <div className="report-filter-actions"><button className="institutional-btn small" type="submit">Apply filters</button><button className="institutional-btn small secondary" type="button" onClick={resetReportFilters}>Reset</button></div>
                 </form>
               </details>
-              <div className="report-filter-summary" aria-label="Filtered ticket totals">
-                <span>Total tickets <strong>{Object.values(reports.ticketCountsByStatus || []).reduce((sum, row) => sum + Number(row.count || 0), 0)}</strong></span>
+              <div className="report-filter-summary" aria-label="Assignment totals">
                 <span>Assigned <strong>{reports.assignmentCounts?.assigned ?? 0}</strong></span>
                 <span>Unassigned <strong>{reports.assignmentCounts?.unassigned ?? 0}</strong></span>
               </div>
               <p className="small-muted report-generated-meta">Generated {new Date(reports.generated_at).toLocaleString()} · Prepared by {reports.prepared_by} · Coverage: {reports.filters?.start_date || 'all available dates'} to {reports.filters?.end_date || 'present'}</p>
+            </section>
+            <section className="analytics-summary-strip" aria-label="Ticket health summary">
+              {analyticsSummary.map((item) => (
+                <div key={item.label} className={`analytics-summary-item ${item.tone}`}>
+                  <span>{item.label}</span>
+                  <strong>{item.value.toLocaleString()}</strong>
+                </div>
+              ))}
             </section>
             <nav className="analytics-section-tabs" aria-label="Analytics report sections" role="tablist">
               {[
@@ -519,7 +544,7 @@ function AdminReportsPage() {
               <section className="analytics-section-panel" role="tabpanel" aria-label="Analytics overview">
                 <div className="report-section-heading"><h3>Overview</h3><p className="small-muted">Ticket volume, departments, priority mix, common concerns, and assistant FAQ activity.</p></div>
             <section className="report-visual-grid">
-          <div className="institutional-card report-bars-card">
+          <div className="institutional-card report-bars-card report-plate">
             <h3>Tickets per department</h3>
             {reports.ticketCountsByDepartment.length > 0 ? (
               <div
@@ -539,7 +564,7 @@ function AdminReportsPage() {
               </div>
             ) : <p className="small-muted">No department ticket data yet.</p>}
           </div>
-          <div className="institutional-card report-donut-card report-priority-card">
+          <div className="institutional-card report-donut-card report-priority-card report-plate">
             <div className="report-card-heading"><div><h3>Ticket priorities</h3><span>Low, medium, and urgent</span></div></div>
             <div className="report-priority-chart-layout">
               <div className="report-priority-chart-wrap">
@@ -604,7 +629,20 @@ function AdminReportsPage() {
             </div>
             <p className="report-priority-chart-hint">Hover or select a slice to inspect its share. Select it again to reset.</p>
           </div>
-          <div className="institutional-card report-bars-card report-most-faq-card">
+          <div className="institutional-card report-trend-card report-plate">
+            <div className="report-card-heading"><div><h3>Ticket activity</h3><span>Daily volume · Last 14 days</span></div></div>
+            {recentDailyTotal > 0 ? (
+              <div className="report-trend-chart" role="img" aria-label={`Daily ticket activity for the last 14 days: ${recentDailyActivity.map((item) => `${item.date}, ${item.count} tickets`).join('; ')}`}>
+                {recentDailyActivity.map((item, index) => (
+                  <div key={item.date} className="report-trend-column" title={`${item.date}: ${item.count} tickets`}>
+                    <span className="report-trend-bar" style={{ height: getChartHeight(item.count, recentDailyActivity) }} />
+                    <small>{index % 3 === 0 || index === recentDailyActivity.length - 1 ? new Date(`${item.date}T12:00:00`).toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' }) : ''}</small>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="small-muted">No tickets recorded during the last 14 days for this report scope.</p>}
+          </div>
+          <div className="institutional-card report-bars-card report-most-faq-card report-plate">
             <div className="report-card-heading"><div><h3>Top FAQs</h3><span>Top questions matched in assistant conversations</span></div></div>
             {reports.mostAskedFaqs?.length > 0 ? (
               <div className="report-faq-bar-chart" aria-label="Top FAQs">
@@ -617,7 +655,7 @@ function AdminReportsPage() {
               </div>
             ) : <p className="small-muted">No FAQ activity yet.</p>}
           </div>
-          <div className="institutional-card report-bars-card report-status-bars-card">
+          <div className="institutional-card report-bars-card report-status-bars-card report-plate">
             <h3>Resolved vs unresolved by department</h3>
             {reports.ticketsByDepartmentStatus.length > 0 ? (
               <>
@@ -655,7 +693,7 @@ function AdminReportsPage() {
             {activeReportSection === 'performance' && (
               <section className="analytics-section-panel" role="tabpanel" aria-label="Performance reports">
                 <div className="report-section-heading"><h3>Performance</h3><p className="small-muted">Average first response and resolution elapsed times, grouped by department.</p></div>
-          <section className="institutional-card report-table-card">
+          <section className="institutional-card report-table-card report-plate">
             <h3>Response and resolution time by department</h3>
             <p className="small-muted">Elapsed time from ticket creation to the first staff/admin update, and to the first resolved/closed status update.</p>
             <div className="report-table-scroll"><table className="report-table"><thead><tr><th>Department</th><th>Tickets with response</th><th>Avg first response (hours)</th><th>Tickets resolved/closed</th><th>Avg resolution (hours)</th></tr></thead><tbody>
@@ -667,14 +705,14 @@ function AdminReportsPage() {
             {activeReportSection === 'audit' && (
               <section className="analytics-section-panel" role="tabpanel" aria-label="Audit and activity reports">
                 <div className="report-section-heading"><h3>Audit &amp; activity</h3><p className="small-muted">Ticket workflow actions and persistent account, catalog, and system audit history.</p></div>
-          <section className="institutional-card report-table-card">
+          <section className="institutional-card report-table-card report-plate">
             <h3>Ticket audit activity</h3>
             <p className="small-muted">Workflow actions associated with tickets matching the current filters. Showing up to 200 most recent events.</p>
             <div className="report-table-scroll"><table className="report-table"><thead><tr><th>Time</th><th>Ticket</th><th>Action</th><th>Actor role</th><th>Department ID</th><th>Details</th></tr></thead><tbody>
               {(reports.auditRecords || []).length === 0 ? <tr><td colSpan="6" className="small-muted">No audit events for these filters.</td></tr> : reports.auditRecords.map((record, index) => <tr key={`${record.ticket_id}-${record.action}-${record.created_at}-${index}`}><td>{new Date(record.created_at).toLocaleString()}</td><td>{getCompleteTicketCode({ id: record.ticket_id, Department: { name: departments.find((department) => Number(department.id) === Number(record.department_id))?.name } })}</td><td>{record.action}</td><td>{record.actor_role}</td><td>{record.department_id}</td><td>{record.message}</td></tr>)}
             </tbody></table></div>
           </section>
-          <section className="institutional-card report-table-card">
+          <section className="institutional-card report-table-card report-plate">
             <h3>Persistent audit trail</h3>
             <p className="small-muted">Latest 200 recorded events. Actor role and name are snapshots from the time of the action. Audit history is read-only in this interface.</p>
             <div className="report-table-scroll"><table className="report-table"><thead><tr><th>Timestamp</th><th>Actor</th><th>Role</th><th>Action</th><th>Affected record</th><th>Previous values</th><th>New values</th></tr></thead><tbody>
@@ -694,7 +732,7 @@ function AdminReportsPage() {
             {activeReportSection === 'tickets' && (
               <section className="analytics-section-panel" role="tabpanel" aria-label="Ticket records">
                 <div className="report-section-heading"><h3>Ticket records</h3><p className="small-muted">Latest ticket records matching the applied filters.</p></div>
-          <section className="institutional-card report-table-card">
+          <section className="institutional-card report-table-card report-plate">
           <h3>Ticket detail table</h3>
           <div className="report-table-scroll">
             <table className="report-table">

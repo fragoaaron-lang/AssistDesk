@@ -1,0 +1,48 @@
+{
+  "title": "Choose the analytics layout",
+  "question": "Which structure makes it easiest to scan operational health and investigate the details? All options keep the existing AssistDesk brand, filters, reports, audit history, and user directory.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Report Plate Index",
+      "kicker": "THE ROLL",
+      "lineage": "Design annual plate section",
+      "thesis": "A calm index sheet that turns each report area into a registered, clearly bounded plate.",
+      "palette": ["#f5f4f6", "#16181a", "#0c7180", "#dcdDF3"],
+      "materials": ["fine rules", "registration marks"],
+      "viewport": "Compact scope toolbar, a high-signal ticket summary, then aligned report plates with one line of registration detail at each section boundary.",
+      "risk": "Can feel editorial unless the standard dashboard navigation and actions remain unmistakable.",
+      "html": ".impeccable/mocks/decision/assigned.html",
+      "htmlFrame": "1440x900"
+    },
+    {
+      "id": "alt-labanotation",
+      "label": "Service Score",
+      "kicker": "ALTERNATE",
+      "lineage": "Labanotation movement score",
+      "thesis": "A time-and-state score makes ticket movement and department workload readable as one coordinated system.",
+      "palette": ["#f5f4f6", "#16181a", "#0c7180", "#dcdDF3"],
+      "materials": ["precise bands", "solid and dotted marks"],
+      "viewport": "Standard header and tabs above a wide departmental score: active load, resolved load, and response time align in rows; overview totals remain first.",
+      "risk": "Dense rows may need careful labeling to avoid looking like an unfamiliar notation.",
+      "html": ".impeccable/mocks/decision/alt-labanotation.html",
+      "htmlFrame": "1440x900"
+    },
+    {
+      "id": "alt-type-specimen",
+      "label": "Live Metrics Specimen",
+      "kicker": "ALTERNATE",
+      "lineage": "Interactive variable-type specimen",
+      "thesis": "One selected metric becomes the reading lens while every supporting chart updates its emphasis.",
+      "palette": ["#f5f4f6", "#16181a", "#0c7180", "#dcdDF3"],
+      "materials": ["large numeric type", "fine grid"],
+      "viewport": "The top of Overview leads with a focused metric selector and oversized ticket total; priority, department, and resolution charts follow in a responsive grid.",
+      "risk": "A focused metric must not hide the audit and record sections or make their filters ambiguous.",
+      "html": ".impeccable/mocks/decision/alt-type-specimen.html",
+      "htmlFrame": "1440x900"
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "buildPath": { "value": "code", "toggle": false },
+  "steer": true
+}
