@@ -10,6 +10,7 @@
     "start": "npm ci --prefix server --omit=dev --no-fund --no-audit && npm start --prefix server",
     "migrate": "npm ci --prefix server --omit=dev --no-fund --no-audit && npm --prefix server run migrate",
     "seed:basic-education-faqs": "npm --prefix server run seed:basic-education-faqs",
+    "seed:office-location-faqs": "npm --prefix server run seed:office-location-faqs",
     "seed:it-faqs": "npm --prefix server run seed:it-faqs",
     "seed:osa-faqs": "npm --prefix server run seed:osa-faqs",
     "seed:registrar-faqs": "npm --prefix server run seed:registrar-faqs",

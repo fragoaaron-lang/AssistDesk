@@ -13,6 +13,7 @@ const normalizeStudentQuery = require('../utils/normalizeStudentQuery');
 const { isDepartmentLocationRequest, findDepartmentByName, getDepartmentLocationAnswer } = require('../utils/departmentLocation');
 const ASSISTANT_SYSTEM_INSTRUCTION = require('../utils/assistantSystemInstruction');
 const { isFilipinoOrTaglish } = require('../utils/responseLanguage');
+const { getOfficeFactRequest, findOfficeFactFaq } = require('../utils/officeLocationFaqs');
 
 const normalize = normalizeStudentQuery;
 
@@ -276,11 +277,12 @@ const buildDepartmentLocationResult = (department) => ({
 });
 
 const buildResponse = async (query, suggestedQuestionKeywords = '') => {
+  const officeFactRequest = getOfficeFactRequest(query);
   const isLocationQuery = isDepartmentLocationRequest(query);
   const departments = isLocationQuery ? await Department.findAll() : null;
   const namedLocationDepartment = isLocationQuery ? findDepartmentByName(query, departments) : null;
 
-  if (!isSchoolRelatedQuestion(query) && !namedLocationDepartment) {
+  if (!isSchoolRelatedQuestion(query) && !namedLocationDepartment && !officeFactRequest) {
     return {
       ai_response: OUT_OF_SCOPE_RESPONSE,
       matched_department: null,
@@ -292,10 +294,42 @@ const buildResponse = async (query, suggestedQuestionKeywords = '') => {
     };
   }
 
-  if (namedLocationDepartment) return buildDepartmentLocationResult(namedLocationDepartment);
+  if (namedLocationDepartment && !officeFactRequest) return buildDepartmentLocationResult(namedLocationDepartment);
 
   const faqs = await Faq.findAll({ include: [{ model: Department }] });
   const services = await Service.findAll({ include: [{ model: Department }] });
+  if (officeFactRequest) {
+    const officeFaq = findOfficeFactFaq(query, faqs);
+    if (officeFaq) {
+      return {
+        ai_response: officeFaq.answer,
+        matched_department: officeFaq.department_id,
+        matched_faq_id: officeFaq.id,
+        department_details: null,
+        service_details: null,
+        source: {
+          type: 'FAQ',
+          id: officeFaq.id,
+          label: officeFaq.question,
+          department: officeFaq.Department?.name || officeFactRequest.office.office,
+        },
+        clarification_required: false,
+        escalation_available: false,
+      };
+    }
+
+    const contactOffice = officeFactRequest.office.contactOffice || officeFactRequest.office.office;
+    return {
+      ai_response: `I don’t have that information yet. Please contact ${contactOffice} to confirm.`,
+      matched_department: null,
+      department_details: null,
+      service_details: null,
+      source: null,
+      clarification_required: false,
+      escalation_available: false,
+    };
+  }
+
   const normalizedQuery = normalize(query);
   const departmentIntent = getDepartmentIntent(query);
   if (isLocationQuery) {

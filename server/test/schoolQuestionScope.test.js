@@ -10,6 +10,7 @@ const isStudentIdRequest = require('../utils/isStudentIdRequest');
 const { isDepartmentLocationRequest, findDepartmentByName, getDepartmentLocationAnswer } = require('../utils/departmentLocation');
 const { isFilipinoOrTaglish } = require('../utils/responseLanguage');
 const assistantSystemInstruction = require('../utils/assistantSystemInstruction');
+const { officeFacts, getOfficeFactRequest, findOfficeFactFaq } = require('../utils/officeLocationFaqs');
 const { getClassScheduleFollowupQuery, getDepartmentScheduleAnswer, SCHEDULE_PROMPT } = require('../utils/classScheduleFollowup');
 
 test('allows questions about TCC, its campus, and school support', () => {
@@ -151,6 +152,43 @@ test('recognizes department location questions and answers from directory data',
     3
   );
   assert.match(getDepartmentLocationAnswer({ name: 'Library', location: null }), /confirmed location/i);
+});
+
+test('office location and hours intents resolve only to their matching direct FAQs', () => {
+  const examples = [
+    ['Where is the clinic?', 'Clinic', 'location'],
+    ["where's the clinic", 'Clinic', 'location'],
+    ['nasaan ang clinic', 'Clinic', 'location'],
+    ['saan clinic', 'Clinic', 'location'],
+    ['where to go if sick', 'Clinic', 'location'],
+    ['clinic hours', 'Clinic', 'hours'],
+    ['where is library', 'Library', 'location'],
+    ['where is the registrar', 'Registrar Office', 'location'],
+    ['cashier hours', 'Cashier', 'hours'],
+    ['where is guidance office', 'Guidance Office', 'location'],
+    ['where is canteen', 'Canteen', 'location'],
+    ['canteen hours', 'Canteen', 'hours'],
+  ];
+
+  examples.forEach(([query, expectedOffice, expectedType]) => {
+    const intent = getOfficeFactRequest(query);
+    assert.equal(intent?.office.office, expectedOffice, query);
+    assert.equal(intent?.type, expectedType, query);
+    const faq = intent.office.faqs.find(({ type }) => type === expectedType);
+    const departmentName = (intent.office.faqDepartmentAliases || intent.office.departmentAliases)[0];
+    const selected = findOfficeFactFaq(query, [{ ...faq, id: 10, department_id: 4, Department: { name: departmentName } }]);
+    assert.equal(selected?.question, faq.question, query);
+  });
+
+  assert.equal(findOfficeFactFaq('where is clinic', [{
+    question: 'What do I need to borrow a book from the library?',
+    Department: { name: 'Library' },
+  }]), null);
+  assert.equal(officeFacts.every(({ faqs }) => faqs.some(({ type }) => type === 'location')
+    && faqs.some(({ type }) => type === 'hours')), true);
+  assert.match(officeFacts.find(({ office }) => office === 'Clinic').faqs.find(({ type }) => type === 'hours').answer, /6:30 AM to 5:00 PM/);
+  assert.doesNotMatch(officeFacts.find(({ office }) => office === 'Clinic').faqs.find(({ type }) => type === 'location').answer, /open monday/i);
+  assert.match(officeFacts.find(({ office }) => office === 'Canteen').faqs.find(({ type }) => type === 'hours').answer, /does not specify canteen hours/i);
 });
 
 test('allows everyday academic and student-life questions', () => {

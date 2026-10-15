@@ -26,6 +26,7 @@ const schoolVocabulary = new Set(`
   security semester staff status studentaffairs timetable transcript transportation treatment university verification
   wednesday thursday friday monday saturday sunday today tomorrow yesterday
   address applicant enrollment enrolment guidance registrar maintenance library accounting cashier financial assistance
+  saan nasaan oras bukas ano kailan paano magkano
 `.trim().split(/\s+/));
 const vocabularyByLength = new Map();
 schoolVocabulary.forEach((word) => {
