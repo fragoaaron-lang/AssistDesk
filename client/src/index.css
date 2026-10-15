@@ -1595,11 +1595,11 @@ button, input, select, textarea {
 .analytics-page-intro {
   align-items: center;
   margin-bottom: 18px;
-  padding: 28px 30px 22px;
-  border: 1px solid rgba(31, 111, 120, 0.1);
-  border-radius: 22px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(240, 247, 250, 0.9));
-  box-shadow: 0 14px 32px rgba(15, 45, 82, 0.06);
+  padding: 0 0 8px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .analytics-page-intro h2 {
