@@ -1641,13 +1641,20 @@ button, input, select, textarea {
 }
 
 .report-chart { margin-bottom: 1.25rem; }
-.report-filter-card { margin-bottom: 14px; padding: 10px 0 12px; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; background: transparent; box-shadow: none; }
+.report-filter-card {
+  margin-bottom: 14px;
+  padding: 18px 18px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: var(--shadow);
+}
 .report-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .report-toolbar-copy { min-width: 0; }
 .report-toolbar-copy h3 { margin: 0 0 3px; color: var(--navy); font-size: 1rem; }
 .report-toolbar-copy span { color: var(--muted); font-size: 0.78rem; line-height: 1.4; }
 .report-toolbar > button { flex: 0 0 auto; }
-.report-filter-disclosure { margin-top: 12px; border-top: 1px solid var(--border); }
+.report-filter-disclosure { margin-top: 12px; border-top: 1px solid var(--border); background: #fff; border-radius: 10px; }
 .report-filter-disclosure summary { display: flex; align-items: center; gap: 9px; min-height: 40px; padding: 7px 2px; color: var(--text); cursor: pointer; list-style: none; user-select: none; }
 .report-filter-disclosure summary::-webkit-details-marker { display: none; }
 .report-filter-disclosure-label { font-size: 0.82rem; font-weight: 700; }
