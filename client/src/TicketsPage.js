@@ -234,6 +234,11 @@ function TicketsPage() {
   const [submissionState, setSubmissionState] = useState({ status: 'idle', message: '', ticketCode: '' });
   const [expandedDepartments, setExpandedDepartments] = useState({});
   const [expandedRoles, setExpandedRoles] = useState({});
+  const [ticketView, setTicketView] = useState(() => (
+    ['resolved', 'closed'].includes(statusFilter) ? 'resolved'
+      : ['open', 'pending', 'in_progress'].includes(statusFilter) ? 'active'
+        : 'all'
+  ));
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [updatingStatus, setUpdatingStatus] = useState('');
   const [etaDraft, setEtaDraft] = useState('');
@@ -338,9 +343,19 @@ function TicketsPage() {
   }, { ...getDepartmentIssueOptions(selectedDepartment) });
   const specificIssueOptions = generalIssueOptions[form.category] || [];
   const visibleTickets = tickets.filter((ticket) => (
-    (!statusFilter || String(ticket.status || '').toLowerCase() === statusFilter)
+    (isTicketManager
+      ? (!statusFilter || String(ticket.status || '').toLowerCase() === statusFilter)
+      : ticketView === 'all'
+        || (ticketView === 'resolved' && ['resolved', 'closed'].includes(String(ticket.status || '').toLowerCase()))
+        || (ticketView === 'active' && !['resolved', 'closed'].includes(String(ticket.status || '').toLowerCase())))
       && (!priorityFilter || String(ticket.priority || '').toLowerCase() === priorityFilter)
   ));
+
+  const ticketViewCounts = {
+    all: tickets.length,
+    active: tickets.filter((ticket) => !['resolved', 'closed'].includes(String(ticket.status || '').toLowerCase())).length,
+    resolved: tickets.filter((ticket) => ['resolved', 'closed'].includes(String(ticket.status || '').toLowerCase())).length,
+  };
 
   const isMaintenanceDepartment = selectedDepartment?.name?.toLowerCase().includes('maintenance');
   const getDepartmentFolder = (department) => {
@@ -857,11 +872,30 @@ function TicketsPage() {
         <div className="institutional-card ticket-list-card">
           <div className="ticket-section-heading">
             <div>
-              <h3>{priorityFilter === 'urgent' ? 'Urgent tickets' : statusFilter === 'open' ? 'Open tickets' : 'Recent tickets'}</h3>
+              <h3>{priorityFilter === 'urgent' ? 'Urgent tickets' : !isTicketManager && ticketView === 'resolved' ? 'Resolved requests' : !isTicketManager && ticketView === 'active' ? 'Active requests' : statusFilter === 'open' ? 'Open tickets' : 'Recent tickets'}</h3>
               <p>{isTicketManager ? 'Select a request to review details and manage its progress.' : 'Choose a department to follow the status of your requests.'}</p>
             </div>
             <span className="ticket-list-count">{visibleTickets.length} {visibleTickets.length === 1 ? 'ticket' : 'tickets'}</span>
           </div>
+          {!isTicketManager && (
+            <div className="ticket-view-tabs" role="group" aria-label="Filter your requests">
+              {[
+                ['all', 'All requests'],
+                ['active', 'Active'],
+                ['resolved', 'Resolved'],
+              ].map(([view, label]) => (
+                <button
+                  key={view}
+                  type="button"
+                  className={`ticket-view-tab${ticketView === view ? ' active' : ''}`}
+                  aria-pressed={ticketView === view}
+                  onClick={() => setTicketView(view)}
+                >
+                  {label}<span>{ticketViewCounts[view]}</span>
+                </button>
+              ))}
+            </div>
+          )}
           {visibleTickets.length === 0 ? (
             <div className="ticket-empty-state" role="status">
               <strong>{statusFilter || priorityFilter ? 'No matching tickets' : isTicketManager ? 'No tickets to review' : 'No requests yet'}</strong>

@@ -5009,6 +5009,61 @@ body.dark-mode .auth-modal-close {
   font-variant-numeric: tabular-nums;
 }
 
+.ticket-view-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -4px 0 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ticket-view-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface, #fff);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.ticket-view-tab span {
+  display: inline-grid;
+  min-width: 21px;
+  height: 21px;
+  place-items: center;
+  padding-inline: 5px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ticket-view-tab:hover,
+.ticket-view-tab.active {
+  border-color: var(--teal);
+  background: color-mix(in srgb, var(--teal) 9%, var(--surface, #fff));
+  color: var(--teal);
+}
+
+.ticket-view-tab.active span {
+  background: var(--teal);
+  color: #fff;
+}
+
+.ticket-view-tab:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--teal) 35%, transparent);
+  outline-offset: 2px;
+}
+
 .ticket-empty-state {
   display: grid;
   gap: 5px;
