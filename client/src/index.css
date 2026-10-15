@@ -869,11 +869,26 @@ button, input, select, textarea {
   }
 }
 
+.profile-layout {
+  display: grid;
+  gap: 20px;
+}
+
+.profile-panels-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 20px;
+}
+
 .profile-card {
   position: relative;
   background: linear-gradient(135deg, #ffffff 0%, #fbfdff 100%);
   border: 1px solid rgba(31, 111, 120, 0.1);
   box-shadow: 0 12px 28px rgba(15, 45, 82, 0.05);
+}
+
+.profile-account-card {
+  padding: 22px 24px;
 }
 
 .profile-card-actions {

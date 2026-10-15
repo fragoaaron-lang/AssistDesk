@@ -466,32 +466,188 @@ function ProfilePage() {
           </div>
         </div>
 
-        <div className="institutional-card profile-card profile-section-card" style={{ marginBottom: '20px' }}>
-          <div className="profile-section-heading-copy"><h3>Account profile</h3><p>Your name and contact information used for support requests.</p></div>
-          <div className="profile-summary-row">
-            <div className="profile-avatar profile-avatar-upload">
-              {profilePhoto ? (
-                <img src={profilePhoto} alt="Profile" className="profile-avatar-image" />
-              ) : (
-                <span className="profile-avatar-placeholder profile-avatar-fallback">{getInitials(user?.name)}</span>
-              )}
-              {photoUploadLoading && <div className="profile-avatar-loader" aria-label="Uploading profile photo" />}
+        <div className="profile-layout">
+          <div className="institutional-card profile-card profile-section-card profile-account-card" style={{ marginBottom: '20px' }}>
+            <div className="profile-section-heading-copy"><h3>Account profile</h3><p>Your name and contact information used for support requests.</p></div>
+            <div className="profile-summary-row">
+              <div className="profile-avatar profile-avatar-upload">
+                {profilePhoto ? (
+                  <img src={profilePhoto} alt="Profile" className="profile-avatar-image" />
+                ) : (
+                  <span className="profile-avatar-placeholder profile-avatar-fallback">{getInitials(user?.name)}</span>
+                )}
+                {photoUploadLoading && <div className="profile-avatar-loader" aria-label="Uploading profile photo" />}
+              </div>
+              <div className="profile-user-meta">
+                <div className="profile-name">{user?.name || 'Student User'}</div>
+                <div className="profile-meta">{user?.email || 'student@assistdesk.edu'}</div>
+                <div className="profile-meta">Role: {user?.role || 'student'}</div>
+                {user?.role === 'student' && user?.student_number && (
+                  <div className="profile-meta">Student number: {user.student_number}</div>
+                )}
+                {user?.role === 'student' && user?.department_name && (
+                  <div className="profile-meta">Department: {user.department_name}</div>
+                )}
+                <label className={`profile-upload-button ${photoUploadLoading ? 'loading' : ''}`}>
+                  <input type="file" accept="image/*" onChange={handleProfilePhotoChange} disabled={photoUploadLoading} />
+                  <span>{photoUploadLoading ? 'Uploading...' : 'Upload photo'}</span>
+                </label>
+              </div>
             </div>
-            <div className="profile-user-meta">
-              <div className="profile-name">{user?.name || 'Student User'}</div>
-              <div className="profile-meta">{user?.email || 'student@assistdesk.edu'}</div>
-              <div className="profile-meta">Role: {user?.role || 'student'}</div>
-              {user?.role === 'student' && user?.student_number && (
-                <div className="profile-meta">Student number: {user.student_number}</div>
-              )}
-              {user?.role === 'student' && user?.department_name && (
-                <div className="profile-meta">Department: {user.department_name}</div>
-              )}
-              <label className={`profile-upload-button ${photoUploadLoading ? 'loading' : ''}`}>
-                <input type="file" accept="image/*" onChange={handleProfilePhotoChange} disabled={photoUploadLoading} />
-                <span>{photoUploadLoading ? 'Uploading...' : 'Upload photo'}</span>
+          </div>
+
+          <div className="profile-panels-grid">
+            <div className="institutional-card profile-section-card" style={{ marginBottom: '20px' }}>
+              <div className="profile-section-heading-copy"><h3>Personalization</h3><p>Adjust how AssistDesk is displayed and how updates reach you.</p></div>
+
+              <label className="preference-row">
+                <span>Compact dashboard view</span>
+                <input type="checkbox" checked={prefs.compactMode} onChange={(e) => updatePreference('compactMode', e.target.checked)} />
+              </label>
+
+              <label className="preference-row">
+                <span>Email updates</span>
+                <input type="checkbox" checked={prefs.emailUpdates} onChange={(e) => updatePreference('emailUpdates', e.target.checked)} />
+              </label>
+
+              <label className="preference-row">
+                <span>Push alerts</span>
+                <input type="checkbox" checked={prefs.pushAlerts} onChange={(e) => updatePreference('pushAlerts', e.target.checked)} />
+              </label>
+
+              <PhoneAlertsControl />
+
+              <div className="preference-row">
+                <span>Dark mode</span>
+                <button
+                  type="button"
+                  className={`preference-switch ${prefs.darkMode ? 'on' : ''}`}
+                  role="switch"
+                  aria-label="Dark mode"
+                  aria-checked={prefs.darkMode}
+                  onClick={() => updatePreference('darkMode', !prefs.darkMode)}
+                >
+                  <span className="preference-switch-track" aria-hidden="true"><span className="preference-switch-thumb" /></span>
+                  <span className="preference-switch-label">{prefs.darkMode ? 'ON' : 'OFF'}</span>
+                </button>
+              </div>
+
+              <label className="preference-row select-row">
+                <span>Preferred accent</span>
+                <select value={prefs.accent} onChange={(e) => updatePreference('accent', e.target.value)}>
+                  <option value="teal">Teal</option>
+                  <option value="navy">Navy</option>
+                  <option value="gold">Gold</option>
+                </select>
               </label>
             </div>
+
+            <div className="institutional-card profile-section-card" id="security">
+              <div className="profile-section-header">
+                <div className="profile-section-heading-copy"><h3>Security</h3><p>Keep your account credentials up to date.</p></div>
+              </div>
+
+              <div className="profile-security-body">
+                <div className="profile-security-actions">
+                  <button
+                    type="button"
+                    className="institutional-btn secondary small"
+                    onClick={() => setShowPasswordEditor((prev) => !prev)}
+                  >
+                    {showPasswordEditor ? 'Close' : 'Change password'}
+                  </button>
+                </div>
+
+                {showPasswordEditor && (
+                  <div className="profile-security-form-wrapper">
+                    <form onSubmit={handlePasswordChange} className="password-change-form">
+                      <div className="password-field">
+                        <input
+                          className="institutional-input"
+                          type={showPasswordFields.oldPassword ? 'text' : 'password'}
+                          aria-label="Current password"
+                          placeholder="Current password"
+                          value={passwordForm.oldPassword}
+                          onChange={(e) => setPasswordForm((current) => ({ ...current, oldPassword: e.target.value }))}
+                          required
+                        />
+                        <button
+                          type="button"
+                          className={`password-visibility ${showPasswordFields.oldPassword ? 'visible' : ''}`}
+                          onClick={() => togglePasswordVisibility('oldPassword')}
+                          aria-label={showPasswordFields.oldPassword ? 'Hide current password' : 'Show current password'}
+                        >
+                          <span className="password-eye" aria-hidden="true" />
+                        </button>
+                      </div>
+
+                      <div className="password-field">
+                        <input
+                          className="institutional-input"
+                          type={showPasswordFields.newPassword ? 'text' : 'password'}
+                          aria-label="New password"
+                          placeholder="New password"
+                          value={passwordForm.newPassword}
+                          onChange={(e) => setPasswordForm((current) => ({ ...current, newPassword: e.target.value }))}
+                          required
+                        />
+                        <button
+                          type="button"
+                          className={`password-visibility ${showPasswordFields.newPassword ? 'visible' : ''}`}
+                          onClick={() => togglePasswordVisibility('newPassword')}
+                          aria-label={showPasswordFields.newPassword ? 'Hide new password' : 'Show new password'}
+                        >
+                          <span className="password-eye" aria-hidden="true" />
+                        </button>
+                      </div>
+
+                      <div className="password-field">
+                        <input
+                          className="institutional-input"
+                          type={showPasswordFields.confirmPassword ? 'text' : 'password'}
+                          aria-label="Confirm new password"
+                          placeholder="Confirm new password"
+                          value={passwordForm.confirmPassword}
+                          onChange={(e) => setPasswordForm((current) => ({ ...current, confirmPassword: e.target.value }))}
+                          required
+                        />
+                        <button
+                          type="button"
+                          className={`password-visibility ${showPasswordFields.confirmPassword ? 'visible' : ''}`}
+                          onClick={() => togglePasswordVisibility('confirmPassword')}
+                          aria-label={showPasswordFields.confirmPassword ? 'Hide confirmed new password' : 'Show confirmed new password'}
+                        >
+                          <span className="password-eye" aria-hidden="true" />
+                        </button>
+                      </div>
+                      <p className="helper-text">{PASSWORD_RULE_MESSAGE}</p>
+                      <button className="institutional-btn" type="submit">Update password</button>
+                    </form>
+                    {passwordState.message && (
+                      <p className={`profile-password-message ${passwordState.status}`}>
+                        {passwordState.message}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="institutional-card account-deletion-card profile-section-card">
+            <div className="account-deletion-panel">
+              <div className="account-deletion-text">
+                <span className="account-deletion-title">Delete your account</span>
+                <small>Permanently delete this account and remove all related data from AssistDesk.</small>
+              </div>
+              <button type="button" className="account-deletion-btn" onClick={openDeleteDialog}>
+                Delete account
+              </button>
+            </div>
+          </div>
+
+          <div className="institutional-card profile-logout-card">
+            <LogoutButton className="profile-logout-btn" />
           </div>
         </div>
 
@@ -569,158 +725,6 @@ function ProfilePage() {
           </div>
         )}
 
-        <div className="institutional-card profile-section-card" style={{ marginBottom: '20px' }}>
-          <div className="profile-section-heading-copy"><h3>Personalization</h3><p>Adjust how AssistDesk is displayed and how updates reach you.</p></div>
-
-          <label className="preference-row">
-            <span>Compact dashboard view</span>
-            <input type="checkbox" checked={prefs.compactMode} onChange={(e) => updatePreference('compactMode', e.target.checked)} />
-          </label>
-
-          <label className="preference-row">
-            <span>Email updates</span>
-            <input type="checkbox" checked={prefs.emailUpdates} onChange={(e) => updatePreference('emailUpdates', e.target.checked)} />
-          </label>
-
-          <label className="preference-row">
-            <span>Push alerts</span>
-            <input type="checkbox" checked={prefs.pushAlerts} onChange={(e) => updatePreference('pushAlerts', e.target.checked)} />
-          </label>
-
-          <PhoneAlertsControl />
-
-          <div className="preference-row">
-            <span>Dark mode</span>
-            <button
-              type="button"
-              className={`preference-switch ${prefs.darkMode ? 'on' : ''}`}
-              role="switch"
-              aria-label="Dark mode"
-              aria-checked={prefs.darkMode}
-              onClick={() => updatePreference('darkMode', !prefs.darkMode)}
-            >
-              <span className="preference-switch-track" aria-hidden="true"><span className="preference-switch-thumb" /></span>
-              <span className="preference-switch-label">{prefs.darkMode ? 'ON' : 'OFF'}</span>
-            </button>
-          </div>
-
-          <label className="preference-row select-row">
-            <span>Preferred accent</span>
-            <select value={prefs.accent} onChange={(e) => updatePreference('accent', e.target.value)}>
-              <option value="teal">Teal</option>
-              <option value="navy">Navy</option>
-              <option value="gold">Gold</option>
-            </select>
-          </label>
-
-        </div>
-
-        <div className="institutional-card profile-section-card" id="security">
-          <div className="profile-section-header">
-            <div className="profile-section-heading-copy"><h3>Security</h3><p>Keep your account credentials up to date.</p></div>
-          </div>
-
-          <div className="profile-security-body">
-            <div className="profile-security-actions">
-              <button
-                type="button"
-                className="institutional-btn secondary small"
-                onClick={() => setShowPasswordEditor((prev) => !prev)}
-              >
-                {showPasswordEditor ? 'Close' : 'Change password'}
-              </button>
-            </div>
-
-            {showPasswordEditor && (
-              <div className="profile-security-form-wrapper">
-                <form onSubmit={handlePasswordChange} className="password-change-form">
-                  <div className="password-field">
-                    <input
-                      className="institutional-input"
-                      type={showPasswordFields.oldPassword ? 'text' : 'password'}
-                      aria-label="Current password"
-                      placeholder="Current password"
-                      value={passwordForm.oldPassword}
-                      onChange={(e) => setPasswordForm((current) => ({ ...current, oldPassword: e.target.value }))}
-                      required
-                    />
-                    <button
-                      type="button"
-                      className={`password-visibility ${showPasswordFields.oldPassword ? 'visible' : ''}`}
-                      onClick={() => togglePasswordVisibility('oldPassword')}
-                      aria-label={showPasswordFields.oldPassword ? 'Hide current password' : 'Show current password'}
-                    >
-                      <span className="password-eye" aria-hidden="true" />
-                    </button>
-                  </div>
-
-                  <div className="password-field">
-                    <input
-                      className="institutional-input"
-                      type={showPasswordFields.newPassword ? 'text' : 'password'}
-                      aria-label="New password"
-                      placeholder="New password"
-                      value={passwordForm.newPassword}
-                      onChange={(e) => setPasswordForm((current) => ({ ...current, newPassword: e.target.value }))}
-                      required
-                    />
-                    <button
-                      type="button"
-                      className={`password-visibility ${showPasswordFields.newPassword ? 'visible' : ''}`}
-                      onClick={() => togglePasswordVisibility('newPassword')}
-                      aria-label={showPasswordFields.newPassword ? 'Hide new password' : 'Show new password'}
-                    >
-                      <span className="password-eye" aria-hidden="true" />
-                    </button>
-                  </div>
-
-                  <div className="password-field">
-                    <input
-                      className="institutional-input"
-                      type={showPasswordFields.confirmPassword ? 'text' : 'password'}
-                      aria-label="Confirm new password"
-                      placeholder="Confirm new password"
-                      value={passwordForm.confirmPassword}
-                      onChange={(e) => setPasswordForm((current) => ({ ...current, confirmPassword: e.target.value }))}
-                      required
-                    />
-                    <button
-                      type="button"
-                      className={`password-visibility ${showPasswordFields.confirmPassword ? 'visible' : ''}`}
-                      onClick={() => togglePasswordVisibility('confirmPassword')}
-                      aria-label={showPasswordFields.confirmPassword ? 'Hide confirmed new password' : 'Show confirmed new password'}
-                    >
-                      <span className="password-eye" aria-hidden="true" />
-                    </button>
-                  </div>
-                  <p className="helper-text">{PASSWORD_RULE_MESSAGE}</p>
-                  <button className="institutional-btn" type="submit">Update password</button>
-                </form>
-                {passwordState.message && (
-                  <p className={`profile-password-message ${passwordState.status}`}>
-                    {passwordState.message}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="institutional-card account-deletion-card profile-section-card">
-          <div className="account-deletion-panel">
-            <div className="account-deletion-text">
-              <span className="account-deletion-title">Delete your account</span>
-              <small>Permanently delete this account and remove all related data from AssistDesk.</small>
-            </div>
-            <button type="button" className="account-deletion-btn" onClick={openDeleteDialog}>
-              Delete account
-            </button>
-          </div>
-        </div>
-
-        <div className="institutional-card profile-logout-card">
-          <LogoutButton className="profile-logout-btn" />
-        </div>
       </div>
     </div>
   );
