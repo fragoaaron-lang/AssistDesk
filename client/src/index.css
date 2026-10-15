@@ -2171,6 +2171,32 @@ button, input, select, textarea {
   padding: 34px;
 }
 
+.remember-me-option {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  align-items: center;
+  column-gap: 9px;
+  row-gap: 3px;
+  margin: 16px 0;
+  color: var(--navy);
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.remember-me-option input {
+  grid-row: span 2;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--teal);
+}
+
+.remember-me-option small {
+  color: var(--muted-text, #667085);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
 .auth-form h3 {
   margin-top: 0;
   color: var(--navy);

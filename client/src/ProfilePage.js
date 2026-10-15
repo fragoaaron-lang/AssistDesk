@@ -355,6 +355,7 @@ function ProfilePage() {
       }
 
       localStorage.removeItem('assistdesk_token');
+      sessionStorage.removeItem('assistdesk_token');
       localStorage.removeItem(getUserStorageKey(user, 'profile_prefs'));
       localStorage.removeItem(getUserStorageKey(user, 'profile_photo'));
       window.location.assign('/');

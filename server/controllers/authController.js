@@ -6,6 +6,7 @@ const { sendPasswordResetEmail, sendEmailVerificationEmail, generateVerification
 const { recordAudit } = require('../utils/auditLog');
 const { disconnectUser } = require('../utils/socket');
 const { getJwtSecret } = require('../config/security');
+const { getLoginTokenExpiry } = require('../utils/authTokenExpiry');
 
 const JWT_SECRET = getJwtSecret();
 const JWT_EXPIRES_IN = process.env.NODE_ENV === 'production' ? '1h' : (process.env.JWT_EXPIRES_IN || '1h');
@@ -60,9 +61,9 @@ const validatePassword = (password) => {
   return null;
 };
 
-const signToken = (user) =>
+const signToken = (user, rememberMe = false) =>
   jwt.sign({ id: user.id, role: user.role, department_id: user.department_id || null, session_version: Number(user.session_version) || 0 }, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN,
+    expiresIn: getLoginTokenExpiry(rememberMe, JWT_EXPIRES_IN),
     issuer: 'assistdesk',
     audience: 'assistdesk-client',
   });
@@ -276,7 +277,7 @@ exports.login = async (req, res) => {
     }
 
     await recordAudit({ actor: user, action: 'auth.login', entityType: 'user', entityId: user.id, after: { account_status: user.account_status } });
-    const token = signToken(user);
+    const token = signToken(user, req.body?.remember_me === true);
 
     return res.json({
       message: user.account_status === 'terminated' ? 'Account status notice.' : 'Login successful.',

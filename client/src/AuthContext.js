@@ -3,6 +3,21 @@ import axios from 'axios';
 import { API_BASE_URL } from './config';
 
 const AuthContext = createContext();
+const TOKEN_STORAGE_KEY = 'assistdesk_token';
+
+const getStoredToken = () => localStorage.getItem(TOKEN_STORAGE_KEY)
+  || sessionStorage.getItem(TOKEN_STORAGE_KEY);
+
+const storeToken = (token, rememberMe = false) => {
+  localStorage.removeItem(TOKEN_STORAGE_KEY);
+  sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+  (rememberMe ? localStorage : sessionStorage).setItem(TOKEN_STORAGE_KEY, token);
+};
+
+const clearStoredToken = () => {
+  localStorage.removeItem(TOKEN_STORAGE_KEY);
+  sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+};
 
 const persistWelcomeName = (name) => {
   if (name) {
@@ -39,12 +54,12 @@ const applySavedTheme = (currentUser) => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('assistdesk_token'));
+  const [token, setToken] = useState(getStoredToken);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadUser = async () => {
-      const storedToken = localStorage.getItem('assistdesk_token');
+      const storedToken = getStoredToken();
 
       if (!storedToken) {
         setLoading(false);
@@ -59,7 +74,7 @@ export const AuthProvider = ({ children }) => {
         setToken(storedToken);
         setUser(response.data.user);
       } catch (error) {
-        localStorage.removeItem('assistdesk_token');
+        clearStoredToken();
         setToken(null);
         setUser(null);
       } finally {
@@ -81,7 +96,7 @@ export const AuthProvider = ({ children }) => {
         setUser(response.data.user);
       } catch (error) {
         if (error.response?.status === 401) {
-          localStorage.removeItem('assistdesk_token');
+          clearStoredToken();
           setToken(null);
           setUser(null);
         }
@@ -96,13 +111,17 @@ export const AuthProvider = ({ children }) => {
     applySavedTheme(user);
   }, [user?.id, user?.email]);
 
-  const login = async (email, password) => {
-    const response = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
+  const login = async (email, password, rememberMe = false) => {
+    const response = await axios.post(`${API_BASE_URL}/api/auth/login`, {
+      email,
+      password,
+      remember_me: rememberMe === true,
+    });
     const { user, token: newToken } = response.data;
     const userName = user?.name || email.split('@')[0];
     const firstName = userName.split(' ')[0];
 
-    localStorage.setItem('assistdesk_token', newToken);
+    storeToken(newToken, rememberMe);
     persistWelcomeName(firstName);
     setToken(newToken);
     setUser(user);
@@ -127,7 +146,7 @@ export const AuthProvider = ({ children }) => {
 
     const { user, token: newToken } = response.data;
 
-    localStorage.setItem('assistdesk_token', newToken);
+    storeToken(newToken);
     setToken(newToken);
     setUser(user);
     return { user, token: newToken || null };
@@ -139,7 +158,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    const currentToken = localStorage.getItem('assistdesk_token');
+    const currentToken = getStoredToken();
     const currentName = user?.name || localStorage.getItem('assistdesk_last_user_name');
     if (currentName) {
       persistWelcomeName(currentName.split(' ')[0]);
@@ -157,7 +176,7 @@ export const AuthProvider = ({ children }) => {
         console.warn('Logout audit event could not be recorded.', error.message);
       }
     }
-    localStorage.removeItem('assistdesk_token');
+    clearStoredToken();
     setToken(null);
     setUser(null);
     window.location.assign('/');

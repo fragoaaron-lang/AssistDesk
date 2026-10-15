@@ -7,6 +7,7 @@ import { useAuth } from './AuthContext';
 function LoginPage({ modal = false, onSwitch }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
@@ -26,7 +27,7 @@ function LoginPage({ modal = false, onSwitch }) {
     setIsLoading(true);
 
     try {
-      const result = await login(email, password);
+      const result = await login(email, password, rememberMe);
       const userName = result?.user?.name || email.split('@')[0];
       const firstName = userName.split(' ')[0];
       if (result?.user?.account_status === 'terminated') {
@@ -95,6 +96,11 @@ function LoginPage({ modal = false, onSwitch }) {
                 <input className="institutional-input" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" autoComplete="current-password" disabled={isLoading} />
                 <button type="button" className={`password-visibility ${showPassword ? 'visible' : ''}`} onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Hide password' : 'Show password'} disabled={isLoading}><span className="password-eye" aria-hidden="true" /></button>
               </div>
+              <label className="remember-me-option">
+                <input type="checkbox" checked={rememberMe} onChange={(event) => setRememberMe(event.target.checked)} disabled={isLoading} />
+                <span>Remember me</span>
+                <small>Stay signed in on this device for up to 30 days.</small>
+              </label>
               <button className={`institutional-btn auth-submit-btn ${isLoading ? 'is-loading' : ''}`} type="submit" style={{ width: '100%' }} disabled={isLoading}>
                 {isLoading ? <><span className="auth-spinner" aria-hidden="true" />Signing in...</> : 'Login'}
               </button>
