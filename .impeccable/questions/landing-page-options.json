@@ -1,0 +1,43 @@
+{
+  "title": "Choose the landing-page composition",
+  "question": "Which structure should guide the AssistDesk landing-page redesign? Keep its content truthful and its existing sign-in and registration flow intact.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "Campus Wayfinding Board",
+      "kicker": "THE ROLL",
+      "lineage": "Campus maps and service directories",
+      "thesis": "A request begins with a clear route to the right support team.",
+      "palette": ["#082038", "#0f2d52", "#1f6f78", "#ffd35a", "#f3f7fb"],
+      "materials": ["campus wayfinding lines", "department directory markers"],
+      "viewport": "The headline and start action lead into a connected service route, with the campus support teams mapped as destinations.",
+      "risk": "The wayfinding diagram must stay subordinate to the real action and readable content.",
+      "html": ".impeccable/mocks/decision/landing-wayfinding.html"
+    },
+    {
+      "id": "foldout-service-sheet",
+      "label": "The Fold-out Service Sheet",
+      "lineage": "Campus service leaflets and unfolding reference sheets",
+      "thesis": "One clear sheet opens into the steps and services behind a support request.",
+      "palette": ["#082038", "#0f2d52", "#1f6f78", "#ffd35a", "#f3f7fb"],
+      "materials": ["folded information sheet", "creased route lines"],
+      "viewport": "A single continuous sheet moves from the support offer to request steps and department help without becoming a row of feature cards.",
+      "risk": "The fold metaphor can feel decorative unless every panel clarifies a real step.",
+      "html": ".impeccable/mocks/decision/landing-foldout.html"
+    },
+    {
+      "id": "campus-service-window",
+      "label": "Campus Service Window",
+      "lineage": "A campus help counter and its numbered service slips",
+      "thesis": "The visitor sees where to begin and what follow-up looks like before signing in.",
+      "palette": ["#082038", "#0f2d52", "#1f6f78", "#ffd35a", "#f3f7fb"],
+      "materials": ["service counter window", "request receipt"],
+      "viewport": "A campus service window frames a clear request action, while a single receipt shows the real submit-track-update flow.",
+      "risk": "A counter scene must remain a working webpage, not an illustration of a webpage.",
+      "html": ".impeccable/mocks/decision/landing-counter.html"
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "buildPath": { "value": "code", "toggle": false },
+  "steer": true
+}
