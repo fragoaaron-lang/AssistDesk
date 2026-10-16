@@ -71,6 +71,34 @@ const getDepartmentsForRole = (allDepartments, selectedRole) => {
   return allDepartments;
 };
 
+const getRegistrationErrors = ({ firstName, middleInitial, lastName, email, studentNumber, departmentId, password, confirmPassword, role }) => {
+  const errors = {};
+  if (!firstName.trim()) errors.firstName = 'Enter your first name.';
+  if (!/^[A-Za-z]$/.test(middleInitial)) errors.middleInitial = 'Enter one letter for your middle initial.';
+  if (!lastName.trim()) errors.lastName = 'Enter your last name.';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) errors.email = 'Enter a valid email address.';
+
+  if (role === 'student') {
+    const studentNumberMatch = studentNumber.trim().match(/^(\d{4})-\d{5}$/);
+    if (!studentNumberMatch) {
+      errors.studentNumber = 'Use the format YYYY-XXXXX.';
+    } else if (Number(studentNumberMatch[1]) > new Date().getFullYear()) {
+      errors.studentNumber = 'The academic year cannot be in the future.';
+    }
+  }
+
+  if (!departmentId) errors.departmentId = 'Select your department.';
+  if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{12,128}$/.test(password) || new TextEncoder().encode(password).length > 72) {
+    errors.password = 'Use 12–72 characters with uppercase, lowercase, a number, and a symbol.';
+  }
+  if (!confirmPassword) {
+    errors.confirmPassword = 'Confirm your password.';
+  } else if (password !== confirmPassword) {
+    errors.confirmPassword = 'Passwords do not match.';
+  }
+  return errors;
+};
+
 function RegisterPage({ modal = false, onSwitch }) {
   const [firstName, setFirstName] = useState('');
   const [middleInitial, setMiddleInitial] = useState('');
@@ -85,9 +113,39 @@ function RegisterPage({ modal = false, onSwitch }) {
   const [departmentId, setDepartmentId] = useState('');
   const [departments, setDepartments] = useState([]);
   const [message, setMessage] = useState('');
+  const [touched, setTouched] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const [serverFieldErrors, setServerFieldErrors] = useState({});
   const { register } = useAuth();
   const navigate = useNavigate();
   const availableDepartments = getDepartmentsForRole(departments, role);
+  const formValues = { firstName, middleInitial, lastName, email, studentNumber, departmentId, password, confirmPassword, role };
+  const validationErrors = getRegistrationErrors(formValues);
+  const fieldErrors = { ...validationErrors, ...serverFieldErrors };
+
+  const updateField = (field, value, setter) => {
+    setter(value);
+    setTouched((current) => ({ ...current, [field]: true }));
+    setServerFieldErrors((current) => {
+      if (!current[field]) return current;
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
+    setMessage('');
+  };
+
+  const fieldError = (field) => ((touched[field] || submitted || serverFieldErrors[field]) ? fieldErrors[field] : '');
+
+  const getFieldProps = (field) => {
+    const error = fieldError(field);
+    return {
+      id: `registration-${field}`,
+      'aria-invalid': Boolean(error),
+      'aria-describedby': error ? `registration-${field}-error` : undefined,
+      onBlur: () => setTouched((current) => ({ ...current, [field]: true })),
+    };
+  };
 
   useEffect(() => {
     axios.get(`${API_BASE_URL}/api/catalog/departments`)
@@ -104,39 +162,33 @@ function RegisterPage({ modal = false, onSwitch }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!/^[A-Za-z]$/.test(middleInitial)) {
-      setMessage('Middle initial must be one letter.');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setMessage('Passwords do not match.');
-      return;
-    }
-
-    if (role === 'student') {
-      const studentNumberMatch = studentNumber.trim().match(/^(\d{4})-\d{5}$/);
-      if (!studentNumberMatch || Number(studentNumberMatch[1]) > new Date().getFullYear()) {
-        setMessage('Student number must use a valid academic year. It should follow the format 2026-XXXXX.');
-        return;
-      }
-    }
-
-    if (role !== 'student' && !departmentId) {
-      setMessage('Please select your department.');
+    setSubmitted(true);
+    const errors = getRegistrationErrors(formValues);
+    const firstInvalidField = Object.keys(errors)[0];
+    if (firstInvalidField) {
+      document.getElementById(`registration-${firstInvalidField}`)?.focus();
       return;
     }
 
     try {
       const name = `${firstName.trim()} ${middleInitial.toUpperCase()}. ${lastName.trim()}`;
-      const result = await register(name, email, password, role, departmentId, studentNumber);
+      await register(name, email, password, role, departmentId, studentNumber);
       navigate('/verify-email');
     } catch (error) {
       const timeoutMessage = error.code === 'ECONNABORTED'
         ? 'Registration email delivery timed out. Please try again or contact support.'
         : error.response?.data?.message || 'Registration failed.';
-      setMessage(timeoutMessage);
+      const normalizedMessage = timeoutMessage.toLowerCase();
+      const field = normalizedMessage.includes('email') ? 'email'
+        : normalizedMessage.includes('password') ? 'password'
+          : normalizedMessage.includes('student number') ? 'studentNumber'
+            : normalizedMessage.includes('department') ? 'departmentId' : null;
+      if (field) {
+        setServerFieldErrors({ [field]: timeoutMessage });
+        document.getElementById(`registration-${field}`)?.focus();
+      } else {
+        setMessage(timeoutMessage);
+      }
     }
   };
 
@@ -152,41 +204,63 @@ function RegisterPage({ modal = false, onSwitch }) {
         </div>
         <div className="auth-form">
           <h3>Register</h3>
-          <form onSubmit={handleSubmit}>
+          <form className="registration-form" onSubmit={handleSubmit} noValidate>
             <div className="form-row">
-              <input className="institutional-input" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" required />
-              <input className="institutional-input middle-initial-input" value={middleInitial} onChange={(e) => setMiddleInitial(e.target.value.slice(0, 1))} placeholder="M.I." maxLength="1" required />
-              <input className="institutional-input" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" required />
+              <div className="registration-field">
+                <input className="institutional-input" {...getFieldProps('firstName')} aria-label="First name" value={firstName} onChange={(e) => updateField('firstName', e.target.value, setFirstName)} placeholder="First name" autoComplete="given-name" required />
+                {fieldError('firstName') && <span className="registration-field-error" id="registration-firstName-error">{fieldError('firstName')}</span>}
+              </div>
+              <div className="registration-field">
+                <input className="institutional-input middle-initial-input" {...getFieldProps('middleInitial')} aria-label="Middle initial" value={middleInitial} onChange={(e) => updateField('middleInitial', e.target.value.slice(0, 1), setMiddleInitial)} placeholder="M.I." maxLength="1" autoComplete="additional-name" required />
+                {fieldError('middleInitial') && <span className="registration-field-error" id="registration-middleInitial-error">{fieldError('middleInitial')}</span>}
+              </div>
+              <div className="registration-field">
+                <input className="institutional-input" {...getFieldProps('lastName')} aria-label="Last name" value={lastName} onChange={(e) => updateField('lastName', e.target.value, setLastName)} placeholder="Last name" autoComplete="family-name" required />
+                {fieldError('lastName') && <span className="registration-field-error" id="registration-lastName-error">{fieldError('lastName')}</span>}
+              </div>
             </div>
-            <input className="institutional-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email address" required />
+            <div className="registration-field">
+              <input className="institutional-input" type="email" {...getFieldProps('email')} aria-label="Email address" value={email} onChange={(e) => updateField('email', e.target.value, setEmail)} placeholder="Email address" autoComplete="email" required />
+              {fieldError('email') && <span className="registration-field-error" id="registration-email-error">{fieldError('email')}</span>}
+            </div>
             {role !== 'admin' && (
               <>
-                {role === 'student' && <input className="institutional-input" type="text" value={studentNumber} onChange={(e) => setStudentNumber(e.target.value)} placeholder="Student number (2026-XXXXX)" pattern="[0-9]{4}-[0-9]{5}" maxLength="10" required />}
-                <select className="institutional-select" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} required>
-                  <option value="">Select a department</option>
-                  {availableDepartments.map((department) => (
-                    <option key={department.id} value={department.id}>{getDepartmentDisplayName(department)}</option>
-                  ))}
-                </select>
+                {role === 'student' && (
+                  <div className="registration-field">
+                    <input className="institutional-input" type="text" {...getFieldProps('studentNumber')} aria-label="Student number" value={studentNumber} onChange={(e) => updateField('studentNumber', e.target.value, setStudentNumber)} placeholder="Student number (YYYY-XXXXX)" pattern="[0-9]{4}-[0-9]{5}" maxLength="10" autoComplete="off" required />
+                    {fieldError('studentNumber') && <span className="registration-field-error" id="registration-studentNumber-error">{fieldError('studentNumber')}</span>}
+                  </div>
+                )}
+                <div className="registration-field">
+                  <select className="institutional-select" {...getFieldProps('departmentId')} aria-label="Department" value={departmentId} onChange={(e) => updateField('departmentId', e.target.value, setDepartmentId)} required>
+                    <option value="">Select a department</option>
+                    {availableDepartments.map((department) => (
+                      <option key={department.id} value={department.id}>{getDepartmentDisplayName(department)}</option>
+                    ))}
+                  </select>
+                  {fieldError('departmentId') && <span className="registration-field-error" id="registration-departmentId-error">{fieldError('departmentId')}</span>}
+                </div>
               </>
             )}
-            <div className="password-field">
-              <input className="institutional-input" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required />
+            <div className="registration-field password-field">
+              <input className="institutional-input" type={showPassword ? 'text' : 'password'} {...getFieldProps('password')} aria-label="Password" value={password} onChange={(e) => updateField('password', e.target.value, setPassword)} placeholder="Password" autoComplete="new-password" required />
               <button type="button" className={`password-visibility ${showPassword ? 'visible' : ''}`} onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Hide password' : 'Show password'}><span className="password-eye" aria-hidden="true" /></button>
+              {fieldError('password') && <span className="registration-field-error" id="registration-password-error">{fieldError('password')}</span>}
             </div>
-            <div className="password-field">
-              <input className="institutional-input" type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm password" required />
+            <div className="registration-field password-field">
+              <input className="institutional-input" type={showConfirmPassword ? 'text' : 'password'} {...getFieldProps('confirmPassword')} aria-label="Confirm password" value={confirmPassword} onChange={(e) => updateField('confirmPassword', e.target.value, setConfirmPassword)} placeholder="Confirm password" autoComplete="new-password" required />
               <button type="button" className={`password-visibility ${showConfirmPassword ? 'visible' : ''}`} onClick={() => setShowConfirmPassword((visible) => !visible)} aria-label={showConfirmPassword ? 'Hide confirmed password' : 'Show confirmed password'}><span className="password-eye" aria-hidden="true" /></button>
+              {fieldError('confirmPassword') && <span className="registration-field-error" id="registration-confirmPassword-error">{fieldError('confirmPassword')}</span>}
             </div>
-            <p className="helper-text">Use 8+ characters with uppercase, lowercase, number, and symbol.</p>
-            <select className="institutional-select" value={role} onChange={(e) => { setRole(e.target.value); setDepartmentId(''); }}>
+            <p className="helper-text registration-password-hint">Use 12–72 characters with uppercase, lowercase, a number, and a symbol.</p>
+            <select className="institutional-select" aria-label="Account type" value={role} onChange={(e) => { setRole(e.target.value); setDepartmentId(''); setServerFieldErrors({}); }}>
               <option value="student">Student</option>
               <option value="faculty">Faculty</option>
               <option value="staff">Staff</option>
             </select>
             <button className="institutional-btn" type="submit" style={{ width: '100%' }}>Register</button>
           </form>
-          {message && <p style={{ color: 'red', marginTop: '0.8rem' }}>{message}</p>}
+          {message && <p className="registration-form-error" role="alert">{message}</p>}
           <p className="helper-text">{modal ? <button type="button" className="auth-switch-button" onClick={onSwitch}>Already have an account?</button> : <a href="/">Already have an account?</a>}</p>
         </div>
       </div>

@@ -2409,6 +2409,60 @@ button, input, select, textarea {
 
 .form-row > * { flex: 1; }
 
+.registration-form {
+  display: grid;
+  gap: 12px;
+}
+
+.registration-form .form-row {
+  align-items: start;
+  gap: 10px;
+}
+
+.registration-field {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.registration-field .institutional-input,
+.registration-field .institutional-select {
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.registration-field [aria-invalid="true"] {
+  border-color: #b42318;
+  box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.1);
+}
+
+.registration-field-error {
+  display: block;
+  color: #a12620;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.registration-password-hint {
+  margin: -5px 0 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.registration-form-error {
+  margin: 12px 0 0;
+  padding: 11px 13px;
+  border: 1px solid #e6a4a4;
+  border-radius: 10px;
+  background: #fff3f3;
+  color: #8f2020;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
 .password-field { position: relative; }
 .password-field .institutional-input { padding-right: 68px; }
 .password-visibility {
@@ -4353,6 +4407,9 @@ body.dark-mode .institutional-select {
 body.dark-mode input::placeholder,
 body.dark-mode textarea::placeholder { color: #8293a0; }
 body.dark-mode option { background: #15212b; color: var(--text); }
+body.dark-mode .registration-field-error { color: #ffaaa5; }
+body.dark-mode .registration-field [aria-invalid="true"] { border-color: #ff8980 !important; box-shadow: 0 0 0 3px rgba(255, 137, 128, 0.14); }
+body.dark-mode .registration-form-error { background: #482124; border-color: #98505a; color: #ffc1c1; }
 
 body.dark-mode .ticket-department-heading,
 body.dark-mode .ticket-record-button,
