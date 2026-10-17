@@ -7,7 +7,6 @@ import SidebarProfile from './SidebarProfile';
 const baseLinks = [
   { label: 'Dashboard', to: '/dashboard', key: 'dashboard' },
   { label: 'Tickets', to: '/tickets', key: 'tickets' },
-  { label: 'Assistant', to: '/assistant', key: 'assistant' },
   { label: 'Profile', to: '/profile', key: 'profile' },
 ];
 
@@ -27,15 +26,11 @@ function AuthenticatedNavigation({ user, subtitle, onUsersNavigate, mobileProfil
   const links = useMemo(() => {
     if (minimal) return [];
 
-    const accountLinks = location.pathname === '/profile'
-      ? baseLinks.filter((link) => link.key !== 'assistant')
-      : baseLinks;
-
     return [
-      ...accountLinks,
+      ...baseLinks,
       ...(user?.role === 'admin' ? adminLinks : []),
     ];
-  }, [location.pathname, minimal, user?.role]);
+  }, [minimal, user?.role]);
 
   const getActiveLink = (link) => {
     if (link.key === 'users') return isUsersView;
