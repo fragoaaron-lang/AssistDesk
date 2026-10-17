@@ -35,7 +35,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      'script-src': ["'self'", "'sha256-XzOGgjZcZ1bP6o7VXBISodPowUTo/FxYmOcduy/b0+g='", 'https://cdn.jsdelivr.net'],
+      'script-src': ["'self'", "'sha256-XzOGgjZcZ1bP6o7VXBISodPowUTo/FxYmOcduy/b0+g='", "'sha256-UzSRwGz7YN6TWsJ/SvDvc0UVlujn8lPM0NOo9vKNX/s='", "'sha256-LzGYgQ4UkShOG9GuyaKeRgSYNGxOOumXF9QrVKupqOk='", 'https://cdn.jsdelivr.net'],
       'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       'font-src': ["'self'", 'https://fonts.gstatic.com', 'data:'],
       'img-src': ["'self'", 'data:', 'blob:', 'https:'],
