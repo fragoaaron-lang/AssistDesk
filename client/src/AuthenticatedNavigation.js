@@ -24,10 +24,18 @@ function AuthenticatedNavigation({ user, subtitle, onUsersNavigate, mobileProfil
   const mobileMenuRef = useRef(null);
   const isUsersView = location.pathname === '/admin/reports'
     && new URLSearchParams(location.search).get('view') === 'users';
-  const links = useMemo(() => (minimal ? [] : [
-    ...baseLinks,
-    ...(user?.role === 'admin' ? adminLinks : []),
-  ]), [minimal, user?.role]);
+  const links = useMemo(() => {
+    if (minimal) return [];
+
+    const accountLinks = location.pathname === '/profile'
+      ? baseLinks.filter((link) => link.key !== 'assistant')
+      : baseLinks;
+
+    return [
+      ...accountLinks,
+      ...(user?.role === 'admin' ? adminLinks : []),
+    ];
+  }, [location.pathname, minimal, user?.role]);
 
   const getActiveLink = (link) => {
     if (link.key === 'users') return isUsersView;
