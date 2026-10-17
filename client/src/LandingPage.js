@@ -21,7 +21,7 @@ function LandingPage() {
 
   useEffect(() => {
     const landing = landingRef.current;
-    if (!landing || document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+    if (!landing || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
 
     const lenis = new Lenis({
       duration: 1.05,
@@ -37,6 +37,7 @@ function LandingPage() {
     };
     lenis.on('scroll', updateScroll);
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    if (document.hidden) lenis.stop();
     gsap.ticker.add(raf);
     gsap.ticker.lagSmoothing(0);
 
