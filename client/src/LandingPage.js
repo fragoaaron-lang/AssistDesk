@@ -86,35 +86,6 @@ function LandingPage() {
           { scale: 0.74, opacity: 0.5 },
           { scale: 1, opacity: 1, duration: 0.36, stagger: 0.12, ease: 'power2.out' }, '-=0.22');
 
-      gsap.to(landing.querySelectorAll('.landing-heat-pulse'), {
-        scale: 1.16,
-        opacity: 0.38,
-        duration: 5.5,
-        stagger: 1.1,
-        ease: 'sine.inOut',
-        yoyo: true,
-        repeat: -1,
-        scrollTrigger: {
-          trigger: landing.querySelector('.landing-hero'),
-          start: 'top bottom',
-          end: 'bottom top',
-          toggleActions: 'play pause resume pause',
-        },
-      });
-
-      gsap.to(landing.querySelector('.landing-map-grid'), {
-        backgroundPosition: '38px 38px',
-        duration: 32,
-        ease: 'none',
-        repeat: -1,
-        scrollTrigger: {
-          trigger: landing.querySelector('.landing-hero'),
-          start: 'top bottom',
-          end: 'bottom top',
-          toggleActions: 'play pause resume pause',
-        },
-      });
-
       gsap.fromTo(landing.querySelector('.landing-section-heading'),
         { y: 22, opacity: 0.7 },
         {
@@ -272,14 +243,9 @@ function LandingPage() {
 
       <section className="landing-hero" aria-labelledby="landing-title">
         <div className="landing-hero-map" aria-hidden="true">
-          <img src="/school-map.png" alt="" />
+          <iframe src="/campus-map-3d-v3.html?background=1" title="Campus 3D map background" tabIndex={-1} />
           <div className="landing-hero-map-wash" />
-          <span className="landing-heat-pulse landing-heat-pulse-one" />
-          <span className="landing-heat-pulse landing-heat-pulse-two" />
-          <span className="landing-heat-pulse landing-heat-pulse-three" />
-          <span className="landing-heat-pulse landing-heat-pulse-four" />
         </div>
-        <div className="landing-map-grid" aria-hidden="true" />
         <div className="landing-hero-content">
           <p className="landing-hero-kicker"><span /> TCC · Campus support, connected</p>
           <h1 id="landing-title">Find your way to the right help.</h1>

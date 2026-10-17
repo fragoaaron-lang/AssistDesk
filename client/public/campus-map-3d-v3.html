@@ -4,12 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Campus 3D Map</title>
+<script>if(new URLSearchParams(location.search).get('background')==='1')document.documentElement.classList.add('map-background');</script>
 <style>
 :root{--bg1:#eef1f5;--bg2:#cdd6e2;--panel:#ffffffe8;--ink:#1d2430;--mute:#5b6678;--line:#d6dce6;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg1:#1b2230;--bg2:#10141d;--panel:#1c2331e8;--ink:#e8edf6;--mute:#9aa6bb;--line:#2e384b}}
 :root[data-theme="dark"]{--bg1:#1b2230;--bg2:#10141d;--panel:#1c2331e8;--ink:#e8edf6;--mute:#9aa6bb;--line:#2e384b}
 html,body{height:100%;margin:0}
 body{background:radial-gradient(circle at 50% 30%,var(--bg1),var(--bg2));color:var(--ink);font-family:"Outfit","Segoe UI",system-ui,sans-serif;overflow:hidden}
+html.map-background body{background:transparent}
+html.map-background #labels,html.map-background .ui{display:none!important}
 #c{position:absolute;inset:0;width:100%;height:100%;display:block}
 #labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 .lbl{position:absolute;transform:translate(-50%,-50%);font-size:11px;font-weight:700;color:var(--ink);white-space:nowrap;letter-spacing:.03em}
