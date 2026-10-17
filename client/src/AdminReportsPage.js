@@ -63,7 +63,7 @@ const reportFilterFields = {
   audit: ['start_date', 'end_date', 'department_id', 'action', 'entity_type'],
 };
 
-function ReportFilterPanel({ section, filters, departments, categories, loading, onChange, onApply, onReset, onExport }) {
+function ReportFilterPanel({ section, filters, departments, categories, loading, expanded, onToggle, onChange, onApply, onReset, onExport }) {
   const fieldLabel = {
     start_date: 'From',
     end_date: 'To',
@@ -77,49 +77,67 @@ function ReportFilterPanel({ section, filters, departments, categories, loading,
   const activeCount = Object.values(filters).filter(Boolean).length;
 
   return (
-    <section className="institutional-card report-filter-card report-tab-filter-card" aria-label={`${reportSectionNames[section]} filters`}>
-      <div className="report-toolbar">
-        <div className="report-toolbar-copy">
-          <h3>{reportSectionNames[section]} filters</h3>
-          <span>{activeCount ? `${activeCount} filter${activeCount === 1 ? '' : 's'} set for this tab` : 'Filters are saved separately for each tab.'}</span>
-        </div>
+    <section className={`institutional-card report-filter-card report-tab-filter-card${expanded ? ' is-expanded' : ''}`} aria-label={`${reportSectionNames[section]} filters`}>
+      <div className="report-filter-dropdown-head">
+        <button type="button" className="report-filter-dropdown-toggle" aria-expanded={expanded} aria-controls={`report-filter-panel-${section}`} onClick={onToggle}>
+          <span className="report-toolbar-copy">
+            <strong>{reportSectionNames[section]} filters</strong>
+            <small>{activeCount ? `${activeCount} filter${activeCount === 1 ? '' : 's'} set for this tab` : 'Saved separately for this tab'}</small>
+          </span>
+          <svg className="report-filter-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg>
+        </button>
         {section === 'tickets' && <button type="button" className="institutional-btn small secondary" onClick={onExport} disabled={loading}>Export CSV</button>}
       </div>
-      <form className="report-filter-form" onSubmit={onApply}>
-        {reportFilterFields[section].map((field) => (
-          <label key={field}>{fieldLabel[field]}
-            {field === 'start_date' || field === 'end_date' ? (
-              <input className="institutional-input" type="date" value={filters[field]} onChange={(event) => onChange(field, event.target.value)} />
-            ) : field === 'department_id' ? (
-              <select className="institutional-select" value={filters.department_id} onChange={(event) => onChange(field, event.target.value)}>
-                <option value="">All departments</option>
-                {departments.map((department) => <option key={department.id} value={department.id}>{department.display_name || department.name}</option>)}
-              </select>
-            ) : field === 'category' ? (
-              <select className="institutional-select" value={filters.category} onChange={(event) => onChange(field, event.target.value)}>
-                <option value="">All categories</option>
-                {categories.map((category) => <option key={category} value={category}>{category}</option>)}
-              </select>
-            ) : field === 'priority' ? (
-              <select className="institutional-select" value={filters.priority} onChange={(event) => onChange(field, event.target.value)}>
-                <option value="">All priorities</option>
-                {['low', 'medium', 'urgent'].map((value) => <option key={value} value={value}>{value}</option>)}
-              </select>
-            ) : field === 'status' ? (
-              <select className="institutional-select" value={filters.status} onChange={(event) => onChange(field, event.target.value)}>
-                <option value="">All statuses</option>
-                {['open', 'pending', 'in_progress', 'resolved', 'closed'].map((value) => <option key={value} value={value}>{value.replace('_', ' ')}</option>)}
-              </select>
-            ) : (
-              <input className="institutional-input" type="search" value={filters[field]} onChange={(event) => onChange(field, event.target.value)} placeholder={field === 'action' ? 'Filter by action' : 'e.g. ticket, user'} />
-            )}
-          </label>
-        ))}
-        <div className="report-filter-actions">
-          <button className="institutional-btn small" type="submit" disabled={loading}>{loading ? 'Applying…' : 'Apply filters'}</button>
-          <button className="institutional-btn small secondary" type="button" onClick={onReset} disabled={loading}>Reset</button>
-        </div>
-      </form>
+      <div id={`report-filter-panel-${section}`} className="report-filter-dropdown-panel" hidden={!expanded}>
+        {expanded && (loading ? (
+            <div className="report-filter-skeleton" role="status" aria-label={`Loading ${reportSectionNames[section]} filters`} aria-busy="true">
+              <span className="report-skeleton-announcement">Loading filters…</span>
+              {reportFilterFields[section].map((field) => (
+                <div className="report-filter-skeleton-field" key={field}>
+                  <span>{fieldLabel[field]}</span>
+                  <span className="report-skeleton-block" />
+                </div>
+              ))}
+              <div className="report-filter-skeleton-actions"><span className="report-skeleton-block" /><span className="report-skeleton-block" /></div>
+            </div>
+          ) : (
+            <form className="report-filter-form" onSubmit={onApply}>
+              {reportFilterFields[section].map((field) => (
+                <label key={field}>{fieldLabel[field]}
+                  {field === 'start_date' || field === 'end_date' ? (
+                    <input className="institutional-input" type="date" value={filters[field]} onChange={(event) => onChange(field, event.target.value)} />
+                  ) : field === 'department_id' ? (
+                    <select className="institutional-select" value={filters.department_id} onChange={(event) => onChange(field, event.target.value)}>
+                      <option value="">All departments</option>
+                      {departments.map((department) => <option key={department.id} value={department.id}>{department.display_name || department.name}</option>)}
+                    </select>
+                  ) : field === 'category' ? (
+                    <select className="institutional-select" value={filters.category} onChange={(event) => onChange(field, event.target.value)}>
+                      <option value="">All categories</option>
+                      {categories.map((category) => <option key={category} value={category}>{category}</option>)}
+                    </select>
+                  ) : field === 'priority' ? (
+                    <select className="institutional-select" value={filters.priority} onChange={(event) => onChange(field, event.target.value)}>
+                      <option value="">All priorities</option>
+                      {['low', 'medium', 'urgent'].map((value) => <option key={value} value={value}>{value}</option>)}
+                    </select>
+                  ) : field === 'status' ? (
+                    <select className="institutional-select" value={filters.status} onChange={(event) => onChange(field, event.target.value)}>
+                      <option value="">All statuses</option>
+                      {['open', 'pending', 'in_progress', 'resolved', 'closed'].map((value) => <option key={value} value={value}>{value.replace('_', ' ')}</option>)}
+                    </select>
+                  ) : (
+                    <input className="institutional-input" type="search" value={filters[field]} onChange={(event) => onChange(field, event.target.value)} placeholder={field === 'action' ? 'Exact action name' : 'e.g. ticket, user'} />
+                  )}
+                </label>
+              ))}
+              <div className="report-filter-actions">
+                <button className="institutional-btn small" type="submit" disabled={loading}>Apply filters</button>
+                <button className="institutional-btn small secondary" type="button" onClick={onReset} disabled={loading}>Reset</button>
+              </div>
+            </form>
+          ))}
+      </div>
     </section>
   );
 }
@@ -211,6 +229,7 @@ function AdminReportsPage() {
   const [reportFiltersBySection, setReportFiltersBySection] = useState(() => Object.fromEntries(
     Object.keys(reportSectionNames).map((section) => [section, { ...reportFilterDefaults }])
   ));
+  const [filterDropdownsOpen, setFilterDropdownsOpen] = useState({});
   const [activeReportSection, setActiveReportSection] = useState('overview');
   const [sectionLoading, setSectionLoading] = useState(false);
   const sectionRequestId = useRef(0);
@@ -235,6 +254,9 @@ function AdminReportsPage() {
       ...current,
       [section]: { ...current[section], [key]: value },
     }));
+  };
+  const toggleFilterDropdown = (section) => {
+    setFilterDropdownsOpen((current) => ({ ...current, [section]: current[section] !== true }));
   };
 
   useEffect(() => {
@@ -348,6 +370,7 @@ function AdminReportsPage() {
   const selectReportSection = async (section) => {
     if (section === activeReportSection) return;
     setActiveReportSection(section);
+    setFilterDropdownsOpen((current) => ({ ...current, [section]: true }));
     setMessage('');
     const requestId = ++sectionRequestId.current;
     setSectionLoading(true);
@@ -665,6 +688,8 @@ function AdminReportsPage() {
               departments={departments}
               categories={reports.availableCategories || []}
               loading={sectionLoading}
+              expanded={filterDropdownsOpen[activeReportSection] === true}
+              onToggle={() => toggleFilterDropdown(activeReportSection)}
               onChange={(field, value) => setReportFilter(activeReportSection, field, value)}
               onApply={applyReportFilters}
               onReset={resetReportFilters}
