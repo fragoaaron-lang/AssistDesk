@@ -256,7 +256,7 @@ function DashboardPage() {
                   left: `${pos.x}%`,
                   top: `${pos.y}%`,
                   '--heat-opacity': getHeatStrength(ticketCount),
-                  '--heat-size': `${Math.min(34, 16 + ticketCount * 2)}%`,
+                  '--heat-size': `${Math.min(24, 10 + ticketCount * 1.4)}%`,
                 }}
               />
             );
