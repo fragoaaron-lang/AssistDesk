@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import { API_BASE_URL } from './config';
@@ -38,6 +38,89 @@ const getCompleteTicketCode = (ticket) => {
   return `${getTicketPrefix(ticket.Department?.name)}-${String(ticket.id).padStart(4, '0')}`;
 };
 
+const reportSectionNames = {
+  overview: 'Overview',
+  performance: 'Performance',
+  tickets: 'Ticket records',
+  audit: 'Audit and activity',
+};
+
+function ReportTableSkeleton({ rows = 5, columns = 6 }) {
+  return (
+    <div className="report-skeleton-table" aria-hidden="true">
+      <div className="report-skeleton-table-row is-heading" style={{ '--skeleton-columns': columns }}>
+        {Array.from({ length: columns }, (_, index) => <span className="report-skeleton-block" key={`heading-${index}`} />)}
+      </div>
+      {Array.from({ length: rows }, (_, rowIndex) => (
+        <div className="report-skeleton-table-row" style={{ '--skeleton-columns': columns }} key={`row-${rowIndex}`}>
+          {Array.from({ length: columns }, (_, columnIndex) => (
+            <span className="report-skeleton-block" key={`cell-${rowIndex}-${columnIndex}`} />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ReportSectionSkeleton({ section }) {
+  const sectionName = reportSectionNames[section];
+  return (
+    <section className={`analytics-section-panel report-skeleton-panel report-skeleton-${section}`} role="status" aria-label={`Loading ${sectionName} report`} aria-busy="true">
+      <span className="report-skeleton-announcement">Loading {sectionName} report…</span>
+      <div className="report-section-heading" aria-hidden="true">
+        <span className="report-skeleton-block report-skeleton-title" />
+        <span className="report-skeleton-block report-skeleton-description" />
+      </div>
+      {section === 'overview' ? (
+        <div className="report-skeleton-overview-grid" aria-hidden="true">
+          <div className="institutional-card report-plate report-skeleton-plate report-skeleton-department-chart">
+            <span className="report-skeleton-block report-skeleton-card-title" />
+            <div className="report-skeleton-chart-bars">
+              {[48, 76, 58, 92, 67, 83, 42, 72].map((height, index) => <span className="report-skeleton-block" style={{ height: `${height}%` }} key={index} />)}
+            </div>
+          </div>
+          <div className="institutional-card report-plate report-skeleton-plate report-skeleton-priority-chart">
+            <span className="report-skeleton-block report-skeleton-card-title" />
+            <div className="report-skeleton-donut-wrap"><span className="report-skeleton-block report-skeleton-donut" /></div>
+            <div className="report-skeleton-legend"><span className="report-skeleton-block" /><span className="report-skeleton-block" /><span className="report-skeleton-block" /></div>
+          </div>
+          <div className="institutional-card report-plate report-skeleton-plate report-skeleton-trend-chart">
+            <span className="report-skeleton-block report-skeleton-card-title" />
+            <div className="report-skeleton-chart-bars is-daily">
+              {[38, 56, 44, 78, 51, 91, 65, 43, 72, 56, 84, 49, 68, 94].map((height, index) => <span className="report-skeleton-block" style={{ height: `${height}%` }} key={index} />)}
+            </div>
+          </div>
+          <div className="institutional-card report-plate report-skeleton-plate report-skeleton-secondary-chart">
+            <span className="report-skeleton-block report-skeleton-card-title" />
+            <span className="report-skeleton-block report-skeleton-line" />
+            <span className="report-skeleton-block report-skeleton-line is-short" />
+            <span className="report-skeleton-block report-skeleton-line" />
+            <span className="report-skeleton-block report-skeleton-line is-medium" />
+          </div>
+          <div className="institutional-card report-plate report-skeleton-plate report-skeleton-secondary-chart">
+            <span className="report-skeleton-block report-skeleton-card-title" />
+            <span className="report-skeleton-block report-skeleton-line" />
+            <span className="report-skeleton-block report-skeleton-line is-medium" />
+            <span className="report-skeleton-block report-skeleton-line is-short" />
+            <span className="report-skeleton-block report-skeleton-line" />
+          </div>
+        </div>
+      ) : section === 'audit' ? (
+        <div className="report-skeleton-audit-grid" aria-hidden="true">
+          <div className="institutional-card report-plate report-skeleton-plate"><span className="report-skeleton-block report-skeleton-card-title" /><ReportTableSkeleton columns={6} /></div>
+          <div className="institutional-card report-plate report-skeleton-plate"><span className="report-skeleton-block report-skeleton-card-title" /><ReportTableSkeleton columns={7} /></div>
+        </div>
+      ) : (
+        <div className="institutional-card report-plate report-skeleton-plate" aria-hidden="true">
+          <span className="report-skeleton-block report-skeleton-card-title" />
+          {section === 'performance' && <span className="report-skeleton-block report-skeleton-description is-table-description" />}
+          <ReportTableSkeleton columns={section === 'performance' ? 5 : 6} />
+        </div>
+      )}
+    </section>
+  );
+}
+
 function AdminReportsPage() {
   const { token, user } = useAuth();
   const location = useLocation();
@@ -48,6 +131,8 @@ function AdminReportsPage() {
   const [departments, setDepartments] = useState([]);
   const [reportFilters, setReportFilters] = useState({ start_date: '', end_date: '', department_id: '', category: '', priority: '', status: '' });
   const [activeReportSection, setActiveReportSection] = useState('overview');
+  const [sectionLoading, setSectionLoading] = useState(false);
+  const sectionLoadingTimer = useRef(null);
   const [message, setMessage] = useState('');
   const [showUserDirectory, setShowUserDirectory] = useState(() => new URLSearchParams(window.location.search).get('view') === 'users');
   const [showTerminatedUsers, setShowTerminatedUsers] = useState(false);
@@ -141,6 +226,16 @@ function AdminReportsPage() {
         .catch(() => setMessage('Unable to load departments for personnel management.'));
     }
   }, [token]);
+
+  useEffect(() => () => window.clearTimeout(sectionLoadingTimer.current), []);
+
+  const selectReportSection = (section) => {
+    if (section === activeReportSection) return;
+    window.clearTimeout(sectionLoadingTimer.current);
+    setActiveReportSection(section);
+    setSectionLoading(true);
+    sectionLoadingTimer.current = window.setTimeout(() => setSectionLoading(false), 420);
+  };
 
   const toggleUserRole = (roleName) => {
     setExpandedUserRoles((current) => ({
@@ -442,7 +537,7 @@ function AdminReportsPage() {
                   role="tab"
                   aria-selected={activeReportSection === section}
                   className={`analytics-section-tab${activeReportSection === section ? ' is-active' : ''}`}
-                  onClick={() => setActiveReportSection(section)}
+                  onClick={() => selectReportSection(section)}
                 >
                   {label}
                 </button>
@@ -481,7 +576,8 @@ function AdminReportsPage() {
                 </div>
               ))}
             </section>
-            {activeReportSection === 'overview' && (
+            {sectionLoading ? <ReportSectionSkeleton section={activeReportSection} /> : null}
+            {!sectionLoading && activeReportSection === 'overview' && (
               <section className="analytics-section-panel" role="tabpanel" aria-label="Analytics overview">
                 <div className="report-section-heading"><h3>Overview</h3><p className="small-muted">Ticket volume, departments, priority mix, common concerns, and assistant FAQ activity.</p></div>
             <section className="report-visual-grid">
@@ -631,7 +727,7 @@ function AdminReportsPage() {
           </section>
               </section>
             )}
-            {activeReportSection === 'performance' && (
+            {!sectionLoading && activeReportSection === 'performance' && (
               <section className="analytics-section-panel" role="tabpanel" aria-label="Performance reports">
                 <div className="report-section-heading"><h3>Performance</h3><p className="small-muted">Average first response and resolution elapsed times, grouped by department.</p></div>
           <section className="institutional-card report-table-card report-plate">
@@ -643,7 +739,7 @@ function AdminReportsPage() {
           </section>
               </section>
             )}
-            {activeReportSection === 'audit' && (
+            {!sectionLoading && activeReportSection === 'audit' && (
               <section className="analytics-section-panel" role="tabpanel" aria-label="Audit and activity reports">
                 <div className="report-section-heading"><h3>Audit &amp; activity</h3><p className="small-muted">Ticket workflow actions and persistent account, catalog, and system audit history.</p></div>
           <section className="institutional-card report-table-card report-plate">
@@ -670,7 +766,7 @@ function AdminReportsPage() {
           </section>
               </section>
             )}
-            {activeReportSection === 'tickets' && (
+            {!sectionLoading && activeReportSection === 'tickets' && (
               <section className="analytics-section-panel" role="tabpanel" aria-label="Ticket records">
                 <div className="report-section-heading"><h3>Ticket records</h3><p className="small-muted">Latest ticket records matching the applied filters.</p></div>
           <section className="institutional-card report-table-card report-plate">

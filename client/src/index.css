@@ -1957,6 +1957,82 @@ button, input, select, textarea {
 .analytics-section-panel .report-plate::after { position: absolute; width: 8px; height: 8px; content: ''; background: linear-gradient(var(--teal),var(--teal)) center/1px 8px no-repeat, linear-gradient(90deg,var(--teal),var(--teal)) center/8px 1px no-repeat; opacity: .52; pointer-events: none; }
 .analytics-section-panel .report-plate::before { top: 7px; left: 7px; }
 .analytics-section-panel .report-plate::after { right: 7px; bottom: 7px; }
+.report-skeleton-announcement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+.report-skeleton-block {
+  display: block;
+  min-width: 0;
+  border-radius: 5px;
+  background: linear-gradient(100deg, #e6edf1 18%, #f4f7f9 42%, #e6edf1 66%);
+  background-size: 220% 100%;
+  animation: reportSkeletonShimmer 1.35s ease-in-out infinite;
+}
+@keyframes reportSkeletonShimmer {
+  to { background-position-x: -220%; }
+}
+.report-skeleton-title { width: min(210px, 34%); height: 21px; margin-bottom: 10px; }
+.report-skeleton-description { width: min(540px, 72%); height: 12px; }
+.report-skeleton-description.is-table-description { width: min(690px, 86%); margin-bottom: 18px; }
+.report-skeleton-overview-grid,
+.report-skeleton-audit-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  align-items: start;
+  gap: 18px;
+}
+.report-skeleton-plate { min-width: 0; min-height: 228px; padding: 20px; }
+.report-skeleton-card-title { width: 46%; height: 17px; margin-bottom: 18px; }
+.report-skeleton-department-chart { min-height: 290px; }
+.report-skeleton-chart-bars {
+  display: flex;
+  height: 192px;
+  align-items: end;
+  gap: 9px;
+  padding: 10px 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+.report-skeleton-chart-bars > span { flex: 1 1 0; min-height: 16px; border-radius: 5px 5px 0 0; }
+.report-skeleton-chart-bars.is-daily { height: 150px; gap: 5px; }
+.report-skeleton-trend-chart { min-height: 230px; }
+.report-skeleton-donut-wrap { display: grid; min-height: 166px; place-items: center; }
+.report-skeleton-donut {
+  width: 142px;
+  max-width: 48vw;
+  aspect-ratio: 1;
+  border: 25px solid #e6edf1;
+  border-radius: 50%;
+  background: transparent;
+}
+.report-skeleton-legend { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.report-skeleton-legend > span { height: 11px; }
+.report-skeleton-secondary-chart { min-height: 225px; }
+.report-skeleton-line { width: 100%; height: 17px; margin: 20px 0; }
+.report-skeleton-line.is-short { width: 66%; }
+.report-skeleton-line.is-medium { width: 82%; }
+.report-skeleton-table { min-width: 0; overflow: hidden; }
+.report-skeleton-table-row {
+  display: grid;
+  grid-template-columns: repeat(var(--skeleton-columns), minmax(0, 1fr));
+  align-items: center;
+  gap: 14px;
+  min-height: 48px;
+  padding: 9px 4px;
+  border-top: 1px solid var(--border);
+}
+.report-skeleton-table-row.is-heading { min-height: 38px; border-top: 0; }
+.report-skeleton-table-row > span { height: 12px; }
+.report-skeleton-table-row > span:nth-child(2n) { width: 78%; }
+.report-skeleton-table-row.is-heading > span { height: 10px; background-color: #dce6eb; }
+body.dark-mode .report-skeleton-block { background: linear-gradient(100deg, #263743 18%, #354956 42%, #263743 66%); background-size: 220% 100%; }
+body.dark-mode .report-skeleton-donut { border-color: #263743; background: transparent; }
 .audit-values-cell { max-width: 260px; max-height: 120px; overflow: auto; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 0.72rem/1.4 ui-monospace, SFMono-Regular, Consolas, monospace; }
 .report-chart:last-child { margin-bottom: 0; }
 .report-chart-title {
@@ -4410,6 +4486,8 @@ body.dark-mode .map-ticket-detail-close {
   .institutional-card h3 { font-size: 1.05rem; }
   .stat-grid { grid-template-columns: 1fr; }
   .report-visual-grid { grid-template-columns: 1fr; }
+  .report-skeleton-overview-grid,
+  .report-skeleton-audit-grid { grid-template-columns: minmax(0, 1fr); }
   .report-trend-card, .report-activity-card { grid-column: span 1; }
   .form-row { flex-direction: column; gap: 0; }
   .header-actions {
@@ -6101,6 +6179,11 @@ body.dark-mode .report-table tbody tr:hover {
 @media (prefers-reduced-motion: reduce) {
   .analytics-loading-indicator:not(.has-error) {
     animation-duration: 2.5s;
+  }
+
+  .report-skeleton-block {
+    animation: none;
+    background-position: center;
   }
 }
 
