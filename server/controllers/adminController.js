@@ -277,14 +277,26 @@ exports.getReports = async (req, res) => {
 
 exports.getAuditLogs = async (req, res) => {
   try {
+    const filterError = validateReportFilters({
+      start_date: req.query.start_date,
+      end_date: req.query.end_date,
+      department_id: req.query.department_id,
+    });
+    if (filterError) return res.status(400).json({ message: filterError });
+
     const limitValue = Number(req.query.limit);
     const limit = Number.isInteger(limitValue) && limitValue > 0 ? Math.min(limitValue, 500) : 200;
     const offsetValue = Number(req.query.offset);
     const offset = Number.isInteger(offsetValue) && offsetValue >= 0 ? Math.min(offsetValue, 100000) : 0;
     const where = {};
     if (req.user.department_id) where.department_id = req.user.department_id;
+    else if (req.query.department_id) where.department_id = Number(req.query.department_id);
     if (req.query.entity_type) where.entity_type = String(req.query.entity_type).slice(0, 60);
     if (req.query.action) where.action = String(req.query.action).slice(0, 80);
+    const createdAt = {};
+    if (req.query.start_date) createdAt[Op.gte] = new Date(`${req.query.start_date}T00:00:00.000Z`);
+    if (req.query.end_date) createdAt[Op.lte] = new Date(`${req.query.end_date}T23:59:59.999Z`);
+    if (Object.keys(createdAt).length) where.created_at = createdAt;
     const { count, rows } = await AuditLog.findAndCountAll({ where, order: [['created_at', 'DESC'], ['id', 'DESC']], limit, offset });
     return res.json({ auditLogs: rows, total: count, limit, offset });
   } catch (error) {

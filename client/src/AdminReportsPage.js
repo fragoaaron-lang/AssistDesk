@@ -45,6 +45,85 @@ const reportSectionNames = {
   audit: 'Audit and activity',
 };
 
+const reportFilterDefaults = {
+  start_date: '',
+  end_date: '',
+  department_id: '',
+  category: '',
+  priority: '',
+  status: '',
+  action: '',
+  entity_type: '',
+};
+
+const reportFilterFields = {
+  overview: ['start_date', 'end_date', 'department_id', 'category', 'priority', 'status'],
+  performance: ['start_date', 'end_date', 'department_id'],
+  tickets: ['start_date', 'end_date', 'department_id', 'category', 'priority', 'status'],
+  audit: ['start_date', 'end_date', 'department_id', 'action', 'entity_type'],
+};
+
+function ReportFilterPanel({ section, filters, departments, categories, loading, onChange, onApply, onReset, onExport }) {
+  const fieldLabel = {
+    start_date: 'From',
+    end_date: 'To',
+    department_id: 'Department',
+    category: 'Category',
+    priority: 'Priority',
+    status: 'Status',
+    action: 'Audit action',
+    entity_type: 'Record type',
+  };
+  const activeCount = Object.values(filters).filter(Boolean).length;
+
+  return (
+    <section className="institutional-card report-filter-card report-tab-filter-card" aria-label={`${reportSectionNames[section]} filters`}>
+      <div className="report-toolbar">
+        <div className="report-toolbar-copy">
+          <h3>{reportSectionNames[section]} filters</h3>
+          <span>{activeCount ? `${activeCount} filter${activeCount === 1 ? '' : 's'} set for this tab` : 'Filters are saved separately for each tab.'}</span>
+        </div>
+        {section === 'tickets' && <button type="button" className="institutional-btn small secondary" onClick={onExport} disabled={loading}>Export CSV</button>}
+      </div>
+      <form className="report-filter-form" onSubmit={onApply}>
+        {reportFilterFields[section].map((field) => (
+          <label key={field}>{fieldLabel[field]}
+            {field === 'start_date' || field === 'end_date' ? (
+              <input className="institutional-input" type="date" value={filters[field]} onChange={(event) => onChange(field, event.target.value)} />
+            ) : field === 'department_id' ? (
+              <select className="institutional-select" value={filters.department_id} onChange={(event) => onChange(field, event.target.value)}>
+                <option value="">All departments</option>
+                {departments.map((department) => <option key={department.id} value={department.id}>{department.display_name || department.name}</option>)}
+              </select>
+            ) : field === 'category' ? (
+              <select className="institutional-select" value={filters.category} onChange={(event) => onChange(field, event.target.value)}>
+                <option value="">All categories</option>
+                {categories.map((category) => <option key={category} value={category}>{category}</option>)}
+              </select>
+            ) : field === 'priority' ? (
+              <select className="institutional-select" value={filters.priority} onChange={(event) => onChange(field, event.target.value)}>
+                <option value="">All priorities</option>
+                {['low', 'medium', 'urgent'].map((value) => <option key={value} value={value}>{value}</option>)}
+              </select>
+            ) : field === 'status' ? (
+              <select className="institutional-select" value={filters.status} onChange={(event) => onChange(field, event.target.value)}>
+                <option value="">All statuses</option>
+                {['open', 'pending', 'in_progress', 'resolved', 'closed'].map((value) => <option key={value} value={value}>{value.replace('_', ' ')}</option>)}
+              </select>
+            ) : (
+              <input className="institutional-input" type="search" value={filters[field]} onChange={(event) => onChange(field, event.target.value)} placeholder={field === 'action' ? 'Filter by action' : 'e.g. ticket, user'} />
+            )}
+          </label>
+        ))}
+        <div className="report-filter-actions">
+          <button className="institutional-btn small" type="submit" disabled={loading}>{loading ? 'Applying…' : 'Apply filters'}</button>
+          <button className="institutional-btn small secondary" type="button" onClick={onReset} disabled={loading}>Reset</button>
+        </div>
+      </form>
+    </section>
+  );
+}
+
 function ReportTableSkeleton({ rows = 5, columns = 6 }) {
   return (
     <div className="report-skeleton-table" aria-hidden="true">
@@ -129,10 +208,14 @@ function AdminReportsPage() {
   const [reportsLoadError, setReportsLoadError] = useState('');
   const [auditLogs, setAuditLogs] = useState([]);
   const [departments, setDepartments] = useState([]);
-  const [reportFilters, setReportFilters] = useState({ start_date: '', end_date: '', department_id: '', category: '', priority: '', status: '' });
+  const [reportFiltersBySection, setReportFiltersBySection] = useState(() => Object.fromEntries(
+    Object.keys(reportSectionNames).map((section) => [section, { ...reportFilterDefaults }])
+  ));
   const [activeReportSection, setActiveReportSection] = useState('overview');
   const [sectionLoading, setSectionLoading] = useState(false);
-  const sectionLoadingTimer = useRef(null);
+  const sectionRequestId = useRef(0);
+  const reportsRequestId = useRef(0);
+  const auditRequestId = useRef(0);
   const [message, setMessage] = useState('');
   const [showUserDirectory, setShowUserDirectory] = useState(() => new URLSearchParams(window.location.search).get('view') === 'users');
   const [showTerminatedUsers, setShowTerminatedUsers] = useState(false);
@@ -141,16 +224,25 @@ function AdminReportsPage() {
   const [activePriority, setActivePriority] = useState(null);
   const [hoveredPriority, setHoveredPriority] = useState(null);
 
+  const reportFilters = reportFiltersBySection[activeReportSection];
   const getReportParams = (filters = reportFilters) => Object.fromEntries(
-    Object.entries(filters).filter(([, value]) => value !== '')
+    ['start_date', 'end_date', 'department_id', 'category', 'priority', 'status']
+      .map((key) => [key, filters[key]])
+      .filter(([, value]) => value !== '')
   );
-  const appliedFilterCount = Object.values(reports?.filters || {}).filter(Boolean).length;
+  const setReportFilter = (section, key, value) => {
+    setReportFiltersBySection((current) => ({
+      ...current,
+      [section]: { ...current[section], [key]: value },
+    }));
+  };
 
   useEffect(() => {
     setShowUserDirectory(new URLSearchParams(location.search).get('view') === 'users');
   }, [location.search]);
 
   const loadReports = async (filters = reportFilters) => {
+    const requestId = ++reportsRequestId.current;
     setReportsLoading(true);
     setReportsLoadError('');
     try {
@@ -158,25 +250,33 @@ function AdminReportsPage() {
         headers: { Authorization: `Bearer ${token}` },
         params: getReportParams(filters),
       });
-      setReports(res.data);
+      if (reportsRequestId.current === requestId) setReports(res.data);
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Unable to load reports.';
-      setReportsLoadError(errorMessage);
-      setMessage(errorMessage);
+      if (reportsRequestId.current === requestId) {
+        setReportsLoadError(errorMessage);
+        setMessage(errorMessage);
+      }
     } finally {
-      setReportsLoading(false);
+      if (reportsRequestId.current === requestId) setReportsLoading(false);
     }
   };
 
-  const loadAuditLogs = async () => {
+  const loadAuditLogs = async (filters = reportFilters) => {
+    const requestId = ++auditRequestId.current;
     try {
       const response = await axios.get(`${API_BASE_URL}/api/admin/audit-logs`, {
         headers: { Authorization: `Bearer ${token}` },
-        params: { limit: 200 },
+        params: {
+          limit: 200,
+          ...Object.fromEntries(['start_date', 'end_date', 'department_id', 'action', 'entity_type']
+            .map((key) => [key, filters[key]])
+            .filter(([, value]) => value !== '')),
+        },
       });
-      setAuditLogs(response.data.auditLogs || []);
+      if (auditRequestId.current === requestId) setAuditLogs(response.data.auditLogs || []);
     } catch (error) {
-      setMessage(error.response?.data?.message || 'Unable to load audit history.');
+      if (auditRequestId.current === requestId) setMessage(error.response?.data?.message || 'Unable to load audit history.');
     }
   };
 
@@ -187,14 +287,32 @@ function AdminReportsPage() {
       return;
     }
     setMessage('');
-    await loadReports(reportFilters);
+    const requestId = ++sectionRequestId.current;
+    setSectionLoading(true);
+    try {
+      await Promise.all([
+        loadReports(reportFilters),
+        activeReportSection === 'audit' ? loadAuditLogs(reportFilters) : Promise.resolve(),
+      ]);
+    } finally {
+      if (sectionRequestId.current === requestId) setSectionLoading(false);
+    }
   };
 
   const resetReportFilters = async () => {
-    const emptyFilters = { start_date: '', end_date: '', department_id: '', category: '', priority: '', status: '' };
-    setReportFilters(emptyFilters);
+    const emptyFilters = { ...reportFilterDefaults };
+    setReportFiltersBySection((current) => ({ ...current, [activeReportSection]: emptyFilters }));
     setMessage('');
-    await loadReports(emptyFilters);
+    const requestId = ++sectionRequestId.current;
+    setSectionLoading(true);
+    try {
+      await Promise.all([
+        loadReports(emptyFilters),
+        activeReportSection === 'audit' ? loadAuditLogs(emptyFilters) : Promise.resolve(),
+      ]);
+    } finally {
+      if (sectionRequestId.current === requestId) setSectionLoading(false);
+    }
   };
 
   const exportReportCsv = async () => {
@@ -227,14 +345,21 @@ function AdminReportsPage() {
     }
   }, [token]);
 
-  useEffect(() => () => window.clearTimeout(sectionLoadingTimer.current), []);
-
-  const selectReportSection = (section) => {
+  const selectReportSection = async (section) => {
     if (section === activeReportSection) return;
-    window.clearTimeout(sectionLoadingTimer.current);
     setActiveReportSection(section);
+    setMessage('');
+    const requestId = ++sectionRequestId.current;
     setSectionLoading(true);
-    sectionLoadingTimer.current = window.setTimeout(() => setSectionLoading(false), 420);
+    const filters = reportFiltersBySection[section];
+    try {
+      await Promise.all([
+        loadReports(filters),
+        section === 'audit' ? loadAuditLogs(filters) : Promise.resolve(),
+      ]);
+    } finally {
+      if (sectionRequestId.current === requestId) setSectionLoading(false);
+    }
   };
 
   const toggleUserRole = (roleName) => {
@@ -534,31 +659,17 @@ function AdminReportsPage() {
                 </button>
               ))}
             </nav>
-            <section className="institutional-card report-filter-card" aria-label="Report filters">
-              <div className="report-toolbar">
-                <div className="report-toolbar-copy">
-                  <h3>Analytics scope</h3>
-                  <span>Filters affect metrics, ticket records, audit events, and CSV export.</span>
-                </div>
-                <button type="button" className="institutional-btn small secondary" onClick={exportReportCsv}>Export CSV</button>
-              </div>
-              <details className="report-filter-disclosure">
-                <summary>
-                  <span className="report-filter-disclosure-label">Filters</span>
-                  <span className="report-filter-count">{appliedFilterCount ? `${appliedFilterCount} applied` : 'None applied'}</span>
-                  <svg className="report-filter-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" /></svg>
-                </summary>
-                <form className="report-filter-form" onSubmit={applyReportFilters}>
-                  <label>From<input className="institutional-input" type="date" value={reportFilters.start_date} onChange={(event) => setReportFilters((current) => ({ ...current, start_date: event.target.value }))} /></label>
-                  <label>To<input className="institutional-input" type="date" value={reportFilters.end_date} onChange={(event) => setReportFilters((current) => ({ ...current, end_date: event.target.value }))} /></label>
-                  <label>Department<select className="institutional-select" value={reportFilters.department_id} onChange={(event) => setReportFilters((current) => ({ ...current, department_id: event.target.value }))}><option value="">All departments</option>{departments.map((department) => <option key={department.id} value={department.id}>{department.display_name || department.name}</option>)}</select></label>
-                  <label>Category<select className="institutional-select" value={reportFilters.category} onChange={(event) => setReportFilters((current) => ({ ...current, category: event.target.value }))}><option value="">All categories</option>{(reports.availableCategories || []).map((category) => <option key={category} value={category}>{category}</option>)}</select></label>
-                  <label>Priority<select className="institutional-select" value={reportFilters.priority} onChange={(event) => setReportFilters((current) => ({ ...current, priority: event.target.value }))}><option value="">All priorities</option>{['low', 'medium', 'urgent'].map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
-                  <label>Status<select className="institutional-select" value={reportFilters.status} onChange={(event) => setReportFilters((current) => ({ ...current, status: event.target.value }))}><option value="">All statuses</option>{['open', 'pending', 'in_progress', 'resolved', 'closed'].map((value) => <option key={value} value={value}>{value.replace('_', ' ')}</option>)}</select></label>
-                  <div className="report-filter-actions"><button className="institutional-btn small" type="submit">Apply filters</button><button className="institutional-btn small secondary" type="button" onClick={resetReportFilters}>Reset</button></div>
-                </form>
-              </details>
-            </section>
+            <ReportFilterPanel
+              section={activeReportSection}
+              filters={reportFilters}
+              departments={departments}
+              categories={reports.availableCategories || []}
+              loading={sectionLoading}
+              onChange={(field, value) => setReportFilter(activeReportSection, field, value)}
+              onApply={applyReportFilters}
+              onReset={resetReportFilters}
+              onExport={exportReportCsv}
+            />
             {sectionLoading ? <ReportSectionSkeleton section={activeReportSection} /> : null}
             {!sectionLoading && activeReportSection === 'overview' && (
               <section className="analytics-section-panel" role="tabpanel" aria-label="Analytics overview">
