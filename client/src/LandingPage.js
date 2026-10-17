@@ -272,7 +272,7 @@ function LandingPage() {
 
       <section className="landing-hero" aria-labelledby="landing-title">
         <div className="landing-hero-map" aria-hidden="true">
-          <img src="/schoolmap.png" alt="" />
+          <img src="/school-map.png" alt="" />
           <div className="landing-hero-map-wash" />
           <span className="landing-heat-pulse landing-heat-pulse-one" />
           <span className="landing-heat-pulse landing-heat-pulse-two" />
