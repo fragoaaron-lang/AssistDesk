@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useLocation } from 'react-router-dom';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
-import HeaderProfile from './HeaderProfile';
-import LogoutButton from './LogoutButton';
-import SidebarProfile from './SidebarProfile';
+import AuthenticatedNavigation from './AuthenticatedNavigation';
 
 const getTicketPrefix = (departmentName) => {
   const normalizedName = String(departmentName || '').toLowerCase();
@@ -41,7 +40,7 @@ const getCompleteTicketCode = (ticket) => {
 
 function AdminReportsPage() {
   const { token, user } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
   const [reports, setReports] = useState(null);
   const [reportsLoading, setReportsLoading] = useState(true);
   const [reportsLoadError, setReportsLoadError] = useState('');
@@ -61,6 +60,10 @@ function AdminReportsPage() {
     Object.entries(filters).filter(([, value]) => value !== '')
   );
   const appliedFilterCount = Object.values(reports?.filters || {}).filter(Boolean).length;
+
+  useEffect(() => {
+    setShowUserDirectory(new URLSearchParams(location.search).get('view') === 'users');
+  }, [location.search]);
 
   const loadReports = async (filters = reportFilters) => {
     setReportsLoading(true);
@@ -284,71 +287,14 @@ function AdminReportsPage() {
   return (
     <div className="app-shell">
       <div className="page-shell">
-        <div className={`mobile-menu-backdrop ${mobileMenuOpen ? 'show' : ''}`} onClick={() => setMobileMenuOpen(false)} />
-        <header className="page-header">
-          <button
-            type="button"
-            className="mobile-menu-toggle"
-            aria-label="Open navigation menu"
-            aria-expanded={mobileMenuOpen}
-            onClick={() => setMobileMenuOpen((prev) => !prev)}
-          >
-            ☰
-          </button>
-          <button type="button" className="header-brand header-brand-button" onClick={() => window.location.reload()} aria-label="Refresh AssistDesk">
-            <div className="brand-badge">
-              <img src="/assistdesk-logo.svg" alt="AssistDesk logo" />
-            </div>
-            <div>
-              <h1>AssistDesk</h1>
-              <p>Administrative analytics</p>
-            </div>
-          </button>
-          <div className="nav-links">
-            <a href="/dashboard">Dashboard</a>
-            <a href="/tickets">Tickets</a>
-            <a href="/profile">Profile</a>
-            {user?.role === 'admin' && (
-              <>
-                <a href="/admin/catalog">Catalog</a>
-                <a href="/admin/reports">Data Analytics</a>
-                <button type="button" className="header-nav-button" onClick={() => setShowUserDirectory((current) => !current)} aria-expanded={showUserDirectory}>
-                  Users
-                </button>
-              </>
-            )}
-          </div>
-          <div className="header-actions">
-            <HeaderProfile user={user} />
-            <LogoutButton />
-          </div>
-        </header>
-
-        <aside className={`mobile-menu-drawer ${mobileMenuOpen ? 'open' : ''}`}>
-          <div className="mobile-menu-head">
-            <button type="button" className="mobile-menu-close" onClick={() => setMobileMenuOpen(false)}>×</button>
-          </div>
-          <div className="mobile-profile-summary">
-            <SidebarProfile user={user} />
-          </div>
-          <div className="nav-links">
-            <a href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</a>
-            <a href="/tickets" onClick={() => setMobileMenuOpen(false)}>Tickets</a>
-            <a href="/profile" onClick={() => setMobileMenuOpen(false)}>Profile</a>
-            {user?.role === 'admin' && (
-              <>
-                <a href="/admin/catalog" onClick={() => setMobileMenuOpen(false)}>Catalog</a>
-                <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Data Analytics</a>
-                <button type="button" className="header-nav-button" onClick={() => { setShowUserDirectory((current) => !current); setMobileMenuOpen(false); }} aria-expanded={showUserDirectory}>
-                  Users
-                </button>
-              </>
-            )}
-          </div>
-          <div className="mobile-menu-actions">
-            <LogoutButton onBeforeLogout={() => setMobileMenuOpen(false)} />
-          </div>
-        </aside>
+        <AuthenticatedNavigation
+          user={user}
+          subtitle="Administrative analytics"
+          onUsersNavigate={(linkKey) => {
+            if (linkKey === 'users') setShowUserDirectory(true);
+            if (linkKey === 'reports') setShowUserDirectory(false);
+          }}
+        />
 
         <div className={`page-intro${showUserDirectory ? '' : ' analytics-page-intro'}`}>
           <div>

@@ -7,7 +7,12 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const location = useLocation();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <main className="route-loading" role="status" aria-live="polite" aria-busy="true">
+        <span className="route-loading-indicator" aria-hidden="true" />
+        <span>Restoring your secure session…</span>
+      </main>
+    );
   }
 
   if (!user) {

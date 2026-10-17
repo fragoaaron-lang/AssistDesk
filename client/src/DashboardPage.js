@@ -3,14 +3,11 @@ import axios from 'axios';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 import { getSocket } from './socket';
-import HeaderProfile from './HeaderProfile';
-import LogoutButton from './LogoutButton';
-import SidebarProfile from './SidebarProfile';
+import AuthenticatedNavigation from './AuthenticatedNavigation';
 import { playLoginBell } from './audioUtils';
 
 function DashboardPage() {
   const { user, token } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dashboard, setDashboard] = useState({ departments: [], services: [], announcements: [], stats: {} });
   const [selectedMapTicket, setSelectedMapTicket] = useState(null);
   const [hoveredMapTicket, setHoveredMapTicket] = useState(null);
@@ -221,16 +218,7 @@ function DashboardPage() {
     return (
       <div className="app-shell">
         <div className="page-shell">
-          <header className="page-header">
-            <button type="button" className="header-brand header-brand-button" onClick={() => window.location.reload()} aria-label="Refresh AssistDesk">
-              <div className="brand-badge"><img src="/assistdesk-logo.svg" alt="AssistDesk logo" /></div>
-              <div><h1>AssistDesk</h1><p>Account status</p></div>
-            </button>
-            <div className="header-actions">
-              <HeaderProfile user={user} />
-              <LogoutButton />
-            </div>
-          </header>
+          <AuthenticatedNavigation user={user} subtitle="Account status" minimal />
 
           <main className="institutional-card" role="alert" style={{ maxWidth: '820px', margin: '48px auto', padding: 'clamp(24px, 5vw, 48px)' }}>
             <div style={{ color: '#a12b2b', fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Account terminated</div>
@@ -276,67 +264,7 @@ function DashboardPage() {
         </div>
       </div>
       <div className="page-shell">
-        <div className={`mobile-menu-backdrop ${mobileMenuOpen ? 'show' : ''}`} onClick={() => setMobileMenuOpen(false)} />
-        <header className="page-header">
-          <button
-            type="button"
-            className="mobile-menu-toggle"
-            aria-label="Open navigation menu"
-            aria-expanded={mobileMenuOpen}
-            onClick={() => setMobileMenuOpen((prev) => !prev)}
-          >
-            ☰
-          </button>
-          <button type="button" className="header-brand header-brand-button" onClick={() => window.location.reload()} aria-label="Refresh AssistDesk">
-            <div className="brand-badge">
-              <img src="/assistdesk-logo.svg" alt="AssistDesk logo" />
-            </div>
-            <div>
-              <h1>AssistDesk</h1>
-              <p>Institutional support portal</p>
-            </div>
-          </button>
-          <div className="nav-links">
-            <a href="/dashboard">Dashboard</a>
-            <a href="/tickets">Tickets</a>
-            <a href="/profile">Profile</a>
-            {user?.role === 'admin' && (
-              <>
-                <a href="/admin/catalog">Catalog</a>
-                <a href="/admin/reports">Data Analytics</a>
-                <a href="/admin/reports?view=users" className="header-nav-button">Users</a>
-              </>
-            )}
-          </div>
-          <div className="header-actions">
-            <HeaderProfile user={user} />
-            <LogoutButton />
-          </div>
-        </header>
-
-        <aside className={`mobile-menu-drawer ${mobileMenuOpen ? 'open' : ''}`}>
-          <div className="mobile-menu-head">
-            <button type="button" className="mobile-menu-close" onClick={() => setMobileMenuOpen(false)}>×</button>
-          </div>
-          <div className="mobile-profile-summary">
-            <SidebarProfile user={user} />
-          </div>
-          <div className="nav-links">
-            <a href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</a>
-            <a href="/tickets" onClick={() => setMobileMenuOpen(false)}>Tickets</a>
-            <a href="/profile" onClick={() => setMobileMenuOpen(false)}>Profile</a>
-            {user?.role === 'admin' && (
-              <>
-                <a href="/admin/catalog" onClick={() => setMobileMenuOpen(false)}>Catalog</a>
-                <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Data Analytics</a>
-                <a href="/admin/reports?view=users" className="header-nav-button" onClick={() => setMobileMenuOpen(false)}>Users</a>
-              </>
-            )}
-          </div>
-          <div className="mobile-menu-actions">
-            <LogoutButton onBeforeLogout={() => setMobileMenuOpen(false)} />
-          </div>
-        </aside>
+        <AuthenticatedNavigation user={user} subtitle="Institutional support portal" />
 
         <section className="dashboard-overview" aria-label="Dashboard status overview">
           <div className="overview-intro">

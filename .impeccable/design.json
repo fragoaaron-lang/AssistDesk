@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-17T00:00:00Z",
+  "title": "Design System: AssistDesk",
+  "extensions": {
+    "colorMeta": {
+      "navy": { "role": "primary", "displayName": "Campus Navy", "canonical": "#0f2d52", "tonalRamp": ["oklch(15% 0.07 252)", "oklch(25% 0.07 252)", "oklch(35% 0.07 252)", "oklch(45% 0.07 252)", "oklch(55% 0.07 252)", "oklch(65% 0.07 252)", "oklch(80% 0.07 252)", "oklch(95% 0.07 252)"] },
+      "navy-deep": { "role": "primary", "displayName": "Deep Route Navy", "canonical": "#082038", "tonalRamp": ["oklch(15% 0.07 245)", "oklch(25% 0.07 245)", "oklch(35% 0.07 245)", "oklch(45% 0.07 245)", "oklch(55% 0.07 245)", "oklch(65% 0.07 245)", "oklch(80% 0.07 245)", "oklch(95% 0.07 245)"] },
+      "teal": { "role": "secondary", "displayName": "Campus Teal", "canonical": "#1f6f78", "tonalRamp": ["oklch(15% 0.07 205)", "oklch(25% 0.07 205)", "oklch(35% 0.07 205)", "oklch(45% 0.07 205)", "oklch(55% 0.07 205)", "oklch(65% 0.07 205)", "oklch(80% 0.07 205)", "oklch(95% 0.07 205)"] },
+      "gold": { "role": "tertiary", "displayName": "Legacy Campus Gold", "canonical": "#d4a017", "tonalRamp": ["oklch(15% 0.12 82)", "oklch(25% 0.12 82)", "oklch(35% 0.12 82)", "oklch(45% 0.12 82)", "oklch(55% 0.12 82)", "oklch(65% 0.12 82)", "oklch(80% 0.12 82)", "oklch(95% 0.12 82)"] },
+      "signal-gold": { "role": "tertiary", "displayName": "Signal Gold", "canonical": "#ffd35a", "tonalRamp": ["oklch(15% 0.12 88)", "oklch(25% 0.12 88)", "oklch(35% 0.12 88)", "oklch(45% 0.12 88)", "oklch(55% 0.12 88)", "oklch(65% 0.12 88)", "oklch(80% 0.12 88)", "oklch(95% 0.12 88)"] },
+      "white": { "role": "neutral", "displayName": "Paper White", "canonical": "#ffffff", "tonalRamp": ["oklch(15% 0 0)", "oklch(25% 0 0)", "oklch(35% 0 0)", "oklch(45% 0 0)", "oklch(55% 0 0)", "oklch(65% 0 0)", "oklch(80% 0 0)", "oklch(95% 0 0)"] },
+      "soft-surface": { "role": "neutral", "displayName": "Cool Map Paper", "canonical": "#f3f7fb", "tonalRamp": ["oklch(15% 0.01 240)", "oklch(25% 0.01 240)", "oklch(35% 0.01 240)", "oklch(45% 0.01 240)", "oklch(55% 0.01 240)", "oklch(65% 0.01 240)", "oklch(80% 0.01 240)", "oklch(95% 0.01 240)"] },
+      "page-text": { "role": "neutral", "displayName": "Campus Ink", "canonical": "#163548", "tonalRamp": ["oklch(15% 0.03 230)", "oklch(25% 0.03 230)", "oklch(35% 0.03 230)", "oklch(45% 0.03 230)", "oklch(55% 0.03 230)", "oklch(65% 0.03 230)", "oklch(80% 0.03 230)", "oklch(95% 0.03 230)"] },
+      "muted-text": { "role": "neutral", "displayName": "Muted Slate", "canonical": "#5f7482", "tonalRamp": ["oklch(15% 0.02 230)", "oklch(25% 0.02 230)", "oklch(35% 0.02 230)", "oklch(45% 0.02 230)", "oklch(55% 0.02 230)", "oklch(65% 0.02 230)", "oklch(80% 0.02 230)", "oklch(95% 0.02 230)"] },
+      "hairline": { "role": "neutral", "displayName": "Fine Divider", "canonical": "#dce6ee", "tonalRamp": ["oklch(15% 0.01 240)", "oklch(25% 0.01 240)", "oklch(35% 0.01 240)", "oklch(45% 0.01 240)", "oklch(55% 0.01 240)", "oklch(65% 0.01 240)", "oklch(80% 0.01 240)", "oklch(95% 0.01 240)"] },
+      "route-line": { "role": "secondary", "displayName": "Route Line", "canonical": "rgba(132, 190, 195, 0.8)", "tonalRamp": ["oklch(15% 0.04 185)", "oklch(25% 0.04 185)", "oklch(35% 0.04 185)", "oklch(45% 0.04 185)", "oklch(55% 0.04 185)", "oklch(65% 0.04 185)", "oklch(80% 0.04 185)", "oklch(95% 0.04 185)"] },
+      "route-marker": { "role": "secondary", "displayName": "Route Marker Teal", "canonical": "#79aeb4", "tonalRamp": ["oklch(15% 0.04 185)", "oklch(25% 0.04 185)", "oklch(35% 0.04 185)", "oklch(45% 0.04 185)", "oklch(55% 0.04 185)", "oklch(65% 0.04 185)", "oklch(80% 0.04 185)", "oklch(95% 0.04 185)"] },
+      "route-marker-fill": { "role": "secondary", "displayName": "Route Mist Teal", "canonical": "#bfe4e2", "tonalRamp": ["oklch(15% 0.03 180)", "oklch(25% 0.03 180)", "oklch(35% 0.03 180)", "oklch(45% 0.03 180)", "oklch(55% 0.03 180)", "oklch(65% 0.03 180)", "oklch(80% 0.03 180)", "oklch(95% 0.03 180)"] },
+      "closing-surface": { "role": "neutral", "displayName": "Wayfinding Pale", "canonical": "#eaf2f5", "tonalRamp": ["oklch(15% 0.01 200)", "oklch(25% 0.01 200)", "oklch(35% 0.01 200)", "oklch(45% 0.01 200)", "oklch(55% 0.01 200)", "oklch(65% 0.01 200)", "oklch(80% 0.01 200)", "oklch(95% 0.01 200)"] },
+      "dialog-surface": { "role": "neutral", "displayName": "Dialog Cool White", "canonical": "#f1f8fb", "tonalRamp": ["oklch(15% 0.01 210)", "oklch(25% 0.01 210)", "oklch(35% 0.01 210)", "oklch(45% 0.01 210)", "oklch(55% 0.01 210)", "oklch(65% 0.01 210)", "oklch(80% 0.01 210)", "oklch(95% 0.01 210)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Direct hero headline; responsive clamps scale it down at narrow widths." },
+      "title": { "displayName": "Section Title", "purpose": "Department heading and prominent content headings." },
+      "body": { "displayName": "Body", "purpose": "Readable supporting copy in Poppins." },
+      "label": { "displayName": "Navigation Label", "purpose": "Compact navigation text and other short wayfinding labels." }
+    },
+    "shadows": [
+      { "name": "authentication-dialog", "value": "0 24px 80px rgba(0,0,0,0.35)", "purpose": "Elevate the existing sign-in or registration dialog above the dimmed backdrop; not for route stops or directory rows." }
+    ],
+    "motion": [
+      { "name": "landing-control-transition", "value": "160ms ease", "purpose": "Button background, border, and one-pixel hover-lift transitions; disabled when reduced motion is requested." },
+      { "name": "authentication-modal-entry", "value": "200ms ease-out", "purpose": "Fade in the authentication backdrop." }
+    ],
+    "breakpoints": [
+      { "name": "mobile-layout", "value": "700px" },
+      { "name": "compact-navigation", "value": "420px" },
+      { "name": "narrow-navigation", "value": "360px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Signal-gold action for beginning a campus support request.",
+      "html": "<button class=\"ds-button-primary\" type=\"button\">Start a request <svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><path d=\"M5 15 15 5M6 5h9v9\" /></svg></button>",
+      "css": ".ds-button-primary { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 46px; padding: 0 18px; border: 1px solid #ffd35a; border-radius: 7px; background: #ffd35a; color: #082038; font: 750 1rem Poppins, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; cursor: pointer; transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease; } .ds-button-primary:hover { border-color: #ffe28c; background: #ffe28c; transform: translateY(-1px); } .ds-button-primary:focus-visible { outline: 3px solid #ffd35a; outline-offset: 4px; box-shadow: 0 0 0 2px #082038; } .ds-button-primary:active { transform: translateY(0); } .ds-button-primary svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }"
+    },
+    {
+      "name": "Secondary Explore Link",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Outlined, translucent route to the department directory from the dark hero.",
+      "html": "<a class=\"ds-button-secondary\" href=\"#departments\">Explore departments <svg viewBox=\"0 0 20 20\" aria-hidden=\"true\"><path d=\"M10 3v12m-5-5 5 5 5-5\" /></svg></a>",
+      "css": ".ds-button-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 46px; padding: 0 18px; border: 1px solid rgba(255,255,255,0.44); border-radius: 7px; background: rgba(255,255,255,0.06); color: #fff; font: 750 1rem Poppins, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-decoration: none; transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease; } .ds-button-secondary:hover { border-color: #fff; background: rgba(255,255,255,0.13); color: #fff; text-decoration: none; } .ds-button-secondary:focus-visible { outline: 3px solid #ffd35a; outline-offset: 4px; box-shadow: 0 0 0 2px #082038; } .ds-button-secondary:active { transform: translateY(0); } .ds-button-secondary svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }"
+    },
+    {
+      "name": "Header Navigation",
+      "kind": "nav",
+      "refersTo": "navigation-header",
+      "description": "Compact white header with a brand mark, section links, and a gold sign-in action.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Main navigation\"><a class=\"ds-brand\" href=\"#home\">AssistDesk</a><a class=\"ds-nav-link\" href=\"#journey\">How it works</a><a class=\"ds-nav-link\" href=\"#departments\">Departments</a><button class=\"ds-nav-action\" type=\"button\">Sign in</button></nav>",
+      "css": ".ds-nav { display: flex; align-items: center; gap: 24px; min-height: 82px; padding: 14px clamp(20px, 5vw, 72px); background: #fff; color: #0f2d52; font-family: Poppins, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; } .ds-brand { margin-right: auto; color: #0f2d52; font-size: 1.12rem; font-weight: 750; text-decoration: none; } .ds-nav-link { color: #5f7482; font-size: 0.88rem; font-weight: 650; text-decoration: none; } .ds-nav-link:hover { color: #1f6f78; } .ds-nav-action { min-height: 42px; padding: 0 17px; border: 1px solid #ffd35a; border-radius: 7px; background: #ffd35a; color: #082038; font: 750 0.88rem Poppins, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; cursor: pointer; transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease; } .ds-nav-action:hover { border-color: #ffe28c; background: #ffe28c; transform: translateY(-1px); } .ds-nav-action:focus-visible, .ds-nav-link:focus-visible, .ds-brand:focus-visible { outline: 3px solid #1f6f78; outline-offset: 4px; box-shadow: 0 0 0 2px #fff; }"
+    },
+    {
+      "name": "Route Stop",
+      "kind": "custom",
+      "refersTo": "route-marker",
+      "description": "Numbered, open route point; the origin alone receives the signal-gold treatment.",
+      "html": "<ol class=\"ds-route\"><li class=\"ds-route-stop ds-route-origin\"><span class=\"ds-route-marker\">01</span><div><strong>Describe your concern</strong><p>Share what you need and set a priority.</p></div></li><li class=\"ds-route-stop\"><span class=\"ds-route-marker\">02</span><div><strong>Reach a department</strong><p>Your request is routed to campus support.</p></div></li><li class=\"ds-route-stop\"><span class=\"ds-route-marker\">03</span><div><strong>Follow each update</strong><p>Check progress as your request moves forward.</p></div></li></ol>",
+      "css": ".ds-route { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin: 0; padding: 0; color: #fff; font-family: Poppins, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; list-style: none; } .ds-route::before { position: absolute; top: 22px; right: calc(33.333% - 23px); left: 23px; height: 1px; background: repeating-linear-gradient(90deg, rgba(132,190,195,0.8) 0 7px, transparent 7px 13px); content: ''; } .ds-route-stop { position: relative; display: grid; grid-template-columns: 46px minmax(0,1fr); gap: 13px; min-width: 0; } .ds-route-marker { position: relative; z-index: 1; display: grid; width: 46px; height: 46px; place-items: center; border: 1px solid #79aeb4; border-radius: 50%; background: #082038; color: #bfe4e2; font-size: 0.72rem; font-weight: 800; font-variant-numeric: tabular-nums; } .ds-route-origin .ds-route-marker { border-color: #ffd35a; background: #ffd35a; color: #082038; } .ds-route-stop strong { display: block; color: #fff; font-size: 0.94rem; } .ds-route-stop p { max-width: 30ch; margin: 5px 0 0; color: rgba(255,255,255,0.68); font-size: 0.78rem; line-height: 1.5; } @media (max-width: 700px) { .ds-route { grid-template-columns: minmax(0,1fr); gap: 20px; } .ds-route::before { top: 22px; bottom: 22px; left: 22px; width: 1px; height: auto; background: repeating-linear-gradient(180deg, rgba(132,190,195,0.8) 0 7px, transparent 7px 13px); } }"
+    },
+    {
+      "name": "Directory Row",
+      "kind": "custom",
+      "refersTo": "directory-row",
+      "description": "Unboxed department entry separated by a fine rule for fast scanning.",
+      "html": "<ul class=\"ds-directory\"><li>Basic Education Department</li><li>College of Nursing</li><li>College of Computer Studies</li></ul>",
+      "css": ".ds-directory { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 0 24px; margin: 0; padding: 0; color: #163548; font-family: Poppins, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; list-style: none; } .ds-directory li { min-width: 0; padding: 11px 0; border-top: 1px solid #dce6ee; font-size: 0.82rem; line-height: 1.4; overflow-wrap: anywhere; } @media (max-width: 420px) { .ds-directory { grid-template-columns: minmax(0,1fr); } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Campus Wayfinding Board",
+    "overview": "AssistDesk keeps its established campus-helpdesk identity—navy, teal, white, and gold—while giving the support journey a distinct, reusable wayfinding language. A fine map grid, connected numbered stops, and restrained destination markers make the route legible; clear type and direct labels remain the primary information layer.\n\nThe Campus Wayfinding Board direction was inferred as the assigned lead after the decision page closed without a stored answer and confirmation returned no selection; it was not a recorded user selection. The implemented surface pairs a dark route field with a quiet directory and a pale closing panel, keeping the existing AssistDesk identity recognizable while making the request-to-department-to-status sequence easy to scan.",
+    "keyCharacteristics": [
+      "Campus support expressed as a clear, connected route.",
+      "Navy-led contrast with teal route details and signal-gold actions.",
+      "Information stays readable and explicit; map graphics support rather than replace it."
+    ],
+    "rules": [
+      { "name": "The Gold Signal Rule", "body": "Reserve the brighter signal gold for the primary action and the route origin; do not treat it as a broad decorative fill.", "section": "colors" },
+      { "name": "The Clear-Label Rule", "body": "Keep meaningful route steps and actions in text; condensed numbering and graphic marks are supporting wayfinding, not substitutes for labels.", "section": "typography" },
+      { "name": "The Route-Orientation Rule", "body": "Preserve the same ordered three-stop path across breakpoints: horizontal on wide screens and vertical on narrow screens.", "section": "layout" }
+    ],
+    "dos": [
+      "Do keep the inherited navy/teal/gold identity and use the brighter signal gold for the principal action and route origin.",
+      "Do use connected route lines and numbered destination markers to clarify an explicitly labeled support sequence.",
+      "Do preserve the 1216px content measure and the horizontal-to-vertical route transformation.",
+      "Do keep keyboard focus visible and honor reduced-motion preferences for interactive transitions."
+    ],
+    "donts": [
+      "Don't let map graphics replace labels, controls, or readable explanations.",
+      "Don't add unsupported response-time promises, service counts, guarantees, or customer claims.",
+      "Don't turn the flat route and directory into a stack of shadowed cards."
+    ]
+  }
+}

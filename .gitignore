@@ -32,3 +32,4 @@ coverage/
 # Local dev environment artifacts
 supabase/
 *.lnk
+.impeccable/review/edge-profile/

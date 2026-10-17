@@ -2,13 +2,10 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
-import HeaderProfile from './HeaderProfile';
-import LogoutButton from './LogoutButton';
-import SidebarProfile from './SidebarProfile';
+import AuthenticatedNavigation from './AuthenticatedNavigation';
 
 function AdminCatalogPage() {
   const { token, user } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [departments, setDepartments] = useState([]);
   const [services, setServices] = useState([]);
   const [issueGroups, setIssueGroups] = useState([]);
@@ -146,67 +143,7 @@ function AdminCatalogPage() {
   return (
     <div className="app-shell">
       <div className="page-shell">
-        <div className={`mobile-menu-backdrop ${mobileMenuOpen ? 'show' : ''}`} onClick={() => setMobileMenuOpen(false)} />
-        <header className="page-header">
-          <button
-            type="button"
-            className="mobile-menu-toggle"
-            aria-label="Open navigation menu"
-            aria-expanded={mobileMenuOpen}
-            onClick={() => setMobileMenuOpen((prev) => !prev)}
-          >
-            ☰
-          </button>
-          <button type="button" className="header-brand header-brand-button" onClick={() => window.location.reload()} aria-label="Refresh AssistDesk">
-            <div className="brand-badge">
-              <img src="/assistdesk-logo.svg" alt="AssistDesk logo" />
-            </div>
-            <div>
-              <h1>AssistDesk</h1>
-              <p>Admin catalog management</p>
-            </div>
-          </button>
-          <div className="nav-links">
-            <a href="/dashboard">Dashboard</a>
-            <a href="/tickets">Tickets</a>
-            <a href="/profile">Profile</a>
-            {user?.role === 'admin' && (
-              <>
-                <a href="/admin/catalog">Catalog</a>
-                <a href="/admin/reports">Data Analytics</a>
-                <a href="/admin/reports?view=users" className="header-nav-button">Users</a>
-              </>
-            )}
-          </div>
-          <div className="header-actions">
-            <HeaderProfile user={user} />
-            <LogoutButton />
-          </div>
-        </header>
-
-        <aside className={`mobile-menu-drawer ${mobileMenuOpen ? 'open' : ''}`}>
-          <div className="mobile-menu-head">
-            <button type="button" className="mobile-menu-close" onClick={() => setMobileMenuOpen(false)}>×</button>
-          </div>
-          <div className="mobile-profile-summary">
-            <SidebarProfile user={user} />
-          </div>
-          <div className="nav-links">
-            <a href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</a>
-            <a href="/tickets" onClick={() => setMobileMenuOpen(false)}>Tickets</a>
-            <a href="/profile" onClick={() => setMobileMenuOpen(false)}>Profile</a>
-            {user?.role === 'admin' && (
-              <>
-                <a href="/admin/catalog" onClick={() => setMobileMenuOpen(false)}>Catalog</a>
-                <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Data Analytics</a>
-                <a href="/admin/reports?view=users" className="header-nav-button" onClick={() => setMobileMenuOpen(false)}>Users</a>
-              </>
-            )}
-          </div>
-          <div className="mobile-menu-actions">
-            <LogoutButton onBeforeLogout={() => setMobileMenuOpen(false)} />
-          </div>
-        </aside>
+        <AuthenticatedNavigation user={user} subtitle="Admin catalog management" />
 
         <div className="page-intro">
           <div>

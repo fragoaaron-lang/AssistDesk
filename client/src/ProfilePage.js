@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { API_BASE_URL } from './config';
-import HeaderProfile from './HeaderProfile';
+import AuthenticatedNavigation from './AuthenticatedNavigation';
 import LogoutButton from './LogoutButton';
 import PhoneAlertsControl from './PhoneAlertsControl';
 
@@ -54,7 +54,6 @@ const prepareProfilePhoto = (file) => new Promise((resolve, reject) => {
 
 function ProfilePage() {
   const { user, token, updateUserProfile } = useAuth();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState(() => getProfilePhotoSource(user));
   const [studentNumber, setStudentNumber] = useState(() => user?.student_number || '');
   const [prefs, setPrefs] = useState(() => {
@@ -379,85 +378,30 @@ function ProfilePage() {
   return (
     <div className="app-shell">
       <div className="page-shell">
-        <div className={`mobile-menu-backdrop ${mobileMenuOpen ? 'show' : ''}`} onClick={() => setMobileMenuOpen(false)} />
-
-        <header className="page-header">
-          <button
-            type="button"
-            className="mobile-menu-toggle"
-            aria-label="Open navigation menu"
-            aria-expanded={mobileMenuOpen}
-            onClick={() => setMobileMenuOpen((prev) => !prev)}
-          >
-            ☰
-          </button>
-          <button type="button" className="header-brand header-brand-button" onClick={() => window.location.reload()} aria-label="Refresh AssistDesk">
-            <div className="brand-badge">
-              <img src="/assistdesk-logo.svg" alt="AssistDesk logo" />
-            </div>
-            <div>
-              <h1>AssistDesk</h1>
-              <p>Personalized support profile</p>
-            </div>
-          </button>
-
-          <div className="nav-links">
-            <a href="/dashboard">Dashboard</a>
-            <a href="/tickets">Tickets</a>
-            <a href="/profile">Profile</a>
-            {user?.role === 'admin' && (
-              <>
-                <a href="/admin/catalog">Catalog</a>
-                <a href="/admin/reports">Data Analytics</a>
-                <a href="/admin/reports?view=users" className="header-nav-button">Users</a>
-              </>
-            )}
-          </div>
-
-          <div className="header-actions">
-            <HeaderProfile user={user} />
-            <LogoutButton />
-          </div>
-        </header>
-
-        <aside className={`mobile-menu-drawer ${mobileMenuOpen ? 'open' : ''}`}>
-          <div className="mobile-menu-head">
-            <button type="button" className="mobile-menu-close" onClick={() => setMobileMenuOpen(false)}>×</button>
-          </div>
-          <div className="mobile-profile-summary">
-            <div className="mobile-profile-photo">
-              {profilePhoto ? (
-                <img src={profilePhoto} alt="Profile" className="profile-avatar-image" />
-              ) : (
-                <span className="profile-avatar-placeholder profile-avatar-fallback">{getInitials(user?.name)}</span>
-              )}
-              {photoUploadLoading && <div className="profile-avatar-loader" aria-label="Uploading profile photo" />}
-              <label className={`profile-avatar-upload-label mobile-upload-label ${photoUploadLoading ? 'loading' : ''}`}>
-                <input type="file" accept="image/*" onChange={handleProfilePhotoChange} disabled={photoUploadLoading} />
-                <span>{photoUploadLoading ? 'Uploading...' : 'Upload'}</span>
-              </label>
-            </div>
-            <div>
-              <div className="mobile-profile-name">{user?.name || 'User'}</div>
-              <div className="mobile-profile-role">{user?.role || 'Member'}</div>
-            </div>
-          </div>
-          <div className="nav-links">
-            <a href="/dashboard" onClick={() => setMobileMenuOpen(false)}>Dashboard</a>
-            <a href="/tickets" onClick={() => setMobileMenuOpen(false)}>Tickets</a>
-            <a href="/profile" onClick={() => setMobileMenuOpen(false)}>Profile</a>
-            {user?.role === 'admin' && (
-              <>
-                <a href="/admin/catalog" onClick={() => setMobileMenuOpen(false)}>Catalog</a>
-                <a href="/admin/reports" onClick={() => setMobileMenuOpen(false)}>Data Analytics</a>
-                <a href="/admin/reports?view=users" className="header-nav-button" onClick={() => setMobileMenuOpen(false)}>Users</a>
-              </>
-            )}
-          </div>
-          <div className="mobile-menu-actions">
-            <LogoutButton onBeforeLogout={() => setMobileMenuOpen(false)} />
-          </div>
-        </aside>
+        <AuthenticatedNavigation
+          user={user}
+          subtitle="Personalized support profile"
+          mobileProfileContent={(
+            <>
+              <div className="mobile-profile-photo">
+                {profilePhoto ? (
+                  <img src={profilePhoto} alt="Profile" className="profile-avatar-image" />
+                ) : (
+                  <span className="profile-avatar-placeholder profile-avatar-fallback">{getInitials(user?.name)}</span>
+                )}
+                {photoUploadLoading && <div className="profile-avatar-loader" aria-label="Uploading profile photo" />}
+                <label className={`profile-avatar-upload-label mobile-upload-label ${photoUploadLoading ? 'loading' : ''}`}>
+                  <input type="file" accept="image/*" onChange={handleProfilePhotoChange} disabled={photoUploadLoading} />
+                  <span>{photoUploadLoading ? 'Uploading...' : 'Upload'}</span>
+                </label>
+              </div>
+              <div>
+                <div className="mobile-profile-name">{user?.name || 'User'}</div>
+                <div className="mobile-profile-role">{user?.role || 'Member'}</div>
+              </div>
+            </>
+          )}
+        />
 
         <div className="page-intro">
           <div>
