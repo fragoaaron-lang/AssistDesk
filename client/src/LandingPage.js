@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import Lenis from 'lenis';
+import 'lenis/dist/lenis.css';
 import LoginPage from './LoginPage';
 import RegisterPage from './RegisterPage';
 
@@ -19,7 +21,24 @@ function LandingPage() {
 
   useEffect(() => {
     const landing = landingRef.current;
-    if (!landing || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+    if (!landing || document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+
+    const lenis = new Lenis({
+      duration: 1.05,
+      smoothWheel: true,
+      anchors: { offset: -24 },
+      prevent: (node) => Boolean(node.closest('.auth-modal, .mobile-menu-drawer')),
+    });
+    const updateScroll = () => ScrollTrigger.update();
+    const raf = (time) => lenis.raf(time * 1000);
+    const handleVisibilityChange = () => {
+      if (document.hidden) lenis.stop();
+      else lenis.start();
+    };
+    lenis.on('scroll', updateScroll);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    gsap.ticker.add(raf);
+    gsap.ticker.lagSmoothing(0);
 
     const context = gsap.context(() => {
       const routeList = landing.querySelector('.landing-route-list');
@@ -28,31 +47,72 @@ function LandingPage() {
 
       const sequence = gsap.timeline({ defaults: { ease: 'expo.out' } });
       sequence
+        .fromTo(landing.querySelector('.landing-hero-map'),
+          { scale: 1.035, filter: 'blur(5px)' },
+          { scale: 1, filter: 'blur(0px)', duration: 1.15, ease: 'power2.out' })
+        .fromTo(landing.querySelector('.landing-hero-map-wash'),
+          { opacity: 0.2 },
+          { opacity: 1, duration: 0.9 }, '-=0.9')
+        .fromTo(landing.querySelector('.landing-brand'),
+          { y: -14, opacity: 0.65 },
+          { y: 0, opacity: 1, duration: 0.5 }, '-=0.65')
+        .fromTo(landing.querySelector('.landing-nav-links'),
+          { y: -10, opacity: 0.65 },
+          { y: 0, opacity: 1, duration: 0.42 }, '-=0.32')
+        .fromTo(landing.querySelector('.landing-hero-kicker'),
+          { y: 12, opacity: 0, clipPath: 'inset(0 0 100% 0)' },
+          { y: 0, opacity: 1, clipPath: 'inset(0 0 0% 0)', duration: 0.52 }, '-=0.12')
+        .fromTo(landing.querySelector('.landing-hero h1'),
+          { y: 24, opacity: 0, clipPath: 'inset(0 0 100% 0)' },
+          { y: 0, opacity: 1, clipPath: 'inset(0 0 0% 0)', duration: 0.78 }, '-=0.2')
+        .fromTo(landing.querySelector('.landing-lede'),
+          { y: 14, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.5 }, '-=0.42')
+        .fromTo(landing.querySelector('.landing-actions'),
+          { y: 10, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.42 }, '-=0.28')
         .fromTo(landing.querySelector('.landing-brand-mark'),
           { y: -8, rotate: -3, scale: 0.96, opacity: 0.75 },
-          { y: 0, rotate: 0, scale: 1, opacity: 1, duration: 0.42 })
-        .fromTo(landing.querySelectorAll('.landing-nav-links a'),
-          { y: -6, opacity: 0.65 },
-          { y: 0, opacity: 1, duration: 0.32, stagger: 0.07 }, '-=0.2')
+          { y: 0, rotate: 0, scale: 1, opacity: 1, duration: 0.42 }, '-=0.4')
         .fromTo(landing.querySelector('.landing-nav-button'),
           { y: -5, opacity: 0.7 },
-          { y: 0, opacity: 1, duration: 0.32 }, '-=0.2')
-        .fromTo(landing.querySelector('.landing-hero h1'),
-          { y: 14, opacity: 0.82 },
-          { y: 0, opacity: 1, duration: 0.46 }, '-=0.08')
-        .fromTo(landing.querySelector('.landing-lede'),
-          { y: 10, opacity: 0.7 },
-          { y: 0, opacity: 1, duration: 0.36 }, '-=0.24')
-        .fromTo(landing.querySelector('.landing-actions'),
-          { y: 8, opacity: 0.7 },
-          { y: 0, opacity: 1, duration: 0.32 }, '-=0.2')
+          { y: 0, opacity: 1, duration: 0.32 }, '-=0.28')
         .fromTo(landing.querySelector('.landing-route-heading'),
-          { y: 8, opacity: 0.72 },
-          { y: 0, opacity: 1, duration: 0.3 }, '-=0.12')
+          { y: 12, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.4 }, '-=0.06')
         .to(routeList, { '--route-progress': 1, duration: 0.54, ease: 'power2.inOut' }, '-=0.06')
         .fromTo(landing.querySelectorAll('.landing-route-marker'),
-          { scale: 0.82, opacity: 0.65 },
-          { scale: 1, opacity: 1, duration: 0.3, stagger: 0.1, ease: 'back.out(1.5)' }, '-=0.18');
+          { scale: 0.74, opacity: 0.5 },
+          { scale: 1, opacity: 1, duration: 0.36, stagger: 0.12, ease: 'power2.out' }, '-=0.22');
+
+      gsap.to(landing.querySelectorAll('.landing-heat-pulse'), {
+        scale: 1.16,
+        opacity: 0.38,
+        duration: 5.5,
+        stagger: 1.1,
+        ease: 'sine.inOut',
+        yoyo: true,
+        repeat: -1,
+        scrollTrigger: {
+          trigger: landing.querySelector('.landing-hero'),
+          start: 'top bottom',
+          end: 'bottom top',
+          toggleActions: 'play pause resume pause',
+        },
+      });
+
+      gsap.to(landing.querySelector('.landing-map-grid'), {
+        backgroundPosition: '38px 38px',
+        duration: 32,
+        ease: 'none',
+        repeat: -1,
+        scrollTrigger: {
+          trigger: landing.querySelector('.landing-hero'),
+          start: 'top bottom',
+          end: 'bottom top',
+          toggleActions: 'play pause resume pause',
+        },
+      });
 
       gsap.fromTo(landing.querySelector('.landing-section-heading'),
         { y: 22, opacity: 0.7 },
@@ -111,12 +171,47 @@ function LandingPage() {
             once: true,
           },
         });
+
+      gsap.fromTo(landing.querySelector('.landing-close .landing-primary-button'),
+        { y: 12, opacity: 0.72 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.42,
+          ease: 'expo.out',
+          scrollTrigger: {
+            trigger: landing.querySelector('.landing-close'),
+            start: 'top 72%',
+            once: true,
+          },
+        });
     }, landing);
 
     return () => {
       landing.classList.remove('landing-motion-ready');
       context.revert();
+      gsap.ticker.remove(raf);
+      gsap.ticker.lagSmoothing(500, 33);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      lenis.off('scroll', updateScroll);
+      lenis.destroy();
     };
+  }, []);
+
+  useEffect(() => {
+    const landing = landingRef.current;
+    if (!landing || window.matchMedia('(prefers-reduced-motion: reduce)').matches || !window.matchMedia('(pointer: fine)').matches) return undefined;
+    const surface = landing.querySelector('.landing-hero');
+    if (!surface) return undefined;
+
+    const setPointerPosition = (event) => {
+      const bounds = surface.getBoundingClientRect();
+      surface.style.setProperty('--pointer-x', `${event.clientX - bounds.left}px`);
+      surface.style.setProperty('--pointer-y', `${event.clientY - bounds.top}px`);
+    };
+
+    surface.addEventListener('pointermove', setPointerPosition, { passive: true });
+    return () => surface.removeEventListener('pointermove', setPointerPosition);
   }, []);
 
   useEffect(() => {
@@ -175,8 +270,17 @@ function LandingPage() {
       </header>
 
       <section className="landing-hero" aria-labelledby="landing-title">
+        <div className="landing-hero-map" aria-hidden="true">
+          <img src="/schoolmap.png" alt="" />
+          <div className="landing-hero-map-wash" />
+          <span className="landing-heat-pulse landing-heat-pulse-one" />
+          <span className="landing-heat-pulse landing-heat-pulse-two" />
+          <span className="landing-heat-pulse landing-heat-pulse-three" />
+          <span className="landing-heat-pulse landing-heat-pulse-four" />
+        </div>
         <div className="landing-map-grid" aria-hidden="true" />
         <div className="landing-hero-content">
+          <p className="landing-hero-kicker"><span /> TCC · Campus support, connected</p>
           <h1 id="landing-title">Find your way to the right help.</h1>
           <p className="landing-lede">One clear path from your concern to the campus team that can help.</p>
           <div className="landing-actions">
@@ -212,6 +316,7 @@ function LandingPage() {
       </section>
 
       <section className="landing-departments" id="departments" aria-labelledby="departments-title">
+        <div className="landing-departments-map" aria-hidden="true"><img src="/school-map.png" alt="" /></div>
         <div className="landing-section-heading">
           <div>
             <h2 id="departments-title">Find the team you need.</h2>
