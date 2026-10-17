@@ -326,15 +326,6 @@ function AdminReportsPage() {
     count: Number(reports?.ticketCountsByPriority?.find((row) => row.priority === priority)?.count) || 0,
     color: priorityColors[priority],
   }));
-  const getCountForStatuses = (statuses) => (reports?.ticketCountsByStatus || [])
-    .filter((row) => statuses.includes(row.status))
-    .reduce((sum, row) => sum + (Number(row.count) || 0), 0);
-  const analyticsSummary = [
-    { label: 'Tickets in scope', value: Object.values(reports?.ticketCountsByStatus || []).reduce((sum, row) => sum + (Number(row.count) || 0), 0), tone: 'total' },
-    { label: 'Active', value: getCountForStatuses(['open', 'pending', 'in_progress']), tone: 'active' },
-    { label: 'Resolved', value: getCountForStatuses(['resolved', 'closed']), tone: 'resolved' },
-    { label: 'Urgent', value: priorityData.find((item) => item.name === 'urgent')?.count || 0, tone: 'urgent' },
-  ];
   const activityByDate = new Map((reports?.monthlyTicketCounts || []).map((item) => [item.date, Number(item.count) || 0]));
   const reportAnchorDate = new Date(reports?.generated_at || Date.now());
   const recentDailyActivity = Array.from({ length: 14 }, (_, index) => {
@@ -567,14 +558,6 @@ function AdminReportsPage() {
                   <div className="report-filter-actions"><button className="institutional-btn small" type="submit">Apply filters</button><button className="institutional-btn small secondary" type="button" onClick={resetReportFilters}>Reset</button></div>
                 </form>
               </details>
-            </section>
-            <section className="analytics-summary-strip" aria-label="Ticket health summary">
-              {analyticsSummary.map((item) => (
-                <div key={item.label} className={`analytics-summary-item ${item.tone}`}>
-                  <span>{item.label}</span>
-                  <strong>{item.value.toLocaleString()}</strong>
-                </div>
-              ))}
             </section>
             {sectionLoading ? <ReportSectionSkeleton section={activeReportSection} /> : null}
             {!sectionLoading && activeReportSection === 'overview' && (
