@@ -45,14 +45,6 @@ function DashboardPage() {
     };
   }, [dashboard.tickets, visibleDepartments]);
 
-  const departmentQueue = useMemo(() =>
-    [...visibleDepartments]
-      .filter((department) => Number(department.ticket_count || 0) > 0)
-      .sort((a, b) => Number(b.ticket_count || 0) - Number(a.ticket_count || 0))
-      .slice(0, 4),
-    [visibleDepartments]
-  );
-
   const dashboardHighlights = useMemo(() => {
     const announcementList = (dashboard.announcements || []).slice(0, 3);
     const serviceList = (dashboard.services || []).slice(0, 4);
@@ -292,41 +284,6 @@ function DashboardPage() {
               <strong>{dashboardSummary.activeTickets > 0 ? 'Live' : 'Quiet'}</strong>
               <small>{dashboardSummary.activeTickets > 0 ? 'Tickets are moving' : 'No open requests'}</small>
             </a>
-          </div>
-        </section>
-
-        <section id="department-queue" className="dashboard-queue" aria-label="Department queue summary">
-          <div className="queue-header">
-            <div>
-              <p className="eyebrow">Department queue</p>
-              <h3>Most active service points</h3>
-            </div>
-            <span className="queue-total">{dashboardSummary.liveDepartments} active</span>
-          </div>
-          <div className="queue-grid">
-            {departmentQueue.length > 0 ? (
-              departmentQueue.map((department) => {
-                const count = Number(department.ticket_count || 0);
-                const queueWidth = Math.min(100, 20 + count * 12);
-                return (
-                  <article key={`dept-queue-${department.id}`} className="queue-card">
-                    <div className="queue-card-topline">
-                      <strong>{department.name}</strong>
-                      <span>{count} tickets</span>
-                    </div>
-                    <div className="queue-meter" aria-hidden="true">
-                      <span style={{ width: `${queueWidth}%` }} />
-                    </div>
-                    <div className="queue-card-foot">
-                      <small>{count > 0 ? 'Monitoring live demand' : 'Idle'}</small>
-                      <em>{count >= 3 ? 'High demand' : count > 0 ? 'Steady' : 'Low'}</em>
-                    </div>
-                  </article>
-                );
-              })
-            ) : (
-              <div className="queue-empty">No active departments right now.</div>
-            )}
           </div>
         </section>
 
