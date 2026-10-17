@@ -1,6 +1,5 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const { getAllowedOrigins, getFrontendUrl, getJwtSecret, getTrustProxyHops } = require('../config/security');
@@ -53,27 +52,25 @@ test('trusted proxy configuration is bounded and environment-aware', () => {
   assert.throws(() => getTrustProxyHops({ NODE_ENV: 'production', TRUST_PROXY_HOPS: '4' }), /integer from 0 to 3/);
 });
 
-test('deployment CSP hashes the campus map script instead of allowing inline scripts', () => {
+test('campus map initializes from a same-origin script allowed by deployment CSP', () => {
   const workspace = path.resolve(__dirname, '..');
   const mapHtml = fs.readFileSync(path.join(workspace, '../client/public/campus-map-3d-v3.html'), 'utf8');
-  const inlineScript = [...mapHtml.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
-    .map((match) => match[1])
-    .find((script) => script.trim());
-  assert.ok(inlineScript, 'campus map has a script requiring an explicit CSP hash');
-
-  const normalizedScript = inlineScript.replace(/\r\n?/g, '\n');
-  const digest = crypto.createHash('sha256').update(normalizedScript).digest('base64');
-  const cspHash = `'sha256-${digest}'`;
+  const mapScript = '/campus-map-3d-v3.js';
   const vercelConfig = fs.readFileSync(path.join(workspace, '../client/vercel.json'), 'utf8');
   const expressConfig = fs.readFileSync(path.join(workspace, 'server.js'), 'utf8');
+  const mapScriptPath = path.join(workspace, '../client/public', mapScript.slice(1));
   const externalScripts = [...mapHtml.matchAll(/<script\b([^>]*)\bsrc="([^"]+)"([^>]*)><\/script>/gi)];
+  const inlineScripts = [...mapHtml.matchAll(/<script\b(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)];
 
-  assert.ok(vercelConfig.includes(cspHash), 'Vercel CSP hash must match the inline campus map script');
-  assert.ok(expressConfig.includes(cspHash), 'Express CSP hash must match the inline campus map script');
+  assert.ok(fs.existsSync(mapScriptPath), 'same-origin campus map script must be deployed with the HTML');
+  assert.ok(externalScripts.some(([, , src]) => src === mapScript), 'map HTML must load the same-origin initializer');
+  assert.equal(inlineScripts.length, 0, 'map HTML must not depend on inline scripts blocked by CSP');
+  assert.ok(vercelConfig.includes("script-src 'self'"), 'Vercel CSP must allow same-origin scripts');
+  assert.ok(expressConfig.includes("'script-src': [\"'self'\""), 'Express CSP must allow same-origin scripts');
   assert.equal(vercelConfig.includes("script-src 'self' 'unsafe-inline'"), false);
   assert.equal(expressConfig.includes("'script-src-attr': [\"'unsafe-inline'\"]"), false);
   assert.ok(externalScripts.length > 0);
-  externalScripts.forEach(([, before, , after]) => {
+  externalScripts.filter(([, , src]) => src.startsWith('https://cdn.jsdelivr.net')).forEach(([, , before, after]) => {
     assert.match(`${before} ${after}`, /integrity="sha384-[A-Za-z0-9+/=]+"/);
     assert.match(`${before} ${after}`, /crossorigin="anonymous"/);
   });
