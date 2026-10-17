@@ -190,6 +190,17 @@ function LandingPage() {
     if (!authModal) return undefined;
 
     const previouslyFocused = authTriggerRef.current;
+    const dialog = modalRef.current;
+    const animationContext = gsap.context(() => {
+      if (!dialog || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      gsap.fromTo(dialog,
+        { y: 18, scale: 0.985, opacity: 0, filter: 'blur(5px)' },
+        { y: 0, scale: 1, opacity: 1, filter: 'blur(0px)', duration: 0.42, ease: 'power3.out', clearProps: 'filter' });
+      gsap.fromTo(dialog.querySelector('.auth-modal-content'),
+        { y: 8, opacity: 0.72 },
+        { y: 0, opacity: 1, duration: 0.34, delay: 0.08, ease: 'power2.out' });
+    }, dialog);
     const focusFrame = window.requestAnimationFrame(() => {
       modalRef.current?.querySelector('.auth-modal-close')?.focus();
     });
@@ -218,6 +229,7 @@ function LandingPage() {
     return () => {
       window.cancelAnimationFrame(focusFrame);
       document.removeEventListener('keydown', handleModalKeyDown);
+      animationContext.revert();
       previouslyFocused?.focus();
     };
   }, [authModal]);

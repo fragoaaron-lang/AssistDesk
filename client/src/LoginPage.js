@@ -80,7 +80,7 @@ function LoginPage({ modal = false, onSwitch }) {
     <div className={modal ? 'auth-modal-content' : 'auth-shell'}>
       <div className="auth-card">
         <div className="auth-hero">
-          <div className={`brand-badge auth-logo-badge ${isLoading ? 'is-animating' : ''}`} style={{ width: '72px', height: '72px', marginBottom: '14px', background: 'rgba(255,255,255,0.18)' }}>
+          <div className={`brand-badge auth-logo-badge ${isLoading ? 'is-animating' : ''}`}>
             <img src="/assistdesk-logo.svg" alt="AssistDesk logo" />
           </div>
           <h2>AssistDesk</h2>
@@ -88,12 +88,16 @@ function LoginPage({ modal = false, onSwitch }) {
         </div>
         <div className="auth-form">
           <div className="login-status-badge">Welcome back</div>
-          <p className="helper-text">{isLoading ? 'Preparing your dashboard and campus services for your account…' : 'Sign in to manage requests, track services, and access the campus support network.'}</p>
+          <p className="helper-text auth-intro">{isLoading ? 'Preparing your dashboard and campus services for your account…' : 'Sign in to manage requests, track services, and access the campus support network.'}</p>
           {!showForgotPassword ? (
-            <form onSubmit={handleSubmit}>
-              <input className="institutional-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" autoComplete="email" disabled={isLoading} />
-              <div className="password-field">
-                <input className="institutional-input" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" autoComplete="current-password" disabled={isLoading} />
+            <form className="auth-login-form" onSubmit={handleSubmit}>
+              <div className="auth-field">
+                <label className="auth-field-label" htmlFor="login-email">Email address</label>
+                <input id="login-email" className="institutional-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@college.edu" autoComplete="email" disabled={isLoading} />
+              </div>
+              <div className="auth-field password-field">
+                <label className="auth-field-label" htmlFor="login-password">Password</label>
+                <input id="login-password" className="institutional-input" type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" autoComplete="current-password" disabled={isLoading} />
                 <button type="button" className={`password-visibility ${showPassword ? 'visible' : ''}`} onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Hide password' : 'Show password'} disabled={isLoading}><span className="password-eye" aria-hidden="true" /></button>
               </div>
               <label className="remember-me-option">
@@ -101,26 +105,29 @@ function LoginPage({ modal = false, onSwitch }) {
                 <span>Remember me</span>
                 <small>Stay signed in on this device for up to 30 days.</small>
               </label>
-              <button className={`institutional-btn auth-submit-btn ${isLoading ? 'is-loading' : ''}`} type="submit" style={{ width: '100%' }} disabled={isLoading}>
+              <button className={`institutional-btn auth-submit-btn ${isLoading ? 'is-loading' : ''}`} type="submit" disabled={isLoading}>
                 {isLoading ? <><span className="auth-spinner" aria-hidden="true" />Signing in...</> : 'Login'}
               </button>
             </form>
           ) : (
-            <form onSubmit={handleForgotPassword}>
-              <input className="institutional-input" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="Enter your email" autoComplete="email" disabled={isLoading} />
+            <form className="auth-login-form" onSubmit={handleForgotPassword}>
+              <div className="auth-field">
+                <label className="auth-field-label" htmlFor="forgot-email">Email address</label>
+                <input id="forgot-email" className="institutional-input" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="name@college.edu" autoComplete="email" disabled={isLoading} />
+              </div>
               <button className={`institutional-btn auth-submit-btn ${isLoading ? 'is-loading' : ''}`} type="submit" style={{ width: '100%' }} disabled={isLoading}>
                 {isLoading ? <><span className="auth-spinner" aria-hidden="true" />Sending...</> : 'Send reset link'}
               </button>
-              <button type="button" className="auth-switch-button" style={{ marginTop: '0.8rem' }} onClick={() => setShowForgotPassword(false)} disabled={isLoading}>Back to login</button>
+              <button type="button" className="auth-switch-button auth-back-link" onClick={() => setShowForgotPassword(false)} disabled={isLoading}>Back to login</button>
             </form>
           )}
-          {message && <p style={{ color: 'red', marginTop: '0.8rem' }}>{message}</p>}
+          {message && <p className="auth-form-message" role="alert">{message}</p>}
           {!showForgotPassword && (
-            <p className="helper-text">
+            <p className="helper-text auth-secondary-link">
               <button type="button" className="auth-switch-button" onClick={() => setShowForgotPassword(true)} disabled={isLoading}>Forgot password?</button>
             </p>
           )}
-          <p className="helper-text">{modal ? <button type="button" className="auth-switch-button" onClick={onSwitch}>Create an account</button> : <button type="button" className="auth-switch-button" onClick={() => window.location.href = '/'}>Create an account</button>}</p>
+          <p className="helper-text auth-footer-switch">{modal ? <button type="button" className="auth-switch-button" onClick={onSwitch}>Create an account</button> : <button type="button" className="auth-switch-button" onClick={() => window.location.href = '/'}>Create an account</button>}</p>
         </div>
       </div>
     </div>
