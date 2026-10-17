@@ -33,7 +33,7 @@ h1{font-size:16px;margin:0 0 8px;font-weight:700}
 #heatmap,#ticketLayer{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 #heatmap{z-index:2}
 #ticketLayer{z-index:3}
-.heat-dot{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(239,35,45,.78) 0%,rgba(255,91,23,.58) 20%,rgba(255,187,0,.34) 48%,rgba(255,196,0,0) 74%);filter:blur(4px);mix-blend-mode:multiply;pointer-events:none}
+.heat-dot{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(239,35,45,.76) 0%,rgba(255,91,23,.62) 26%,rgba(255,187,0,.4) 58%,rgba(255,196,0,0) 78%);filter:blur(4px);mix-blend-mode:normal;pointer-events:none}
 .ticket-pin{position:absolute;transform:translate(-50%,-100%) rotate(-45deg);width:11px;height:11px;padding:0;border:2px solid #fff;border-radius:50% 50% 50% 0;box-shadow:0 1px 5px rgba(16,24,40,.55);pointer-events:auto;cursor:pointer}
 .ticket-pin::after{content:"";position:absolute;inset:3px;border-radius:50%;background:#fff;pointer-events:none}
 .ticket-pin.low{background:#34c759}.ticket-pin.medium{background:#3b82f6}.ticket-pin.urgent{background:#ef4444}
@@ -200,10 +200,10 @@ function worldPointFromDepartment(department){
 function makeHeatCloud(department,count){
  const cloud=document.createElement('div');
  cloud.className='heat-dot';
- const size=Math.min(82,34+Math.sqrt(count)*14);
+ const size=Math.min(112,62+Math.sqrt(count)*12);
  cloud.style.width=size+'px';
  cloud.style.height=size+'px';
- cloud.style.opacity=String(Math.min(.72,.34+Math.log2(count+1)*.12));
+ cloud.style.opacity=String(Math.min(.92,.76+count*.04));
  cloud.title=department.name+' · '+count+' ticket'+(count===1?'':'s');
  heatLayer.appendChild(cloud);
  return cloud;

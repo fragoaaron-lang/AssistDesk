@@ -141,7 +141,7 @@ function DashboardPage() {
     };
   }, [token, user?.account_status]);
 
-  const getHeatStrength = (count) => Math.min(0.92, 0.2 + (Number(count) * 0.12));
+  const getHeatStrength = (count) => Math.min(0.98, 0.38 + (Number(count) * 0.16));
 
   const getVolumeLabel = (level) => {
     if (level === 'urgent') return 'High Volume';
@@ -256,7 +256,7 @@ function DashboardPage() {
                   left: `${pos.x}%`,
                   top: `${pos.y}%`,
                   '--heat-opacity': getHeatStrength(ticketCount),
-                  '--heat-size': `${Math.min(24, 10 + ticketCount * 1.4)}%`,
+                  '--heat-size': `${Math.min(30, 16 + ticketCount * 1.8)}%`,
                 }}
               />
             );
