@@ -2774,6 +2774,13 @@ body.dark-mode .report-filter-dropdown-toggle strong { color: var(--text); }
   overflow-wrap: anywhere;
 }
 
+.registration-field-hint {
+  display: block;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
 .registration-password-hint {
   margin: -5px 0 0;
   font-size: 0.8rem;

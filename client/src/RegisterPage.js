@@ -123,6 +123,11 @@ const getDepartmentsForRole = (allDepartments, selectedRole) => {
   return allDepartments;
 };
 
+const formatStudentNumber = (value) => {
+  const digits = String(value || '').replace(/\D/g, '').slice(0, 9);
+  return digits.length > 4 ? `${digits.slice(0, 4)}-${digits.slice(4)}` : digits;
+};
+
 const getRegistrationErrors = ({ firstName, middleInitial, lastName, email, studentNumber, departmentId, password, confirmPassword, role }) => {
   const errors = {};
   if (!firstName.trim()) errors.firstName = 'Enter your first name.';
@@ -256,23 +261,23 @@ function RegisterPage({ modal = false, onSwitch }) {
             <div className="form-row">
               <div className="registration-field">
                 <label className="auth-field-label" htmlFor="registration-firstName">First name</label>
-                <input className="institutional-input" {...getFieldProps('firstName')} aria-label="First name" value={firstName} onChange={(e) => updateField('firstName', e.target.value, setFirstName)} placeholder="First name" autoComplete="given-name" required />
+                <input className="institutional-input" {...getFieldProps('firstName')} aria-label="First name" value={firstName} onChange={(e) => updateField('firstName', e.target.value, setFirstName)} autoComplete="given-name" required />
                 {fieldError('firstName') && <span className="registration-field-error" id="registration-firstName-error">{fieldError('firstName')}</span>}
               </div>
               <div className="registration-field">
                 <label className="auth-field-label" htmlFor="registration-middleInitial">Middle initial</label>
-                <input className="institutional-input middle-initial-input" {...getFieldProps('middleInitial')} aria-label="Middle initial" value={middleInitial} onChange={(e) => updateField('middleInitial', e.target.value.slice(0, 1), setMiddleInitial)} placeholder="M.I." maxLength="1" autoComplete="additional-name" required />
+                <input className="institutional-input middle-initial-input" {...getFieldProps('middleInitial')} aria-label="Middle initial" value={middleInitial} onChange={(e) => updateField('middleInitial', e.target.value.slice(0, 1), setMiddleInitial)} maxLength="1" autoComplete="additional-name" required />
                 {fieldError('middleInitial') && <span className="registration-field-error" id="registration-middleInitial-error">{fieldError('middleInitial')}</span>}
               </div>
               <div className="registration-field">
                 <label className="auth-field-label" htmlFor="registration-lastName">Last name</label>
-                <input className="institutional-input" {...getFieldProps('lastName')} aria-label="Last name" value={lastName} onChange={(e) => updateField('lastName', e.target.value, setLastName)} placeholder="Last name" autoComplete="family-name" required />
+                <input className="institutional-input" {...getFieldProps('lastName')} aria-label="Last name" value={lastName} onChange={(e) => updateField('lastName', e.target.value, setLastName)} autoComplete="family-name" required />
                 {fieldError('lastName') && <span className="registration-field-error" id="registration-lastName-error">{fieldError('lastName')}</span>}
               </div>
             </div>
             <div className="registration-field registration-email-field">
               <label className="auth-field-label" htmlFor="registration-email">Email address</label>
-              <input className="institutional-input" type="email" {...getFieldProps('email')} aria-label="Email address" value={email} onChange={(e) => updateField('email', e.target.value, setEmail)} placeholder="Email address" autoComplete="email" required />
+              <input className="institutional-input" type="email" {...getFieldProps('email')} aria-label="Email address" value={email} onChange={(e) => updateField('email', e.target.value, setEmail)} autoComplete="email" required />
               {fieldError('email') && <span className="registration-field-error" id="registration-email-error">{fieldError('email')}</span>}
             </div>
             {role !== 'admin' && (
@@ -280,7 +285,8 @@ function RegisterPage({ modal = false, onSwitch }) {
                 {role === 'student' && (
                   <div className="registration-field registration-student-field">
                     <label className="auth-field-label" htmlFor="registration-studentNumber">Student number</label>
-                    <input className="institutional-input" type="text" {...getFieldProps('studentNumber')} aria-label="Student number" value={studentNumber} onChange={(e) => updateField('studentNumber', e.target.value, setStudentNumber)} placeholder="Student number (YYYY-XXXXX)" pattern="[0-9]{4}-[0-9]{5}" maxLength="10" autoComplete="off" required />
+                    <input className="institutional-input" type="text" inputMode="numeric" {...getFieldProps('studentNumber')} aria-label="Student number" aria-describedby={fieldError('studentNumber') ? 'registration-studentNumber-error' : 'registration-studentNumber-hint'} value={studentNumber} onChange={(e) => updateField('studentNumber', formatStudentNumber(e.target.value), setStudentNumber)} pattern="[0-9]{4}-[0-9]{5}" maxLength="10" autoComplete="off" required />
+                    <small className="registration-field-hint" id="registration-studentNumber-hint">Enter the 4-digit year followed by your 5-digit number.</small>
                     {fieldError('studentNumber') && <span className="registration-field-error" id="registration-studentNumber-error">{fieldError('studentNumber')}</span>}
                   </div>
                 )}
@@ -298,13 +304,13 @@ function RegisterPage({ modal = false, onSwitch }) {
             )}
             <div className="registration-field password-field">
               <label className="auth-field-label" htmlFor="registration-password">Password</label>
-              <input className="institutional-input" type={showPassword ? 'text' : 'password'} {...getFieldProps('password')} aria-label="Password" value={password} onChange={(e) => updateField('password', e.target.value, setPassword)} placeholder="Password" autoComplete="new-password" required />
+              <input className="institutional-input" type={showPassword ? 'text' : 'password'} {...getFieldProps('password')} aria-label="Password" value={password} onChange={(e) => updateField('password', e.target.value, setPassword)} autoComplete="new-password" required />
               <button type="button" className={`password-visibility ${showPassword ? 'visible' : ''}`} onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Hide password' : 'Show password'}><span className="password-eye" aria-hidden="true" /></button>
               {fieldError('password') && <span className="registration-field-error" id="registration-password-error">{fieldError('password')}</span>}
             </div>
             <div className="registration-field password-field">
               <label className="auth-field-label" htmlFor="registration-confirmPassword">Confirm password</label>
-              <input className="institutional-input" type={showConfirmPassword ? 'text' : 'password'} {...getFieldProps('confirmPassword')} aria-label="Confirm password" value={confirmPassword} onChange={(e) => updateField('confirmPassword', e.target.value, setConfirmPassword)} placeholder="Confirm password" autoComplete="new-password" required />
+              <input className="institutional-input" type={showConfirmPassword ? 'text' : 'password'} {...getFieldProps('confirmPassword')} aria-label="Confirm password" value={confirmPassword} onChange={(e) => updateField('confirmPassword', e.target.value, setConfirmPassword)} autoComplete="new-password" required />
               <button type="button" className={`password-visibility ${showConfirmPassword ? 'visible' : ''}`} onClick={() => setShowConfirmPassword((visible) => !visible)} aria-label={showConfirmPassword ? 'Hide confirmed password' : 'Show confirmed password'}><span className="password-eye" aria-hidden="true" /></button>
               {fieldError('confirmPassword') && <span className="registration-field-error" id="registration-confirmPassword-error">{fieldError('confirmPassword')}</span>}
             </div>
