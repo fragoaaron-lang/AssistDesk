@@ -25,48 +25,100 @@ const fallbackDepartments = [
 const facultyDepartmentNames = [
   'basic education department',
   'college of nursing',
-  'cs',
-  'cba',
-  'charm',
+  'college of computer studies',
+  'college of business and accountancy',
+  'college of hospitality management',
   'college of criminology',
   'college of physical therapy',
-  'education department',
+  'college of education',
 ];
 
 const staffDepartmentNames = [
   'maintenance department',
   'accounting department',
-  'registrar department',
   'library',
-  'guidance',
   'office of student affairs',
+  'registrar office',
+  'guidance office',
   'clinic',
-  'it department',
+  'information technology department',
 ];
 
+const normalizeDepartmentLabel = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+
+const canonicalDepartmentLabels = {
+  'basic education': 'Basic Education Department',
+  'basic education department': 'Basic Education Department',
+  'education department': 'College of Education',
+  'college of education': 'College of Education',
+  'college of nursing': 'College of Nursing',
+  'nursing department': 'College of Nursing',
+  cs: 'College of Computer Studies',
+  'cs department': 'College of Computer Studies',
+  'computer science department': 'College of Computer Studies',
+  'college of computer studies': 'College of Computer Studies',
+  cba: 'College of Business and Accountancy',
+  'college of business administration': 'College of Business and Accountancy',
+  'college of business and accountancy': 'College of Business and Accountancy',
+  charm: 'College of Hospitality Management',
+  'college of hospitality and restaurant management': 'College of Hospitality Management',
+  'college of hospitality management': 'College of Hospitality Management',
+  'college of criminology': 'College of Criminology',
+  'criminology department': 'College of Criminology',
+  'college of physical therapy': 'College of Physical Therapy',
+  'physical therapy department': 'College of Physical Therapy',
+  'maintenance department': 'Maintenance Department',
+  maintenance: 'Maintenance Department',
+  'accounting department': 'Accounting Department',
+  accounting: 'Accounting Department',
+  'registrar department': 'Registrar Office',
+  'registrar office': 'Registrar Office',
+  library: 'Library',
+  'library department': 'Library',
+  guidance: 'Guidance Office',
+  'guidance office': 'Guidance Office',
+  'office of student affairs': 'Office of Student Affairs',
+  'office of the student affairs': 'Office of Student Affairs',
+  'student affairs': 'Office of Student Affairs',
+  'it department': 'Information Technology Department',
+  'information technology department': 'Information Technology Department',
+  'clinic department': 'Clinic',
+};
+
+const getCanonicalDepartmentName = (department) => {
+  const normalizedName = normalizeDepartmentLabel(department?.name);
+  const normalizedDisplayName = normalizeDepartmentLabel(department?.display_name);
+  return canonicalDepartmentLabels[normalizedName]
+    || canonicalDepartmentLabels[normalizedDisplayName]
+    || department?.display_name
+    || department?.name
+    || '';
+};
+
+const deduplicateDepartments = (records) => {
+  const unique = new Map();
+  records.forEach((department) => {
+    const displayName = getCanonicalDepartmentName(department);
+    const key = normalizeDepartmentLabel(displayName);
+    if (!key) return;
+
+    const candidate = { ...department, display_name: displayName };
+    const existing = unique.get(key);
+    if (!existing || Number(candidate.id) < Number(existing.id)) unique.set(key, candidate);
+  });
+  return [...unique.values()].sort((first, second) => first.display_name.localeCompare(second.display_name));
+};
+
 const getDepartmentDisplayName = (department) => {
-  const normalizedName = String(department?.name || '').toLowerCase();
-  if (['cs', 'computer science department', 'college of computer studies'].includes(normalizedName)) {
-    return 'College of Computer Studies';
-  }
-  if (['charm', 'college of hospitality and restaurant management', 'college of hospitality management'].includes(normalizedName)) {
-    return 'College of Hospitality Management';
-  }
-  if (['cba', 'college of business administration', 'college of business and accountancy'].includes(normalizedName)) {
-    return 'College of Business and Accountancy';
-  }
-  if (['education department', 'college of education'].includes(normalizedName)) {
-    return 'College of Education';
-  }
-  return department?.display_name || department?.name;
+  return getCanonicalDepartmentName(department);
 };
 
 const getDepartmentsForRole = (allDepartments, selectedRole) => {
   if (selectedRole === 'faculty') {
-    return allDepartments.filter((department) => facultyDepartmentNames.includes(String(department.name || '').toLowerCase()));
+    return allDepartments.filter((department) => facultyDepartmentNames.includes(normalizeDepartmentLabel(getDepartmentDisplayName(department))));
   }
   if (selectedRole === 'staff') {
-    return allDepartments.filter((department) => staffDepartmentNames.includes(String(department.name || '').toLowerCase()));
+    return allDepartments.filter((department) => staffDepartmentNames.includes(normalizeDepartmentLabel(getDepartmentDisplayName(department))));
   }
   return allDepartments;
 };
@@ -151,13 +203,9 @@ function RegisterPage({ modal = false, onSwitch }) {
     axios.get(`${API_BASE_URL}/api/catalog/departments`)
       .then((response) => {
         const options = response.data.departments?.length ? response.data.departments : fallbackDepartments;
-        setDepartments([...options].sort((first, second) => (
-          getDepartmentDisplayName(first).localeCompare(getDepartmentDisplayName(second))
-        )));
+        setDepartments(deduplicateDepartments(options));
       })
-      .catch(() => setDepartments([...fallbackDepartments].sort((first, second) => (
-        getDepartmentDisplayName(first).localeCompare(getDepartmentDisplayName(second))
-      ))));
+      .catch(() => setDepartments(deduplicateDepartments(fallbackDepartments)));
   }, []);
 
   const handleSubmit = async (e) => {
