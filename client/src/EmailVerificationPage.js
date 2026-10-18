@@ -9,12 +9,54 @@ function EmailVerificationPage() {
   const location = useLocation();
   const pageRef = useRef(null);
   const redirectTimerRef = useRef(null);
+  const codeInputRefs = useRef([]);
   const previousStatusRef = useRef('waiting');
   const [status, setStatus] = useState('waiting');
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState(() => location.state?.email || '');
-  const [code, setCode] = useState('');
+  const [codeDigits, setCodeDigits] = useState(() => Array(8).fill(''));
+  const code = codeDigits.join('');
   const [resendState, setResendState] = useState('idle');
+
+  const updateCodeDigit = (index, rawValue) => {
+    const digits = String(rawValue || '').replace(/\D/g, '').slice(0, 8 - index);
+    if (!digits) {
+      setCodeDigits((current) => current.map((digit, digitIndex) => (digitIndex === index ? '' : digit)));
+      return;
+    }
+
+    setCodeDigits((current) => {
+      const next = [...current];
+      digits.split('').forEach((digit, offset) => { next[index + offset] = digit; });
+      return next;
+    });
+    if (digits.length > 1) {
+      codeInputRefs.current[Math.min(index + digits.length, 7)]?.focus();
+    } else if (index < 7) {
+      codeInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleCodeKeyDown = (event, index) => {
+    if (event.key === 'Backspace' && !codeDigits[index] && index > 0) {
+      event.preventDefault();
+      setCodeDigits((current) => current.map((digit, digitIndex) => (digitIndex === index - 1 ? '' : digit)));
+      codeInputRefs.current[index - 1]?.focus();
+    } else if (event.key === 'ArrowLeft' && index > 0) {
+      event.preventDefault();
+      codeInputRefs.current[index - 1]?.focus();
+    } else if (event.key === 'ArrowRight' && index < 7) {
+      event.preventDefault();
+      codeInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleCodePaste = (event, index) => {
+    const pastedDigits = event.clipboardData.getData('text').replace(/\D/g, '');
+    if (!pastedDigits) return;
+    event.preventDefault();
+    updateCodeDigit(index, pastedDigits);
+  };
 
   useLayoutEffect(() => {
     const root = pageRef.current;
@@ -168,23 +210,31 @@ function EmailVerificationPage() {
                   <span>Email address</span>
                   <input id="verification-email" className="institutional-input" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
                 </label>
-                <label className="verification-field verification-code-field" htmlFor="verification-code">
-                  <span>8-digit code</span>
-                  <input
-                    id="verification-code"
-                    className="institutional-input verification-code-input"
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    pattern="[0-9]{8}"
-                    maxLength={8}
-                    value={code}
-                    onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 8))}
-                    aria-describedby="verification-code-hint"
-                    required
-                  />
+                <fieldset className="verification-field verification-code-field" aria-describedby="verification-code-hint">
+                  <legend>8-digit code</legend>
+                  <div className="verification-code-grid" role="group" aria-label="8-digit verification code">
+                    {codeDigits.map((digit, index) => (
+                      <input
+                        key={index}
+                        ref={(element) => { codeInputRefs.current[index] = element; }}
+                        className="institutional-input verification-code-input"
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete={index === 0 ? 'one-time-code' : 'off'}
+                        pattern="[0-9]*"
+                        maxLength={8}
+                        value={digit}
+                        onChange={(event) => updateCodeDigit(index, event.target.value)}
+                        onKeyDown={(event) => handleCodeKeyDown(event, index)}
+                        onPaste={(event) => handleCodePaste(event, index)}
+                        aria-label={`Digit ${index + 1} of 8`}
+                        aria-invalid={status === 'error'}
+                        required
+                      />
+                    ))}
+                  </div>
                   <small id="verification-code-hint">Enter all 8 numbers from the email.</small>
-                </label>
+                </fieldset>
 
                 {message && <p className={`verification-feedback${isErrorFeedback ? ' is-error' : isSuccessFeedback ? ' is-success' : ''}`} role={isErrorFeedback ? 'alert' : 'status'} aria-live={isErrorFeedback ? 'assertive' : 'polite'}>{message}</p>}
 
@@ -195,6 +245,7 @@ function EmailVerificationPage() {
                 </button>
               </form>
 
+              <p className="verification-spam-note">Before requesting another code, check your spam or junk folder.</p>
               <div className="verification-resend-row">
                 <span>Didn’t receive it?</span>
                 <form onSubmit={handleResend}>
