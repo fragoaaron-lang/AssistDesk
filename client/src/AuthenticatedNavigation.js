@@ -16,6 +16,8 @@ const adminLinks = [
   { label: 'Users', to: '/admin/reports?view=users', key: 'users', adminOnly: true },
 ];
 
+const requestPageRefresh = (page) => window.dispatchEvent(new CustomEvent('assistdesk:page-refresh', { detail: { page } }));
+
 function AuthenticatedNavigation({ user, subtitle, onUsersNavigate, mobileProfileContent, minimal = false }) {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -84,8 +86,12 @@ function AuthenticatedNavigation({ user, subtitle, onUsersNavigate, mobileProfil
         to={link.to}
         className={active ? 'is-current' : ''}
         aria-current={active ? 'page' : undefined}
-        onClick={() => {
+        onClick={(event) => {
           onUsersNavigate?.(link.key);
+          if (active && ['dashboard', 'tickets', 'profile'].includes(link.key)) {
+            event.preventDefault();
+            requestPageRefresh(link.key);
+          }
           if (mobile) closeMenu();
         }}
       >
@@ -113,7 +119,12 @@ function AuthenticatedNavigation({ user, subtitle, onUsersNavigate, mobileProfil
           )}
         </button>}
 
-        <Link className="header-brand header-brand-button" to="/dashboard" aria-label="AssistDesk dashboard">
+        <Link className="header-brand header-brand-button" to="/dashboard" aria-label="AssistDesk dashboard" onClick={(event) => {
+          if (location.pathname === '/dashboard') {
+            event.preventDefault();
+            requestPageRefresh('dashboard');
+          }
+        }}>
           <span className="brand-badge"><img src="/assistdesk-logo.svg" alt="" /></span>
           <span className="header-brand-copy">
             <strong>AssistDesk</strong>

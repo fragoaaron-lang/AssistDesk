@@ -137,6 +137,17 @@ function DashboardPage() {
     };
   }, [token, user?.account_status]);
 
+  useEffect(() => {
+    const refreshDashboard = (event) => {
+      if (event.detail?.page !== 'dashboard' || !token || user?.account_status === 'terminated') return;
+      setDashboardLoading(true);
+      loadData();
+    };
+
+    window.addEventListener('assistdesk:page-refresh', refreshDashboard);
+    return () => window.removeEventListener('assistdesk:page-refresh', refreshDashboard);
+  }, [token, user?.account_status]);
+
   const getHeatStrength = (count) => Math.min(0.98, 0.38 + (Number(count) * 0.16));
 
   const getVolumeLabel = (level) => {

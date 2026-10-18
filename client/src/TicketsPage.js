@@ -337,6 +337,18 @@ function TicketsPage() {
   }, [token]);
 
   useEffect(() => {
+    const refreshTickets = (event) => {
+      if (event.detail?.page !== 'tickets' || !token) return;
+      setTicketsLoading(true);
+      Promise.allSettled([loadTickets(), loadDepartments(), loadIssueGroups()])
+        .finally(() => setTicketsLoading(false));
+    };
+
+    window.addEventListener('assistdesk:page-refresh', refreshTickets);
+    return () => window.removeEventListener('assistdesk:page-refresh', refreshTickets);
+  }, [token]);
+
+  useEffect(() => {
     if (!token) return undefined;
     const socket = getSocket();
     if (!socket) return undefined;

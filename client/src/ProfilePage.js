@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from './AuthContext';
 import { API_BASE_URL } from './config';
 import AuthenticatedNavigation from './AuthenticatedNavigation';
@@ -97,6 +97,7 @@ function ProfilePage() {
   const [profileReadyKey, setProfileReadyKey] = useState(null);
   const profileUserKey = user ? (user.id ?? user.email ?? 'authenticated') : null;
   const profileLoading = !user || profileReadyKey !== profileUserKey;
+  const profileRefreshTimer = useRef(null);
   const [profilePhoto, setProfilePhoto] = useState(() => getProfilePhotoSource(user));
   const [studentNumber, setStudentNumber] = useState(() => user?.student_number || '');
   const [prefs, setPrefs] = useState(() => {
@@ -135,6 +136,27 @@ function ProfilePage() {
     studentNumber: user?.student_number || '',
   }));
 
+  const hydrateProfile = useCallback(() => {
+    if (!user) return;
+
+    const keyPhoto = getUserStorageKey(user, 'profile_photo');
+    const keyPrefs = getUserStorageKey(user, 'profile_prefs');
+    const storedPhoto = user.profile_picture || localStorage.getItem(keyPhoto) || '';
+    let storedPrefs = defaultPrefs;
+
+    try {
+      storedPrefs = { ...defaultPrefs, ...JSON.parse(localStorage.getItem(keyPrefs) || '{}') };
+    } catch (error) {
+      storedPrefs = defaultPrefs;
+    }
+
+    setSavedSnapshot({ prefs: storedPrefs, photo: storedPhoto, studentNumber: user.student_number || '' });
+    setProfilePhoto(storedPhoto);
+    setStudentNumber(user.student_number || '');
+    setPrefs(storedPrefs);
+    setProfileReadyKey(user.id ?? user.email ?? 'authenticated');
+  }, [user]);
+
   useEffect(() => {
     if (prefs.darkMode) {
       document.body.classList.add('dark-mode');
@@ -151,26 +173,26 @@ function ProfilePage() {
   }, [prefs.accent]);
 
   useEffect(() => {
-    if (!user) return;
+    hydrateProfile();
+  }, [hydrateProfile]);
 
-    const keyPhoto = getUserStorageKey(user, 'profile_photo');
-    const keyPrefs = getUserStorageKey(user, 'profile_prefs');
+  useEffect(() => {
+    const refreshProfile = (event) => {
+      if (event.detail?.page !== 'profile' || !user) return;
+      setProfileReadyKey(null);
+      if (profileRefreshTimer.current) window.clearTimeout(profileRefreshTimer.current);
+      profileRefreshTimer.current = window.setTimeout(() => {
+        hydrateProfile();
+        profileRefreshTimer.current = null;
+      }, 220);
+    };
 
-    const storedPhoto = user?.profile_picture || localStorage.getItem(keyPhoto) || '';
-    let storedPrefs = defaultPrefs;
-
-    try {
-      storedPrefs = { ...defaultPrefs, ...JSON.parse(localStorage.getItem(keyPrefs) || '{}') };
-    } catch (error) {
-      storedPrefs = defaultPrefs;
-    }
-
-    setSavedSnapshot({ prefs: storedPrefs, photo: storedPhoto, studentNumber: user.student_number || '' });
-    setProfilePhoto(storedPhoto);
-    setStudentNumber(user.student_number || '');
-    setPrefs(storedPrefs);
-    setProfileReadyKey(user.id ?? user.email ?? 'authenticated');
-  }, [user?.id, user?.email]);
+    window.addEventListener('assistdesk:page-refresh', refreshProfile);
+    return () => {
+      window.removeEventListener('assistdesk:page-refresh', refreshProfile);
+      if (profileRefreshTimer.current) window.clearTimeout(profileRefreshTimer.current);
+    };
+  }, [hydrateProfile, user]);
 
   useEffect(() => {
     if (!user) return;
