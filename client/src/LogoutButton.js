@@ -15,7 +15,7 @@ function LogoutButton({ onBeforeLogout, className = 'institutional-btn secondary
   return (
     <>
       <button type="button" className={`logout-button ${className}`} onClick={handleLogout} disabled={loggingOut}>
-        {loggingOut ? 'Logging out...' : 'Logout'}
+        {loggingOut ? 'Signing out...' : 'Sign out'}
       </button>
       {loggingOut && (
         <div className="logout-overlay" role="status" aria-live="polite">
@@ -23,7 +23,7 @@ function LogoutButton({ onBeforeLogout, className = 'institutional-btn secondary
             <div className="splash-logo-wrap"><img src="/assistdesk-logo.svg" alt="" /></div>
             <span className="splash-pulse" />
           </div>
-          <h1>Logging out</h1>
+          <h1>Signing out</h1>
           <p>Closing your AssistDesk session</p>
           <div className="splash-progress" aria-hidden="true"><span /></div>
         </div>
