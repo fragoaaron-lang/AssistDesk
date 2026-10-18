@@ -216,24 +216,19 @@ const deduplicateDepartments = (records) => {
   return [...unique.values()].sort((first, second) => first.display_name.localeCompare(second.display_name));
 };
 
-function TicketListSkeleton() {
+function TicketListSkeleton({ isTicketManager }) {
   return (
     <div className="ticket-record-list ticket-record-skeleton-list" role="status" aria-label="Loading tickets" aria-busy="true">
       <span className="report-skeleton-announcement">Loading tickets…</span>
-      {Array.from({ length: 6 }, (_, index) => (
-        <div className="ticket-record-button ticket-record-skeleton" key={index} aria-hidden="true">
-          <div className="ticket-record-topline">
-            <span className="surface-skeleton-block ticket-skeleton-code" />
-            <span className="surface-skeleton-block ticket-skeleton-pill" />
+      <div className="ticket-skeleton-folder-list" aria-hidden="true">
+        {Array.from({ length: isTicketManager ? 4 : 9 }, (_, index) => (
+          <div className="ticket-skeleton-folder" key={index}>
+            <span className="surface-skeleton-block ticket-skeleton-folder-icon" />
+            <span className="surface-skeleton-block ticket-skeleton-folder-name" />
+            <span className="surface-skeleton-block ticket-skeleton-folder-count" />
           </div>
-          <div className="ticket-record-issue"><span className="surface-skeleton-block ticket-skeleton-caption" /><span className="surface-skeleton-block ticket-skeleton-line" /></div>
-          <div className="ticket-record-issue"><span className="surface-skeleton-block ticket-skeleton-caption" /><span className="surface-skeleton-block ticket-skeleton-line is-long" /></div>
-          <div className="ticket-record-meta">
-            <span className="surface-skeleton-block ticket-skeleton-pill" />
-            <span className="surface-skeleton-block ticket-skeleton-date" />
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }
@@ -253,17 +248,17 @@ function TicketsPageSkeleton({ isTicketManager }) {
         </section>
       )}
       <section className="institutional-card ticket-list-card ticket-loading-card">
-        <div className="ticket-section-heading">
-          <div>
-            <h3>Loading tickets</h3>
-            <p>Your support requests are being refreshed.</p>
+        <div className="ticket-section-heading ticket-loading-heading" aria-hidden="true">
+          <div className="ticket-loading-heading-copy">
+            <span className="surface-skeleton-block ticket-loading-title" />
+            <span className="surface-skeleton-block ticket-loading-description" />
           </div>
           <span className="surface-skeleton-block ticket-count-skeleton" aria-hidden="true" />
         </div>
         <div className="ticket-view-tabs ticket-loading-tabs" aria-hidden="true">
           {[0, 1, 2].map((index) => <span className="surface-skeleton-block" key={index} />)}
         </div>
-        <TicketListSkeleton />
+        <TicketListSkeleton isTicketManager={isTicketManager} />
       </section>
     </div>
   );
@@ -919,7 +914,7 @@ function TicketsPage() {
               </button>
             ))}
           </div>
-          {ticketsLoading ? <TicketListSkeleton /> : visibleTickets.length === 0 ? (
+          {ticketsLoading ? <TicketListSkeleton isTicketManager={isTicketManager} /> : visibleTickets.length === 0 ? (
             <div className="ticket-empty-state" role="status">
               <strong>{ticketView === 'resolved' ? (isTicketManager ? 'No resolved tickets' : 'No resolved requests') : ticketView === 'active' ? (isTicketManager ? 'No active tickets' : 'No active requests') : statusFilter || priorityFilter ? 'No matching tickets' : isTicketManager ? 'No tickets to review' : 'No requests yet'}</strong>
               <p>{ticketView !== 'all' ? 'Tickets in this status group will appear here when available.' : statusFilter || priorityFilter ? 'Try adjusting the status or priority filter.' : isTicketManager ? 'New requests will appear here when they are submitted.' : 'Create a request above to start tracking progress with your support department.'}</p>

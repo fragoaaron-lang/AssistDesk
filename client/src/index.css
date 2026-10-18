@@ -4100,15 +4100,12 @@ body.dark-mode .map-ticket-detail-close {
 .ticket-record-button:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
 .ticket-record-topline,
 .ticket-record-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
-.ticket-record-skeleton-list { padding: 4px 0 12px; }
-.ticket-record-skeleton { cursor: default; }
-.ticket-record-skeleton:hover { border-color: var(--border); background: var(--surface); box-shadow: none; transform: none; }
-.ticket-skeleton-code { width: 84px; height: 11px; }
-.ticket-skeleton-pill { width: 58px; height: 21px; border-radius: 999px; }
-.ticket-skeleton-caption { width: 72px; height: 8px; }
-.ticket-skeleton-line { width: 64%; height: 11px; }
-.ticket-skeleton-line.is-long { width: 86%; }
-.ticket-skeleton-date { width: 74px; height: 9px; }
+.ticket-record-skeleton-list { grid-template-columns: minmax(0, 1fr); padding: 4px 0 12px; }
+.ticket-skeleton-folder-list { display: grid; gap: 10px; }
+.ticket-skeleton-folder { display: flex; min-width: 0; min-height: 52px; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-soft); }
+.ticket-skeleton-folder-icon { width: 18px; height: 13px; flex: 0 0 18px; }
+.ticket-skeleton-folder-name { width: min(42%, 220px); height: 12px; }
+.ticket-skeleton-folder-count { width: 30px; height: 22px; margin-left: auto; border-radius: 999px; }
 .ticket-count-skeleton { width: 66px; height: 13px; }
 .ticket-tab-count-skeleton { width: 20px; height: 14px; border-radius: 999px; }
 .ticket-list-count.is-loading { display: inline-flex; align-items: center; min-width: 66px; min-height: 14px; }
@@ -5476,6 +5473,9 @@ body.dark-mode .auth-modal-close {
 .ticket-form-skeleton-description { width: 100%; height: 92px; border: 1px solid var(--border); border-radius: 10px; }
 .ticket-form-skeleton-button { width: 142px; height: 42px; border-radius: 999px; }
 .ticket-loading-card .ticket-section-heading { margin-bottom: 14px; }
+.ticket-loading-heading-copy { display: grid; min-width: 0; gap: 7px; }
+.ticket-loading-title { width: min(200px, 44vw); height: 19px; }
+.ticket-loading-description { width: min(360px, 68vw); height: 11px; }
 .ticket-loading-tabs { gap: 8px; }
 .ticket-loading-tabs > span { width: 108px; height: 38px; border: 1px solid var(--border); border-radius: 999px; }
 
