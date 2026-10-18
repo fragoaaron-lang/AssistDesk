@@ -9,6 +9,8 @@ import { playLoginBell } from './audioUtils';
 function DashboardPage() {
   const { user, token } = useAuth();
   const [dashboard, setDashboard] = useState({ departments: [], services: [], announcements: [], stats: {} });
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [campusMapLoaded, setCampusMapLoaded] = useState(false);
   const [selectedMapTicket, setSelectedMapTicket] = useState(null);
   const [hoveredMapTicket, setHoveredMapTicket] = useState(null);
   const [showWelcomeSplash, setShowWelcomeSplash] = useState(() => sessionStorage.getItem('assistdesk_show_welcome_splash') === 'true');
@@ -81,6 +83,8 @@ function DashboardPage() {
       }
     } catch (error) {
       console.error('Error loading dashboard:', error);
+    } finally {
+      setDashboardLoading(false);
     }
   };
 
@@ -258,11 +262,23 @@ function DashboardPage() {
       <div className="page-shell">
         <AuthenticatedNavigation user={user} subtitle="Institutional support portal" />
 
-        <section className="dashboard-overview" aria-label="Dashboard status overview">
+        <section className="dashboard-overview" aria-label="Dashboard status overview" aria-busy={dashboardLoading}>
           <div className="overview-intro">
             <p className="eyebrow">Operations overview</p>
             <h2>Campus support at a glance</h2>
           </div>
+          {dashboardLoading ? (
+            <div className="overview-grid dashboard-summary-skeleton" role="status" aria-label="Loading dashboard ticket summary" aria-busy="true">
+              <span className="report-skeleton-announcement">Loading dashboard ticket summary…</span>
+              {[0, 1, 2, 3].map((index) => (
+                <div className={`overview-stat dashboard-stat-skeleton${index === 0 ? ' primary' : ''}`} key={index} aria-hidden="true">
+                  <span className="surface-skeleton-block dashboard-stat-label" />
+                  <span className="surface-skeleton-block dashboard-stat-value" />
+                  <span className="surface-skeleton-block dashboard-stat-detail" />
+                </div>
+              ))}
+            </div>
+          ) : (
           <div className="overview-grid">
             <a className="overview-stat primary" href="/tickets?status=open" aria-label={`View ${dashboardSummary.activeTickets} open tickets`}>
               <span className="overview-label">Open tickets</span>
@@ -285,6 +301,7 @@ function DashboardPage() {
               <small>{dashboardSummary.activeTickets > 0 ? 'Tickets are moving' : 'No open requests'}</small>
             </a>
           </div>
+          )}
         </section>
 
         <div id="campus-map" className="institutional-card" style={{ marginBottom: '20px' }}>
@@ -295,7 +312,7 @@ function DashboardPage() {
             </div>
             <div className="map-toolbar-pill">Live map</div>
           </div>
-          <div className="map-shell">
+          <div className="map-shell dashboard-map-shell" aria-busy={dashboardLoading || !campusMapLoaded}>
             <div className="map-frame campus-3d-frame">
               <iframe
                 ref={campusMapFrame}
@@ -303,8 +320,18 @@ function DashboardPage() {
                 title="Campus 3D map"
                 className="campus-map-embed"
                 loading="lazy"
-                onLoad={syncCampusMap}
+                onLoad={() => {
+                  setCampusMapLoaded(true);
+                  syncCampusMap();
+                }}
               />
+              {(dashboardLoading || !campusMapLoaded) && (
+                <div className="dashboard-map-skeleton" role="status" aria-label="Loading campus ticket map" aria-busy="true">
+                  <span className="report-skeleton-announcement">Loading campus ticket map…</span>
+                  <span className="surface-skeleton-block dashboard-map-skeleton-canvas" aria-hidden="true" />
+                  <span className="surface-skeleton-block dashboard-map-skeleton-label" aria-hidden="true" />
+                </div>
+              )}
             </div>
           </div>
         </div>

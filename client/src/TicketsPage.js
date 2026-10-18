@@ -216,6 +216,28 @@ const deduplicateDepartments = (records) => {
   return [...unique.values()].sort((first, second) => first.display_name.localeCompare(second.display_name));
 };
 
+function TicketListSkeleton() {
+  return (
+    <div className="ticket-record-list ticket-record-skeleton-list" role="status" aria-label="Loading tickets" aria-busy="true">
+      <span className="report-skeleton-announcement">Loading tickets…</span>
+      {Array.from({ length: 6 }, (_, index) => (
+        <div className="ticket-record-button ticket-record-skeleton" key={index} aria-hidden="true">
+          <div className="ticket-record-topline">
+            <span className="surface-skeleton-block ticket-skeleton-code" />
+            <span className="surface-skeleton-block ticket-skeleton-pill" />
+          </div>
+          <div className="ticket-record-issue"><span className="surface-skeleton-block ticket-skeleton-caption" /><span className="surface-skeleton-block ticket-skeleton-line" /></div>
+          <div className="ticket-record-issue"><span className="surface-skeleton-block ticket-skeleton-caption" /><span className="surface-skeleton-block ticket-skeleton-line is-long" /></div>
+          <div className="ticket-record-meta">
+            <span className="surface-skeleton-block ticket-skeleton-pill" />
+            <span className="surface-skeleton-block ticket-skeleton-date" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function TicketsPage() {
   const { token, user } = useAuth();
   const searchParams = new URLSearchParams(window.location.search);
@@ -223,6 +245,7 @@ function TicketsPage() {
   const priorityFilter = ['low', 'medium', 'urgent'].includes(searchParams.get('priority')) ? searchParams.get('priority') : '';
   const isTicketManager = ['admin', 'staff'].includes(user?.role);
   const [tickets, setTickets] = useState([]);
+  const [ticketsLoading, setTicketsLoading] = useState(true);
   const [departments, setDepartments] = useState([]);
   const [issueGroups, setIssueGroups] = useState([]);
   const [form, setForm] = useState({ subject: '', description: '', category: '', priority: 'medium', department_id: '' });
@@ -305,10 +328,12 @@ function TicketsPage() {
 
   useEffect(() => {
     if (token) {
-      loadTickets();
-      loadDepartments();
-      loadIssueGroups();
+      let isCurrent = true;
+      Promise.allSettled([loadTickets(), loadDepartments(), loadIssueGroups()])
+        .finally(() => { if (isCurrent) setTicketsLoading(false); });
+      return () => { isCurrent = false; };
     }
+    return undefined;
   }, [token]);
 
   useEffect(() => {
@@ -813,9 +838,11 @@ function TicketsPage() {
               <h3>{priorityFilter === 'urgent' ? 'Urgent tickets' : ticketView === 'resolved' ? (isTicketManager ? 'Resolved tickets' : 'Resolved requests') : ticketView === 'active' ? (isTicketManager ? 'Active tickets' : 'Active requests') : statusFilter === 'open' ? 'Open tickets' : 'Recent tickets'}</h3>
               <p>{isTicketManager ? 'Select a request to review details and manage its progress.' : 'Choose a department to follow the status of your requests.'}</p>
             </div>
-            <span className="ticket-list-count">{visibleTickets.length} {visibleTickets.length === 1 ? 'ticket' : 'tickets'}</span>
+            <span className={`ticket-list-count${ticketsLoading ? ' is-loading' : ''}`} aria-label={ticketsLoading ? 'Ticket count loading' : undefined}>
+              {ticketsLoading ? <span className="surface-skeleton-block ticket-count-skeleton" aria-hidden="true" /> : `${visibleTickets.length} ${visibleTickets.length === 1 ? 'ticket' : 'tickets'}`}
+            </span>
           </div>
-          <div className="ticket-view-tabs" role="group" aria-label={isTicketManager ? 'Filter tickets by status' : 'Filter your requests'}>
+          <div className="ticket-view-tabs" role="group" aria-label={isTicketManager ? 'Filter tickets by status' : 'Filter your requests'} aria-busy={ticketsLoading}>
             {[
               ['all', isTicketManager ? 'All tickets' : 'All requests'],
               ['active', 'Active'],
@@ -828,11 +855,11 @@ function TicketsPage() {
                 aria-pressed={ticketView === view}
                 onClick={() => setTicketView(view)}
               >
-                {label}<span>{ticketViewCounts[view]}</span>
+                {label}<span>{ticketsLoading ? <span className="surface-skeleton-block ticket-tab-count-skeleton" aria-hidden="true" /> : ticketViewCounts[view]}</span>
               </button>
             ))}
           </div>
-          {visibleTickets.length === 0 ? (
+          {ticketsLoading ? <TicketListSkeleton /> : visibleTickets.length === 0 ? (
             <div className="ticket-empty-state" role="status">
               <strong>{ticketView === 'resolved' ? (isTicketManager ? 'No resolved tickets' : 'No resolved requests') : ticketView === 'active' ? (isTicketManager ? 'No active tickets' : 'No active requests') : statusFilter || priorityFilter ? 'No matching tickets' : isTicketManager ? 'No tickets to review' : 'No requests yet'}</strong>
               <p>{ticketView !== 'all' ? 'Tickets in this status group will appear here when available.' : statusFilter || priorityFilter ? 'Try adjusting the status or priority filter.' : isTicketManager ? 'New requests will appear here when they are submitted.' : 'Create a request above to start tracking progress with your support department.'}</p>

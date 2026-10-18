@@ -52,8 +52,51 @@ const prepareProfilePhoto = (file) => new Promise((resolve, reject) => {
   reader.readAsDataURL(file);
 });
 
+function ProfilePageSkeleton() {
+  return (
+    <div className="profile-layout profile-page-skeleton" role="status" aria-label="Loading profile" aria-busy="true">
+      <span className="report-skeleton-announcement">Loading profile…</span>
+      <section className="institutional-card profile-account-card profile-skeleton-card" aria-hidden="true">
+        <span className="surface-skeleton-block profile-skeleton-heading" />
+        <span className="surface-skeleton-block profile-skeleton-description" />
+        <div className="profile-summary-row">
+          <span className="surface-skeleton-block profile-skeleton-avatar" />
+          <div className="profile-skeleton-user-meta">
+            <span className="surface-skeleton-block profile-skeleton-name" />
+            <span className="surface-skeleton-block profile-skeleton-meta" />
+            <span className="surface-skeleton-block profile-skeleton-meta is-short" />
+            <span className="surface-skeleton-block profile-skeleton-button" />
+          </div>
+        </div>
+      </section>
+      <div className="profile-panels-grid profile-skeleton-panels" aria-hidden="true">
+        <section className="institutional-card profile-section-card profile-skeleton-card">
+          <span className="surface-skeleton-block profile-skeleton-heading" />
+          <span className="surface-skeleton-block profile-skeleton-description" />
+          {[0, 1, 2, 3, 4].map((index) => <span className="surface-skeleton-block profile-skeleton-preference" key={index} />)}
+        </section>
+        <section className="institutional-card profile-section-card profile-skeleton-card">
+          <span className="surface-skeleton-block profile-skeleton-heading" />
+          <span className="surface-skeleton-block profile-skeleton-description" />
+          <span className="surface-skeleton-block profile-skeleton-button" />
+        </section>
+      </div>
+      <div className="institutional-card profile-section-card profile-skeleton-actions" aria-hidden="true">
+        <span className="surface-skeleton-block profile-skeleton-heading" />
+        <span className="surface-skeleton-block profile-skeleton-button" />
+      </div>
+      <div className="institutional-card profile-logout-card profile-skeleton-card" aria-hidden="true">
+        <span className="surface-skeleton-block profile-skeleton-button" />
+      </div>
+    </div>
+  );
+}
+
 function ProfilePage() {
   const { user, token, updateUserProfile } = useAuth();
+  const [profileReadyKey, setProfileReadyKey] = useState(null);
+  const profileUserKey = user ? (user.id ?? user.email ?? 'authenticated') : null;
+  const profileLoading = !user || profileReadyKey !== profileUserKey;
   const [profilePhoto, setProfilePhoto] = useState(() => getProfilePhotoSource(user));
   const [studentNumber, setStudentNumber] = useState(() => user?.student_number || '');
   const [prefs, setPrefs] = useState(() => {
@@ -126,6 +169,7 @@ function ProfilePage() {
     setProfilePhoto(storedPhoto);
     setStudentNumber(user.student_number || '');
     setPrefs(storedPrefs);
+    setProfileReadyKey(user.id ?? user.email ?? 'authenticated');
   }, [user?.id, user?.email]);
 
   useEffect(() => {
@@ -410,7 +454,7 @@ function ProfilePage() {
           </div>
         </div>
 
-        <div className="profile-layout">
+        {profileLoading ? <ProfilePageSkeleton /> : <div className="profile-layout">
           <div className="institutional-card profile-card profile-section-card profile-account-card" style={{ marginBottom: '20px' }}>
             <div className="profile-section-heading-copy"><h3>Account profile</h3><p>Your name and contact information used for support requests.</p></div>
             <div className="profile-summary-row">
@@ -593,7 +637,7 @@ function ProfilePage() {
           <div className="institutional-card profile-logout-card">
             <LogoutButton className="profile-logout-btn" />
           </div>
-        </div>
+        </div>}
 
         {showSaveDialog && (
           <div className="profile-save-dialog-backdrop" role="presentation" onClick={() => setShowSaveDialog(false)}>

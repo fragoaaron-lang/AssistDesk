@@ -1033,6 +1033,21 @@ button, input, select, textarea {
   gap: 20px;
 }
 
+.profile-page-skeleton { gap: 20px; }
+.profile-skeleton-card { display: grid; align-content: start; gap: 10px; }
+.profile-skeleton-heading { width: min(190px, 48%); height: 18px; }
+.profile-skeleton-description { width: min(420px, 78%); height: 11px; margin-bottom: 5px; }
+.profile-skeleton-avatar { width: 62px; height: 62px; flex: 0 0 62px; border-radius: 50%; }
+.profile-skeleton-user-meta { display: grid; width: min(390px, 100%); gap: 8px; }
+.profile-skeleton-name { width: min(230px, 70%); height: 17px; }
+.profile-skeleton-meta { width: min(290px, 84%); height: 11px; }
+.profile-skeleton-meta.is-short { width: min(190px, 58%); }
+.profile-skeleton-button { width: 112px; height: 34px; margin-top: 3px; border-radius: 999px; }
+.profile-skeleton-preference { width: 100%; height: 38px; border-bottom: 1px solid var(--border); border-radius: 0; }
+.profile-skeleton-actions { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.profile-skeleton-actions .profile-skeleton-heading { margin: 0; }
+body.dark-mode .profile-skeleton-preference { border-bottom-color: var(--border); }
+
 .profile-card {
   position: relative;
   background: linear-gradient(135deg, #ffffff 0%, #fbfdff 100%);
@@ -2012,6 +2027,14 @@ button, input, select, textarea {
   background-size: 220% 100%;
   animation: reportSkeletonShimmer 1.35s ease-in-out infinite;
 }
+.surface-skeleton-block {
+  display: block;
+  min-width: 0;
+  border-radius: 6px;
+  background: linear-gradient(100deg, #e2eaf0 18%, #f3f7fa 42%, #e2eaf0 66%);
+  background-size: 220% 100%;
+  animation: reportSkeletonShimmer 1.35s ease-in-out infinite;
+}
 @keyframes reportSkeletonShimmer {
   to { background-position-x: -220%; }
 }
@@ -2070,6 +2093,10 @@ button, input, select, textarea {
 .report-skeleton-table-row.is-heading > span { height: 10px; background-color: #dce6eb; }
 body.dark-mode .report-skeleton-block { background: linear-gradient(100deg, #263743 18%, #354956 42%, #263743 66%); background-size: 220% 100%; }
 body.dark-mode .report-skeleton-donut { border-color: #263743; background: transparent; }
+body.dark-mode .surface-skeleton-block { background: linear-gradient(100deg, #263743 18%, #354956 42%, #263743 66%); background-size: 220% 100%; }
+@media (prefers-reduced-motion: reduce) {
+  .surface-skeleton-block { animation: none; }
+}
 body.dark-mode .report-filter-dropdown-toggle strong { color: var(--text); }
 .audit-values-cell { max-width: 260px; max-height: 120px; overflow: auto; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font: 0.72rem/1.4 ui-monospace, SFMono-Regular, Consolas, monospace; }
 .report-chart:last-child { margin-bottom: 0; }
@@ -2869,6 +2896,22 @@ body.dark-mode .report-filter-dropdown-toggle strong { color: var(--text); }
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
 }
+
+.dashboard-stat-skeleton { pointer-events: none; }
+.dashboard-stat-skeleton.primary { border-color: rgba(18, 83, 110, 0.2); }
+.dashboard-stat-skeleton .surface-skeleton-block { background: linear-gradient(100deg, #dce8ed 18%, #f0f6f8 42%, #dce8ed 66%); background-size: 220% 100%; }
+.dashboard-stat-skeleton.primary .surface-skeleton-block { background: linear-gradient(100deg, rgba(255,255,255,0.22) 18%, rgba(255,255,255,0.42) 42%, rgba(255,255,255,0.22) 66%); background-size: 220% 100%; }
+.dashboard-stat-label { width: 62%; height: 10px; }
+.dashboard-stat-value { width: 36%; height: 30px; margin: 5px 0 2px; }
+.dashboard-stat-detail { width: 72%; height: 10px; }
+.dashboard-map-shell .map-frame { position: relative; }
+.dashboard-map-skeleton { position: absolute; inset: 0; z-index: 4; display: grid; place-items: center; overflow: hidden; background: #eef3f5; }
+.dashboard-map-skeleton-canvas { position: absolute; inset: 0; border-radius: 0; background: linear-gradient(135deg, #e5edf0 0%, #f3f7f8 48%, #e5edf0 100%); }
+.dashboard-map-skeleton-label { position: absolute; right: 16px; bottom: 16px; width: 92px; height: 24px; border: 1px solid rgba(105, 132, 145, 0.2); border-radius: 999px; }
+body.dark-mode .dashboard-stat-skeleton .surface-skeleton-block { background: linear-gradient(100deg, #263743 18%, #354956 42%, #263743 66%); background-size: 220% 100%; }
+body.dark-mode .dashboard-stat-skeleton.primary .surface-skeleton-block { background: linear-gradient(100deg, rgba(255,255,255,0.16) 18%, rgba(255,255,255,0.3) 42%, rgba(255,255,255,0.16) 66%); background-size: 220% 100%; }
+body.dark-mode .dashboard-map-skeleton { background: #14232d; }
+body.dark-mode .dashboard-map-skeleton-canvas { background: linear-gradient(135deg, #1d303b, #263a46 48%, #1d303b); }
 
 .dashboard-queue {
   display: grid;
@@ -4057,6 +4100,18 @@ body.dark-mode .map-ticket-detail-close {
 .ticket-record-button:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
 .ticket-record-topline,
 .ticket-record-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.ticket-record-skeleton-list { padding: 4px 0 12px; }
+.ticket-record-skeleton { cursor: default; }
+.ticket-record-skeleton:hover { border-color: var(--border); background: var(--surface); box-shadow: none; transform: none; }
+.ticket-skeleton-code { width: 84px; height: 11px; }
+.ticket-skeleton-pill { width: 58px; height: 21px; border-radius: 999px; }
+.ticket-skeleton-caption { width: 72px; height: 8px; }
+.ticket-skeleton-line { width: 64%; height: 11px; }
+.ticket-skeleton-line.is-long { width: 86%; }
+.ticket-skeleton-date { width: 74px; height: 9px; }
+.ticket-count-skeleton { width: 66px; height: 13px; }
+.ticket-tab-count-skeleton { width: 20px; height: 14px; border-radius: 999px; }
+.ticket-list-count.is-loading { display: inline-flex; align-items: center; min-width: 66px; min-height: 14px; }
 .ticket-record-topline strong { color: var(--navy); font-size: 0.8rem; letter-spacing: 0.025em; }
 .ticket-record-issue { display: grid; min-width: 0; gap: 2px; }
 .ticket-record-issue > small { color: var(--muted); font-size: 0.66rem; font-weight: 600; line-height: 1.25; }
