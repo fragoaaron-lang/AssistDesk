@@ -218,6 +218,40 @@ function ReportSectionSkeleton({ section }) {
   );
 }
 
+function UserDirectorySkeleton() {
+  return (
+    <section className="institutional-card user-directory-card user-directory-skeleton" role="status" aria-label="Loading users" aria-busy="true">
+      <span className="report-skeleton-announcement">Loading active and terminated user accounts…</span>
+      <div className="report-card-heading" aria-hidden="true">
+        <div className="user-directory-skeleton-heading">
+          <span className="surface-skeleton-block user-directory-skeleton-title" />
+          <span className="surface-skeleton-block user-directory-skeleton-description" />
+        </div>
+        <span className="surface-skeleton-block user-directory-skeleton-archive" />
+      </div>
+      <div className="ticket-skeleton-folder-list" aria-hidden="true">
+        {['Student', 'Faculty', 'Staff'].map((role) => (
+          <div className="ticket-skeleton-folder" key={role}>
+            <span className="surface-skeleton-block ticket-skeleton-folder-icon" />
+            <span className="surface-skeleton-block ticket-skeleton-folder-name" />
+            <span className="surface-skeleton-block ticket-skeleton-folder-count" />
+          </div>
+        ))}
+      </div>
+      <div className="user-directory-skeleton-table" aria-hidden="true">
+        <div className="user-directory-skeleton-table-head">
+          {[0, 1, 2, 3, 4, 5].map((column) => <span className="surface-skeleton-block" key={column} />)}
+        </div>
+        {[0, 1, 2, 3].map((row) => (
+          <div className="user-directory-skeleton-table-row" key={row}>
+            {[0, 1, 2, 3, 4, 5].map((column) => <span className="surface-skeleton-block" key={column} />)}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function AdminReportsPage() {
   const { token, user } = useAuth();
   const location = useLocation();
@@ -506,6 +540,26 @@ function AdminReportsPage() {
   };
 
   if (!reports) {
+    if (showUserDirectory) {
+      return (
+        <div className="app-shell">
+          <div className="page-shell">
+            <AuthenticatedNavigation user={user} subtitle="Administrative analytics" onUsersNavigate={(linkKey) => {
+              if (linkKey === 'users') loadReports();
+              if (linkKey === 'reports') setShowUserDirectory(false);
+            }} />
+            <div className="page-intro">
+              <div>
+                <h2>Users</h2>
+                <p>Manage active and terminated user accounts.</p>
+              </div>
+            </div>
+            {reportsLoadError && <p className="admin-feedback" role="alert">{reportsLoadError} <button type="button" className="institutional-btn small" onClick={() => loadReports()}>Try again</button></p>}
+            {reportsLoading && <UserDirectorySkeleton />}
+          </div>
+        </div>
+      );
+    }
     return (
       <main className="app-shell analytics-loading-shell">
         <section className="institutional-card analytics-loading" role={reportsLoadError ? 'alert' : 'status'} aria-live="polite" aria-busy={reportsLoading}>
@@ -525,7 +579,12 @@ function AdminReportsPage() {
           user={user}
           subtitle="Administrative analytics"
           onUsersNavigate={(linkKey) => {
-            if (linkKey === 'users') setShowUserDirectory(true);
+            if (linkKey === 'users') {
+              setShowUserDirectory(true);
+              setShowTerminatedUsers(false);
+              setMessage('');
+              loadReports();
+            }
             if (linkKey === 'reports') setShowUserDirectory(false);
           }}
         />
@@ -538,7 +597,9 @@ function AdminReportsPage() {
         </div>
         {message && <p className="admin-feedback" role="status" aria-live="polite">{message}</p>}
 
-        {showUserDirectory && (
+        {showUserDirectory && reportsLoading && <UserDirectorySkeleton />}
+
+        {showUserDirectory && !reportsLoading && (
           <section className="institutional-card user-directory-card">
             <div className="report-card-heading">
               <div>

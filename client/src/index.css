@@ -1048,6 +1048,29 @@ button, input, select, textarea {
 .profile-skeleton-actions .profile-skeleton-heading { margin: 0; }
 body.dark-mode .profile-skeleton-preference { border-bottom-color: var(--border); }
 
+.catalog-skeleton-grid { display: grid; gap: 20px; }
+.catalog-skeleton-card { display: grid; align-content: start; gap: 11px; }
+.catalog-skeleton-title { width: min(250px, 52%); height: 19px; }
+.catalog-skeleton-copy { width: min(470px, 82%); height: 11px; margin-bottom: 5px; }
+.catalog-skeleton-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 10px 14px; }
+.catalog-skeleton-fields > span { height: 42px; border: 1px solid var(--border); border-radius: 10px; }
+.catalog-skeleton-card:nth-of-type(4) .catalog-skeleton-fields > span:nth-child(2) { grid-column: span 2; height: 78px; }
+.catalog-skeleton-action { width: 138px; height: 40px; border-radius: 999px; }
+.catalog-skeleton-records { display: grid; gap: 8px; margin-top: 5px; }
+.catalog-skeleton-records > span { height: 54px; border: 1px solid var(--border); border-radius: 10px; }
+
+.user-directory-skeleton-heading { display: grid; gap: 8px; min-width: 0; }
+.user-directory-skeleton-title { width: min(190px, 48vw); height: 18px; }
+.user-directory-skeleton-description { width: min(360px, 68vw); height: 11px; }
+.user-directory-skeleton-archive { width: 44px; height: 44px; flex: 0 0 44px; border: 1px solid var(--border); border-radius: 8px; }
+.user-directory-skeleton-table { width: 100%; margin-top: 14px; overflow-x: auto; }
+.user-directory-skeleton-table-head,
+.user-directory-skeleton-table-row { display: grid; grid-template-columns: 1.1fr 1.4fr 1.2fr 0.9fr 0.7fr 0.8fr; align-items: center; gap: 14px; min-width: 720px; padding: 12px 8px; border-top: 1px solid var(--border); }
+.user-directory-skeleton-table-head { border-top: 0; }
+.user-directory-skeleton-table-head > span { height: 10px; }
+.user-directory-skeleton-table-row > span { height: 12px; }
+.user-directory-skeleton-table-row > span:nth-child(2n) { width: 78%; }
+
 .profile-card {
   position: relative;
   background: linear-gradient(135deg, #ffffff 0%, #fbfdff 100%);

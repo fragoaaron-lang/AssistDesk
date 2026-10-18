@@ -4,8 +4,32 @@ import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 import AuthenticatedNavigation from './AuthenticatedNavigation';
 
+function CatalogPageSkeleton() {
+  return (
+    <div className="catalog-skeleton-grid" role="status" aria-label="Loading catalog" aria-busy="true">
+      <span className="report-skeleton-announcement">Loading departments, services, issue options, and FAQs…</span>
+      {[0, 1, 2, 3].map((section) => (
+        <section className="institutional-card catalog-section-card catalog-skeleton-card" key={section} aria-hidden="true">
+          <span className="surface-skeleton-block catalog-skeleton-title" />
+          <span className="surface-skeleton-block catalog-skeleton-copy" />
+          <div className="catalog-skeleton-fields">
+            {Array.from({ length: section === 0 ? 6 : section === 2 ? 3 : 4 }, (_, index) => (
+              <span className="surface-skeleton-block" key={index} />
+            ))}
+          </div>
+          <span className="surface-skeleton-block catalog-skeleton-action" />
+          <div className="catalog-skeleton-records">
+            {[0, 1, 2].map((row) => <span className="surface-skeleton-block" key={row} />)}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
 function AdminCatalogPage() {
   const { token, user } = useAuth();
+  const [catalogLoading, setCatalogLoading] = useState(true);
   const [departments, setDepartments] = useState([]);
   const [services, setServices] = useState([]);
   const [issueGroups, setIssueGroups] = useState([]);
@@ -40,23 +64,38 @@ function AdminCatalogPage() {
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  const loadData = async () => {
-    const [deptRes, serviceRes, issueRes, faqRes] = await Promise.all([
-      api.get('/departments/manage'),
-      api.get('/services'),
-      api.get('/issues'),
-      api.get('/faqs'),
-    ]);
-    setDepartments(deptRes.data.departments || []);
-    setServices(serviceRes.data.services || []);
-    setIssueGroups(issueRes.data.generalIssues || []);
-    setFaqs(faqRes.data.faqs || []);
+  const loadData = async (showSkeleton = false) => {
+    if (showSkeleton) setCatalogLoading(true);
+    try {
+      const [deptRes, serviceRes, issueRes, faqRes] = await Promise.all([
+        api.get('/departments/manage'),
+        api.get('/services'),
+        api.get('/issues'),
+        api.get('/faqs'),
+      ]);
+      setDepartments(deptRes.data.departments || []);
+      setServices(serviceRes.data.services || []);
+      setIssueGroups(issueRes.data.generalIssues || []);
+      setFaqs(faqRes.data.faqs || []);
+    } finally {
+      if (showSkeleton) setCatalogLoading(false);
+    }
   };
 
   useEffect(() => {
     if (token) {
-      loadData().catch(() => setMessage('Failed to load admin catalog data.'));
+      loadData(true).catch(() => setMessage('Failed to load admin catalog data.'));
     }
+  }, [token]);
+
+  useEffect(() => {
+    const refreshCatalog = (event) => {
+      if (event.detail?.page !== 'catalog' || !token) return;
+      loadData(true).catch(() => setMessage('Failed to load admin catalog data.'));
+    };
+
+    window.addEventListener('assistdesk:page-refresh', refreshCatalog);
+    return () => window.removeEventListener('assistdesk:page-refresh', refreshCatalog);
   }, [token]);
 
   const createDepartment = async (e) => {
@@ -154,6 +193,7 @@ function AdminCatalogPage() {
 
         {message && <p className="catalog-feedback" role="status">{message}</p>}
 
+        {catalogLoading ? <CatalogPageSkeleton /> : <>
         <div className="institutional-card catalog-section-card" style={{ marginBottom: '20px' }}>
           <div className="catalog-section-heading">
             <div>
@@ -316,6 +356,7 @@ function AdminCatalogPage() {
             ))}
           </div>
         </div>
+        </>}
       </div>
     </div>
   );

@@ -92,6 +92,11 @@ function AuthenticatedNavigation({ user, subtitle, onUsersNavigate, mobileProfil
             event.preventDefault();
             requestPageRefresh(link.key);
           }
+          if (active && link.key === 'catalog') {
+            event.preventDefault();
+            requestPageRefresh('catalog');
+          }
+          if (active && link.key === 'users') event.preventDefault();
           if (mobile) closeMenu();
         }}
       >
