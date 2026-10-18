@@ -13,7 +13,9 @@ function EmailVerificationPage() {
   const previousStatusRef = useRef('waiting');
   const [status, setStatus] = useState('waiting');
   const [message, setMessage] = useState('');
-  const [email, setEmail] = useState(() => location.state?.email || '');
+  const [email] = useState(() => String(
+    location.state?.email || sessionStorage.getItem('assistdesk_pending_verification_email') || ''
+  ).trim().toLowerCase());
   const [codeDigits, setCodeDigits] = useState(() => Array(8).fill(''));
   const code = codeDigits.join('');
   const [resendState, setResendState] = useState('idle');
@@ -118,6 +120,7 @@ function EmailVerificationPage() {
 
     try {
       await completeEmailVerification(email, code);
+      sessionStorage.removeItem('assistdesk_pending_verification_email');
       setStatus('success');
       setMessage('Your email is confirmed. Taking you to your support workspace…');
       redirectTimerRef.current = window.setTimeout(() => navigate('/dashboard', { replace: true }), 1400);
@@ -192,7 +195,9 @@ function EmailVerificationPage() {
             <h2 id="verification-title">{status === 'success' ? 'You’re verified' : status === 'error' ? 'Let’s try that again' : 'Enter your verification code'}</h2>
             <p>{status === 'success'
               ? 'Your account is ready. We’re taking you to your support workspace.'
-              : 'We sent an 8-digit code to your email. Enter it below to activate your account.'}</p>
+              : email
+                ? 'We sent an 8-digit code to the registered address below. Enter it to activate your account.'
+                : 'We couldn’t find the registration email for this verification. Return to sign in and start again.'}</p>
           </div>
 
           {status === 'success' ? (
@@ -206,10 +211,10 @@ function EmailVerificationPage() {
           ) : (
             <>
               <form className="verification-form" onSubmit={handleVerify}>
-                <label className="verification-field" htmlFor="verification-email">
-                  <span>Email address</span>
-                  <input id="verification-email" className="institutional-input" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
-                </label>
+                <div className={`verification-recipient${email ? '' : ' is-missing'}`} aria-label={email ? `Verification code sent to ${email}` : 'Registration email unavailable'}>
+                  <span>{email ? 'Verification code sent to' : 'Registration email unavailable'}</span>
+                  <strong>{email || 'Return to sign in and restart registration.'}</strong>
+                </div>
                 <fieldset className="verification-field verification-code-field" aria-describedby="verification-code-hint">
                   <legend>8-digit code</legend>
                   <div className="verification-code-grid" role="group" aria-label="8-digit verification code">
@@ -238,7 +243,7 @@ function EmailVerificationPage() {
 
                 {message && <p className={`verification-feedback${isErrorFeedback ? ' is-error' : isSuccessFeedback ? ' is-success' : ''}`} role={isErrorFeedback ? 'alert' : 'status'} aria-live={isErrorFeedback ? 'assertive' : 'polite'}>{message}</p>}
 
-                <button type="submit" className="institutional-btn verification-submit" disabled={status === 'verifying' || resendState === 'sending' || code.length !== 8 || !email.trim()}>
+                <button type="submit" className="institutional-btn verification-submit" disabled={status === 'verifying' || resendState === 'sending' || code.length !== 8 || !email}>
                   {status === 'verifying' && <span className="verification-button-spinner" aria-hidden="true" />}
                   {status === 'verifying' ? 'Checking code…' : 'Verify email'}
                   {status !== 'verifying' && <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11m-4-4 4 4-4 4" /></svg>}
@@ -249,7 +254,7 @@ function EmailVerificationPage() {
               <div className="verification-resend-row">
                 <span>Didn’t receive it?</span>
                 <form onSubmit={handleResend}>
-                  <button type="submit" className="verification-text-button" disabled={resendState === 'sending' || status === 'verifying' || !email.trim()}>
+                  <button type="submit" className="verification-text-button" disabled={resendState === 'sending' || status === 'verifying' || !email}>
                     {resendState === 'sending' ? 'Sending…' : resendState === 'sent' ? 'Send another code' : 'Resend code'}
                   </button>
                 </form>

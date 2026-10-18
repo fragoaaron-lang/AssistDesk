@@ -226,7 +226,9 @@ function RegisterPage({ modal = false, onSwitch }) {
     try {
       const name = `${firstName.trim()} ${middleInitial.toUpperCase()}. ${lastName.trim()}`;
       await register(name, email, password, role, departmentId, studentNumber);
-      navigate('/verify-email');
+      const verificationEmail = email.trim().toLowerCase();
+      sessionStorage.setItem('assistdesk_pending_verification_email', verificationEmail);
+      navigate('/verify-email', { state: { email: verificationEmail } });
     } catch (error) {
       const timeoutMessage = error.code === 'ECONNABORTED'
         ? 'Registration email delivery timed out. Please try again or contact support.'

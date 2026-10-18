@@ -1707,6 +1707,12 @@ body.dark-mode .profile-skeleton-preference { border-bottom-color: var(--border)
 .verification-panel-heading p { margin: 0; color: #526b7a; font-size: 0.9rem; line-height: 1.65; }
 
 .verification-form { display: grid; gap: 19px; width: 100%; max-width: 470px; }
+.verification-recipient { display: grid; gap: 4px; min-width: 0; padding: 12px 14px; border: 1px solid #dce6ee; border-radius: 9px; background: #f3f7fb; }
+.verification-recipient > span { color: #5f7482; font-size: 0.7rem; font-weight: 650; }
+.verification-recipient > strong { overflow-wrap: anywhere; color: #163548; font-size: 0.88rem; font-weight: 700; }
+.verification-recipient.is-missing { border-color: #e8c5c1; background: #fff7f6; }
+.verification-recipient.is-missing > span,
+.verification-recipient.is-missing > strong { color: #8f3029; }
 .verification-field { display: grid; min-width: 0; gap: 7px; color: #163548; font-size: 0.78rem; font-weight: 700; }
 .verification-code-field { min-inline-size: 0; margin: 0; padding: 0; border: 0; }
 .verification-code-field legend { margin-bottom: 7px; padding: 0; color: #163548; font-size: 0.78rem; font-weight: 700; }
@@ -1765,6 +1771,12 @@ body.dark-mode .verification-panel-heading h2,
 body.dark-mode .verification-field { color: #edf7fa; }
 body.dark-mode .verification-panel-heading p,
 body.dark-mode .verification-field > small { color: #b9c8d0; }
+body.dark-mode .verification-recipient { border-color: #354b58; background: #152630; }
+body.dark-mode .verification-recipient > span { color: #b9c8d0; }
+body.dark-mode .verification-recipient > strong { color: #edf7fa; }
+body.dark-mode .verification-recipient.is-missing { border-color: #71423f; background: #2a1d1d; }
+body.dark-mode .verification-recipient.is-missing > span,
+body.dark-mode .verification-recipient.is-missing > strong { color: #ffaaa5; }
 body.dark-mode .verification-field .institutional-input { border-color: #354b58; background: #152630; color: #edf7fa; }
 body.dark-mode .verification-field .institutional-input:focus { border-color: #78c5c4; outline-color: rgba(120, 197, 196, 0.18); }
 body.dark-mode .verification-step-label,

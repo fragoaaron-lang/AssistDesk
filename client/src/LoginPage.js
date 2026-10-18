@@ -41,7 +41,9 @@ function LoginPage({ modal = false, onSwitch }) {
       navigate('/dashboard');
     } catch (error) {
       if (error.response?.status === 403 && error.response?.data?.message === 'Please verify your email address before signing in.') {
-        navigate('/verify-email', { state: { email: email.trim() } });
+        const verificationEmail = email.trim().toLowerCase();
+        sessionStorage.setItem('assistdesk_pending_verification_email', verificationEmail);
+        navigate('/verify-email', { state: { email: verificationEmail } });
         return;
       }
       setMessage(error.response?.data?.message || 'Login failed.');
