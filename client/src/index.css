@@ -1600,6 +1600,180 @@ body.dark-mode .profile-skeleton-preference { border-bottom-color: var(--border)
   max-width: 860px;
 }
 
+.auth-shell.verification-shell {
+  position: relative;
+  align-items: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: clamp(16px, 3vw, 40px);
+  background:
+    radial-gradient(ellipse at 12% 12%, rgba(31, 111, 120, 0.1), transparent 32%),
+    linear-gradient(135deg, #f4f8fa, #eaf2f5);
+}
+
+.verification-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.86fr) minmax(0, 1.14fr);
+  width: min(1120px, 100%);
+  min-height: min(690px, calc(100dvh - 80px));
+  overflow: hidden;
+  border: 1px solid rgba(15, 45, 82, 0.1);
+  border-radius: 26px;
+  background: #fff;
+  box-shadow: 0 28px 80px rgba(8, 32, 56, 0.16);
+}
+
+.verification-story {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 32px;
+  overflow: hidden;
+  padding: clamp(28px, 4vw, 48px);
+  background: linear-gradient(148deg, #082038 0%, #0f2d52 58%, #145d69 100%);
+  color: #fff;
+  isolation: isolate;
+}
+
+.verification-story::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background-image: linear-gradient(rgba(191, 228, 226, 0.055) 1px, transparent 1px), linear-gradient(90deg, rgba(191, 228, 226, 0.055) 1px, transparent 1px);
+  background-size: 32px 32px;
+  content: '';
+  mask-image: linear-gradient(145deg, #000, transparent 82%);
+}
+
+.verification-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  width: fit-content;
+  color: #fff;
+  text-decoration: none;
+}
+
+.verification-brand-mark {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.verification-brand-mark img { display: block; width: 100%; height: 100%; border-radius: 9px; object-fit: cover; }
+.verification-brand > span:last-child { display: grid; gap: 3px; }
+.verification-brand strong { font-size: 1rem; letter-spacing: -0.02em; }
+.verification-brand small { color: #c5d8df; font-size: 0.7rem; }
+.verification-brand:focus-visible { outline: 3px solid #ffd35a; outline-offset: 5px; border-radius: 4px; }
+
+.verification-story-copy { max-width: 390px; }
+.verification-story-copy h1 { margin: 0 0 14px; color: #fff; font-size: clamp(2.25rem, 4vw, 3.25rem); line-height: 1.04; letter-spacing: -0.045em; }
+.verification-story-copy p { max-width: 38ch; margin: 0; color: #d1e0e5; font-size: 0.98rem; line-height: 1.65; }
+
+.verification-route-wrap { position: relative; }
+.verification-route { display: grid; gap: 19px; margin: 0; padding: 0; list-style: none; }
+.verification-route-line { position: absolute; top: 18px; bottom: 18px; left: 17px; width: 2px; background: rgba(191, 228, 226, 0.28); }
+.verification-route-line-fill { display: block; width: 100%; height: 100%; transform: scaleY(0.66); transform-origin: top center; background: #ffd35a; }
+.verification-route-wrap.is-complete .verification-route-line-fill { transform: scaleY(1); }
+.verification-route-step { position: relative; display: flex; align-items: center; gap: 13px; min-width: 0; }
+.verification-route-node { display: grid; width: 36px; height: 36px; flex: 0 0 36px; place-items: center; border: 1px solid rgba(191, 228, 226, 0.55); border-radius: 50%; background: #0f2d52; color: #d6e7eb; font-size: 0.7rem; font-weight: 750; font-variant-numeric: tabular-nums; }
+.verification-route-node svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.verification-route-step.is-complete .verification-route-node { border-color: #ffd35a; background: #ffd35a; color: #082038; }
+.verification-route-step.is-active .verification-route-node { border-color: #ffd35a; box-shadow: 0 0 0 4px rgba(255, 211, 90, 0.12); color: #ffd35a; }
+.verification-route-step.is-complete.is-active .verification-route-node { background: #ffd35a; color: #082038; }
+.verification-route-step > span:last-child { display: grid; min-width: 0; gap: 2px; }
+.verification-route-step strong { color: #f6fbfc; font-size: 0.84rem; }
+.verification-route-step small { color: #b9ced6; font-size: 0.72rem; }
+.verification-story-note { margin: 0; color: #b9ced6; font-size: 0.76rem; line-height: 1.5; }
+
+.verification-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: clamp(30px, 5.5vw, 72px);
+  background: #fff;
+}
+
+.verification-panel-heading { max-width: 490px; margin-bottom: 30px; }
+.verification-step-label { display: inline-flex; margin-bottom: 13px; color: #1f6f78; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.13em; }
+.verification-panel-heading h2 { margin: 0 0 9px; color: #0f2d52; font-size: clamp(1.8rem, 3vw, 2.45rem); line-height: 1.12; letter-spacing: -0.04em; }
+.verification-panel-heading p { margin: 0; color: #526b7a; font-size: 0.9rem; line-height: 1.65; }
+
+.verification-form { display: grid; gap: 19px; width: 100%; max-width: 470px; }
+.verification-field { display: grid; min-width: 0; gap: 7px; color: #163548; font-size: 0.78rem; font-weight: 700; }
+.verification-field .institutional-input { min-width: 0; min-height: 49px; margin: 0; border-color: #d4e0e7; border-radius: 9px; background: #fbfdfe; color: #163548; }
+.verification-field .institutional-input:focus { border-color: #1f6f78; outline: 3px solid rgba(31, 111, 120, 0.14); }
+.verification-code-input { min-height: 64px !important; text-align: center; font-size: clamp(1.35rem, 3vw, 1.75rem); font-weight: 700; letter-spacing: 0.42em; font-variant-numeric: tabular-nums; }
+.verification-field > small { color: #5f7482; font-size: 0.72rem; font-weight: 450; line-height: 1.45; }
+.verification-feedback { margin: -7px 0 0; color: #526b7a; font-size: 0.78rem; line-height: 1.5; }
+.verification-feedback.is-error { color: #9b3027; }
+.verification-feedback.is-success { color: #176b4a; }
+.verification-submit { display: inline-flex; width: 100%; min-height: 50px; align-items: center; justify-content: center; gap: 10px; border-radius: 9px; }
+.verification-submit svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.verification-submit:disabled { cursor: not-allowed; opacity: 0.62; }
+.verification-button-spinner { width: 16px; height: 16px; border: 2px solid rgba(255, 255, 255, 0.4); border-top-color: #fff; border-radius: 50%; animation: verification-spin 0.75s linear infinite; }
+@keyframes verification-spin { to { transform: rotate(360deg); } }
+
+.verification-resend-row { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 22px; color: #5f7482; font-size: 0.78rem; }
+.verification-resend-row form { display: inline; margin: 0; }
+.verification-text-button,
+.verification-back-link { padding: 3px 0; border: 0; background: transparent; color: #176b72; font: inherit; font-weight: 750; text-decoration: underline; text-decoration-color: rgba(23, 107, 114, 0.4); text-underline-offset: 3px; cursor: pointer; }
+.verification-text-button:hover:not(:disabled),
+.verification-back-link:hover { color: #0f2d52; text-decoration-color: currentColor; }
+.verification-text-button:disabled { color: #82939d; cursor: wait; }
+.verification-back-link { width: fit-content; margin-top: 19px; color: #5f7482; font-size: 0.78rem; font-weight: 600; }
+.verification-success-state { display: grid; justify-items: start; gap: 10px; max-width: 430px; color: #526b7a; font-size: 0.82rem; line-height: 1.55; }
+.verification-success-mark { display: grid; width: 52px; height: 52px; place-items: center; border: 1px solid #a9d8c1; border-radius: 50%; background: #eaf7ef; color: #176b4a; }
+.verification-success-mark svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.verification-success-state strong { color: #163548; font-size: 1rem; }
+.verification-success-state > span:last-child { color: #526b7a; }
+
+@media (max-width: 760px) {
+  .auth-shell.verification-shell { align-items: start; padding: 14px; }
+  .verification-layout { grid-template-columns: minmax(0, 1fr); min-height: 0; width: min(560px, 100%); margin: auto; border-radius: 20px; }
+  .verification-story { gap: 24px; padding: 26px clamp(20px, 6vw, 34px); }
+  .verification-story-copy h1 { max-width: 15ch; font-size: clamp(2rem, 8vw, 2.7rem); }
+  .verification-route { gap: 14px; }
+  .verification-panel { padding: 30px clamp(20px, 6vw, 38px) 34px; }
+}
+
+@media (max-width: 380px) {
+  .auth-shell.verification-shell { padding: 8px; }
+  .verification-layout { border-radius: 16px; }
+  .verification-story { padding: 22px 18px; }
+  .verification-panel { padding: 26px 18px; }
+  .verification-panel-heading { margin-bottom: 22px; }
+  .verification-code-input { letter-spacing: 0.3em; }
+}
+
+body.dark-mode .verification-layout { border-color: #2d4351; background: #101e28; }
+body.dark-mode .verification-panel { background: #101e28; }
+body.dark-mode .verification-panel-heading h2,
+body.dark-mode .verification-field { color: #edf7fa; }
+body.dark-mode .verification-panel-heading p,
+body.dark-mode .verification-field > small { color: #b9c8d0; }
+body.dark-mode .verification-field .institutional-input { border-color: #354b58; background: #152630; color: #edf7fa; }
+body.dark-mode .verification-field .institutional-input:focus { border-color: #78c5c4; outline-color: rgba(120, 197, 196, 0.18); }
+body.dark-mode .verification-step-label,
+body.dark-mode .verification-text-button { color: #8bd6d2; }
+body.dark-mode .verification-feedback { color: #c2d0d6; }
+body.dark-mode .verification-feedback.is-error { color: #ffaaa5; }
+body.dark-mode .verification-feedback.is-success { color: #8fe0b5; }
+body.dark-mode .verification-success-mark { border-color: #326c51; background: #153c2a; color: #9be0b8; }
+body.dark-mode .verification-success-state strong { color: #edf7fa; }
+body.dark-mode .verification-success-state > span:last-child { color: #b9c8d0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .verification-button-spinner { animation-duration: 1.5s; }
+}
+
 .verification-form {
   display: grid;
   gap: 18px;
