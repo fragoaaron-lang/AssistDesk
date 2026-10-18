@@ -238,6 +238,37 @@ function TicketListSkeleton() {
   );
 }
 
+function TicketsPageSkeleton({ isTicketManager }) {
+  return (
+    <div className="ticket-page-skeleton">
+      {!isTicketManager && (
+        <section className="institutional-card ticket-form-card ticket-form-skeleton" aria-hidden="true">
+          <span className="surface-skeleton-block ticket-form-skeleton-heading" />
+          <span className="surface-skeleton-block ticket-form-skeleton-copy" />
+          <div className="ticket-form-skeleton-fields">
+            {[0, 1, 2, 3].map((index) => <span className="surface-skeleton-block" key={index} />)}
+          </div>
+          <span className="surface-skeleton-block ticket-form-skeleton-description" />
+          <span className="surface-skeleton-block ticket-form-skeleton-button" />
+        </section>
+      )}
+      <section className="institutional-card ticket-list-card ticket-loading-card">
+        <div className="ticket-section-heading">
+          <div>
+            <h3>Loading tickets</h3>
+            <p>Your support requests are being refreshed.</p>
+          </div>
+          <span className="surface-skeleton-block ticket-count-skeleton" aria-hidden="true" />
+        </div>
+        <div className="ticket-view-tabs ticket-loading-tabs" aria-hidden="true">
+          {[0, 1, 2].map((index) => <span className="surface-skeleton-block" key={index} />)}
+        </div>
+        <TicketListSkeleton />
+      </section>
+    </div>
+  );
+}
+
 function TicketsPage() {
   const { token, user } = useAuth();
   const searchParams = new URLSearchParams(window.location.search);
@@ -269,6 +300,8 @@ function TicketsPage() {
   const [routingSelection, setRoutingSelection] = useState('');
   const [routingReason, setRoutingReason] = useState('');
   const uploadErrorTimeoutRef = useRef(null);
+  const ticketLoadCycleRef = useRef(0);
+  const ticketLoadingTimerRef = useRef(null);
 
   useEffect(() => {
     const hasTicketOverlay = Boolean(selectedTicket || previewImage)
@@ -326,22 +359,35 @@ function TicketsPage() {
     }
   };
 
+  const loadTicketWorkspace = () => {
+    const requestId = ++ticketLoadCycleRef.current;
+    const startedAt = Date.now();
+    if (ticketLoadingTimerRef.current) window.clearTimeout(ticketLoadingTimerRef.current);
+    setTicketsLoading(true);
+    Promise.allSettled([loadTickets(), loadDepartments(), loadIssueGroups()]).finally(() => {
+      if (requestId !== ticketLoadCycleRef.current) return;
+      const minimumSkeletonTime = 400;
+      const remaining = Math.max(0, minimumSkeletonTime - (Date.now() - startedAt));
+      ticketLoadingTimerRef.current = window.setTimeout(() => {
+        if (requestId === ticketLoadCycleRef.current) setTicketsLoading(false);
+        ticketLoadingTimerRef.current = null;
+      }, remaining);
+    });
+  };
+
   useEffect(() => {
-    if (token) {
-      let isCurrent = true;
-      Promise.allSettled([loadTickets(), loadDepartments(), loadIssueGroups()])
-        .finally(() => { if (isCurrent) setTicketsLoading(false); });
-      return () => { isCurrent = false; };
-    }
-    return undefined;
+    if (!token) return undefined;
+    loadTicketWorkspace();
+    return () => {
+      ticketLoadCycleRef.current += 1;
+      if (ticketLoadingTimerRef.current) window.clearTimeout(ticketLoadingTimerRef.current);
+    };
   }, [token]);
 
   useEffect(() => {
     const refreshTickets = (event) => {
       if (event.detail?.page !== 'tickets' || !token) return;
-      setTicketsLoading(true);
-      Promise.allSettled([loadTickets(), loadDepartments(), loadIssueGroups()])
-        .finally(() => setTicketsLoading(false));
+      loadTicketWorkspace();
     };
 
     window.addEventListener('assistdesk:page-refresh', refreshTickets);
@@ -759,6 +805,8 @@ function TicketsPage() {
           </div>
         </div>
 
+        {ticketsLoading ? <TicketsPageSkeleton isTicketManager={isTicketManager} /> : (
+        <>
         {user?.role !== 'admin' && (
           <div id="ticket-request-form" className={`institutional-card ticket-form-card ${submissionState.status === 'loading' ? 'is-submitting' : ''}`} style={{ marginBottom: '20px' }}>
             <div className="ticket-form-heading">
@@ -928,6 +976,8 @@ function TicketsPage() {
           </div>
           )}
         </div>
+        </>
+        )}
         {selectedTicket && (
           <div className="ticket-detail-modal-backdrop" role="presentation" onMouseDown={() => setSelectedTicket(null)}>
             <div className="ticket-detail-modal" role="dialog" aria-modal="true" aria-labelledby="ticket-detail-title" onMouseDown={(event) => event.stopPropagation()}>

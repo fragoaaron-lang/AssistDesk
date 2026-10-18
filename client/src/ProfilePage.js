@@ -173,7 +173,8 @@ function ProfilePage() {
   }, [prefs.accent]);
 
   useEffect(() => {
-    hydrateProfile();
+    const hydrationTimer = window.setTimeout(hydrateProfile, 400);
+    return () => window.clearTimeout(hydrationTimer);
   }, [hydrateProfile]);
 
   useEffect(() => {
@@ -184,7 +185,7 @@ function ProfilePage() {
       profileRefreshTimer.current = window.setTimeout(() => {
         hydrateProfile();
         profileRefreshTimer.current = null;
-      }, 220);
+      }, 400);
     };
 
     window.addEventListener('assistdesk:page-refresh', refreshProfile);
