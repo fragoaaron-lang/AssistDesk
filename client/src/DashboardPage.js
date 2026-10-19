@@ -5,14 +5,11 @@ import { useAuth } from './AuthContext';
 import { getSocket } from './socket';
 import AuthenticatedNavigation from './AuthenticatedNavigation';
 import { playLoginBell } from './audioUtils';
-import ActivityHistoryList from './ActivityHistory';
 
 function DashboardPage() {
   const { user, token } = useAuth();
   const [dashboard, setDashboard] = useState({ departments: [], services: [], announcements: [], stats: {} });
   const [dashboardLoading, setDashboardLoading] = useState(true);
-  const [recentActivity, setRecentActivity] = useState([]);
-  const [activityLoading, setActivityLoading] = useState(true);
   const [campusMapLoaded, setCampusMapLoaded] = useState(false);
   const [selectedMapTicket, setSelectedMapTicket] = useState(null);
   const [hoveredMapTicket, setHoveredMapTicket] = useState(null);
@@ -72,22 +69,6 @@ function DashboardPage() {
       }))
     ));
   }, [dashboard.tickets, visibleDepartments]);
-
-  const loadRecentActivity = useCallback(async () => {
-    if (!token) return;
-    setActivityLoading(true);
-    try {
-      const response = await axios.get(`${API_BASE_URL}/api/auth/activity`, {
-        headers: { Authorization: `Bearer ${token}` },
-        params: { limit: 4 },
-      });
-      setRecentActivity(response.data.activity || []);
-    } catch (error) {
-      console.error('Error loading personal activity:', error);
-    } finally {
-      setActivityLoading(false);
-    }
-  }, [token]);
 
   const loadData = async () => {
     try {
@@ -154,7 +135,7 @@ function DashboardPage() {
       socket.off('ticketEtaExpired', loadData);
       socket.off('announcementCreated', loadData);
     };
-  }, [token, user?.account_status, loadRecentActivity]);
+  }, [token, user?.account_status]);
 
   useEffect(() => {
     const refreshDashboard = (event) => {
@@ -165,17 +146,7 @@ function DashboardPage() {
 
     window.addEventListener('assistdesk:page-refresh', refreshDashboard);
     return () => window.removeEventListener('assistdesk:page-refresh', refreshDashboard);
-  }, [token, user?.account_status, loadRecentActivity]);
-
-  useEffect(() => {
-    if (!token || user?.account_status === 'terminated') return undefined;
-    loadRecentActivity();
-    const refreshActivity = (event) => {
-      if (event.detail?.page === 'dashboard') loadRecentActivity();
-    };
-    window.addEventListener('assistdesk:page-refresh', refreshActivity);
-    return () => window.removeEventListener('assistdesk:page-refresh', refreshActivity);
-  }, [token, user?.account_status, loadRecentActivity]);
+  }, [token, user?.account_status]);
 
   const getHeatStrength = (count) => Math.min(0.98, 0.38 + (Number(count) * 0.16));
 
@@ -333,7 +304,6 @@ function DashboardPage() {
                 </div>
                 <a href="/profile#activity-history">View history</a>
               </div>
-              <ActivityHistoryList activity={recentActivity} loading={activityLoading} compact />
             </section>
             <a className="overview-stat" href="/tickets?priority=urgent" aria-label={`View ${dashboardSummary.urgentTickets} urgent tickets needing triage`}>
               <span className="overview-label">High priority</span>
