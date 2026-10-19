@@ -123,7 +123,9 @@ function ProfilePage() {
   const [showActivityHistory, setShowActivityHistory] = useState(false);
   const activityHistoryTriggerRef = useRef(null);
   const [activityHistory, setActivityHistory] = useState([]);
+  const [activityTotal, setActivityTotal] = useState(0);
   const [activityLoading, setActivityLoading] = useState(false);
+  const [activityMoreLoading, setActivityMoreLoading] = useState(false);
   const [activityError, setActivityError] = useState('');
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteState, setDeleteState] = useState({ status: 'idle', message: '' });
@@ -226,21 +228,35 @@ function ProfilePage() {
     setPrefs((current) => ({ ...current, [key]: value }));
   };
 
-  const openActivityHistory = async () => {
-    setShowActivityHistory(true);
-    setActivityLoading(true);
+  const loadActivityHistory = async (offset = 0) => {
+    const isFirstPage = offset === 0;
+    if (isFirstPage) {
+      setActivityLoading(true);
+      setActivityHistory([]);
+      setActivityTotal(0);
+    } else {
+      setActivityMoreLoading(true);
+    }
     setActivityError('');
     try {
       const response = await axios.get(`${API_BASE_URL}/api/auth/activity`, {
         headers: { Authorization: `Bearer ${token}` },
-        params: { limit: 100 },
+        params: { limit: 25, offset },
       });
-      setActivityHistory(response.data.activity || []);
+      const nextActivity = response.data.activity || [];
+      setActivityHistory((current) => (isFirstPage ? nextActivity : [...current, ...nextActivity]));
+      setActivityTotal(Number(response.data.total) || 0);
     } catch (error) {
       setActivityError(error.response?.data?.message || 'Unable to load your activity history. Try again.');
     } finally {
-      setActivityLoading(false);
+      if (isFirstPage) setActivityLoading(false);
+      else setActivityMoreLoading(false);
     }
+  };
+
+  const openActivityHistory = () => {
+    setShowActivityHistory(true);
+    loadActivityHistory(0);
   };
 
   useEffect(() => {
@@ -793,7 +809,16 @@ function ProfilePage() {
                 <button type="button" className="user-directory-close-button" onClick={() => setShowActivityHistory(false)} aria-label="Close activity history">×</button>
               </header>
               <ActivityHistoryList activity={activityHistory} loading={activityLoading} error={activityError} />
-              {!activityLoading && activityHistory.length > 0 && <p className="activity-history-footnote">Showing up to the latest 100 account events.</p>}
+              {!activityLoading && activityHistory.length > 0 && (
+                <>
+                  <p className="activity-history-footnote">Showing {activityHistory.length} of {activityTotal} recorded activities.</p>
+                  {activityHistory.length < activityTotal && (
+                    <button type="button" className="activity-history-load-more" onClick={() => loadActivityHistory(activityHistory.length)} disabled={activityMoreLoading}>
+                      {activityMoreLoading ? 'Loading more activity…' : 'Load more activity'}
+                    </button>
+                  )}
+                </>
+              )}
             </section>
           </div>
         )}

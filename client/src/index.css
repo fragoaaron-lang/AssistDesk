@@ -1072,6 +1072,10 @@ body.dark-mode .profile-skeleton-preference { border-bottom-color: var(--border)
 .activity-history-message { margin: 0; padding: 16px 0; color: var(--muted); font-size: 0.84rem; line-height: 1.55; }
 .activity-history-message.is-error { color: #a12620; }
 .activity-history-footnote { margin: 16px 0 0; color: var(--muted); font-size: 0.72rem; }
+.activity-history-load-more { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; margin-top: 12px; padding: 8px 13px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface-soft); color: var(--teal); font: inherit; font-size: 0.78rem; font-weight: 750; cursor: pointer; }
+.activity-history-load-more:hover:not(:disabled) { border-color: rgba(31, 111, 120, 0.4); background: #eaf3f4; }
+.activity-history-load-more:disabled { cursor: wait; opacity: 0.65; }
+.activity-history-load-more:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
 .activity-history-skeleton { grid-template-columns: 24px minmax(0, 1fr) minmax(100px, 140px); }
 .activity-history-marker.surface-skeleton-block { width: 22px; height: 22px; border-radius: 50%; }
 .activity-history-title { width: min(280px, 100%); height: 13px; }
@@ -1092,6 +1096,8 @@ body.dark-mode .profile-activity-button:hover { background: #20474b; }
 body.dark-mode .activity-history-dialog-header h2 { color: var(--text); }
 body.dark-mode .activity-history-marker { border-color: #356b6c; background: #17363b; color: #8bd6d2; }
 body.dark-mode .activity-history-message.is-error { color: #ffaaa5; }
+body.dark-mode .activity-history-load-more { border-color: var(--border); background: var(--surface-soft); color: #8bd6d2; }
+body.dark-mode .activity-history-load-more:hover:not(:disabled) { background: #20474b; }
 body.dark-mode .dashboard-activity-card { border-color: rgba(102, 124, 138, 0.34); background: linear-gradient(135deg, rgba(23, 34, 42, 0.96), rgba(18, 35, 46, 0.9)); }
 body.dark-mode .dashboard-activity-heading h3 { color: #edf7fa; }
 body.dark-mode .dashboard-activity-heading > a { color: #8bd6d2; }
