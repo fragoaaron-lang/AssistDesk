@@ -7,6 +7,7 @@ try {
 }
 
 const sequelize = require('./config/db');
+require('./models');
 
 async function migrate() {
   // If no database credentials are provided, skip migrations to avoid failing builds.

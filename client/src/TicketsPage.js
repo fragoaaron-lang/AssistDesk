@@ -5,107 +5,9 @@ import { useAuth } from './AuthContext';
 import AuthenticatedNavigation from './AuthenticatedNavigation';
 import TicketProgressBar from './TicketProgressBar';
 import { getSocket } from './socket';
+import ticketIssueOptions from './ticketIssueOptions.json';
 
-const defaultGeneralIssueOptions = {
-    'Academic or Department Service': ['Question about a department service', 'Course or program concern', 'Schedule or appointment concern', 'Learning materials or resource request', 'Other academic or department concern'],
-    'Administrative Request': ['Form or document request', 'Enrollment or records question', 'Payment or assessment question', 'Approval or permit request', 'Other administrative concern'],
-    'Technology or Equipment': ['System or account access', 'Network or internet concern', 'Computer or equipment problem', 'Software or printing concern', 'Other technology concern'],
-    'Facilities or Safety': ['Facility repair request', 'Cleanliness or sanitation concern', 'Safety hazard or incident', 'Room or equipment concern', 'Other facilities concern'],
-    'Health or Student Support': ['Health or wellness concern', 'Counseling or guidance request', 'Accessibility or accommodation concern', 'Urgent student support concern', 'Other student support concern'],
-    'General Inquiry or Feedback': ['Request for information', 'Service suggestion or feedback', 'Complaint or concern', 'Other general request'],
-  };
-
-  const departmentGeneralIssueOptions = {
-    it: {
-      'Network and Connectivity': ['Wi-Fi or internet access', 'Network outage or slow connection', 'Connect a device to campus network', 'Other network concern'],
-      'Computer and Equipment': ['Computer or laptop problem', 'Printer or scanner problem', 'Classroom or office equipment problem', 'Request equipment assistance', 'Other equipment concern'],
-      'Software and Account Access': ['Password or account access', 'Email or portal access', 'Software installation or error', 'System permission request', 'Other software or access concern'],
-      'Other IT Support': ['General IT question', 'Request technical assistance', 'Report a technology issue not listed'],
-    },
-    maintenance: {
-      'Building and Room Repairs': ['Electrical or lighting problem', 'Plumbing or water problem', 'Air conditioning or ventilation problem', 'Door, window, or structural damage', 'Other building repair'],
-      'Furniture and Equipment': ['Broken chair, table, or furniture', 'Classroom equipment repair', 'Request furniture or fixture repair', 'Other equipment concern'],
-      'Cleaning and Sanitation': ['Classroom cleanliness', 'Restroom cleanliness or supplies', 'Waste or pest concern', 'Other sanitation concern'],
-      'Safety and Other Maintenance': ['Safety hazard or damaged property', 'Urgent facility problem', 'General maintenance request', 'Other maintenance concern'],
-    },
-    clinic: {
-      'Medical Assistance': ['First aid or injury', 'Feeling unwell or need clinical rest', 'Medical consultation', 'Urgent medical assistance', 'Other medical concern'],
-      'Clinic Documents and Services': ['Medical certificate inquiry', 'Physical examination inquiry', 'Dental service inquiry', 'Laboratory result or appointment question', 'Other clinic service'],
-      'Clinic Information': ['Clinic hours or availability', 'Medicine availability', 'Parent or guardian contact request', 'General clinic question'],
-    },
-    library: {
-      'Books and Borrowing': ['Borrow or return a book', 'Book renewal or reservation', 'Overdue, lost, or damaged book', 'Book or reference availability', 'Other borrowing concern'],
-      'Research and Study Resources': ['Research or thesis material request', 'OPAC or catalog access', 'Online academic resource access', 'Library computer or internet access', 'Study space concern'],
-      'Other Library Support': ['Library hours or policy question', 'Library card concern', 'General library request'],
-    },
-    accounting: {
-      'Tuition and Payments': ['Tuition balance or statement inquiry', 'Payment not reflected', 'Payment method or receipt concern', 'Installment or payment schedule inquiry', 'Other payment concern'],
-      'Fees and Assessment': ['Enrollment fee assessment', 'Graduation or document fee inquiry', 'Refund or adjustment request', 'Other fee or assessment concern'],
-      'Scholarships and Discounts': ['Scholarship eligibility inquiry', 'Discount or benefit inquiry', 'Scholarship record concern', 'Other scholarship concern'],
-      'Other Accounting Support': ['General accounting question', 'Request a financial record', 'Other accounting request'],
-    },
-    registrar: {
-      'Enrollment and Registration': ['Enrollment or subject encoding concern', 'Add or drop a subject', 'Class schedule or subject load inquiry', 'Transfer or enrollment document concern', 'Other enrollment concern'],
-      'Student Records and Documents': ['Transcript of Records request', 'Certificate or Form 137/138 request', 'Certificate of Enrollment or grades request', 'Correction to student record', 'Other document request'],
-      'Grades and Academic Records': ['Incomplete grade inquiry', 'Grade submission or correction', 'Academic record evaluation', 'Other grade or records concern'],
-      'Other Registrar Support': ['Registrar office hours or location', 'Request status follow-up', 'General registrar inquiry'],
-    },
-    osa: {
-      'Student Welfare and Conduct': ['Student concern or complaint', 'Safety, bullying, or conduct concern', 'Request for student support', 'Lost-and-found inquiry', 'Other student welfare concern'],
-      'Student Activities and Organizations': ['Student organization or event approval', 'Facility or equipment reservation', 'Student activity concern', 'Other organization request'],
-      'Student Services': ['Student ID concern', 'School rules or policy inquiry', 'Campus security concern', 'General Office of Student Affairs inquiry'],
-      'Gate Pass / Sticker': [
-        'Request a vehicle gate pass',
-        'Vehicle sticker application process — Window 10 review, then Window 8 payment',
-        'Vehicle sticker renewal or replacement process',
-        'Gate pass application steps and requirements',
-        'Gate pass or sticker payment and claiming process',
-        'Other gate pass or sticker concern',
-      ],
-    },
-    guidance: {
-      'Guidance and Counseling': ['Request counseling or personal support', 'Academic guidance request', 'Career or program guidance', 'Urgent student welfare concern', 'Other guidance concern'],
-      'Guidance Services': ['Good Moral Certificate inquiry', 'Referral or appointment request', 'Guidance office hours or location', 'Other guidance service'],
-    },
-    education: {
-      'Classes and Academic Support': ['Class schedule or subject concern', 'Course or lesson concern', 'Learning material request', 'Academic assistance or tutoring', 'Other academic concern'],
-      'Department Services': ['Enrollment or advising concern', 'Uniform or program requirement', 'Faculty or classroom concern', 'Department document or information request', 'Other department concern'],
-    },
-    cs: {
-      'Computer Science Courses': ['Programming assignment or coding issue', 'Software development project concern', 'Course or curriculum question', 'Algorithm or computing topic assistance', 'Other CS academic concern'],
-      'Computer Labs and Tools': ['Computer laboratory access', 'Programming software or license issue', 'Computer or lab equipment problem', 'Project or development environment access', 'Other CS lab concern'],
-      'Department Services': ['Class schedule or enrollment concern', 'Learning material request', 'Faculty or advising concern', 'Internship or practicum inquiry', 'Other Computer Studies request'],
-    },
-    cba: {
-      'Business and Accountancy Courses': ['Accounting or bookkeeping course concern', 'Business or management course concern', 'Coursework or case-study assistance', 'Course or curriculum question', 'Other CBA academic concern'],
-      'Learning and Department Resources': ['Accounting or business software access', 'Learning material request', 'Class schedule or enrollment concern', 'Faculty or advising concern', 'Other CBA resource request'],
-      'Practicum and Department Services': ['Internship or OJT inquiry', 'Uniform or program requirement', 'Department document request', 'Other CBA service concern'],
-    },
-    crim: {
-      'Criminology Courses and Activities': ['Criminology or criminal justice course concern', 'Practical activity or project concern', 'Research or learning material request', 'Course or schedule question', 'Other CRIM academic concern'],
-      'Department Requirements and Resources': ['Uniform or equipment concern', 'Laboratory or training resource issue', 'Internship or OJT inquiry', 'Faculty or advising concern', 'Other CRIM department request'],
-    },
-    hm: {
-      'Hospitality Courses and Practical Work': ['Hospitality or tourism course concern', 'Kitchen or food-service practical activity', 'Food preparation equipment issue', 'Learning material request', 'Other HM academic concern'],
-      'Department Requirements and Resources': ['Uniform or grooming requirement', 'Kitchen or laboratory access', 'Internship or OJT inquiry', 'Class schedule or advising concern', 'Other Hospitality Management request'],
-    },
-    pt: {
-      'Physical Therapy Courses and Practice': ['Physical therapy course concern', 'Practical or laboratory activity', 'Clinical placement or internship inquiry', 'Learning material request', 'Other PT academic concern'],
-      'Clinical and Lab Resources': ['Therapy equipment concern', 'Laboratory access or availability', 'Clinical duty schedule concern', 'Faculty or advising concern', 'Other PT resource request'],
-    },
-    nursing: {
-      'Nursing Courses and Clinical Duty': ['Nursing course or skills-lab concern', 'Clinical duty or placement inquiry', 'Clinical schedule concern', 'Learning material or module request', 'Other Nursing academic concern'],
-      'Department Requirements and Resources': ['Uniform or clinical requirement', 'Laboratory equipment concern', 'Internship or clinical documentation', 'Faculty or advising concern', 'Other Nursing department request'],
-    },
-    basic: {
-      'Basic Education Classes': ['Class schedule or section concern', 'Learning material or book request', 'Classroom concern', 'Academic assistance request', 'Other class concern'],
-      'Student and Parent Services': ['Enrollment or student record concern', 'ID or uniform concern', 'Adviser or school communication concern', 'Safety or student welfare concern', 'Other Basic Education request'],
-    },
-    college: {
-      'Classes and Academic Support': ['Class schedule or subject concern', 'Course or program concern', 'Learning material request', 'Academic assistance or tutoring', 'Other academic concern'],
-      'Department Services': ['Enrollment or advising concern', 'Uniform or program requirement', 'Faculty or classroom concern', 'Department document or information request', 'Other department concern'],
-    },
-  };
+const { defaultGeneralIssueOptions, departmentGeneralIssueOptions } = ticketIssueOptions;
 const collegeDepartmentNames = [
   'basic education department',
   'college of nursing',
@@ -408,14 +310,16 @@ function TicketsPage() {
     })
     : departments;
   const visibleIssueGroups = issueGroups.filter((group) => (
-    (!form.department_id || Number(group.department_id) === Number(form.department_id))
+    Boolean(form.department_id)
+      && Number(group.department_id) === Number(form.department_id)
       && availableDepartments.some((department) => Number(department.id) === Number(group.department_id))
   ));
-  const generalIssueOptions = visibleIssueGroups.reduce((options, group) => {
-    const specificNames = (group.specificIssues || []).map((specificIssue) => specificIssue.name);
-    options[group.name] = [...new Set([...(options[group.name] || []), ...specificNames])];
-    return options;
-  }, { ...getDepartmentIssueOptions(selectedDepartment) });
+  const generalIssueOptions = visibleIssueGroups.length
+    ? visibleIssueGroups.reduce((options, group) => {
+      options[group.name] = (group.specificIssues || []).map((specificIssue) => specificIssue.name);
+      return options;
+    }, {})
+    : getDepartmentIssueOptions(selectedDepartment);
   const specificIssueOptions = generalIssueOptions[form.category] || [];
   const visibleTickets = tickets.filter((ticket) => (
     (ticketView === 'all'
