@@ -5,11 +5,14 @@ import { useAuth } from './AuthContext';
 import { getSocket } from './socket';
 import AuthenticatedNavigation from './AuthenticatedNavigation';
 import { playLoginBell } from './audioUtils';
+import ActivityHistoryList from './ActivityHistory';
 
 function DashboardPage() {
   const { user, token } = useAuth();
   const [dashboard, setDashboard] = useState({ departments: [], services: [], announcements: [], stats: {} });
   const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [activityLoading, setActivityLoading] = useState(true);
   const [campusMapLoaded, setCampusMapLoaded] = useState(false);
   const [selectedMapTicket, setSelectedMapTicket] = useState(null);
   const [hoveredMapTicket, setHoveredMapTicket] = useState(null);
@@ -69,6 +72,22 @@ function DashboardPage() {
       }))
     ));
   }, [dashboard.tickets, visibleDepartments]);
+
+  const loadRecentActivity = useCallback(async () => {
+    if (!token) return;
+    setActivityLoading(true);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/auth/activity`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { limit: 4 },
+      });
+      setRecentActivity(response.data.activity || []);
+    } catch (error) {
+      console.error('Error loading personal activity:', error);
+    } finally {
+      setActivityLoading(false);
+    }
+  }, [token]);
 
   const loadData = async () => {
     try {
@@ -135,7 +154,7 @@ function DashboardPage() {
       socket.off('ticketEtaExpired', loadData);
       socket.off('announcementCreated', loadData);
     };
-  }, [token, user?.account_status]);
+  }, [token, user?.account_status, loadRecentActivity]);
 
   useEffect(() => {
     const refreshDashboard = (event) => {
@@ -146,7 +165,17 @@ function DashboardPage() {
 
     window.addEventListener('assistdesk:page-refresh', refreshDashboard);
     return () => window.removeEventListener('assistdesk:page-refresh', refreshDashboard);
-  }, [token, user?.account_status]);
+  }, [token, user?.account_status, loadRecentActivity]);
+
+  useEffect(() => {
+    if (!token || user?.account_status === 'terminated') return undefined;
+    loadRecentActivity();
+    const refreshActivity = (event) => {
+      if (event.detail?.page === 'dashboard') loadRecentActivity();
+    };
+    window.addEventListener('assistdesk:page-refresh', refreshActivity);
+    return () => window.removeEventListener('assistdesk:page-refresh', refreshActivity);
+  }, [token, user?.account_status, loadRecentActivity]);
 
   const getHeatStrength = (count) => Math.min(0.98, 0.38 + (Number(count) * 0.16));
 
@@ -313,6 +342,17 @@ function DashboardPage() {
             </a>
           </div>
           )}
+        </section>
+
+        <section className="institutional-card dashboard-activity-card" aria-label="Your recent activity">
+          <div className="dashboard-activity-heading">
+            <div>
+              <h3>Your recent activity</h3>
+              <p>Actions recorded for your account.</p>
+            </div>
+            <a href="/profile#activity-history">View history</a>
+          </div>
+          <ActivityHistoryList activity={recentActivity} loading={activityLoading} compact />
         </section>
 
         <div id="campus-map" className="institutional-card" style={{ marginBottom: '20px' }}>

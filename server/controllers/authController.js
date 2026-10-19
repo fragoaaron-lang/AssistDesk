@@ -1,9 +1,10 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const { User, Department, PasswordResetToken } = require('../models');
+const { User, Department, PasswordResetToken, AuditLog } = require('../models');
 const { sendPasswordResetEmail, sendEmailVerificationEmail, generateVerificationCode } = require('../utils/email');
 const { recordAudit } = require('../utils/auditLog');
+const { buildPersonalActivityQuery } = require('../utils/personalActivityQuery');
 const { disconnectUser } = require('../utils/socket');
 const { getJwtSecret } = require('../config/security');
 const { getLoginTokenExpiry } = require('../utils/authTokenExpiry');
@@ -320,6 +321,18 @@ exports.getMe = async (req, res) => {
   } catch (error) {
     console.error(JSON.stringify({ event: 'profile_load_failed', request_id: req.requestId, error_name: error.name || 'Error' }));
     return res.status(500).json({ message: 'Unable to load profile.' });
+  }
+};
+
+exports.getMyActivity = async (req, res) => {
+  try {
+    const query = buildPersonalActivityQuery(req.user.id, req.query.limit, req.query.offset);
+    const { count, rows } = await AuditLog.findAndCountAll(query);
+
+    return res.json({ activity: rows, total: count, limit: query.limit, offset: query.offset });
+  } catch (error) {
+    console.error(JSON.stringify({ event: 'personal_activity_load_failed', request_id: req.requestId, error_name: error.name || 'Error' }));
+    return res.status(500).json({ message: 'Unable to load your activity history.' });
   }
 };
 

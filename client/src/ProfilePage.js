@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import axios from 'axios';
 import { useAuth } from './AuthContext';
 import { API_BASE_URL } from './config';
 import AuthenticatedNavigation from './AuthenticatedNavigation';
 import LogoutButton from './LogoutButton';
 import PhoneAlertsControl from './PhoneAlertsControl';
+import ActivityHistoryList from './ActivityHistory';
 
 const defaultPrefs = {
   compactMode: false,
@@ -118,6 +120,11 @@ function ProfilePage() {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showActivityHistory, setShowActivityHistory] = useState(false);
+  const activityHistoryTriggerRef = useRef(null);
+  const [activityHistory, setActivityHistory] = useState([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [activityError, setActivityError] = useState('');
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteState, setDeleteState] = useState({ status: 'idle', message: '' });
   const [savedSnapshot, setSavedSnapshot] = useState(() => ({
@@ -218,6 +225,40 @@ function ProfilePage() {
   const updatePreference = (key, value) => {
     setPrefs((current) => ({ ...current, [key]: value }));
   };
+
+  const openActivityHistory = async () => {
+    setShowActivityHistory(true);
+    setActivityLoading(true);
+    setActivityError('');
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/auth/activity`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { limit: 100 },
+      });
+      setActivityHistory(response.data.activity || []);
+    } catch (error) {
+      setActivityError(error.response?.data?.message || 'Unable to load your activity history. Try again.');
+    } finally {
+      setActivityLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!showActivityHistory) return undefined;
+    const returnFocusTarget = activityHistoryTriggerRef.current;
+    const focusFrame = window.requestAnimationFrame(() => {
+      document.querySelector('.activity-history-dialog .user-directory-close-button')?.focus();
+    });
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setShowActivityHistory(false);
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      document.removeEventListener('keydown', closeOnEscape);
+      if (returnFocusTarget?.isConnected) returnFocusTarget.focus();
+    };
+  }, [showActivityHistory]);
 
   const persistProfilePhoto = async (nextPhoto, nextStudentNumber = studentNumber) => {
     if (!user) return;
@@ -503,6 +544,10 @@ function ProfilePage() {
                   <input type="file" accept="image/*" onChange={handleProfilePhotoChange} disabled={photoUploadLoading} />
                   <span>{photoUploadLoading ? 'Uploading...' : 'Upload photo'}</span>
                 </label>
+                <button id="activity-history" ref={activityHistoryTriggerRef} type="button" className="profile-activity-button" onClick={openActivityHistory}>
+                  <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 10a6.5 6.5 0 1 0 1.9-4.6L3.5 7.3M3.5 3.8v3.5H7M10 6v4l2.6 1.6" /></svg>
+                  Activity history
+                </button>
               </div>
             </div>
           </div>
@@ -733,6 +778,23 @@ function ProfilePage() {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {showActivityHistory && (
+          <div className="profile-save-dialog-backdrop activity-history-backdrop" role="presentation" onMouseDown={() => setShowActivityHistory(false)}>
+            <section className="activity-history-dialog" role="dialog" aria-modal="true" aria-labelledby="activity-history-title" onMouseDown={(event) => event.stopPropagation()}>
+              <header className="activity-history-dialog-header">
+                <div>
+                  <p className="activity-history-eyebrow">ACCOUNT RECORD</p>
+                  <h2 id="activity-history-title">Your activity history</h2>
+                  <p>Recent actions recorded for your account.</p>
+                </div>
+                <button type="button" className="user-directory-close-button" onClick={() => setShowActivityHistory(false)} aria-label="Close activity history">×</button>
+              </header>
+              <ActivityHistoryList activity={activityHistory} loading={activityLoading} error={activityError} />
+              {!activityLoading && activityHistory.length > 0 && <p className="activity-history-footnote">Showing up to the latest 100 account events.</p>}
+            </section>
           </div>
         )}
 

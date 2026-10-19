@@ -2,7 +2,7 @@
 
 ## Storage and access
 
-Persistent events are written to `audit_logs` through `server/utils/auditLog.js`. Events snapshot the actor's user ID, display name, and role, an action, affected entity type/ID, optional department scope, before/after JSON values, metadata, and server timestamp. Audit rows intentionally do not have a cascading user/ticket foreign key, so account/ticket deletion does not erase the audit event. Audit-log writes are application-created, and model hooks reject update/delete operations. There are no audit mutation routes. `GET /api/admin/audit-logs` requires an active administrator and returns the newest records (maximum 500 per request); department-scoped admins only see records scoped to their department.
+Persistent events are written to `audit_logs` through `server/utils/auditLog.js`. Events snapshot the actor's user ID, display name, and role, an action, affected entity type/ID, optional department scope, before/after JSON values, metadata, and server timestamp. Audit rows intentionally do not have a cascading user/ticket foreign key, so account/ticket deletion does not erase the audit event. Audit-log writes are application-created, and model hooks reject update/delete operations. There are no audit mutation routes. `GET /api/admin/audit-logs` requires an active administrator and returns the newest records (maximum 500 per request); department-scoped admins only see records scoped to their department. `GET /api/auth/activity` requires authentication and returns only the current actor's newest activity (maximum 100 per request), exposing only event type, affected entity reference, and timestamp—not before/after values or metadata.
 
 ## Logged events
 
@@ -11,7 +11,7 @@ Persistent events are written to `audit_logs` through `server/utils/auditLog.js`
 - Tickets: creation, status/resolution/closure, assignment/unassignment/reassignment, routing correction, ETA change, manual/system priority escalation, comments, and requester ticket deletion.
 - Catalog: department, service, and FAQ create/update/delete operations.
 
-Self-service account deletion anonymizes the user record instead of hard-deleting it, removes private chat/notification/reset-token data, and preserves ticket and ticket-update history. Requester ticket deletion can remove the original ticket updates, but writes a separate audit-log snapshot in the same transaction first. Catalog hard deletion similarly saves a before-snapshot and deletion event in the transaction. Audit access is admin-only; ordinary users have no audit read or mutation API.
+Self-service account deletion anonymizes the user record instead of hard-deleting it, removes private chat/notification/reset-token data, and preserves ticket and ticket-update history. Requester ticket deletion can remove the original ticket updates, but writes a separate audit-log snapshot in the same transaction first. Catalog hard deletion similarly saves a before-snapshot and deletion event in the transaction. Full audit access and all mutation restrictions remain admin/system-only; ordinary users can read only the limited activity history belonging to their authenticated account and cannot read or mutate other audit records.
 
 ## Limitations
 
