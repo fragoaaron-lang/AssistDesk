@@ -35,6 +35,21 @@ function DashboardPage() {
 
   const visibleDepartments = dashboard.departments || [];
 
+  const dashboardSummary = useMemo(() => {
+    const tickets = dashboard.tickets || [];
+    const openTicketCount = tickets.filter((ticket) => String(ticket.status || '').toLowerCase() === 'open').length;
+    const activeTickets = tickets.length ? openTicketCount : visibleDepartments.reduce((total, department) => total + Number(department.ticket_count || 0), 0);
+    const urgentTickets = tickets.filter((ticket) => String(ticket.priority || '').toLowerCase() === 'urgent').length;
+    const liveDepartments = visibleDepartments.filter((department) => Number(department.ticket_count || 0) > 0).length;
+
+    return {
+      activeTickets,
+      urgentTickets,
+      liveDepartments,
+      totalDepartments: visibleDepartments.length,
+    };
+  }, [dashboard.tickets, visibleDepartments]);
+
   const dashboardHighlights = useMemo(() => {
     const announcementList = (dashboard.announcements || []).slice(0, 3);
     const serviceList = (dashboard.services || []).slice(0, 4);
@@ -286,6 +301,48 @@ function DashboardPage() {
       </div>
       <div className="page-shell">
         <AuthenticatedNavigation user={user} subtitle="Institutional support portal" />
+
+        <section className="dashboard-overview" aria-label="Dashboard status overview" aria-busy={dashboardLoading}>
+          <div className="overview-intro">
+            <p className="eyebrow">Operations overview</p>
+            <h2>Campus support at a glance</h2>
+          </div>
+          {dashboardLoading ? (
+            <div className="overview-grid dashboard-summary-skeleton" role="status" aria-label="Loading dashboard ticket summary" aria-busy="true">
+              <span className="report-skeleton-announcement">Loading dashboard ticket summary…</span>
+              {[0, 1, 2, 3].map((index) => (
+                <div className={`overview-stat dashboard-stat-skeleton${index === 0 ? ' primary' : ''}`} key={index} aria-hidden="true">
+                  <span className="surface-skeleton-block dashboard-stat-label" />
+                  <span className="surface-skeleton-block dashboard-stat-value" />
+                  <span className="surface-skeleton-block dashboard-stat-detail" />
+                </div>
+              ))}
+            </div>
+          ) : (
+          <div className="overview-grid">
+            <a className="overview-stat primary" href="/tickets?status=open" aria-label={`View ${dashboardSummary.activeTickets} open tickets`}>
+              <span className="overview-label">Open tickets</span>
+              <strong>{dashboardSummary.activeTickets}</strong>
+              <small>{dashboardSummary.urgentTickets} urgent items</small>
+            </a>
+            <a className="overview-stat" href="/dashboard#department-queue" aria-label={`View active departments, ${dashboardSummary.liveDepartments} of ${dashboardSummary.totalDepartments}`}>
+              <span className="overview-label">Active departments</span>
+              <strong>{dashboardSummary.liveDepartments}</strong>
+              <small>of {dashboardSummary.totalDepartments} monitored</small>
+            </a>
+            <a className="overview-stat" href="/tickets?priority=urgent" aria-label={`View ${dashboardSummary.urgentTickets} urgent tickets needing triage`}>
+              <span className="overview-label">High priority</span>
+              <strong>{dashboardSummary.urgentTickets}</strong>
+              <small>need triage today</small>
+            </a>
+            <a className="overview-stat" href="/dashboard#campus-map" aria-label="View the live campus ticket map">
+              <span className="overview-label">Campus pulse</span>
+              <strong>{dashboardSummary.activeTickets > 0 ? 'Live' : 'Quiet'}</strong>
+              <small>{dashboardSummary.activeTickets > 0 ? 'Tickets are moving' : 'No open requests'}</small>
+            </a>
+          </div>
+          )}
+        </section>
 
         <section className="institutional-card dashboard-activity-card" aria-label="Your recent activity">
           <div className="dashboard-activity-heading">
