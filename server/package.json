@@ -38,7 +38,7 @@
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.2.0",
     "nodemailer": "^10.0.9",
-    "pg": "^8.23.0",
+    "pg": "^8.23.1",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.8",
     "socket.io": "^4.8.3",
