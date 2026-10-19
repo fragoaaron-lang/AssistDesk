@@ -325,11 +325,16 @@ function DashboardPage() {
               <strong>{dashboardSummary.activeTickets}</strong>
               <small>{dashboardSummary.urgentTickets} urgent items</small>
             </a>
-            <a className="overview-stat" href="/dashboard#department-queue" aria-label={`View active departments, ${dashboardSummary.liveDepartments} of ${dashboardSummary.totalDepartments}`}>
-              <span className="overview-label">Active departments</span>
-              <strong>{dashboardSummary.liveDepartments}</strong>
-              <small>of {dashboardSummary.totalDepartments} monitored</small>
-            </a>
+            <section className="overview-stat dashboard-activity-overview-stat" aria-label="Your recent activity">
+              <div className="dashboard-activity-heading">
+                <div>
+                  <h3>Your recent activity</h3>
+                  <p>Actions recorded for your account.</p>
+                </div>
+                <a href="/profile#activity-history">View history</a>
+              </div>
+              <ActivityHistoryList activity={recentActivity} loading={activityLoading} compact />
+            </section>
             <a className="overview-stat" href="/tickets?priority=urgent" aria-label={`View ${dashboardSummary.urgentTickets} urgent tickets needing triage`}>
               <span className="overview-label">High priority</span>
               <strong>{dashboardSummary.urgentTickets}</strong>
@@ -342,17 +347,6 @@ function DashboardPage() {
             </a>
           </div>
           )}
-        </section>
-
-        <section className="institutional-card dashboard-activity-card" aria-label="Your recent activity">
-          <div className="dashboard-activity-heading">
-            <div>
-              <h3>Your recent activity</h3>
-              <p>Actions recorded for your account.</p>
-            </div>
-            <a href="/profile#activity-history">View history</a>
-          </div>
-          <ActivityHistoryList activity={recentActivity} loading={activityLoading} compact />
         </section>
 
         <div id="campus-map" className="institutional-card" style={{ marginBottom: '20px' }}>
