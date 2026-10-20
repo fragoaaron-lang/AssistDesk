@@ -7623,61 +7623,29 @@ body.dark-mode .auth-modal .remember-me-option small {
 
   .dashboard-overview .overview-grid {
     gap: 8px;
-  }
-
-  .dashboard-overview .overview-stat.primary {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  .dashboard-overview .overview-stat[href*="priority=urgent"] {
-    grid-column: 2;
-    grid-row: 1;
-  }
-
-  .dashboard-overview .overview-stat[href*="#campus-map"] {
-    display: flex;
-    grid-column: 1 / -1;
-    grid-row: 2;
-    min-height: 58px;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 10px 13px;
-    border-radius: 13px;
-  }
-
-  .dashboard-overview .overview-stat[href*="#campus-map"] .overview-label,
-  .dashboard-overview .overview-stat[href*="#campus-map"] small {
-    flex: 1 1 0;
-  }
-
-  .dashboard-overview .overview-stat[href*="#campus-map"] strong {
-    flex: 0 0 auto;
-    font-size: 1.2rem;
+    grid-auto-rows: minmax(112px, auto);
   }
 
   .dashboard-overview .dashboard-activity-overview-stat {
-    grid-column: 1 / -1;
-    grid-row: 3;
-    min-height: 56px;
-    align-content: center;
-    padding: 9px 12px;
+    min-height: 112px;
+    align-content: start;
+    padding: 10px;
   }
 
-  .dashboard-overview .overview-stat:not(.dashboard-activity-overview-stat) {
-    min-height: 82px;
-    align-content: center;
-    gap: 5px;
-    padding: 12px;
+  .dashboard-overview .overview-stat {
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 112px;
+    align-content: start;
+    gap: 6px;
+    padding: 10px;
     border-radius: 13px;
   }
 
   .dashboard-overview .dashboard-activity-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    display: grid;
+    justify-content: start;
+    gap: 4px;
     margin: 0;
   }
 
@@ -7692,7 +7660,12 @@ body.dark-mode .auth-modal .remember-me-option small {
   }
 
   .dashboard-overview .dashboard-activity-heading > a {
+    justify-self: start;
     font-size: 0.58rem;
+  }
+
+  .dashboard-overview .overview-stat[href*="#campus-map"] {
+    gap: 6px;
   }
 
   .dashboard-queue {
@@ -7722,28 +7695,15 @@ body.dark-mode .auth-modal .remember-me-option small {
 }
 
 @media (max-width: 380px) {
-  .dashboard-overview .overview-stat:not(.dashboard-activity-overview-stat) {
-    min-height: 76px;
-    padding: 9px;
-  }
-
-  .dashboard-overview .dashboard-activity-overview-stat {
-    min-height: 54px;
-    padding: 8px 10px;
-  }
-
   .dashboard-overview .overview-grid {
     gap: 7px;
+    grid-auto-rows: minmax(104px, auto);
   }
 
-  .dashboard-overview .overview-stat:not(.dashboard-activity-overview-stat) {
-    min-height: 76px;
+  .dashboard-overview .overview-stat,
+  .dashboard-overview .dashboard-activity-overview-stat {
+    min-height: 104px;
     padding: 9px;
-  }
-
-  .dashboard-overview .overview-stat[href*="#campus-map"] {
-    min-height: 54px;
-    padding: 8px 10px;
   }
 
   .dashboard-overview .dashboard-activity-heading h3 {
