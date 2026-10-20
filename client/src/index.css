@@ -7625,10 +7625,44 @@ body.dark-mode .auth-modal .remember-me-option small {
     gap: 8px;
   }
 
+  .dashboard-overview .overview-stat.primary {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .dashboard-overview .overview-stat[href*="priority=urgent"] {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .dashboard-overview .overview-stat[href*="#campus-map"] {
+    display: flex;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    min-height: 58px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 13px;
+    border-radius: 13px;
+  }
+
+  .dashboard-overview .overview-stat[href*="#campus-map"] .overview-label,
+  .dashboard-overview .overview-stat[href*="#campus-map"] small {
+    flex: 1 1 0;
+  }
+
+  .dashboard-overview .overview-stat[href*="#campus-map"] strong {
+    flex: 0 0 auto;
+    font-size: 1.2rem;
+  }
+
   .dashboard-overview .dashboard-activity-overview-stat {
-    min-height: 68px;
-    align-content: start;
-    padding: 9px 10px;
+    grid-column: 1 / -1;
+    grid-row: 3;
+    min-height: 56px;
+    align-content: center;
+    padding: 9px 12px;
   }
 
   .dashboard-overview .overview-stat:not(.dashboard-activity-overview-stat) {
@@ -7694,8 +7728,8 @@ body.dark-mode .auth-modal .remember-me-option small {
   }
 
   .dashboard-overview .dashboard-activity-overview-stat {
-    min-height: 64px;
-    padding: 8px 9px;
+    min-height: 54px;
+    padding: 8px 10px;
   }
 
   .dashboard-overview .overview-grid {
@@ -7705,6 +7739,11 @@ body.dark-mode .auth-modal .remember-me-option small {
   .dashboard-overview .overview-stat:not(.dashboard-activity-overview-stat) {
     min-height: 76px;
     padding: 9px;
+  }
+
+  .dashboard-overview .overview-stat[href*="#campus-map"] {
+    min-height: 54px;
+    padding: 8px 10px;
   }
 
   .dashboard-overview .dashboard-activity-heading h3 {
