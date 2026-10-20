@@ -7626,9 +7626,9 @@ body.dark-mode .auth-modal .remember-me-option small {
   }
 
   .dashboard-overview .dashboard-activity-overview-stat {
-    min-height: 82px;
-    align-content: center;
-    padding: 10px;
+    min-height: 68px;
+    align-content: start;
+    padding: 9px 10px;
   }
 
   .dashboard-overview .overview-stat:not(.dashboard-activity-overview-stat) {
@@ -7640,24 +7640,25 @@ body.dark-mode .auth-modal .remember-me-option small {
   }
 
   .dashboard-overview .dashboard-activity-heading {
-    display: grid;
-    justify-content: start;
-    gap: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     margin: 0;
   }
 
   .dashboard-overview .dashboard-activity-heading h3 {
-    font-size: 0.78rem;
+    font-size: 0.74rem;
     line-height: 1.25;
   }
 
   .dashboard-overview .dashboard-activity-heading p {
-    font-size: 0.62rem;
+    font-size: 0.58rem;
+    line-height: 1.25;
   }
 
   .dashboard-overview .dashboard-activity-heading > a {
-    justify-self: start;
-    font-size: 0.64rem;
+    font-size: 0.58rem;
   }
 
   .dashboard-queue {
@@ -7693,8 +7694,8 @@ body.dark-mode .auth-modal .remember-me-option small {
   }
 
   .dashboard-overview .dashboard-activity-overview-stat {
-    min-height: 76px;
-    padding: 10px;
+    min-height: 64px;
+    padding: 8px 9px;
   }
 
   .dashboard-overview .overview-grid {
@@ -7707,7 +7708,12 @@ body.dark-mode .auth-modal .remember-me-option small {
   }
 
   .dashboard-overview .dashboard-activity-heading h3 {
-    font-size: 0.74rem;
+    font-size: 0.7rem;
+  }
+
+  .dashboard-overview .dashboard-activity-heading p,
+  .dashboard-overview .dashboard-activity-heading > a {
+    font-size: 0.54rem;
   }
 
   .dashboard-map-shell .campus-3d-frame {
