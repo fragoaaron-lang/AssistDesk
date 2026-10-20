@@ -3,12 +3,28 @@ if (new URLSearchParams(location.search).get('background') === '1') {
 }
 
 const CATS = {
-  acad: ['College Buildings', '#f2c230'],
-  basic: ['Basic Education', '#7cc344'],
-  admin: ['Administrative Buildings', '#2f7df0'],
-  campus: ['Student Activity Areas', '#a15fd0'],
-  health: ['Campus Service Facilities', '#ee4b4b'],
-  park: ['Parking Areas', '#9aa0ab'],
+  acad: ['College Buildings', '#d4a017'],
+  basic: ['Basic Education', '#bfe4e2'],
+  admin: ['Administrative Buildings', '#0f2d52'],
+  campus: ['Student Activity Areas', '#79aeb4'],
+  health: ['Campus Service Facilities', '#1f6f78'],
+  park: ['Parking Areas', '#dce6ee'],
+};
+const LABEL_INK = {
+  acad: '#082038',
+  basic: '#0f2d52',
+  admin: '#ffffff',
+  campus: '#082038',
+  health: '#ffffff',
+  park: '#163548',
+};
+const LABEL_OUTLINE = {
+  acad: 'rgba(255,255,255,.78)',
+  basic: 'rgba(255,255,255,.82)',
+  admin: 'rgba(8,32,56,.78)',
+  campus: 'rgba(255,255,255,.78)',
+  health: 'rgba(8,32,56,.78)',
+  park: 'rgba(255,255,255,.82)',
 };
 const B = [
   ['CHARM|BLDG.', 'acad', 272, 90, 490, 193, 3],
@@ -21,7 +37,7 @@ const B = [
   ['PARKING AREA', 'park', 431, 572, 490, 952, 0, 'v'],
   ['D.H. SORIANO|HALL (AVR)', 'campus', 567, 226, 720, 308, 2],
   ['BASIC EDUCATION BLDG.', 'basic', 720, 264, 1218, 308, 2],
-  ["BASIC EDUCATION|PRINCIPAL'S OFFICE", 'basic', 1218, 264, 1456, 308, 1, '#5a9a34'],
+  ["BASIC EDUCATION|PRINCIPAL'S OFFICE", 'basic', 1218, 264, 1456, 308, 1, '#bfe4e2'],
   ['PARKING AREA', 'park', 1099, 90, 1397, 128, 0],
   ['CRIMINOLOGY & LAW|BLDG.', 'acad', 1099, 128, 1397, 225, 3],
   ['INFORMATION & TECHNOLOGY|BLDG.', 'acad', 567, 364, 873, 408, 2],
@@ -41,7 +57,7 @@ const B = [
   ['PARKING|AREA', 'park', 1766, 597, 1972, 647, 0],
   ['CHAPEL', 'campus', 1177, 693, 1231, 730, 1],
   ['NURSING|BLDG.', 'acad', 1177, 730, 1270, 833, 2],
-  ['CAREGIVING|BLDG.', 'admin', 1177, 833, 1270, 885, 2, '#1aa5b8'],
+  ['CAREGIVING|BLDG.', 'admin', 1177, 833, 1270, 885, 2, '#79aeb4'],
   ['NURSING|BLDG.', 'acad', 1177, 885, 1270, 1000, 2],
   ['J.B. ANGELES BLDG.|(ADMIN BLDG.)', 'admin', 698, 748, 1139, 839, 3],
   ['PARKING|AREA', 'park', 698, 839, 1139, 898, 0],
@@ -95,7 +111,7 @@ const road = W(0x4a5160, { roughness: 0.95 });
 [[0, 1018, 2048, 1075], [490, 175, 567, 1018], [490, 175, 1100, 224], [975, 25, 1025, 224], [975, 25, 1972, 77], [1062, 90, 1099, 224], [1920, 25, 1972, 597], [1218, 572, 1972, 597], [74, 368, 490, 382], [373, 497, 490, 510], [873, 308, 892, 735], [1200, 308, 1218, 680], [567, 735, 1160, 748], [1158, 658, 1177, 1000], [1140, 692, 1177, 732], [567, 848, 698, 898], [1200, 308, 1294, 321]].forEach((r) => sl(...r, road, 0.12, 0.06));
 const dash = W(0xf5f5f5);
 for (let x = 20; x < 2048; x += 140) sl(x, 1044, x + 70, 1049, dash, 0.14, 0.14);
-function paint(txt, Wc, Hc, fill, rot, bump) {
+function paint(txt, Wc, Hc, fill, rot, bump, ink = '#1c2636', outline = 'rgba(255,255,255,.78)') {
   const c = document.createElement('canvas');
   c.width = Wc;
   c.height = Hc;
@@ -107,9 +123,9 @@ function paint(txt, Wc, Hc, fill, rot, bump) {
   const w = rot ? Hc : Wc;
   const h = rot ? Wc : Hc;
   const L = txt.split('|');
-  let fs = Math.min(h / (L.length * 1.45), w * 0.2);
+  let fs = Math.min(h / (L.length * 1.45), w * 0.2) * 0.68;
   const fit = () => {
-    g.font = '800 ' + fs + 'px Outfit,"Segoe UI",Arial,sans-serif';
+    g.font = '900 ' + fs + 'px Outfit,"Segoe UI",Arial,sans-serif';
     return Math.max(...L.map((t) => g.measureText(t).width));
   };
   while (fit() > w * 0.88) fs *= 0.93;
@@ -124,9 +140,11 @@ function paint(txt, Wc, Hc, fill, rot, bump) {
     g.shadowBlur = fs * 0.07;
     draw(0, 0, '#fff');
   } else {
-    draw(fs * 0.035, fs * 0.035, 'rgba(255,255,255,.7)');
-    draw(-fs * 0.035, -fs * 0.035, 'rgba(0,0,0,.4)');
-    draw(0, 0, '#1c2636');
+    g.lineJoin = 'round';
+    g.lineWidth = Math.max(1, fs * 0.08);
+    g.strokeStyle = outline;
+    L.forEach((line, i) => g.strokeText(line, 0, (i - (L.length - 1) / 2) * fs * 1.22));
+    draw(0, 0, ink);
   }
   const t = new THREE.CanvasTexture(c);
   t.anisotropy = AN;
@@ -169,7 +187,7 @@ B.forEach((b) => {
   const userData = { n: name.replace(/\|/g, ' '), c: category, f: floors, mats: [] };
   const add = (mesh) => { mesh.userData = userData; meshes.push(mesh); };
   const textMat = (Wc, Hc, rot) => {
-    const mat = W(0xffffff, { roughness: 0.65, map: paint(name, Wc, Hc, roofCol, rot, false), bumpMap: paint(name, Wc, Hc, '#000', rot, true), bumpScale: 3 });
+    const mat = W(0xffffff, { roughness: 0.65, map: paint(name, Wc, Hc, roofCol, rot, false, LABEL_INK[category], LABEL_OUTLINE[category]), bumpMap: paint(name, Wc, Hc, '#000', rot, true), bumpScale: 3 });
     userData.mats.push(mat);
     return mat;
   };
