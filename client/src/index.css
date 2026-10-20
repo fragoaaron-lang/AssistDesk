@@ -7623,19 +7623,16 @@ body.dark-mode .auth-modal .remember-me-option small {
 
   .dashboard-overview .overview-grid {
     gap: 8px;
-    grid-auto-rows: minmax(112px, auto);
-  }
-
-  .dashboard-overview .dashboard-activity-overview-stat {
-    min-height: 112px;
-    align-content: start;
-    padding: 10px;
+    grid-auto-rows: 112px;
   }
 
   .dashboard-overview .overview-stat {
     box-sizing: border-box;
+    grid-column: auto;
+    grid-row: auto;
     min-width: 0;
-    min-height: 112px;
+    min-height: 0;
+    height: 100%;
     align-content: start;
     gap: 6px;
     padding: 10px;
@@ -7668,6 +7665,10 @@ body.dark-mode .auth-modal .remember-me-option small {
     gap: 6px;
   }
 
+  .dashboard-overview .dashboard-activity-overview-stat {
+    min-height: 0;
+  }
+
   .dashboard-queue {
     gap: 11px;
     padding: 14px;
@@ -7697,12 +7698,11 @@ body.dark-mode .auth-modal .remember-me-option small {
 @media (max-width: 380px) {
   .dashboard-overview .overview-grid {
     gap: 7px;
-    grid-auto-rows: minmax(104px, auto);
+    grid-auto-rows: 108px;
   }
 
-  .dashboard-overview .overview-stat,
-  .dashboard-overview .dashboard-activity-overview-stat {
-    min-height: 104px;
+  .dashboard-overview .overview-stat {
+    min-height: 0;
     padding: 9px;
   }
 
