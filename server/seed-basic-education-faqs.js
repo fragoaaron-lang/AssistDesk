@@ -16,7 +16,7 @@ const faqEntries = [
   },
   {
     question: 'Where can parents inquire about a student concern?',
-    answer: 'Parents may contact or visit the Office of the Principal about a student concern.',
+    answer: 'Parents may inquire at the Office of the Principal, either by phone or in person.',
     keywords: 'basic education parent student concern principal office call visit',
   },
   {
@@ -25,17 +25,20 @@ const faqEntries = [
     keywords: 'basic education principal contact facebook email hotline phone 571 3966',
   },
   {
-    question: 'Where can I ask about school activities or announcements?',
-    answer: 'Check the TCC Basic Education Department Facebook page. Announcements may also be shared through the department group chat by the responding coordinator.',
+    question: 'Where can I ask school activities or announcement?',
+    aliases: ['Where can I ask about school activities or announcements?'],
+    answer: 'Check the Facebook page called “TCC Basic Education Department.” Announcements may also be shared with the department through its group chat by the responding coordinator.',
     keywords: 'basic education school activities announcements facebook group chat coordinator',
   },
   {
-    question: 'Where can parents report attendance concerns?',
+    question: 'Where can parents report for concern about the attendance?',
+    aliases: ['Where can parents report attendance concerns?'],
     answer: 'Parents may approach the class adviser or subject teachers about attendance concerns.',
     keywords: 'basic education parent attendance absence class adviser subject teacher',
   },
   {
-    question: 'Where can parents inquire about a student behavior concern?',
+    question: 'Where can parents inquire about students’ behavior concern?',
+    aliases: ['Where can parents inquire about a student behavior concern?'],
     answer: 'Parents should first approach the homeroom adviser. In some cases, the Prefect of Discipline may also assist.',
     keywords: 'basic education parent student behavior concern homeroom adviser prefect discipline',
   },
@@ -45,12 +48,14 @@ const faqEntries = [
     keywords: 'basic education report card release adviser grades',
   },
   {
-    question: 'Who should I approach about a concern with a teacher?',
+    question: 'Who should I approach regarding a concern with a teacher?',
+    aliases: ['Who should I approach about a concern with a teacher?'],
     answer: 'Approach the principal first. The principal will speak with the teacher involved.',
     keywords: 'basic education concern complaint teacher principal',
   },
   {
-    question: 'What should I do if my Basic Education school ID is lost or damaged?',
+    question: "What should I do if my child's School ID is lost or damaged?",
+    aliases: ['What should I do if my Basic Education school ID is lost or damaged?'],
     answer: 'Report the lost or damaged ID to the adviser to request a replacement.',
     keywords: 'basic education school id lost damaged replacement adviser',
   },
@@ -131,13 +136,19 @@ async function seed() {
     let updated = 0;
 
     for (const entry of faqEntries) {
-      const existing = existingByQuestion.get(normalizeQuestion(entry.question));
+      const { aliases = [], ...faqValues } = entry;
+      const existing = [entry.question, ...aliases]
+        .map(normalizeQuestion)
+        .map((question) => existingByQuestion.get(question))
+        .find(Boolean);
       if (!existing) {
-        const faq = await Faq.create({ department_id: department.id, ...entry }, { transaction });
+        const faq = await Faq.create({ department_id: department.id, ...faqValues }, { transaction });
         existingByQuestion.set(normalizeQuestion(entry.question), faq);
         added += 1;
-      } else if (existing.answer !== entry.answer || existing.keywords !== entry.keywords) {
-        await existing.update({ answer: entry.answer, keywords: entry.keywords }, { transaction });
+      } else if (existing.question !== entry.question || existing.answer !== entry.answer || existing.keywords !== entry.keywords) {
+        existingByQuestion.delete(normalizeQuestion(existing.question));
+        await existing.update(faqValues, { transaction });
+        existingByQuestion.set(normalizeQuestion(entry.question), existing);
         updated += 1;
       }
     }

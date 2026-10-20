@@ -17,6 +17,8 @@
     "seed:student-numbers": "node seed-student-numbers.js",
     "seed:faqs": "node seed-faqs.js",
     "seed:basic-education-faqs": "node seed-basic-education-faqs.js",
+    "seed:nursing-faqs": "node seed-nursing-faqs.js",
+    "seed:crim-faqs": "node seed-crim-faqs.js",
     "seed:office-location-faqs": "node seed-office-location-faqs.js",
     "seed:it-faqs": "node seed-it-faqs.js",
     "seed:osa-faqs": "node seed-osa-faqs.js",
