@@ -7614,3 +7614,81 @@ body.dark-mode .auth-modal .remember-me-option small {
   .auth-modal-close,
   .registration-role-option { transition: none; }
 }
+
+@media (max-width: 640px) {
+  .dashboard-overview .overview-grid,
+  .dashboard-queue .queue-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-overview .overview-grid {
+    gap: 8px;
+  }
+
+  .dashboard-overview .dashboard-activity-overview-stat {
+    grid-column: 1 / -1;
+    min-height: 78px;
+    padding: 12px 14px;
+  }
+
+  .dashboard-overview .overview-stat:not(.dashboard-activity-overview-stat) {
+    min-height: 82px;
+    align-content: center;
+    gap: 5px;
+    padding: 12px;
+    border-radius: 13px;
+  }
+
+  .dashboard-queue {
+    gap: 11px;
+    padding: 14px;
+    border-radius: 15px;
+  }
+
+  .dashboard-queue .queue-grid {
+    gap: 8px;
+  }
+
+  .dashboard-queue .queue-card {
+    gap: 7px;
+    padding: 10px;
+    border-radius: 12px;
+  }
+
+  .dashboard-map-shell .campus-3d-frame {
+    height: clamp(260px, 44dvh, 380px);
+    min-height: 0;
+  }
+
+  .dashboard-map-shell .campus-map-embed {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 380px) {
+  .dashboard-overview .overview-stat:not(.dashboard-activity-overview-stat) {
+    min-height: 76px;
+    padding: 9px;
+  }
+
+  .dashboard-overview .dashboard-activity-overview-stat {
+    min-height: 72px;
+    padding: 10px;
+  }
+
+  .dashboard-activity-heading {
+    gap: 8px;
+  }
+
+  .dashboard-activity-heading h3 {
+    font-size: 0.82rem;
+  }
+
+  .dashboard-activity-heading > a {
+    font-size: 0.66rem;
+  }
+
+  .dashboard-map-shell .campus-3d-frame {
+    height: 260px;
+  }
+}
