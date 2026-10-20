@@ -13,6 +13,7 @@
     "db:test": "node db-test.js",
     "migrate": "node db-migrate.js",
     "seed:admins": "node seed-department-admins.js",
+    "seed:registrar-admin": "node seed-registrar-admin.js",
     "seed:student-numbers": "node seed-student-numbers.js",
     "seed:faqs": "node seed-faqs.js",
     "seed:basic-education-faqs": "node seed-basic-education-faqs.js",

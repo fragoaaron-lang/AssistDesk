@@ -10,7 +10,6 @@ function DashboardPage() {
   const { user, token } = useAuth();
   const [dashboard, setDashboard] = useState({ departments: [], services: [], announcements: [], stats: {} });
   const [dashboardLoading, setDashboardLoading] = useState(true);
-  const [campusMapLoaded, setCampusMapLoaded] = useState(false);
   const [selectedMapTicket, setSelectedMapTicket] = useState(null);
   const [hoveredMapTicket, setHoveredMapTicket] = useState(null);
   const [showWelcomeSplash, setShowWelcomeSplash] = useState(() => sessionStorage.getItem('assistdesk_show_welcome_splash') === 'true');
@@ -250,33 +249,30 @@ function DashboardPage() {
   return (
     <div className="app-shell dashboard-heatmap-shell">
       <div className="dashboard-heatmap-background" aria-hidden="true">
-        <img src="/schoolmap.png" alt="" />
-        <div className="dashboard-heatmap-overlay">
-          {visibleDepartments.filter((dept) => Number(dept.ticket_count || 0) > 0 && getBuildingPosition(dept)).map((dept) => {
-            const pos = getBuildingPosition(dept);
-            const ticketCount = Number(dept.ticket_count || 0);
-            return (
-              <span
-                key={`dashboard-bg-heat-${dept.id}`}
-                className="dashboard-heatmap-spot"
-                style={{
-                  left: `${pos.x}%`,
-                  top: `${pos.y}%`,
-                  '--heat-opacity': getHeatStrength(ticketCount),
-                  '--heat-size': `${Math.min(30, 16 + ticketCount * 1.8)}%`,
-                }}
-              />
-            );
-          })}
-        </div>
+        <iframe
+          ref={campusMapFrame}
+          src="/campus-map-3d-v3.html?background=1"
+          title=""
+          tabIndex={-1}
+          className="dashboard-campus-map-background"
+          loading="eager"
+          onLoad={() => {
+            syncCampusMap();
+          }}
+        />
       </div>
       <div className="page-shell">
         <AuthenticatedNavigation user={user} subtitle="Institutional support portal" />
 
         <section className="dashboard-overview" aria-label="Dashboard status overview" aria-busy={dashboardLoading}>
           <div className="overview-intro">
-            <p className="eyebrow">Operations overview</p>
-            <h2>Campus support at a glance</h2>
+            <div>
+              <p className="eyebrow">Operations overview</p>
+              <h2>Campus support at a glance</h2>
+            </div>
+            <a className="institutional-btn small secondary dashboard-map-link" href="/campus-map-3d-v3.html" target="_blank" rel="noreferrer">
+              Open interactive 3D map
+            </a>
           </div>
           {dashboardLoading ? (
             <div className="overview-grid dashboard-summary-skeleton" role="status" aria-label="Loading dashboard ticket summary" aria-busy="true">
@@ -318,38 +314,6 @@ function DashboardPage() {
           </div>
           )}
         </section>
-
-        <div id="campus-map" className="institutional-card" style={{ marginBottom: '20px' }}>
-          <div className="map-toolbar">
-            <div>
-              <h3>Campus 3D overview</h3>
-              <p className="map-subtitle">Ticket-volume heat clouds and priority pinpoints across departments.</p>
-            </div>
-            <div className="map-toolbar-pill">Live map</div>
-          </div>
-          <div className="map-shell dashboard-map-shell" aria-busy={dashboardLoading || !campusMapLoaded}>
-            <div className="map-frame campus-3d-frame">
-              <iframe
-                ref={campusMapFrame}
-                src="/campus-map-3d-v3.html"
-                title="Campus 3D map"
-                className="campus-map-embed"
-                loading="lazy"
-                onLoad={() => {
-                  setCampusMapLoaded(true);
-                  syncCampusMap();
-                }}
-              />
-              {(dashboardLoading || !campusMapLoaded) && (
-                <div className="dashboard-map-skeleton" role="status" aria-label="Loading campus ticket map" aria-busy="true">
-                  <span className="report-skeleton-announcement">Loading campus ticket map…</span>
-                  <span className="surface-skeleton-block dashboard-map-skeleton-canvas" aria-hidden="true" />
-                  <span className="surface-skeleton-block dashboard-map-skeleton-label" aria-hidden="true" />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
 
         {selectedMapTicket && (
           <div className="map-ticket-detail-backdrop" role="presentation" onClick={() => setSelectedMapTicket(null)}>

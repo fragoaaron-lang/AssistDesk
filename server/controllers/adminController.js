@@ -2,6 +2,7 @@ const { User, Department, Ticket, TicketUpdate, Notification, ChatLog, Admin, Pa
 const { notifyAdmins, disconnectUser } = require('../utils/socket');
 const { addTicketNumber } = require('../utils/ticketNumber');
 const { recordAudit } = require('../utils/auditLog');
+const { getDepartmentScope, canUseDepartmentFilter, applyDepartmentScope } = require('../utils/departmentScope');
 const { Op } = require('sequelize');
 
 const buildTicketFilters = (query = {}) => {
@@ -51,7 +52,11 @@ exports.getReports = async (req, res) => {
   try {
     const filterError = validateReportFilters(req.query);
     if (filterError) return res.status(400).json({ message: filterError });
-    const ticketWhere = buildTicketFilters(req.query);
+    if (!canUseDepartmentFilter(req.user, req.query.department_id)) {
+      return res.status(403).json({ message: 'You may only view reports for your own department.' });
+    }
+    const departmentScope = getDepartmentScope(req.user);
+    const ticketWhere = applyDepartmentScope(req.user, buildTicketFilters(req.query));
     const departmentCounts = await Ticket.findAll({
       attributes: [
         'department_id',
@@ -111,8 +116,14 @@ exports.getReports = async (req, res) => {
       else ticketsByDepartmentStatus[departmentId].unresolved += count;
     });
 
-    const faqs = await Faq.findAll({ attributes: ['id', 'question', 'keywords'] });
-    const chatMessages = await ChatLog.findAll({ attributes: ['message'] });
+    const faqs = await Faq.findAll({
+      attributes: ['id', 'question', 'keywords'],
+      ...(departmentScope ? { where: { department_id: departmentScope } } : {}),
+    });
+    const chatMessages = await ChatLog.findAll({
+      attributes: ['message'],
+      ...(departmentScope ? { where: { matched_department_id: departmentScope } } : {}),
+    });
     const normalizeText = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ');
     const faqUsage = faqs.map((faq) => {
       const terms = `${faq.question} ${faq.keywords || ''}`.split(/\s+/).map(normalizeText).filter((term) => term.length > 3);
@@ -137,18 +148,22 @@ exports.getReports = async (req, res) => {
       concern: row.category || 'Uncategorized',
       count: row.count,
     }));
-    const availableCategories = [...new Set((await Ticket.findAll({ attributes: ['category'], raw: true }))
+    const availableCategories = [...new Set((await Ticket.findAll({ attributes: ['category'], where: ticketWhere, raw: true }))
       .map((row) => row.category || 'Uncategorized'))].sort((first, second) => first.localeCompare(second));
 
     const usersByRole = await User.findAll({
       attributes: ['role', [User.sequelize.fn('COUNT', User.sequelize.col('id')), 'count']],
+      ...(departmentScope ? { where: { department_id: departmentScope } } : {}),
       group: ['role'],
       raw: true,
     });
 
     const users = await User.findAll({
       attributes: ['id', 'name', 'email', 'role', 'student_number', 'account_status'],
-      where: { role: { [Op.in]: ['student', 'faculty', 'staff'] } },
+      where: {
+        role: { [Op.in]: ['student', 'faculty', 'staff'] },
+        ...(departmentScope ? { department_id: departmentScope } : {}),
+      },
       include: [{ model: Department, attributes: ['name'] }],
       order: [['role', 'ASC'], ['name', 'ASC']],
     });
@@ -261,7 +276,7 @@ exports.getReports = async (req, res) => {
       filters: {
         start_date: req.query.start_date || null,
         end_date: req.query.end_date || null,
-        department_id: req.query.department_id || null,
+        department_id: departmentScope || req.query.department_id || null,
         category: req.query.category || null,
         priority: req.query.priority || null,
         status: req.query.status || null,
@@ -309,7 +324,11 @@ exports.exportReportsCsv = async (req, res) => {
   try {
     const filterError = validateReportFilters(req.query);
     if (filterError) return res.status(400).json({ message: filterError });
-    const ticketWhere = buildTicketFilters(req.query);
+    if (!canUseDepartmentFilter(req.user, req.query.department_id)) {
+      return res.status(403).json({ message: 'You may only export reports for your own department.' });
+    }
+    const departmentScope = getDepartmentScope(req.user);
+    const ticketWhere = applyDepartmentScope(req.user, buildTicketFilters(req.query));
     const tickets = await Ticket.findAll({
       attributes: ['id', 'user_id', 'assigned_user_id', 'department_id', 'subject', 'category', 'priority', 'status', 'routing_method', 'created_at'],
       where: ticketWhere,
@@ -337,7 +356,7 @@ exports.exportReportsCsv = async (req, res) => {
       ['AssistDesk Ticket Report'],
       ['Coverage start', req.query.start_date || 'All available dates'],
       ['Coverage end', req.query.end_date || 'All available dates'],
-      ['Department filter', req.query.department_id || 'All departments'],
+      ['Department filter', departmentScope || req.query.department_id || 'All departments'],
       ['Category filter', req.query.category || 'All categories'],
       ['Priority filter', req.query.priority || 'All priorities'],
       ['Status filter', req.query.status || 'All statuses'],

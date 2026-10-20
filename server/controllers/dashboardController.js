@@ -1,5 +1,6 @@
 const { Department, Service, Announcement, Ticket, Notification, sequelize, User } = require('../models');
 const { formatTicketNumber } = require('../utils/ticketNumber');
+const { getTicketAccessWhere } = require('../utils/departmentScope');
 
 const ADMIN_BUILDING_LOCATION = 'Administration Building (J.B. Angeles Building)';
 
@@ -73,6 +74,7 @@ const initialMapPositions = {
 
 exports.getDashboard = async (req, res) => {
   try {
+    const ticketWhere = getTicketAccessWhere(req.user);
     for (const department of defaultDepartments) {
       await Department.findOrCreate({
         where: { name: department.name },
@@ -118,6 +120,7 @@ exports.getDashboard = async (req, res) => {
         'department_id',
         [sequelize.fn('COUNT', sequelize.col('Ticket.id')), 'ticket_count'],
       ],
+      where: ticketWhere,
       group: ['department_id'],
       raw: true,
     });
@@ -128,6 +131,7 @@ exports.getDashboard = async (req, res) => {
 
     const tickets = await Ticket.findAll({
       attributes: ['id', 'department_id', 'subject', 'description', 'priority', 'status', 'created_at'],
+      where: ticketWhere,
       order: [['created_at', 'DESC']],
       raw: true,
     });
@@ -157,8 +161,8 @@ exports.getDashboard = async (req, res) => {
     const stats = {
       departments: departmentsWithStats.length,
       announcements: announcements.length,
-      tickets: await Ticket.count(),
-      openTickets: await Ticket.count({ where: { status: 'open' } }),
+      tickets: await Ticket.count({ where: ticketWhere }),
+      openTickets: await Ticket.count({ where: { ...ticketWhere, status: 'open' } }),
     };
 
     return res.json({ departments: departmentsWithStats, services, announcements, stats, topConcernDepartments, tickets: ticketsWithCodes });

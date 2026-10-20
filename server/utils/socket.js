@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const { Server } = require('socket.io');
 const { User } = require('../models');
 const { getAllowedOrigins, getJwtSecret } = require('../config/security');
+const { getDepartmentScope } = require('./departmentScope');
 
 let io = null;
 const JWT_SECRET = getJwtSecret();
@@ -54,11 +55,10 @@ const createSocketServer = (server) => {
       socket.data.role = user.role;
       socket.data.departmentId = user.department_id || null;
       socket.join(`user_${user.id}`);
-      if (user.role === 'admin') {
+      if (user.role === 'admin' && !getDepartmentScope(user)) {
         socket.join('admins');
-        if (user.department_id) {
-          socket.join(`department_admin_${user.department_id}`);
-        }
+      } else if (user.role === 'admin' && user.department_id) {
+        socket.join(`department_admin_${user.department_id}`);
       } else if (user.role === 'staff' && user.department_id) {
         socket.join(`department_staff_${user.department_id}`);
       }

@@ -3102,10 +3102,12 @@ body.dark-mode .report-filter-dropdown-toggle strong { color: var(--text); }
 }
 
 .dashboard-heatmap-background {
-  position: absolute;
+  position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  overflow: hidden;
+  background: #e8eef3;
 }
 
 .dashboard-heatmap-background::after {
@@ -3113,35 +3115,23 @@ body.dark-mode .report-filter-dropdown-toggle strong { color: var(--text); }
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(135deg, rgba(247, 250, 255, 0.56), rgba(233, 242, 255, 0.2));
+  background: linear-gradient(180deg, rgba(245, 249, 252, 0.42), rgba(235, 243, 248, 0.68));
 }
 
-.dashboard-heatmap-background img {
-  position: relative;
+.dashboard-campus-map-background {
+  position: absolute;
+  inset: -4%;
   z-index: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.28;
-  filter: saturate(0.8) contrast(1.08) brightness(0.9);
+  width: 108%;
+  height: 108%;
+  border: 0;
+  pointer-events: none;
+  opacity: 0.54;
+  filter: saturate(0.74) contrast(0.92);
 }
 
-.dashboard-heatmap-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-}
-
-.dashboard-heatmap-spot {
-  position: absolute;
-  width: var(--heat-size);
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(239, 25, 32, var(--heat-opacity)) 0 14%, rgba(255, 166, 0, calc(var(--heat-opacity) * 0.92)) 34%, rgba(40, 224, 52, calc(var(--heat-opacity) * 0.7)) 62%, rgba(40, 224, 52, 0) 78%);
-  filter: blur(10px);
-  mix-blend-mode: normal;
-  opacity: 0.94;
+.dashboard-map-link {
+  flex: 0 0 auto;
 }
 
 .page-shell {

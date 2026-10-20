@@ -5,6 +5,7 @@ const { sendTicketEtaExpiredEmail } = require('../utils/email');
 const { inferDepartment } = require('../utils/departmentRouting');
 const { recordAudit } = require('../utils/auditLog');
 const { validateImageDataUrl } = require('../utils/inputValidation');
+const { getTicketAccessWhere } = require('../utils/departmentScope');
 const { Op } = require('sequelize');
 
 const withTicketTransaction = async (operation) => {
@@ -133,11 +134,7 @@ exports.processMissedEtaTickets = async () => {
         where: { role: 'admin', department_id: ticket.department_id },
         attributes: ['id', 'name', 'email'],
       });
-      const fallbackAdmins = departmentAdmins.length > 0 ? departmentAdmins : await User.findAll({
-        where: { role: 'admin' },
-        attributes: ['id', 'name', 'email'],
-      });
-      const adminRecipients = [...new Map((fallbackAdmins || []).map((admin) => [admin.email, admin])).values()];
+      const adminRecipients = [...new Map(departmentAdmins.map((admin) => [admin.email, admin])).values()];
 
       await Notification.create({
         user_id: ticket.user_id,
@@ -331,11 +328,7 @@ exports.createTicket = async (req, res) => {
 
 exports.getTickets = async (req, res) => {
   try {
-    const where = req.user.role === 'admin'
-      ? (req.user.department_id ? { department_id: req.user.department_id } : {})
-      : req.user.role === 'staff'
-        ? { department_id: req.user.department_id || -1 }
-        : { user_id: req.user.id };
+    const where = getTicketAccessWhere(req.user);
     const tickets = await Ticket.findAll({
       where,
       include: [
@@ -632,6 +625,9 @@ exports.updateTicketEta = async (req, res) => {
       if (!canManageTicket(req.user, ticket)) return res.status(403).json({ message: 'Only authorized staff in the current department can correct ticket routing.' });
 
       const newDepartmentId = Number(req.body.department_id);
+      if (req.user.role === 'staff' || Number(req.user.department_id) > 0) {
+        return res.status(403).json({ message: 'Only global administrators can move tickets between departments.' });
+      }
       const newDepartment = Number.isInteger(newDepartmentId) ? await Department.findByPk(newDepartmentId) : null;
       if (!newDepartment) return res.status(400).json({ message: 'Select a valid destination department.' });
       if (newDepartmentId === Number(ticket.department_id)) return res.status(400).json({ message: 'The ticket is already routed to that department.' });
