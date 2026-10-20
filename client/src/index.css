@@ -3130,10 +3130,6 @@ body.dark-mode .report-filter-dropdown-toggle strong { color: var(--text); }
   filter: saturate(0.74) contrast(0.92);
 }
 
-.dashboard-map-link {
-  flex: 0 0 auto;
-}
-
 .page-shell {
   position: relative;
   z-index: 1;
