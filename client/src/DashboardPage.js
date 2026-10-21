@@ -32,6 +32,38 @@ function DashboardPage() {
 
   const visibleDepartments = dashboard.departments || [];
 
+  const mapTicketCounts = useMemo(() => {
+    if (Array.isArray(dashboard.mapTicketCounts) && dashboard.mapTicketCounts.length) {
+      return dashboard.mapTicketCounts;
+    }
+
+    const countsByGroup = new Map();
+    (dashboard.tickets || []).forEach((ticket) => {
+      if (ticket.department_id == null) return;
+      const priority = String(ticket.priority || 'medium').toLowerCase();
+      const status = String(ticket.status || 'open').toLowerCase();
+      const key = [ticket.department_id, priority, status].join('|');
+      const group = countsByGroup.get(key) || {
+        department_id: ticket.department_id,
+        priority,
+        status,
+        ticket_count: 0,
+      };
+      group.ticket_count += 1;
+      countsByGroup.set(key, group);
+    });
+    if (countsByGroup.size) return [...countsByGroup.values()];
+
+    return visibleDepartments
+      .filter((department) => Number(department.ticket_count) > 0)
+      .map((department) => ({
+        department_id: department.id,
+        priority: 'medium',
+        status: 'open',
+        ticket_count: Number(department.ticket_count) || 0,
+      }));
+  }, [dashboard.mapTicketCounts, dashboard.tickets, visibleDepartments]);
+
   const dashboardSummary = useMemo(() => {
     const tickets = dashboard.tickets || [];
     const openTicketCount = tickets.filter((ticket) => String(ticket.status || '').toLowerCase() === 'open').length;
@@ -101,17 +133,28 @@ function DashboardPage() {
         map_x: department.map_x,
         map_y: department.map_y,
       })),
-      ticketCounts: (dashboard.mapTicketCounts || []).map((row) => ({
+      ticketCounts: mapTicketCounts.map((row) => ({
         department_id: Number(row.department_id),
         priority: String(row.priority || 'medium'),
         status: String(row.status || 'open'),
         count: Number(row.ticket_count) || 0,
       })),
     }, window.location.origin);
-  }, [dashboard, visibleDepartments]);
+  }, [dashboard, mapTicketCounts, visibleDepartments]);
 
   useEffect(() => {
     syncCampusMap();
+  }, [syncCampusMap]);
+
+  useEffect(() => {
+    const handleCampusMapReady = (event) => {
+      if (event.source !== campusMapFrame.current?.contentWindow
+        || event.data?.type !== 'assistdesk:campus-map-ready') return;
+      syncCampusMap();
+    };
+
+    window.addEventListener('message', handleCampusMapReady);
+    return () => window.removeEventListener('message', handleCampusMapReady);
   }, [syncCampusMap]);
 
   useEffect(() => {

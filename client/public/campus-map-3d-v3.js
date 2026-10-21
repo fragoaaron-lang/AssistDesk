@@ -416,3 +416,4 @@ const v = new THREE.Vector3();
   });
   syncLayers();
 })();
+if (parent !== window) parent.postMessage({ type: 'assistdesk:campus-map-ready' }, location.origin);
