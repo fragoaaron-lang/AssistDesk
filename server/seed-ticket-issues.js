@@ -27,6 +27,32 @@ const getOptionsForDepartment = (departmentName) => {
   return defaultGeneralIssueOptions;
 };
 
+async function seedDepartmentIssueOptions(department, { transaction } = {}) {
+  let addedGeneral = 0;
+  let addedSpecific = 0;
+  const issueOptions = getOptionsForDepartment(department.name);
+
+  for (const [generalIssueName, specificIssueNames] of Object.entries(issueOptions)) {
+    const [generalIssue, createdGeneral] = await GeneralIssue.findOrCreate({
+      where: { department_id: department.id, name: generalIssueName },
+      defaults: { department_id: department.id, name: generalIssueName },
+      transaction,
+    });
+    if (createdGeneral) addedGeneral += 1;
+
+    for (const specificIssueName of specificIssueNames) {
+      const [, createdSpecific] = await SpecificIssue.findOrCreate({
+        where: { general_issue_id: generalIssue.id, name: specificIssueName },
+        defaults: { general_issue_id: generalIssue.id, name: specificIssueName },
+        transaction,
+      });
+      if (createdSpecific) addedSpecific += 1;
+    }
+  }
+
+  return { addedGeneral, addedSpecific };
+}
+
 async function seedTicketIssues({ closeConnection = true } = {}) {
   let transaction;
 
@@ -46,24 +72,9 @@ async function seedTicketIssues({ closeConnection = true } = {}) {
     let addedSpecific = 0;
 
     for (const department of departments) {
-      const issueOptions = getOptionsForDepartment(department.name);
-      for (const [generalIssueName, specificIssueNames] of Object.entries(issueOptions)) {
-        const [generalIssue, createdGeneral] = await GeneralIssue.findOrCreate({
-          where: { department_id: department.id, name: generalIssueName },
-          defaults: { department_id: department.id, name: generalIssueName },
-          transaction,
-        });
-        if (createdGeneral) addedGeneral += 1;
-
-        for (const specificIssueName of specificIssueNames) {
-          const [, createdSpecific] = await SpecificIssue.findOrCreate({
-            where: { general_issue_id: generalIssue.id, name: specificIssueName },
-            defaults: { general_issue_id: generalIssue.id, name: specificIssueName },
-            transaction,
-          });
-          if (createdSpecific) addedSpecific += 1;
-        }
-      }
+      const result = await seedDepartmentIssueOptions(department, { transaction });
+      addedGeneral += result.addedGeneral;
+      addedSpecific += result.addedSpecific;
     }
 
     await transaction.commit();
@@ -85,3 +96,5 @@ if (require.main === module) {
 }
 
 module.exports = seedTicketIssues;
+module.exports.seedDepartmentIssueOptions = seedDepartmentIssueOptions;
+module.exports.getOptionsForDepartment = getOptionsForDepartment;

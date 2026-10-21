@@ -1,5 +1,6 @@
 const { Department, Service, Faq } = require('../models');
 const { recordAudit } = require('../utils/auditLog');
+const { seedDepartmentIssueOptions } = require('../seed-ticket-issues');
 
 const canonicalDepartments = [
   ['Basic Education Department', 'Basic Education Department'],
@@ -64,17 +65,23 @@ const withAuditTransaction = async (sequelize, operation) => {
   }
 };
 
+const ensureDepartmentWithIssueOptions = async (name, defaults) => withAuditTransaction(Department.sequelize, async (transaction) => {
+  const [department] = await Department.findOrCreate({ where: { name }, defaults, transaction });
+  await seedDepartmentIssueOptions(department, { transaction });
+  return department;
+});
+
 exports.getDepartments = async (req, res) => {
   try {
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || canonicalDepartments.length;
-    await Department.findOrCreate({
-      where: { name: 'Education Department' },
-      defaults: { name: 'Education Department', description: 'Handles education-related concerns and academic coordination.' },
+    await ensureDepartmentWithIssueOptions('Education Department', {
+      name: 'Education Department',
+      description: 'Handles education-related concerns and academic coordination.',
     });
-    await Department.findOrCreate({
-      where: { name: 'Registrar Department' },
-      defaults: { name: 'Registrar Department', description: 'Handles student records, enrollment, and official document requests.' },
+    await ensureDepartmentWithIssueOptions('Registrar Department', {
+      name: 'Registrar Department',
+      description: 'Handles student records, enrollment, and official document requests.',
     });
     const departmentRecords = await Department.findAll({
       ...(req.user?.role === 'admin' && Number(req.user.department_id) > 0
@@ -120,6 +127,7 @@ exports.createDepartment = async (req, res) => {
         map_x: parsedMapX,
         map_y: parsedMapY,
       }, { transaction });
+      await seedDepartmentIssueOptions(created, { transaction });
       await recordAudit({ actor: req.user, action: 'catalog.department_created', entityType: 'department', entityId: created.id, departmentId: created.id, after: created.toJSON(), transaction });
       return created;
     });
