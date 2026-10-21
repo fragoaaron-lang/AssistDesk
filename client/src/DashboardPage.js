@@ -101,13 +101,11 @@ function DashboardPage() {
         map_x: department.map_x,
         map_y: department.map_y,
       })),
-      tickets: (dashboard.tickets || []).map((ticket) => ({
-        id: String(ticket.id),
-        ticket_code: String(ticket.ticket_code || `#${ticket.id}`),
-        department_id: Number(ticket.department_id),
-        subject: String(ticket.subject || 'Ticket'),
-        priority: String(ticket.priority || 'medium'),
-        status: String(ticket.status || 'open'),
+      ticketCounts: (dashboard.mapTicketCounts || []).map((row) => ({
+        department_id: Number(row.department_id),
+        priority: String(row.priority || 'medium'),
+        status: String(row.status || 'open'),
+        count: Number(row.ticket_count) || 0,
       })),
     }, window.location.origin);
   }, [dashboard, visibleDepartments]);

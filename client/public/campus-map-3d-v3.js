@@ -286,13 +286,14 @@ function makeTicketPin(ticket, department, position, offsetX, offsetY) {
   btn.type = 'button';
   const priority = ['low', 'medium', 'urgent'].includes(ticket.priority) ? ticket.priority : 'medium';
   btn.className = 'ticket-pin ' + priority;
-  btn.title = (ticket.ticket_code || 'Ticket') + ' · ' + ticket.subject;
-  btn.setAttribute('aria-label', btn.title + ' at ' + department.name);
+  const status = String(ticket.status || 'open').replace(/_/g, ' ');
+  btn.title = department.name + ' · ' + status + ' · ' + priority + ' priority';
+  btn.setAttribute('aria-label', 'Ticket location at ' + department.name + ', ' + status + ', ' + priority + ' priority');
   btn.addEventListener('click', () => {
     const heading = document.createElement('b');
     heading.textContent = department.name;
     const detail = document.createElement('span');
-    detail.textContent = (ticket.ticket_code || 'Ticket') + ' · ' + ticket.subject + ' · ' + ticket.status.replace('_', ' ') + ' · ' + priority.toUpperCase() + ' priority';
+    detail.textContent = status + ' · ' + priority.toUpperCase() + ' priority';
     info.replaceChildren(heading, detail);
   });
   ticketLayer.appendChild(btn);
@@ -317,11 +318,13 @@ function setMapData(data) {
   heatLayer.replaceChildren();
   ticketLayer.replaceChildren();
   const departments = Array.isArray(data.departments) ? data.departments : [];
-  const allTickets = Array.isArray(data.tickets) ? data.tickets : [];
-  const activeTickets = allTickets.filter((ticket) => ['open', 'pending', 'in_progress'].includes(ticket.status));
+  const ticketCounts = Array.isArray(data.ticketCounts) ? data.ticketCounts : [];
   const departmentsById = new Map(departments.map((department) => [String(department.id), department]));
   const counts = new Map();
-  allTickets.forEach((ticket) => counts.set(String(ticket.department_id), (counts.get(String(ticket.department_id)) || 0) + 1));
+  ticketCounts.forEach((ticketGroup) => counts.set(
+    String(ticketGroup.department_id),
+    (counts.get(String(ticketGroup.department_id)) || 0) + (Number(ticketGroup.count) || 0),
+  ));
   departments.forEach((department) => {
     const count = counts.get(String(department.id)) || 0;
     const position = worldPointFromDepartment(department);
@@ -329,15 +332,20 @@ function setMapData(data) {
     heatItems.push({ el: makeHeatCloud(department, count), position });
   });
   const ticketOffsets = new Map();
-  activeTickets.forEach((ticket) => {
-    const department = departmentsById.get(String(ticket.department_id));
+  ticketCounts.forEach((ticketGroup) => {
+    const department = departmentsById.get(String(ticketGroup.department_id));
     const base = department && worldPointFromDepartment(department);
     if (!department || !base) return;
-    const index = ticketOffsets.get(String(ticket.department_id)) || 0;
-    ticketOffsets.set(String(ticket.department_id), index + 1);
-    const angle = index * 2.39996;
-    const radius = index === 0 ? 0 : Math.min(7, 2.5 + index * 0.45);
-    ticketItems.push(makeTicketPin(ticket, department, base, Math.cos(angle) * radius, Math.sin(angle) * radius));
+    const departmentKey = String(ticketGroup.department_id);
+    let index = ticketOffsets.get(departmentKey) || 0;
+    const pinCount = Math.max(0, Number(ticketGroup.count) || 0);
+    for (let pin = 0; pin < pinCount; pin += 1) {
+      const angle = index * 2.39996;
+      const radius = index === 0 ? 0 : Math.min(7, 2.5 + index * 0.45);
+      ticketItems.push(makeTicketPin(ticketGroup, department, base, Math.cos(angle) * radius, Math.sin(angle) * radius));
+      index += 1;
+    }
+    ticketOffsets.set(departmentKey, index);
   });
   syncLayers();
 }

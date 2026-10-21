@@ -125,6 +125,19 @@ exports.getDashboard = async (req, res) => {
       raw: true,
     });
 
+    // The public-to-authenticated campus map uses anonymous aggregates for all
+    // departments, without returning ticket IDs, owners, subjects, or descriptions.
+    const mapTicketCounts = await Ticket.findAll({
+      attributes: [
+        'department_id',
+        'priority',
+        'status',
+        [sequelize.fn('COUNT', sequelize.col('Ticket.id')), 'ticket_count'],
+      ],
+      group: ['department_id', 'priority', 'status'],
+      raw: true,
+    });
+
     const ticketCountMap = Object.fromEntries(
       ticketCounts.map((row) => [String(row.department_id), Number(row.ticket_count)])
     );
@@ -165,7 +178,7 @@ exports.getDashboard = async (req, res) => {
       openTickets: await Ticket.count({ where: { ...ticketWhere, status: 'open' } }),
     };
 
-    return res.json({ departments: departmentsWithStats, services, announcements, stats, topConcernDepartments, tickets: ticketsWithCodes });
+    return res.json({ departments: departmentsWithStats, services, announcements, stats, topConcernDepartments, tickets: ticketsWithCodes, mapTicketCounts });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Unable to load dashboard.' });
