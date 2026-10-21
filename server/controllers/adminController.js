@@ -3,7 +3,7 @@ const { notifyAdmins, disconnectUser } = require('../utils/socket');
 const { addTicketNumber } = require('../utils/ticketNumber');
 const { recordAudit } = require('../utils/auditLog');
 const { getDepartmentScope, canUseDepartmentFilter, applyDepartmentScope } = require('../utils/departmentScope');
-const { mergeDepartmentTicketCounts } = require('../utils/departmentTicketCounts');
+const { mergeDepartmentTicketCounts, mergeDepartmentStatusCounts } = require('../utils/departmentTicketCounts');
 const { Op } = require('sequelize');
 
 const buildTicketFilters = (query = {}) => {
@@ -69,9 +69,10 @@ exports.getReports = async (req, res) => {
       raw: true,
     });
 
+    const selectedDepartmentScope = departmentScope || (req.query.department_id ? Number(req.query.department_id) : null);
     const reportDepartments = await Department.findAll({
       attributes: ['id', 'name'],
-      ...(departmentScope ? { where: { id: departmentScope } } : {}),
+      ...(selectedDepartmentScope ? { where: { id: selectedDepartmentScope } } : {}),
       order: [['name', 'ASC']],
       raw: true,
     });
@@ -106,21 +107,15 @@ exports.getReports = async (req, res) => {
       group: ['department_id', 'status', 'Department.id', 'Department.name'],
       raw: true,
     });
-    const ticketsByDepartmentStatus = {};
-    departmentStatusRows.forEach((row) => {
-      const departmentId = row.department_id || 'unassigned';
-      if (!ticketsByDepartmentStatus[departmentId]) {
-        ticketsByDepartmentStatus[departmentId] = {
-          department_id: row.department_id,
-          department_name: row['Department.name'] || 'Unassigned',
-          resolved: 0,
-          unresolved: 0,
-        };
-      }
-      const count = Number(row.count) || 0;
-      if (['closed', 'resolved'].includes(row.status)) ticketsByDepartmentStatus[departmentId].resolved += count;
-      else ticketsByDepartmentStatus[departmentId].unresolved += count;
-    });
+    const ticketsByDepartmentStatus = mergeDepartmentStatusCounts(
+      reportDepartments,
+      departmentStatusRows.map((row) => ({
+        department_id: row.department_id,
+        department_name: row['Department.name'] || 'Unassigned',
+        status: row.status,
+        count: row.count,
+      })),
+    );
 
     const faqs = await Faq.findAll({
       attributes: ['id', 'question', 'keywords'],
@@ -265,7 +260,7 @@ exports.getReports = async (req, res) => {
       ticketCountsByStatus,
       assignmentCounts,
       ticketCountsByPriority,
-      ticketsByDepartmentStatus: Object.values(ticketsByDepartmentStatus).sort((first, second) => second.unresolved - first.unresolved),
+      ticketsByDepartmentStatus: ticketsByDepartmentStatus.sort((first, second) => second.unresolved - first.unresolved),
       ticketCountsByConcern,
       usersByRole,
       users,
