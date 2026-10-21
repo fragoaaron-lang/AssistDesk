@@ -17,6 +17,7 @@ const pushRoutes = require('./routes/pushRoutes');
 const { createSocketServer } = require('./utils/socket');
 const { processMissedEtaTickets } = require('./controllers/ticketController');
 const seedDepartmentAdmins = require('./seed-department-admins');
+const seedTicketIssues = require('./seed-ticket-issues');
 const { apiRequestLimiter } = require('./middleware/rateLimits');
 const { assertSecurityConfig, getAllowedOrigins, getTrustProxyHops } = require('./config/security');
 
@@ -316,6 +317,7 @@ sequelize
   .then(() => ensureTicketRoutingColumns())
   .then(() => ensureDepartmentMapColumns())
   .then(() => ensureAuditLogTable())
+  .then(() => seedTicketIssues({ closeConnection: false }))
   .then(() => {
     return backfillAdminTable();
   })

@@ -27,7 +27,7 @@ const getOptionsForDepartment = (departmentName) => {
   return defaultGeneralIssueOptions;
 };
 
-async function seed() {
+async function seedTicketIssues({ closeConnection = true } = {}) {
   let transaction;
 
   try {
@@ -36,7 +36,11 @@ async function seed() {
       type: sequelize.QueryTypes.SELECT,
       transaction,
     });
-    if (!departments.length) throw new Error('No departments exist. Create departments before seeding ticket issue options.');
+    if (!departments.length) {
+      console.log('Ticket issue options were not seeded because no departments exist yet.');
+      await transaction.commit();
+      return { addedGeneral: 0, addedSpecific: 0, departmentCount: 0 };
+    }
 
     let addedGeneral = 0;
     let addedSpecific = 0;
@@ -64,13 +68,20 @@ async function seed() {
 
     await transaction.commit();
     console.log(`Ticket issue options seeded. Added ${addedGeneral} general issue(s) and ${addedSpecific} specific issue(s) across ${departments.length} department(s). Existing catalog entries were preserved.`);
+    return { addedGeneral, addedSpecific, departmentCount: departments.length };
   } catch (error) {
     if (transaction && !transaction.finished) await transaction.rollback();
     console.error('Ticket issue seed failed:', error.message);
-    process.exitCode = 1;
+    throw error;
   } finally {
-    await sequelize.close();
+    if (closeConnection) await sequelize.close();
   }
 }
 
-seed();
+if (require.main === module) {
+  seedTicketIssues().catch(() => {
+    process.exitCode = 1;
+  });
+}
+
+module.exports = seedTicketIssues;
