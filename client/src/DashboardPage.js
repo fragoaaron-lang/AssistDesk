@@ -95,14 +95,35 @@ function DashboardPage() {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/dashboard/campus-map`, {
         headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
       });
+      let mapDepartments = response.data.departments || [];
+      let ticketCounts = response.data.ticketCounts || [];
+      if (!ticketCounts.length) {
+        const dashboardResponse = await axios.get(`${API_BASE_URL}/api/dashboard`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        mapDepartments = dashboardResponse.data.departments || mapDepartments;
+        ticketCounts = dashboardResponse.data.mapTicketCounts || ticketCounts;
+      }
       setCampusMapData({
-        departments: response.data.departments || [],
-        ticketCounts: response.data.ticketCounts || [],
+        departments: mapDepartments,
+        ticketCounts,
       });
       setCampusMapError('');
     } catch (error) {
-      setCampusMapError(error.response?.data?.message || 'Unable to load ticket pinpoints.');
+      try {
+        const fallback = await axios.get(`${API_BASE_URL}/api/dashboard`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setCampusMapData({
+          departments: fallback.data.departments || [],
+          ticketCounts: fallback.data.mapTicketCounts || [],
+        });
+        setCampusMapError('');
+      } catch (fallbackError) {
+        setCampusMapError(fallbackError.response?.data?.message || error.response?.data?.message || 'Unable to load ticket pinpoints.');
+      }
     }
   }, [token]);
 

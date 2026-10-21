@@ -286,14 +286,35 @@ function AdminReportsPage() {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/dashboard/campus-map`, {
         headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store',
       });
+      let departments = response.data.departments || [];
+      let ticketCounts = response.data.ticketCounts || [];
+      if (!ticketCounts.length) {
+        const fallback = await axios.get(`${API_BASE_URL}/api/dashboard`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        departments = fallback.data.departments || departments;
+        ticketCounts = fallback.data.mapTicketCounts || ticketCounts;
+      }
       setCampusMapData({
-        departments: response.data.departments || [],
-        ticketCounts: response.data.ticketCounts || [],
+        departments,
+        ticketCounts,
       });
       setCampusMapError('');
     } catch (error) {
-      setCampusMapError(error.response?.data?.message || 'Unable to load campus ticket pins.');
+      try {
+        const fallback = await axios.get(`${API_BASE_URL}/api/dashboard`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setCampusMapData({
+          departments: fallback.data.departments || [],
+          ticketCounts: fallback.data.mapTicketCounts || [],
+        });
+        setCampusMapError('');
+      } catch (fallbackError) {
+        setCampusMapError(fallbackError.response?.data?.message || error.response?.data?.message || 'Unable to load campus ticket pins.');
+      }
     }
   }, [token]);
 
