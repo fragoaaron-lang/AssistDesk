@@ -200,7 +200,7 @@ const FAQ_GROUPS = [
     ['BSHM Department', 'BSHM'],
     ['BSPT Department', 'BSPT'],
     ['Nursing Department', 'Nursing'],
-    ['Education Department', 'Education'],
+    ['BSED Department', 'BSED'],
   ].map(([title, label]) => ({
     title,
     questions: [
