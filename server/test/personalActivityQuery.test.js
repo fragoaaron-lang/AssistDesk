@@ -1,11 +1,16 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { buildPersonalActivityQuery } = require('../utils/personalActivityQuery');
+const { Op } = require('sequelize');
+const { buildPersonalActivityQuery, EXCLUDED_ACTIVITY_ACTIONS } = require('../utils/personalActivityQuery');
 
 test('personal activity query is scoped to the authenticated actor and selects safe fields', () => {
   const query = buildPersonalActivityQuery(42, 25, 10);
 
-  assert.deepEqual(query.where, { actor_user_id: 42 });
+  assert.deepEqual(query.where, {
+    actor_user_id: 42,
+    action: { [Op.notIn]: ['auth.login', 'auth.logout'] },
+  });
+  assert.deepEqual(EXCLUDED_ACTIVITY_ACTIONS, ['auth.login', 'auth.logout']);
   assert.deepEqual(query.attributes, ['id', 'action', 'entity_type', 'entity_id', 'created_at']);
   assert.deepEqual(query.order, [['created_at', 'DESC'], ['id', 'DESC']]);
   assert.equal(query.limit, 25);

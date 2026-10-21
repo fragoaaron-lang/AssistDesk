@@ -1,4 +1,7 @@
+const { Op } = require('sequelize');
+
 const ACTIVITY_ATTRIBUTES = ['id', 'action', 'entity_type', 'entity_id', 'created_at'];
+const EXCLUDED_ACTIVITY_ACTIONS = ['auth.login', 'auth.logout'];
 
 const clampInteger = (value, fallback, maximum) => {
   const parsed = Number(value);
@@ -7,11 +10,14 @@ const clampInteger = (value, fallback, maximum) => {
 };
 
 const buildPersonalActivityQuery = (userId, requestedLimit, requestedOffset) => ({
-  where: { actor_user_id: Number(userId) },
+  where: {
+    actor_user_id: Number(userId),
+    action: { [Op.notIn]: EXCLUDED_ACTIVITY_ACTIONS },
+  },
   attributes: ACTIVITY_ATTRIBUTES,
   order: [['created_at', 'DESC'], ['id', 'DESC']],
   limit: Math.min(clampInteger(requestedLimit, 50, 100), 100) || 50,
   offset: clampInteger(requestedOffset, 0, 10000),
 });
 
-module.exports = { buildPersonalActivityQuery };
+module.exports = { buildPersonalActivityQuery, EXCLUDED_ACTIVITY_ACTIONS };
