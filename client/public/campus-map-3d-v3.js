@@ -343,6 +343,7 @@ function setMapData(data) {
 }
 addEventListener('message', (event) => {
   if (event.origin !== location.origin || event.source !== parent || event.data?.type !== 'assistdesk:campus-map-data') return;
+  document.documentElement.setAttribute('data-theme', event.data.darkMode ? 'dark' : 'light');
   setMapData(event.data);
 });
 const act = new Set(Object.keys(CATS));

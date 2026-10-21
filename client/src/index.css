@@ -181,7 +181,8 @@ body {
   color: #fff;
 }
 
-.chatbot-header div { display: flex; flex-direction: column; gap: 2px; }
+.chatbot-header > div:first-child { display: flex; flex-direction: column; gap: 2px; }
+.chatbot-header > div:last-child { display: flex; flex-direction: row; gap: 8px; align-items: center; }
 .chatbot-header span { color: rgba(255, 255, 255, 0.76); font-size: 0.78rem; }
 .chatbot-close { border: 0; background: transparent; color: #fff; font-size: 1.6rem; cursor: pointer; line-height: 1; }
 
@@ -5159,7 +5160,6 @@ body.dark-mode .ticket-pin::after { background: #f4fbff; }
 body.dark-mode .ticket-legend-swatch { border-color: #f4fbff; }
 
 /* One coherent dark surface system for the workspace, reports, and conversations. */
-body.dark-mode .page-header,
 body.dark-mode .mobile-menu-drawer,
 body.dark-mode .notification-dropdown,
 body.dark-mode .report-filter-dropdown-menu,
@@ -5172,7 +5172,6 @@ body.dark-mode .user-directory-archive-modal {
   border-color: var(--border);
 }
 
-body.dark-mode .page-header,
 body.dark-mode .institutional-card,
 body.dark-mode .report-card,
 body.dark-mode .analytics-section-panel,
@@ -5360,6 +5359,78 @@ body.dark-mode .ticket-detail-modal,
 body.dark-mode .report-table-scroll {
   scrollbar-color: #526d7b #14232d;
 }
+
+/* The dashboard has an intentional map backdrop; do not paint opaque shells over it. */
+body.dark-mode .dashboard-heatmap-shell,
+body.dark-mode .dashboard-heatmap-shell .page-shell {
+  background: transparent !important;
+}
+
+body.dark-mode .dashboard-heatmap-background {
+  background: #09141d;
+}
+
+body.dark-mode .dashboard-heatmap-background::after {
+  background: linear-gradient(180deg, rgba(7, 16, 24, 0.54), rgba(7, 16, 24, 0.78));
+}
+
+body.dark-mode .dashboard-campus-map-background {
+  opacity: 0.46;
+  filter: saturate(0.72) contrast(1.05) brightness(0.82);
+}
+
+body.dark-mode .dashboard-heatmap-shell .overview-intro h2,
+body.dark-mode .dashboard-heatmap-shell .dashboard-activity-heading h3,
+body.dark-mode .dashboard-heatmap-shell .map-toolbar h3,
+body.dark-mode .ai-chat-page .page-intro h2 {
+  color: #edf4f7 !important;
+}
+
+body.dark-mode .dashboard-heatmap-shell .overview-intro .eyebrow,
+body.dark-mode .dashboard-heatmap-shell .map-toolbar-pill {
+  color: #8de2d7 !important;
+}
+
+body.dark-mode .ai-chat-page .institutional-card {
+  background: linear-gradient(145deg, #14212b, #111e28) !important;
+  border-color: #354b59;
+}
+
+body.dark-mode .ai-chat-page .institutional-btn.secondary {
+  border: 1px solid #3d5663;
+  background: #1b2d38;
+  color: #dce9ee;
+}
+
+body.dark-mode .ai-chat-page .institutional-btn.secondary:hover {
+  border-color: #6bd5c8;
+  background: #203b45;
+  color: #a2eee3;
+}
+
+body.dark-mode .ai-chat-entry.user {
+  padding: 10px 12px;
+  border: 1px solid #28616a;
+  border-radius: 10px 10px 3px 10px;
+  background: #16434d;
+  color: #e9fffb;
+}
+
+body.dark-mode .ai-chat-entry.assistant {
+  padding: 10px 12px;
+  border: 1px solid #354a57;
+  border-radius: 10px 10px 10px 3px;
+  background: #192a35;
+  color: #edf4f7;
+}
+
+body.dark-mode .ai-chat-entry .ai-chat-detail,
+body.dark-mode .ai-chat-entry .ai-chat-service,
+body.dark-mode .ai-chat-entry .ai-chat-ticket {
+  color: #dce8ed;
+}
+
+body.dark-mode .ai-chat-entry .ai-response-source { color: #aebfc8; }
 
 @media (prefers-reduced-motion: reduce) {
   body.dark-mode *,

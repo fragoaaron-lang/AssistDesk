@@ -94,6 +94,7 @@ function DashboardPage() {
 
     frame.contentWindow.postMessage({
       type: 'assistdesk:campus-map-data',
+      darkMode: document.body.classList.contains('dark-mode'),
       departments: visibleDepartments.map((department) => ({
         id: Number(department.id),
         name: String(department.name || ''),
@@ -113,6 +114,12 @@ function DashboardPage() {
 
   useEffect(() => {
     syncCampusMap();
+  }, [syncCampusMap]);
+
+  useEffect(() => {
+    const themeObserver = new MutationObserver(() => syncCampusMap());
+    themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    return () => themeObserver.disconnect();
   }, [syncCampusMap]);
 
   useEffect(() => {

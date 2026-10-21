@@ -33,7 +33,7 @@ function AiChatPage() {
   };
 
   return (
-    <div className="app-shell">
+    <div className="app-shell ai-chat-page">
       <div className="page-shell">
         <AuthenticatedNavigation user={user} subtitle="AI institutional assistant" />
 
