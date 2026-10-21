@@ -286,16 +286,14 @@ function makeTicketPin(ticket, department, position, offsetX, offsetY) {
   btn.type = 'button';
   const priority = ['low', 'medium', 'urgent'].includes(ticket.priority) ? ticket.priority : 'medium';
   btn.className = 'ticket-pin ' + priority;
-  const ticketCount = Math.max(1, Number(ticket.count) || 1);
-  btn.textContent = String(ticketCount);
-  btn.title = department.name + ' · ' + ticketCount + ' ticket' + (ticketCount === 1 ? '' : 's')
-    + ' · ' + (Number(ticket.urgent) || 0) + ' urgent';
-  btn.setAttribute('aria-label', btn.title);
+  const status = String(ticket.status || 'open').replace(/_/g, ' ');
+  btn.title = department.name + ' · ' + status + ' · ' + priority + ' priority';
+  btn.setAttribute('aria-label', 'Ticket location at ' + department.name + ', ' + status + ', ' + priority + ' priority');
   btn.addEventListener('click', () => {
     const heading = document.createElement('b');
     heading.textContent = department.name;
     const detail = document.createElement('span');
-    detail.textContent = `${ticketCount} ticket${ticketCount === 1 ? '' : 's'} · ${Number(ticket.urgent) || 0} urgent · ${Number(ticket.active) || 0} active`;
+    detail.textContent = status + ' · ' + priority.toUpperCase() + ' priority';
     info.replaceChildren(heading, detail);
   });
   ticketLayer.appendChild(btn);
@@ -333,26 +331,21 @@ function setMapData(data) {
     if (!count || !position) return;
     heatItems.push({ el: makeHeatCloud(department, count), position });
   });
-  const pinGroups = new Map();
+  const ticketOffsets = new Map();
   ticketCounts.forEach((ticketGroup) => {
-    const departmentKey = String(ticketGroup.department_id);
-    if (!pinGroups.has(departmentKey)) {
-      pinGroups.set(departmentKey, { count: 0, urgent: 0, active: 0, priority: 'low' });
-    }
-    const group = pinGroups.get(departmentKey);
-    const count = Number(ticketGroup.count) || 0;
-    group.count += count;
-    if (ticketGroup.priority === 'urgent') group.urgent += count;
-    if (['open', 'pending', 'in_progress'].includes(ticketGroup.status)) group.active += count;
-    if (ticketGroup.priority === 'urgent' || (ticketGroup.priority === 'medium' && group.priority === 'low')) {
-      group.priority = ticketGroup.priority;
-    }
-  });
-  pinGroups.forEach((group, departmentKey) => {
-    const department = departmentsById.get(departmentKey);
+    const department = departmentsById.get(String(ticketGroup.department_id));
     const base = department && worldPointFromDepartment(department);
     if (!department || !base) return;
-    ticketItems.push(makeTicketPin(group, department, base, 0, 0));
+    const departmentKey = String(ticketGroup.department_id);
+    let index = ticketOffsets.get(departmentKey) || 0;
+    const pinCount = Math.max(0, Number(ticketGroup.count) || 0);
+    for (let pin = 0; pin < pinCount; pin += 1) {
+      const angle = index * 2.39996;
+      const radius = index === 0 ? 0 : Math.min(96, 18 + Math.sqrt(index) * 16);
+      ticketItems.push(makeTicketPin(ticketGroup, department, base, Math.cos(angle) * radius, Math.sin(angle) * radius));
+      index += 1;
+    }
+    ticketOffsets.set(departmentKey, index);
   });
   syncLayers();
 }
