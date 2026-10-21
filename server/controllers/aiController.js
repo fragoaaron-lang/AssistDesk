@@ -4,6 +4,7 @@ const { addTicketNumber } = require('../utils/ticketNumber');
 const { inferDepartment } = require('../utils/departmentRouting');
 const { isSchoolRelatedQuestion, OUT_OF_SCOPE_RESPONSE } = require('../utils/schoolQuestionScope');
 const normalizeFaqQuery = require('../utils/normalizeFaqQuery');
+const { findExactFaq, buildExactFaqResponse } = require('../utils/exactFaqResponse');
 const isTorRequest = require('../utils/isTorRequest');
 const isClassScheduleRequest = require('../utils/isClassScheduleRequest');
 const isRegistrarDocumentRequest = require('../utils/isRegistrarDocumentRequest');
@@ -310,8 +311,8 @@ const buildResponse = async (query, suggestedQuestionKeywords = '') => {
     const locationDepartment = findDepartmentForIntent(departments || await Department.findAll(), departmentIntent);
     if (locationDepartment) return buildDepartmentLocationResult(locationDepartment);
   }
-  const normalizedFaqQuestion = normalizeFaqQuery(query);
-  const exactFaq = faqs.find((faq) => normalizeFaqQuery(faq.question) === normalizedFaqQuestion);
+  const exactFaq = findExactFaq(query, faqs);
+  if (exactFaq) return buildExactFaqResponse(exactFaq);
 
   if (!exactFaq) {
     const localResponse = getLocalConversationResponse(query);
@@ -498,10 +499,10 @@ const buildResponse = async (query, suggestedQuestionKeywords = '') => {
       }
     }
 
-    const clarificationOptions = rankedMatches
+    const clarificationOptions = [...new Set(rankedMatches
       .filter((match) => match.score > 0)
-      .slice(0, 3)
-      .map((match) => match.sourceType === 'faq' ? match.item.question : match.item.name);
+      .map((match) => match.sourceType === 'faq' ? match.item.question : match.item.name))]
+      .slice(0, 3);
     const clarificationText = isAmbiguous
       ? `I found a couple of close matches. Which one do you mean: ${clarificationOptions.join(' or ')}?`
       : clarificationOptions.length

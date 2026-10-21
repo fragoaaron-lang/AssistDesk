@@ -28,6 +28,14 @@ test('allows questions about TCC, its campus, and school support', () => {
   schoolQuestions.forEach((question) => assert.equal(isSchoolRelatedQuestion(question), true, question));
 });
 
+test('recognizes Nursing department uniform questions as school-related', () => {
+  [
+    'Where can I get Nursing uniforms?',
+    'Where can I get uniforms in the Nursing Department?',
+    'Where can I get the modules or books in the Nursing Department?',
+  ].forEach((question) => assert.equal(isSchoolRelatedQuestion(question), true, question));
+});
+
 test('normalizes TOR phrasing so it matches transcript FAQs', () => {
   assert.equal(
     normalizeFaqQuery('Where can I get my transcript of records?'),

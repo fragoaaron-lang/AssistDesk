@@ -6,7 +6,10 @@ const { getDepartmentIntent, shouldUseGenericDepartmentHelp } = require('../util
 test('BSCRIM wording is recognized as a CRIM department intent', () => {
   assert.equal(getDepartmentIntent('Where can I get modules in the BSCRIM Department?'), 'crim');
   assert.equal(getDepartmentIntent('Who is the dean of the BSCRIM department?'), 'crim');
-  assert.match(normalizeFaqQuery('Where can I get modules in the BSCRIM Department?'), /crim bscrim/);
+  assert.equal(
+    normalizeFaqQuery('Where can I get modules in the BSCRIM Department?'),
+    normalizeFaqQuery('Where can I get modules in the CRIM Department?')
+  );
 });
 
 test('generic department help does not override a specific department question', () => {
