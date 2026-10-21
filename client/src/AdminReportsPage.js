@@ -283,12 +283,6 @@ function AdminReportsPage() {
       .map((key) => [key, filters[key]])
       .filter(([, value]) => value !== '')
   );
-  const setReportFilter = (section, key, value) => {
-    setReportFiltersBySection((current) => ({
-      ...current,
-      [section]: { ...current[section], [key]: value },
-    }));
-  };
   const toggleFilterDropdown = (section) => {
     setFilterDropdownsOpen((current) => ({ ...current, [section]: current[section] !== true }));
   };
@@ -336,9 +330,9 @@ function AdminReportsPage() {
     }
   };
 
-  const applyReportFilters = async (event) => {
-    event.preventDefault();
-    if (reportFilters.start_date && reportFilters.end_date && reportFilters.start_date > reportFilters.end_date) {
+  const applyReportFilters = async (event, filters = reportFilters, section = activeReportSection) => {
+    event?.preventDefault();
+    if (filters.start_date && filters.end_date && filters.start_date > filters.end_date) {
       setMessage('Start date must be on or before end date.');
       return;
     }
@@ -347,11 +341,22 @@ function AdminReportsPage() {
     setSectionLoading(true);
     try {
       await Promise.all([
-        loadReports(reportFilters),
-        activeReportSection === 'audit' ? loadAuditLogs(reportFilters) : Promise.resolve(),
+        loadReports(filters),
+        section === 'audit' ? loadAuditLogs(filters) : Promise.resolve(),
       ]);
     } finally {
       if (sectionRequestId.current === requestId) setSectionLoading(false);
+    }
+  };
+
+  const handleReportFilterChange = (section, key, value) => {
+    const nextFilters = { ...reportFiltersBySection[section], [key]: value };
+    setReportFiltersBySection((current) => ({ ...current, [section]: nextFilters }));
+
+    // Select filters should take effect immediately; date ranges remain explicitly applied
+    // so users can set both endpoints before the report reloads.
+    if (['department_id', 'category', 'priority', 'status'].includes(key)) {
+      applyReportFilters(null, nextFilters, section);
     }
   };
 
@@ -751,7 +756,7 @@ function AdminReportsPage() {
               loading={sectionLoading}
               expanded={filterDropdownsOpen[activeReportSection] === true}
               onToggle={() => toggleFilterDropdown(activeReportSection)}
-              onChange={(field, value) => setReportFilter(activeReportSection, field, value)}
+              onChange={(field, value) => handleReportFilterChange(activeReportSection, field, value)}
               onApply={applyReportFilters}
               onReset={resetReportFilters}
               onExport={exportReportCsv}
