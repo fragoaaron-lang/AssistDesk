@@ -125,9 +125,10 @@ exports.getDashboard = async (req, res) => {
       raw: true,
     });
 
-    // The public-to-authenticated campus map uses anonymous aggregates for all
-    // departments, without returning ticket IDs, owners, subjects, or descriptions.
-    const mapTicketCounts = await Ticket.findAll({
+    // The campus map is global across submitters, departments, and statuses.
+    // Keep this query unscoped and aggregate-only: never expose ticket IDs,
+    // submitters, subjects, or descriptions to other users.
+    const mapTicketCounts = await Ticket.unscoped().findAll({
       attributes: [
         'department_id',
         'priority',

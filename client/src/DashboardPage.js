@@ -32,37 +32,7 @@ function DashboardPage() {
 
   const visibleDepartments = dashboard.departments || [];
 
-  const mapTicketCounts = useMemo(() => {
-    if (Array.isArray(dashboard.mapTicketCounts) && dashboard.mapTicketCounts.length) {
-      return dashboard.mapTicketCounts;
-    }
-
-    const countsByGroup = new Map();
-    (dashboard.tickets || []).forEach((ticket) => {
-      if (ticket.department_id == null) return;
-      const priority = String(ticket.priority || 'medium').toLowerCase();
-      const status = String(ticket.status || 'open').toLowerCase();
-      const key = [ticket.department_id, priority, status].join('|');
-      const group = countsByGroup.get(key) || {
-        department_id: ticket.department_id,
-        priority,
-        status,
-        ticket_count: 0,
-      };
-      group.ticket_count += 1;
-      countsByGroup.set(key, group);
-    });
-    if (countsByGroup.size) return [...countsByGroup.values()];
-
-    return visibleDepartments
-      .filter((department) => Number(department.ticket_count) > 0)
-      .map((department) => ({
-        department_id: department.id,
-        priority: 'medium',
-        status: 'open',
-        ticket_count: Number(department.ticket_count) || 0,
-      }));
-  }, [dashboard.mapTicketCounts, dashboard.tickets, visibleDepartments]);
+  const mapTicketCounts = Array.isArray(dashboard.mapTicketCounts) ? dashboard.mapTicketCounts : [];
 
   const dashboardSummary = useMemo(() => {
     const tickets = dashboard.tickets || [];

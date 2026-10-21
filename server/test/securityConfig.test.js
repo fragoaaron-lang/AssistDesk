@@ -63,7 +63,7 @@ test('campus map initializes from a same-origin script allowed by deployment CSP
   const inlineScripts = [...mapHtml.matchAll(/<script\b(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)];
 
   assert.ok(fs.existsSync(mapScriptPath), 'same-origin campus map script must be deployed with the HTML');
-  assert.ok(externalScripts.some(([, , src]) => src === mapScript), 'map HTML must load the same-origin initializer');
+  assert.ok(externalScripts.some(([, , src]) => src.split('?')[0] === mapScript), 'map HTML must load the same-origin initializer');
   assert.equal(inlineScripts.length, 0, 'map HTML must not depend on inline scripts blocked by CSP');
   assert.ok(vercelConfig.includes("script-src 'self'"), 'Vercel CSP must allow same-origin scripts');
   assert.ok(expressConfig.includes("'script-src': [\"'self'\""), 'Express CSP must allow same-origin scripts');
