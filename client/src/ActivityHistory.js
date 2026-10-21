@@ -43,6 +43,7 @@ const activityLabels = {
   'catalog.specific_issue_updated': 'Updated a ticket issue option',
   'catalog.specific_issue_deleted': 'Removed a ticket issue option',
 };
+const hiddenActivityActions = new Set(['auth.login', 'auth.logout']);
 
 const getActivityLabel = (action) => activityLabels[action]
   || String(action || 'Activity recorded')
@@ -57,6 +58,8 @@ const formatActivityDate = (value) => {
 };
 
 function ActivityHistoryList({ activity = [], loading = false, error = '', compact = false }) {
+  const visibleActivity = activity.filter((entry) => !hiddenActivityActions.has(entry.action));
+
   if (loading) {
     return (
       <div className={`activity-history-list${compact ? ' is-compact' : ''}`} role="status" aria-label="Loading activity history" aria-busy="true">
@@ -73,11 +76,11 @@ function ActivityHistoryList({ activity = [], loading = false, error = '', compa
   }
 
   if (error) return <p className="activity-history-message is-error" role="alert">{error}</p>;
-  if (!activity.length) return <p className="activity-history-message">No account activity has been recorded yet.</p>;
+  if (!visibleActivity.length) return <p className="activity-history-message">No account activity has been recorded yet.</p>;
 
   return (
     <ol className={`activity-history-list${compact ? ' is-compact' : ''}`} aria-label="Your account activity">
-      {activity.map((entry) => (
+      {visibleActivity.map((entry) => (
         <li className="activity-history-item" key={entry.id}>
           <span className="activity-history-marker" aria-hidden="true">
             <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="3" /></svg>
