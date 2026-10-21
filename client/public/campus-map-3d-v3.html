@@ -32,9 +32,9 @@ h1{font-size:16px;margin:0 0 8px;font-weight:700}
 #heatmap,#ticketLayer{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 #heatmap{z-index:2}
 #ticketLayer{z-index:3}
-.heat-dot{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(239,35,45,.76) 0%,rgba(255,91,23,.62) 26%,rgba(255,187,0,.4) 58%,rgba(255,196,0,0) 78%);filter:blur(4px);mix-blend-mode:normal;pointer-events:none}
-.ticket-pin{position:absolute;transform:translate(-50%,-100%) rotate(-45deg);width:11px;height:11px;padding:0;border:2px solid #fff;border-radius:50% 50% 50% 0;box-shadow:0 1px 5px rgba(16,24,40,.55);pointer-events:auto;cursor:pointer}
-.ticket-pin::after{content:"";position:absolute;inset:3px;border-radius:50%;background:#fff;pointer-events:none}
+.heat-dot{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(239,35,45,.94) 0%,rgba(255,91,23,.76) 25%,rgba(255,187,0,.46) 58%,rgba(255,196,0,0) 78%);filter:blur(2px);mix-blend-mode:normal;pointer-events:none}
+.ticket-pin{position:absolute;transform:translate(-50%,-100%) rotate(-45deg);width:19px;height:19px;padding:0;border:2px solid #fff;border-radius:50% 50% 50% 0;box-shadow:0 2px 8px rgba(16,24,40,.78),0 0 0 2px rgba(8,32,56,.44);pointer-events:auto;cursor:pointer;z-index:4}
+.ticket-pin::after{content:"";position:absolute;inset:5px;border-radius:50%;background:#fff;pointer-events:none}
 .ticket-pin.low{background:#34c759}.ticket-pin.medium{background:#3b82f6}.ticket-pin.urgent{background:#ef4444}
 #legend{right:12px;bottom:calc(70px + env(safe-area-inset-bottom,0px));padding:10px 12px;min-width:180px}
 #legend strong{display:block;font-size:12px;margin-bottom:8px}

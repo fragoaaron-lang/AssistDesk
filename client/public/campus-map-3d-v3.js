@@ -273,10 +273,10 @@ function worldPointFromDepartment(department) {
 function makeHeatCloud(department, count) {
   const cloud = document.createElement('div');
   cloud.className = 'heat-dot';
-  const size = Math.min(112, 62 + Math.sqrt(count) * 12);
+  const size = Math.min(168, 88 + Math.sqrt(count) * 16);
   cloud.style.width = size + 'px';
   cloud.style.height = size + 'px';
-  cloud.style.opacity = String(Math.min(0.92, 0.76 + count * 0.04));
+  cloud.style.opacity = String(Math.min(1, 0.84 + count * 0.025));
   cloud.title = department.name + ' · ' + count + ' ticket' + (count === 1 ? '' : 's');
   heatLayer.appendChild(cloud);
   return cloud;
@@ -341,7 +341,9 @@ function setMapData(data) {
     const pinCount = Math.max(0, Number(ticketGroup.count) || 0);
     for (let pin = 0; pin < pinCount; pin += 1) {
       const angle = index * 2.39996;
-      const radius = index === 0 ? 0 : Math.min(7, 2.5 + index * 0.45);
+      // These are CSS-pixel offsets, not world coordinates: spread tickets far
+      // enough that overlapping pins don't hide one another on the map.
+      const radius = index === 0 ? 0 : Math.min(96, 18 + Math.sqrt(index) * 16);
       ticketItems.push(makeTicketPin(ticketGroup, department, base, Math.cos(angle) * radius, Math.sin(angle) * radius));
       index += 1;
     }
