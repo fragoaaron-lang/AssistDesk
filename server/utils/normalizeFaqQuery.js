@@ -9,7 +9,7 @@ const normalizeFaqQuery = (text) => normalizeStudentQuery(text)
   .replace(/\bcomputer science\b/g, ' cs bscs ')
   .replace(/\bbasic education\b/g, ' basic education ')
   .replace(/\bhospitality management\b/g, ' hm bshm ')
-  .replace(/\bphysical therapy\b/g, ' pt bspt ')
+  .replace(/\b(?:pt|bspt|physical therapy)\b/g, ' physical therapy ')
   .replace(/\b(?:information technology|it department)\b/g, ' it ')
   .replace(/\s+/g, ' ')
   .trim();

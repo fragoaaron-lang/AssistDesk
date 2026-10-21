@@ -34,3 +34,13 @@ test('exact FAQ matching supports normalized BSCRIM aliases', () => {
 
   assert.equal(findExactFaq('Where can I get uniforms in the Criminology Department?', [crimFaq]), crimFaq);
 });
+
+test('exact FAQ matching treats BSPT and PT as the same department alias', () => {
+  const ptFaq = {
+    ...faq,
+    question: 'Where is the PT Department building?',
+    answer: 'The PT Department Building is between the CBA Building and the SHS Building.',
+  };
+
+  assert.equal(findExactFaq('Where is the BSPT Department building?', [ptFaq]), ptFaq);
+});

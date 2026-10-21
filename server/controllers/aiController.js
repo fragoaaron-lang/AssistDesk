@@ -269,8 +269,6 @@ const buildResponse = async (query, suggestedQuestionKeywords = '') => {
     };
   }
 
-  if (namedLocationDepartment && !officeFactRequest) return buildDepartmentLocationResult(namedLocationDepartment);
-
   const faqs = await Faq.findAll({ include: [{ model: Department }] });
   const services = await Service.findAll({ include: [{ model: Department }] });
   if (officeFactRequest) {
@@ -305,14 +303,16 @@ const buildResponse = async (query, suggestedQuestionKeywords = '') => {
     };
   }
 
+  const exactFaq = findExactFaq(query, faqs);
+  if (exactFaq) return buildExactFaqResponse(exactFaq);
+  if (namedLocationDepartment) return buildDepartmentLocationResult(namedLocationDepartment);
+
   const normalizedQuery = normalize(query);
   const departmentIntent = getDepartmentIntent(query);
   if (isLocationQuery) {
     const locationDepartment = findDepartmentForIntent(departments || await Department.findAll(), departmentIntent);
     if (locationDepartment) return buildDepartmentLocationResult(locationDepartment);
   }
-  const exactFaq = findExactFaq(query, faqs);
-  if (exactFaq) return buildExactFaqResponse(exactFaq);
 
   if (!exactFaq) {
     const localResponse = getLocalConversationResponse(query);
