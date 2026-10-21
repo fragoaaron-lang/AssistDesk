@@ -285,15 +285,16 @@ function makeTicketPin(ticket, department, position, offsetX, offsetY) {
   const btn = document.createElement('button');
   btn.type = 'button';
   const priority = ['low', 'medium', 'urgent'].includes(ticket.priority) ? ticket.priority : 'medium';
-  btn.className = 'ticket-pin ' + priority;
+  btn.className = 'ticket-pin ' + priority + (ticket.unlocated ? ' unlocated' : '');
   const status = String(ticket.status || 'open').replace(/_/g, ' ');
-  btn.title = department.name + ' · ' + status + ' · ' + priority + ' priority';
-  btn.setAttribute('aria-label', 'Ticket location at ' + department.name + ', ' + status + ', ' + priority + ' priority');
+  const locationNote = ticket.unlocated ? ' · department map location not set' : '';
+  btn.title = department.name + locationNote + ' · ' + status + ' · ' + priority + ' priority';
+  btn.setAttribute('aria-label', 'Ticket at ' + department.name + locationNote + ', ' + status + ', ' + priority + ' priority');
   btn.addEventListener('click', () => {
     const heading = document.createElement('b');
     heading.textContent = department.name;
     const detail = document.createElement('span');
-    detail.textContent = status + ' · ' + priority.toUpperCase() + ' priority';
+    detail.textContent = (ticket.unlocated ? 'Department map location not set · ' : '') + status + ' · ' + priority.toUpperCase() + ' priority';
     info.replaceChildren(heading, detail);
   });
   ticketLayer.appendChild(btn);
@@ -331,18 +332,42 @@ function setMapData(data) {
     if (!count || !position) return;
     heatItems.push({ el: makeHeatCloud(department, count), position });
   });
+  const unlocatedGroups = ticketCounts.filter((ticketGroup) => {
+    const department = departmentsById.get(String(ticketGroup.department_id));
+    return !department || !worldPointFromDepartment(department);
+  });
+  const unlocatedCount = unlocatedGroups.reduce((total, group) => total + (Number(group.count) || 0), 0);
+  const unlocatedPosition = new THREE.Vector3(61.44, 3.2, 32.85);
+  if (unlocatedCount > 0) {
+    const unlocatedDepartmentCount = new Set(unlocatedGroups.map((group) => String(group.department_id))).size;
+    const unlocatedDepartment = {
+      id: 'unlocated',
+      name: 'Unlocated tickets',
+      map_x: 50,
+      map_y: 50,
+    };
+    heatItems.push({ el: makeHeatCloud(unlocatedDepartment, unlocatedCount), position: unlocatedPosition });
+    const label = document.createElement('div');
+    label.className = 'map-unlocated-label';
+    label.textContent = 'Location not set · ' + unlocatedCount + ' ticket' + (unlocatedCount === 1 ? '' : 's');
+    label.title = unlocatedDepartmentCount + ' department' + (unlocatedDepartmentCount === 1 ? ' has' : 's have') + ' no mapped coordinates';
+    ticketLayer.appendChild(label);
+    ticketItems.push({ el: label, position: unlocatedPosition });
+  }
   const ticketOffsets = new Map();
   ticketCounts.forEach((ticketGroup) => {
     const department = departmentsById.get(String(ticketGroup.department_id));
-    const base = department && worldPointFromDepartment(department);
-    if (!department || !base) return;
+    const mappedPosition = department && worldPointFromDepartment(department);
+    const unlocated = !mappedPosition;
+    const pinDepartment = department || { id: 'unlocated', name: 'Unassigned department' };
+    const base = mappedPosition || unlocatedPosition;
     const departmentKey = String(ticketGroup.department_id);
     let index = ticketOffsets.get(departmentKey) || 0;
     const pinCount = Math.max(0, Number(ticketGroup.count) || 0);
     for (let pin = 0; pin < pinCount; pin += 1) {
       const angle = index * 2.39996;
-      const radius = index === 0 ? 0 : Math.min(96, 18 + Math.sqrt(index) * 16);
-      ticketItems.push(makeTicketPin(ticketGroup, department, base, Math.cos(angle) * radius, Math.sin(angle) * radius));
+      const radius = index === 0 ? 0 : Math.min(unlocated ? 42 : 96, 18 + Math.sqrt(index) * 16);
+      ticketItems.push(makeTicketPin({ ...ticketGroup, unlocated }, pinDepartment, base, Math.cos(angle) * radius, Math.sin(angle) * radius));
       index += 1;
     }
     ticketOffsets.set(departmentKey, index);

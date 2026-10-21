@@ -11,7 +11,7 @@ Department marker coordinates are stored on each department record as `map_x` an
 - `map_x`: horizontal percentage from the image's left edge.
 - `map_y`: vertical percentage from the image's top edge.
 - For example, `map_x = 50`, `map_y = 50` places the marker at the center.
-- If either coordinate is blank, no office marker or map ticket/heat position is shown for that department; the dashboard does not guess a location from the department name.
+- If either coordinate is blank, the dashboard does not guess an office location from the department name. Tickets assigned to departments without coordinates are still shown together in a clearly labeled “Location not set” cluster on the map.
 
 Initial percentages are image-based starting estimates for recognizable labeled buildings. An authorized admin should verify and adjust each coordinate against the official campus map. The server fills coordinates only when they are currently blank and never overwrites admin-maintained map values, except for fixed campus locations: Maintenance is pinned to the Workshop (85.5%, 54%); Library is placed at the lower right (47%, 65.5%), Registrar at the upper left (43%, 61.5%), Guidance at the upper right (47%, 61.5%), and Accounting at the lower left (43%, 65.5%) of the J.B. Angeles (Administration) Building. Their saved physical location is normalized to “Administration Building (J.B. Angeles Building)”. CS is pinned inside the right-hand Information & Technology Building (54.5%, 31%), and IT is pinned inside the left-hand Information & Technology Building below D.H. Soriano Hall (39%, 32%).
 
@@ -19,8 +19,8 @@ Initial percentages are image-based starting estimates for recognizable labeled 
 
 Admins maintain department name, description/services, contact person, contact number, physical location, office hours, and map percentages in **Catalog → Edit Department**. Saving updates the database-backed directory and dashboard map data. When replacing `schoolmap.png` with a differently cropped or sized map, recalibrate all department percentages in Catalog because coordinates are relative to the image boundaries.
 
-Department records without confirmed locations should keep map coordinates blank until verified. The directory's factual details must likewise be confirmed by the department before publication; seeded or legacy sample records may require review.
+Department records without confirmed locations should keep map coordinates blank until verified. The directory's factual details must likewise be confirmed by the department before publication; seeded or legacy sample records may require review. Missing coordinates never hide tickets: those ticket pins and their heat volume are grouped at the map's neutral campus-center indicator until an authorized admin sets department coordinates.
 
 ## Map capabilities and limitations
 
-The dashboard overlays ticket pins and ticket-volume heat spots on the static campus image; it does not display department office pins or labels. Ticket and heat overlays are omitted when a department lacks coordinates. The map does not calculate walking routes, use GPS, locate a user's device, or provide real-time person tracking. Live updates refer only to application ticket events.
+The dashboard overlays ticket pins and ticket-volume heat spots on the 3D campus map; it does not display department office pins or labels. Tickets with department coordinates appear at that department; tickets without mapped coordinates appear in the labeled unlocated cluster rather than being omitted. The map does not calculate walking routes, use GPS, locate a user's device, or provide real-time person tracking. Live updates refer only to application ticket events.
