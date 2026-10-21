@@ -273,10 +273,10 @@ function worldPointFromDepartment(department) {
 function makeHeatCloud(department, count) {
   const cloud = document.createElement('div');
   cloud.className = 'heat-dot';
-  const size = Math.min(168, 88 + Math.sqrt(count) * 16);
+  const size = Math.min(190, 96 + Math.sqrt(count) * 20);
   cloud.style.width = size + 'px';
   cloud.style.height = size + 'px';
-  cloud.style.opacity = String(Math.min(1, 0.84 + count * 0.025));
+  cloud.style.opacity = String(Math.min(1, 0.9 + count * 0.02));
   cloud.title = department.name + ' · ' + count + ' ticket' + (count === 1 ? '' : 's');
   heatLayer.appendChild(cloud);
   return cloud;
@@ -286,14 +286,16 @@ function makeTicketPin(ticket, department, position, offsetX, offsetY) {
   btn.type = 'button';
   const priority = ['low', 'medium', 'urgent'].includes(ticket.priority) ? ticket.priority : 'medium';
   btn.className = 'ticket-pin ' + priority;
-  const status = String(ticket.status || 'open').replace(/_/g, ' ');
-  btn.title = department.name + ' · ' + status + ' · ' + priority + ' priority';
-  btn.setAttribute('aria-label', 'Ticket location at ' + department.name + ', ' + status + ', ' + priority + ' priority');
+  const ticketCount = Math.max(1, Number(ticket.count) || 1);
+  btn.textContent = String(ticketCount);
+  btn.title = department.name + ' · ' + ticketCount + ' ticket' + (ticketCount === 1 ? '' : 's')
+    + ' · ' + (Number(ticket.urgent) || 0) + ' urgent';
+  btn.setAttribute('aria-label', btn.title);
   btn.addEventListener('click', () => {
     const heading = document.createElement('b');
     heading.textContent = department.name;
     const detail = document.createElement('span');
-    detail.textContent = status + ' · ' + priority.toUpperCase() + ' priority';
+    detail.textContent = `${ticketCount} ticket${ticketCount === 1 ? '' : 's'} · ${Number(ticket.urgent) || 0} urgent · ${Number(ticket.active) || 0} active`;
     info.replaceChildren(heading, detail);
   });
   ticketLayer.appendChild(btn);
@@ -331,23 +333,26 @@ function setMapData(data) {
     if (!count || !position) return;
     heatItems.push({ el: makeHeatCloud(department, count), position });
   });
-  const ticketOffsets = new Map();
+  const pinGroups = new Map();
   ticketCounts.forEach((ticketGroup) => {
-    const department = departmentsById.get(String(ticketGroup.department_id));
+    const departmentKey = String(ticketGroup.department_id);
+    if (!pinGroups.has(departmentKey)) {
+      pinGroups.set(departmentKey, { count: 0, urgent: 0, active: 0, priority: 'low' });
+    }
+    const group = pinGroups.get(departmentKey);
+    const count = Number(ticketGroup.count) || 0;
+    group.count += count;
+    if (ticketGroup.priority === 'urgent') group.urgent += count;
+    if (['open', 'pending', 'in_progress'].includes(ticketGroup.status)) group.active += count;
+    if (ticketGroup.priority === 'urgent' || (ticketGroup.priority === 'medium' && group.priority === 'low')) {
+      group.priority = ticketGroup.priority;
+    }
+  });
+  pinGroups.forEach((group, departmentKey) => {
+    const department = departmentsById.get(departmentKey);
     const base = department && worldPointFromDepartment(department);
     if (!department || !base) return;
-    const departmentKey = String(ticketGroup.department_id);
-    let index = ticketOffsets.get(departmentKey) || 0;
-    const pinCount = Math.max(0, Number(ticketGroup.count) || 0);
-    for (let pin = 0; pin < pinCount; pin += 1) {
-      const angle = index * 2.39996;
-      // These are CSS-pixel offsets, not world coordinates: spread tickets far
-      // enough that overlapping pins don't hide one another on the map.
-      const radius = index === 0 ? 0 : Math.min(96, 18 + Math.sqrt(index) * 16);
-      ticketItems.push(makeTicketPin(ticketGroup, department, base, Math.cos(angle) * radius, Math.sin(angle) * radius));
-      index += 1;
-    }
-    ticketOffsets.set(departmentKey, index);
+    ticketItems.push(makeTicketPin(group, department, base, 0, 0));
   });
   syncLayers();
 }
