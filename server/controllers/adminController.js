@@ -3,6 +3,7 @@ const { notifyAdmins, disconnectUser } = require('../utils/socket');
 const { addTicketNumber } = require('../utils/ticketNumber');
 const { recordAudit } = require('../utils/auditLog');
 const { getDepartmentScope, canUseDepartmentFilter, applyDepartmentScope } = require('../utils/departmentScope');
+const { mergeDepartmentTicketCounts } = require('../utils/departmentTicketCounts');
 const { Op } = require('sequelize');
 
 const buildTicketFilters = (query = {}) => {
@@ -68,11 +69,16 @@ exports.getReports = async (req, res) => {
       raw: true,
     });
 
-    const ticketCountsByDepartment = departmentCounts.map((row) => ({
-      department_id: row.department_id,
-      department_name: row['Department.name'] || 'Unassigned',
-      count: row.count,
-    }));
+    const reportDepartments = await Department.findAll({
+      attributes: ['id', 'name'],
+      ...(departmentScope ? { where: { id: departmentScope } } : {}),
+      order: [['name', 'ASC']],
+      raw: true,
+    });
+    const ticketCountsByDepartment = mergeDepartmentTicketCounts(
+      reportDepartments,
+      departmentCounts.map((row) => ({ department_id: row.department_id, count: row.count })),
+    );
 
     const ticketCountsByStatus = await Ticket.findAll({
       attributes: ['status', [Ticket.sequelize.fn('COUNT', Ticket.sequelize.col('id')), 'count']],
