@@ -11,6 +11,8 @@ function DashboardPage() {
   const [dashboard, setDashboard] = useState({ departments: [], services: [], announcements: [], stats: {} });
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [campusMapLoaded, setCampusMapLoaded] = useState(false);
+  const [campusMapData, setCampusMapData] = useState({ departments: [], ticketCounts: [] });
+  const [campusMapError, setCampusMapError] = useState('');
   const [selectedMapTicket, setSelectedMapTicket] = useState(null);
   const [hoveredMapTicket, setHoveredMapTicket] = useState(null);
   const [showWelcomeSplash, setShowWelcomeSplash] = useState(() => sessionStorage.getItem('assistdesk_show_welcome_splash') === 'true');
@@ -31,8 +33,6 @@ function DashboardPage() {
   const welcomeName = (sessionStorage.getItem('assistdesk_welcome_name') || user?.name || 'User').split(' ')[0];
 
   const visibleDepartments = dashboard.departments || [];
-
-  const mapTicketCounts = Array.isArray(dashboard.mapTicketCounts) ? dashboard.mapTicketCounts : [];
 
   const dashboardSummary = useMemo(() => {
     const tickets = dashboard.tickets || [];
@@ -90,6 +90,22 @@ function DashboardPage() {
     }
   };
 
+  const loadCampusMapData = useCallback(async () => {
+    if (!token) return;
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/dashboard/campus-map`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCampusMapData({
+        departments: response.data.departments || [],
+        ticketCounts: response.data.ticketCounts || [],
+      });
+      setCampusMapError('');
+    } catch (error) {
+      setCampusMapError(error.response?.data?.message || 'Unable to load ticket pinpoints.');
+    }
+  }, [token]);
+
   const syncCampusMap = useCallback(() => {
     const frame = campusMapFrame.current;
     if (!frame?.contentWindow) return;
@@ -97,20 +113,20 @@ function DashboardPage() {
     frame.contentWindow.postMessage({
       type: 'assistdesk:campus-map-data',
       darkMode: document.body.classList.contains('dark-mode'),
-      departments: visibleDepartments.map((department) => ({
+      departments: campusMapData.departments.map((department) => ({
         id: Number(department.id),
         name: String(department.name || ''),
         map_x: department.map_x,
         map_y: department.map_y,
       })),
-      ticketCounts: mapTicketCounts.map((row) => ({
+      ticketCounts: campusMapData.ticketCounts.map((row) => ({
         department_id: Number(row.department_id),
         priority: String(row.priority || 'medium'),
         status: String(row.status || 'open'),
         count: Number(row.ticket_count) || 0,
       })),
     }, window.location.origin);
-  }, [dashboard, mapTicketCounts, visibleDepartments]);
+  }, [campusMapData]);
 
   useEffect(() => {
     syncCampusMap();
@@ -137,34 +153,44 @@ function DashboardPage() {
     if (!token || user?.account_status === 'terminated') return;
 
     loadData();
+    loadCampusMapData();
     const socket = getSocket();
     if (!socket) return;
 
     socket.on('ticketCreated', loadData);
+    socket.on('ticketCreated', loadCampusMapData);
     socket.on('ticketStatusUpdated', loadData);
+    socket.on('ticketStatusUpdated', loadCampusMapData);
     socket.on('ticketEtaUpdated', loadData);
+    socket.on('ticketEtaUpdated', loadCampusMapData);
     socket.on('ticketEtaExpired', loadData);
+    socket.on('ticketEtaExpired', loadCampusMapData);
     socket.on('announcementCreated', loadData);
 
     return () => {
       socket.off('ticketCreated', loadData);
+      socket.off('ticketCreated', loadCampusMapData);
       socket.off('ticketStatusUpdated', loadData);
+      socket.off('ticketStatusUpdated', loadCampusMapData);
       socket.off('ticketEtaUpdated', loadData);
+      socket.off('ticketEtaUpdated', loadCampusMapData);
       socket.off('ticketEtaExpired', loadData);
+      socket.off('ticketEtaExpired', loadCampusMapData);
       socket.off('announcementCreated', loadData);
     };
-  }, [token, user?.account_status]);
+  }, [token, user?.account_status, loadCampusMapData]);
 
   useEffect(() => {
     const refreshDashboard = (event) => {
       if (event.detail?.page !== 'dashboard' || !token || user?.account_status === 'terminated') return;
       setDashboardLoading(true);
       loadData();
+      loadCampusMapData();
     };
 
     window.addEventListener('assistdesk:page-refresh', refreshDashboard);
     return () => window.removeEventListener('assistdesk:page-refresh', refreshDashboard);
-  }, [token, user?.account_status]);
+  }, [token, user?.account_status, loadCampusMapData]);
 
   const getHeatStrength = (count) => Math.min(0.98, 0.38 + (Number(count) * 0.16));
 
@@ -330,6 +356,7 @@ function DashboardPage() {
             <div>
               <h3>Campus 3D overview</h3>
               <p className="map-subtitle">Ticket-volume heat clouds and priority pinpoints across departments.</p>
+              {campusMapError && <p className="map-subtitle" role="alert">{campusMapError}</p>}
             </div>
             <div className="map-toolbar-pill">Live map</div>
           </div>

@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
+import { getSocket } from './socket';
 import AuthenticatedNavigation from './AuthenticatedNavigation';
 
 const getTicketPrefix = (departmentName) => {
@@ -276,6 +277,77 @@ function AdminReportsPage() {
   const [updatingUserId, setUpdatingUserId] = useState(null);
   const [activePriority, setActivePriority] = useState(null);
   const [hoveredPriority, setHoveredPriority] = useState(null);
+  const [campusMapData, setCampusMapData] = useState({ departments: [], ticketCounts: [] });
+  const [campusMapError, setCampusMapError] = useState('');
+  const adminCampusMapFrame = useRef(null);
+
+  const loadCampusMapData = useCallback(async () => {
+    if (!token) return;
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/dashboard/campus-map`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCampusMapData({
+        departments: response.data.departments || [],
+        ticketCounts: response.data.ticketCounts || [],
+      });
+      setCampusMapError('');
+    } catch (error) {
+      setCampusMapError(error.response?.data?.message || 'Unable to load campus ticket pins.');
+    }
+  }, [token]);
+
+  const syncAdminCampusMap = useCallback(() => {
+    const frame = adminCampusMapFrame.current;
+    if (!frame?.contentWindow) return;
+    frame.contentWindow.postMessage({
+      type: 'assistdesk:campus-map-data',
+      darkMode: document.body.classList.contains('dark-mode'),
+      departments: campusMapData.departments.map((department) => ({
+        id: Number(department.id),
+        name: String(department.name || ''),
+        map_x: department.map_x,
+        map_y: department.map_y,
+      })),
+      ticketCounts: campusMapData.ticketCounts.map((row) => ({
+        department_id: Number(row.department_id),
+        priority: String(row.priority || 'medium'),
+        status: String(row.status || 'open'),
+        count: Number(row.ticket_count) || 0,
+      })),
+    }, window.location.origin);
+  }, [campusMapData]);
+
+  useEffect(() => {
+    loadCampusMapData();
+    const socket = getSocket();
+    if (!socket) return undefined;
+    socket.on('ticketCreated', loadCampusMapData);
+    socket.on('ticketStatusUpdated', loadCampusMapData);
+    socket.on('ticketEtaUpdated', loadCampusMapData);
+    socket.on('ticketEtaExpired', loadCampusMapData);
+    return () => {
+      socket.off('ticketCreated', loadCampusMapData);
+      socket.off('ticketStatusUpdated', loadCampusMapData);
+      socket.off('ticketEtaUpdated', loadCampusMapData);
+      socket.off('ticketEtaExpired', loadCampusMapData);
+    };
+  }, [loadCampusMapData]);
+
+  useEffect(() => {
+    syncAdminCampusMap();
+  }, [syncAdminCampusMap]);
+
+  useEffect(() => {
+    const handleCampusMapReady = (event) => {
+      if (event.origin !== window.location.origin
+        || event.source !== adminCampusMapFrame.current?.contentWindow
+        || event.data?.type !== 'assistdesk:campus-map-ready') return;
+      syncAdminCampusMap();
+    };
+    window.addEventListener('message', handleCampusMapReady);
+    return () => window.removeEventListener('message', handleCampusMapReady);
+  }, [syncAdminCampusMap]);
 
   const reportFilters = reportFiltersBySection[activeReportSection];
   const getReportParams = (filters = reportFilters) => Object.fromEntries(
@@ -767,6 +839,22 @@ function AdminReportsPage() {
             {!sectionLoading && activeReportSection === 'overview' && (
               <section className="analytics-section-panel" role="tabpanel" aria-label="Analytics overview">
                 <div className="report-section-heading"><h3>Overview</h3><p className="small-muted">Ticket volume, departments, priority mix, common concerns, and assistant FAQ activity.</p></div>
+                <section className="institutional-card report-campus-map-card" aria-label="Campus map showing tickets from all submitters">
+                  <div className="report-card-heading">
+                    <div><h3>Campus ticket map</h3><span>All ticket pinpoints across departments, from every submitter</span></div>
+                  </div>
+                  {campusMapError && <p className="admin-feedback" role="alert">{campusMapError}</p>}
+                  <div className="map-frame campus-3d-frame report-campus-map-frame">
+                    <iframe
+                      ref={adminCampusMapFrame}
+                      src="/campus-map-3d-v3.html?admin=1"
+                      title="Campus 3D map with all ticket pinpoints"
+                      className="campus-map-embed"
+                      loading="lazy"
+                      onLoad={syncAdminCampusMap}
+                    />
+                  </div>
+                </section>
             <section className="report-visual-grid">
           <div className="institutional-card report-bars-card report-plate">
             <h3>Tickets per department</h3>

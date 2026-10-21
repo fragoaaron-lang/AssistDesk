@@ -5,6 +5,7 @@ const authMiddleware = require('../middleware/auth');
 const router = express.Router();
 
 router.get('/', authMiddleware, dashboardController.getDashboard);
+router.get('/campus-map', authMiddleware, dashboardController.getCampusMapData);
 router.get('/notifications', authMiddleware, dashboardController.getNotifications);
 router.put('/notifications/read', authMiddleware, dashboardController.markNotificationsRead);
 router.delete('/notifications/:id', authMiddleware, dashboardController.deleteNotification);

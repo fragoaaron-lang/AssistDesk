@@ -72,43 +72,71 @@ const initialMapPositions = {
   'information and technology': [39, 32],
 };
 
+async function ensureCampusMapDepartments() {
+  for (const department of defaultDepartments) {
+    await Department.findOrCreate({ where: { name: department.name }, defaults: department });
+    const storedDepartment = await Department.findOne({ where: { name: department.name } });
+    if (storedDepartment && (storedDepartment.map_x == null || storedDepartment.map_y == null)) {
+      await storedDepartment.update({
+        map_x: storedDepartment.map_x ?? department.map_x ?? null,
+        map_y: storedDepartment.map_y ?? department.map_y ?? null,
+      });
+    }
+  }
+
+  const departments = await Department.findAll();
+  for (const department of departments) {
+    const normalizedName = String(department.name || '').toLowerCase().trim();
+    const isAdministrationBuildingDepartment = ['accounting', 'registrar', 'library', 'guidance']
+      .some((office) => normalizedName.includes(office));
+    if (isAdministrationBuildingDepartment && department.location !== ADMIN_BUILDING_LOCATION) {
+      await department.update({ location: ADMIN_BUILDING_LOCATION });
+    }
+
+    const position = initialMapPositions[normalizedName];
+    if (!position) continue;
+    const isFixedBuildingLocation = normalizedName.includes('maintenance')
+      || ['cs department', 'cs', 'computer science department', 'college of computer studies', 'it department', 'information technology department', 'information and technology department', 'information technology', 'information and technology'].includes(normalizedName)
+      || isAdministrationBuildingDepartment;
+    if (!isFixedBuildingLocation && department.map_x != null && department.map_y != null) continue;
+    await department.update({
+      map_x: isFixedBuildingLocation ? position[0] : (department.map_x ?? position[0]),
+      map_y: isFixedBuildingLocation ? position[1] : (department.map_y ?? position[1]),
+    });
+  }
+}
+
+exports.getCampusMapData = async (req, res) => {
+  try {
+    await ensureCampusMapDepartments();
+    const [departments, ticketCounts] = await Promise.all([
+      Department.findAll({
+        attributes: ['id', 'name', 'map_x', 'map_y'],
+        order: [['name', 'ASC']],
+        raw: true,
+      }),
+      Ticket.unscoped().findAll({
+        attributes: [
+          'department_id',
+          'priority',
+          'status',
+          [sequelize.fn('COUNT', sequelize.col('Ticket.id')), 'ticket_count'],
+        ],
+        group: ['department_id', 'priority', 'status'],
+        raw: true,
+      }),
+    ]);
+    return res.json({ departments, ticketCounts });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: 'Unable to load campus ticket map.' });
+  }
+};
+
 exports.getDashboard = async (req, res) => {
   try {
     const ticketWhere = getTicketAccessWhere(req.user);
-    for (const department of defaultDepartments) {
-      await Department.findOrCreate({
-        where: { name: department.name },
-        defaults: department,
-      });
-      const storedDepartment = await Department.findOne({ where: { name: department.name } });
-      if (storedDepartment && (storedDepartment.map_x == null || storedDepartment.map_y == null)) {
-        await storedDepartment.update({
-          map_x: storedDepartment.map_x ?? department.map_x ?? null,
-          map_y: storedDepartment.map_y ?? department.map_y ?? null,
-        });
-      }
-    }
-
-    const mapDepartments = await Department.findAll();
-    for (const department of mapDepartments) {
-      const normalizedName = String(department.name || '').toLowerCase().trim();
-      const isAdministrationBuildingDepartment = ['accounting', 'registrar', 'library', 'guidance']
-        .some((office) => normalizedName.includes(office));
-      if (isAdministrationBuildingDepartment && department.location !== ADMIN_BUILDING_LOCATION) {
-        await department.update({ location: ADMIN_BUILDING_LOCATION });
-      }
-
-      const position = initialMapPositions[normalizedName];
-      if (!position) continue;
-      const isFixedBuildingLocation = normalizedName.includes('maintenance')
-        || ['cs department', 'cs', 'computer science department', 'college of computer studies', 'it department', 'information technology department', 'information and technology department', 'information technology', 'information and technology'].includes(normalizedName)
-        || isAdministrationBuildingDepartment;
-      if (!isFixedBuildingLocation && department.map_x != null && department.map_y != null) continue;
-      await department.update({
-        map_x: isFixedBuildingLocation ? position[0] : (department.map_x ?? position[0]),
-        map_y: isFixedBuildingLocation ? position[1] : (department.map_y ?? position[1]),
-      });
-    }
+    await ensureCampusMapDepartments();
 
     const departments = await Department.findAll({ order: [['name', 'ASC']] });
     const services = await Service.findAll({
