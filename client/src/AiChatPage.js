@@ -58,10 +58,10 @@ function AiChatPage() {
             <button className="institutional-btn small secondary" type="button" onClick={() => setMessage('submit request: ')}>Submit a request</button>
           </div>
 
-          <div style={{ marginTop: '1rem', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem', minHeight: '300px', background: '#fbfdff' }}>
+          <div className="ai-chat-transcript" style={{ marginTop: '1rem', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem', minHeight: '300px' }}>
             {history.length === 0 && <p className="helper-text">No conversation yet.</p>}
             {history.map((entry, index) => (
-              <div key={index} style={{ marginBottom: '1rem' }}>
+              <div key={index} className={`ai-chat-entry ${entry.role}`} style={{ marginBottom: '1rem' }}>
                 <strong>{entry.role === 'user' ? 'You' : 'Assistant'}:</strong> {entry.text}
                 {entry.source && <div className="ai-response-source">Source: {entry.source.type} #{entry.source.id} — {entry.source.label}{entry.source.department ? ` (${entry.source.department})` : ''}</div>}
                 {entry.clarificationRequired && entry.clarificationOptions.length > 0 && (
@@ -73,7 +73,7 @@ function AiChatPage() {
                 )}
                 {entry.escalationAvailable && <p><a href="/tickets">Create a support ticket for staff follow-up</a></p>}
                 {entry.details && (
-                  <div style={{ marginTop: '0.4rem', background: '#f7f7f7', padding: '0.7rem', borderRadius: '10px' }}>
+                  <div className="ai-chat-detail" style={{ marginTop: '0.4rem', padding: '0.7rem', borderRadius: '10px' }}>
                     <div><strong>Department:</strong> {entry.details.name}</div>
                     <div><strong>Point Person:</strong> {entry.details.point_person}</div>
                     <div><strong>Location:</strong> {entry.details.location}</div>
@@ -81,14 +81,14 @@ function AiChatPage() {
                   </div>
                 )}
                 {entry.service && (
-                  <div style={{ marginTop: '0.4rem', background: '#eef7ff', padding: '0.7rem', borderRadius: '10px' }}>
+                  <div className="ai-chat-service" style={{ marginTop: '0.4rem', padding: '0.7rem', borderRadius: '10px' }}>
                     <div><strong>Service:</strong> {entry.service.name}</div>
                     <div><strong>Requirements:</strong> {entry.service.requirements}</div>
                     <div><strong>Processing Time:</strong> {entry.service.processing_time}</div>
                   </div>
                 )}
                 {entry.ticket && (
-                  <div style={{ marginTop: '0.4rem', background: '#eef7ff', padding: '0.7rem', borderRadius: '10px' }}>
+                  <div className="ai-chat-ticket" style={{ marginTop: '0.4rem', padding: '0.7rem', borderRadius: '10px' }}>
                     <div><strong>Ticket:</strong> {entry.ticket.ticket_code || `#${entry.ticket.id}`}</div>
                     <div><strong>Request:</strong> {entry.ticket.subject}</div>
                     <div><strong>Description:</strong> {entry.ticket.description}</div>
@@ -99,7 +99,7 @@ function AiChatPage() {
                   </div>
                 )}
                 {entry.tickets && entry.tickets.map((ticket) => (
-                  <div key={ticket.id} style={{ marginTop: '0.4rem', background: '#f7f7f7', padding: '0.7rem', borderRadius: '10px' }}>
+                  <div key={ticket.id} className="ai-chat-detail" style={{ marginTop: '0.4rem', padding: '0.7rem', borderRadius: '10px' }}>
                     {ticket.ticket_code || `#${ticket.id}`} {ticket.subject} | {ticket.status} | ETA: {ticket.estimated_completion_at ? new Date(ticket.estimated_completion_at).toLocaleString() : 'pending'}
                   </div>
                 ))}

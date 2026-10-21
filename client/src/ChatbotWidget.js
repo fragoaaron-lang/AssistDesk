@@ -335,12 +335,11 @@ function ChatbotWidget() {
               <span>Instant answers & support</span>
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <button 
-                type="button" 
-                className="institutional-btn small" 
+              <button
+                type="button"
+                className="institutional-btn small chatbot-assistant-switch"
                 onClick={() => setShowGenderSelect(!showGenderSelect)}
                 title="Change or select a different assistant"
-                style={{ padding: '4px 10px', fontSize: '0.75rem', background: '#e8f1f5', border: '1px solid #b0d4e3', color: '#333' }}
               >
                 {gender === 'neutral' ? '👤 Choose Assistant' : `Change to ${gender === 'boy' ? 'Maya' : 'Alex'}`}
               </button>
@@ -349,20 +348,22 @@ function ChatbotWidget() {
           </div>
 
           {showGenderSelect && (
-            <div style={{ padding: '12px', borderBottom: '1px solid var(--border)', background: '#f0f7ff' }}>
+            <div className="chatbot-gender-picker">
               <p style={{ fontSize: '0.85rem', marginBottom: '8px', fontWeight: 500 }}>Choose your assistant:</p>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button 
-                  className="institutional-btn small" 
+                <button
+                  type="button"
+                  className={`institutional-btn small chatbot-gender-choice${gender === 'boy' ? ' is-selected' : ''}`}
                   onClick={() => saveGender('boy')}
-                  style={{ flex: 1, background: gender === 'boy' ? 'var(--teal)' : '#e0e0e0', color: gender === 'boy' ? 'white' : 'black' }}
+                  style={{ flex: 1 }}
                 >
                   👦 Alex
                 </button>
-                <button 
-                  className="institutional-btn small" 
+                <button
+                  type="button"
+                  className={`institutional-btn small chatbot-gender-choice${gender === 'girl' ? ' is-selected' : ''}`}
                   onClick={() => saveGender('girl')}
-                  style={{ flex: 1, background: gender === 'girl' ? 'var(--teal)' : '#e0e0e0', color: gender === 'girl' ? 'white' : 'black' }}
+                  style={{ flex: 1 }}
                 >
                   👧 Maya
                 </button>
@@ -375,7 +376,7 @@ function ChatbotWidget() {
               AssistDesk answers from its FAQ and service records, which may be incomplete or outdated. It is not a substitute for official decisions, medical advice, or emergency help. Do not share passwords or sensitive personal information. Contact the relevant office to verify important details.
             </p>
             {history.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '20px 12px' }}>
+              <div className="chatbot-empty-state" style={{ textAlign: 'center', padding: '20px 12px' }}>
                 <div style={{ fontSize: '2rem', marginBottom: '10px' }}>{gender === 'boy' ? '👦' : '👧'}</div>
                 <p className="chatbot-welcome">Welcome! I'm here to answer your questions about departments, services, and FAQs. Select from below or type your question.</p>
               </div>
