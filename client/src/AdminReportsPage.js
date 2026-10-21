@@ -323,11 +323,13 @@ function AdminReportsPage() {
     const socket = getSocket();
     if (!socket) return undefined;
     socket.on('ticketCreated', loadCampusMapData);
+    socket.on('campusMapUpdated', loadCampusMapData);
     socket.on('ticketStatusUpdated', loadCampusMapData);
     socket.on('ticketEtaUpdated', loadCampusMapData);
     socket.on('ticketEtaExpired', loadCampusMapData);
     return () => {
       socket.off('ticketCreated', loadCampusMapData);
+      socket.off('campusMapUpdated', loadCampusMapData);
       socket.off('ticketStatusUpdated', loadCampusMapData);
       socket.off('ticketEtaUpdated', loadCampusMapData);
       socket.off('ticketEtaExpired', loadCampusMapData);

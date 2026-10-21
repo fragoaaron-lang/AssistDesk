@@ -1,6 +1,7 @@
 const { Department, Service, Announcement, Ticket, Notification, sequelize, User } = require('../models');
 const { formatTicketNumber } = require('../utils/ticketNumber');
 const { getTicketAccessWhere } = require('../utils/departmentScope');
+const { getGlobalCampusTicketCounts } = require('../utils/campusMap');
 
 const ADMIN_BUILDING_LOCATION = 'Administration Building (J.B. Angeles Building)';
 
@@ -115,16 +116,7 @@ exports.getCampusMapData = async (req, res) => {
         order: [['name', 'ASC']],
         raw: true,
       }),
-      Ticket.unscoped().findAll({
-        attributes: [
-          'department_id',
-          'priority',
-          'status',
-          [sequelize.fn('COUNT', sequelize.col('Ticket.id')), 'ticket_count'],
-        ],
-        group: ['department_id', 'priority', 'status'],
-        raw: true,
-      }),
+      getGlobalCampusTicketCounts(Ticket, sequelize),
     ]);
     return res.json({ departments, ticketCounts });
   } catch (error) {
@@ -156,16 +148,7 @@ exports.getDashboard = async (req, res) => {
     // The campus map is global across submitters, departments, and statuses.
     // Keep this query unscoped and aggregate-only: never expose ticket IDs,
     // submitters, subjects, or descriptions to other users.
-    const mapTicketCounts = await Ticket.unscoped().findAll({
-      attributes: [
-        'department_id',
-        'priority',
-        'status',
-        [sequelize.fn('COUNT', sequelize.col('Ticket.id')), 'ticket_count'],
-      ],
-      group: ['department_id', 'priority', 'status'],
-      raw: true,
-    });
+    const mapTicketCounts = await getGlobalCampusTicketCounts(Ticket, sequelize);
 
     const ticketCountMap = Object.fromEntries(
       ticketCounts.map((row) => [String(row.department_id), Number(row.ticket_count)])

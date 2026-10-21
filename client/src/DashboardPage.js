@@ -159,6 +159,7 @@ function DashboardPage() {
 
     socket.on('ticketCreated', loadData);
     socket.on('ticketCreated', loadCampusMapData);
+    socket.on('campusMapUpdated', loadCampusMapData);
     socket.on('ticketStatusUpdated', loadData);
     socket.on('ticketStatusUpdated', loadCampusMapData);
     socket.on('ticketEtaUpdated', loadData);
@@ -170,6 +171,7 @@ function DashboardPage() {
     return () => {
       socket.off('ticketCreated', loadData);
       socket.off('ticketCreated', loadCampusMapData);
+      socket.off('campusMapUpdated', loadCampusMapData);
       socket.off('ticketStatusUpdated', loadData);
       socket.off('ticketStatusUpdated', loadCampusMapData);
       socket.off('ticketEtaUpdated', loadData);

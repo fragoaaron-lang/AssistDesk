@@ -273,10 +273,10 @@ function worldPointFromDepartment(department) {
 function makeHeatCloud(department, count) {
   const cloud = document.createElement('div');
   cloud.className = 'heat-dot';
-  const size = Math.min(190, 96 + Math.sqrt(count) * 20);
+  const size = Math.min(260, 138 + Math.sqrt(count) * 28);
   cloud.style.width = size + 'px';
   cloud.style.height = size + 'px';
-  cloud.style.opacity = String(Math.min(1, 0.9 + count * 0.02));
+  cloud.style.opacity = String(Math.min(0.9, 0.58 + Math.log2(count + 1) * 0.14));
   cloud.title = department.name + ' · ' + count + ' ticket' + (count === 1 ? '' : 's');
   heatLayer.appendChild(cloud);
   return cloud;

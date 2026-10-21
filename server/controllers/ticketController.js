@@ -1,5 +1,5 @@
 const { Ticket, TicketUpdate, Department, User, Notification } = require('../models');
-const { notifyUser, notifyAdmins, notifyDepartmentAdmins, notifyDepartmentStaff } = require('../utils/socket');
+const { notifyUser, notifyAdmins, notifyDepartmentAdmins, notifyDepartmentStaff, notifyAllUsers } = require('../utils/socket');
 const { addTicketNumber } = require('../utils/ticketNumber');
 const { sendTicketEtaExpiredEmail } = require('../utils/email');
 const { inferDepartment } = require('../utils/departmentRouting');
@@ -155,6 +155,7 @@ exports.processMissedEtaTickets = async () => {
       notifyDepartmentAdmins(ticket.department_id, 'ticketEtaExpired', { ticket });
       notifyDepartmentStaff(ticket.department_id, 'ticketEtaExpired', { ticket });
       notifyAdmins('ticketEtaExpired', { ticket });
+      notifyAllUsers('campusMapUpdated');
 
       try {
         if (submitter?.email) {
@@ -318,6 +319,7 @@ exports.createTicket = async (req, res) => {
     notifyDepartmentAdmins(resolvedDepartmentId, 'ticketCreated', { ticket });
     notifyDepartmentStaff(resolvedDepartmentId, 'ticketCreated', { ticket });
     notifyAdmins('ticketCreated', { ticket });
+    notifyAllUsers('campusMapUpdated');
 
     return res.status(201).json(ticket);
   } catch (error) {
@@ -450,6 +452,7 @@ exports.updateTicketStatus = async (req, res) => {
     notifyDepartmentAdmins(ticket.department_id, 'ticketStatusUpdated', { ticket });
     notifyDepartmentStaff(ticket.department_id, 'ticketStatusUpdated', { ticket });
     notifyAdmins('ticketStatusUpdated', { ticket });
+    notifyAllUsers('campusMapUpdated');
 
     return res.json(ticket);
   } catch (error) {
@@ -607,6 +610,7 @@ exports.updateTicketEta = async (req, res) => {
         notifyDepartmentAdmins(ticket.department_id, 'ticketStatusUpdated', { ticket });
         notifyDepartmentStaff(ticket.department_id, 'ticketStatusUpdated', { ticket });
         notifyAdmins('ticketStatusUpdated', { ticket });
+        notifyAllUsers('campusMapUpdated');
       }
       notifyDepartmentAdmins(ticket.department_id, 'ticketAssignmentUpdated', { ticket });
       notifyDepartmentStaff(ticket.department_id, 'ticketAssignmentUpdated', { ticket });
@@ -689,6 +693,7 @@ exports.updateTicketEta = async (req, res) => {
       notifyDepartmentStaff(oldDepartmentId, 'ticketDepartmentUpdated', { ticket });
       notifyDepartmentStaff(newDepartmentId, 'ticketDepartmentUpdated', { ticket });
       notifyAdmins('ticketDepartmentUpdated', { ticket });
+      notifyAllUsers('campusMapUpdated');
       return res.json(ticket);
     } catch (error) {
       console.error(error);
@@ -739,6 +744,7 @@ exports.updateTicketEta = async (req, res) => {
       notifyDepartmentAdmins(ticket.department_id, 'ticketPriorityUpdated', { ticket });
       notifyDepartmentStaff(ticket.department_id, 'ticketPriorityUpdated', { ticket });
       notifyAdmins('ticketPriorityUpdated', { ticket });
+      notifyAllUsers('campusMapUpdated');
       return res.json(ticket);
     } catch (error) {
       console.error(error);
@@ -788,6 +794,7 @@ exports.updateTicketEta = async (req, res) => {
       throw error;
     }
 
+    notifyAllUsers('campusMapUpdated');
     return res.json({ message: 'Ticket deleted successfully.', ticket_id: ticket.id });
   } catch (error) {
     console.error('Ticket deletion error:', error);
