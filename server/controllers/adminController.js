@@ -53,23 +53,25 @@ exports.getReports = async (req, res) => {
   try {
     const filterError = validateReportFilters(req.query);
     if (filterError) return res.status(400).json({ message: filterError });
-    if (!canUseDepartmentFilter(req.user, req.query.department_id)) {
-      return res.status(403).json({ message: 'You may only view reports for your own department.' });
-    }
     const departmentScope = getDepartmentScope(req.user);
-    const ticketWhere = applyDepartmentScope(req.user, buildTicketFilters(req.query));
+    // All admins may view aggregate analytics across departments. Keep record-level
+    // information scoped to the admin's own department below.
+    const reportTicketWhere = buildTicketFilters(req.query);
+    const scopedTicketWhere = departmentScope
+      ? { [Op.and]: [reportTicketWhere, { department_id: departmentScope }] }
+      : reportTicketWhere;
     const departmentCounts = await Ticket.findAll({
       attributes: [
         'department_id',
         [Ticket.sequelize.fn('COUNT', Ticket.sequelize.col('Ticket.id')), 'count'],
       ],
-      where: ticketWhere,
+      where: reportTicketWhere,
       include: [{ model: Department, attributes: ['name'] }],
       group: ['department_id', 'Department.id', 'Department.name'],
       raw: true,
     });
 
-    const selectedDepartmentScope = departmentScope || (req.query.department_id ? Number(req.query.department_id) : null);
+    const selectedDepartmentScope = req.query.department_id ? Number(req.query.department_id) : null;
     const reportDepartments = await Department.findAll({
       attributes: ['id', 'name'],
       ...(selectedDepartmentScope ? { where: { id: selectedDepartmentScope } } : {}),
@@ -83,18 +85,18 @@ exports.getReports = async (req, res) => {
 
     const ticketCountsByStatus = await Ticket.findAll({
       attributes: ['status', [Ticket.sequelize.fn('COUNT', Ticket.sequelize.col('id')), 'count']],
-      where: ticketWhere,
+      where: reportTicketWhere,
       group: ['status'],
       raw: true,
     });
     const assignmentCounts = {
-      assigned: await Ticket.count({ where: { [Op.and]: [ticketWhere, { assigned_user_id: { [Op.ne]: null } }] } }),
-      unassigned: await Ticket.count({ where: { [Op.and]: [ticketWhere, { assigned_user_id: null }] } }),
+      assigned: await Ticket.count({ where: { [Op.and]: [reportTicketWhere, { assigned_user_id: { [Op.ne]: null } }] } }),
+      unassigned: await Ticket.count({ where: { [Op.and]: [reportTicketWhere, { assigned_user_id: null }] } }),
     };
 
     const ticketCountsByPriority = await Ticket.findAll({
       attributes: ['priority', [Ticket.sequelize.fn('COUNT', Ticket.sequelize.col('id')), 'count']],
-      where: ticketWhere,
+      where: reportTicketWhere,
       group: ['priority'],
       order: [['priority', 'ASC']],
       raw: true,
@@ -102,7 +104,7 @@ exports.getReports = async (req, res) => {
 
     const departmentStatusRows = await Ticket.findAll({
       attributes: ['department_id', 'status', [Ticket.sequelize.fn('COUNT', Ticket.sequelize.col('Ticket.id')), 'count']],
-      where: ticketWhere,
+      where: reportTicketWhere,
       include: [{ model: Department, attributes: ['name'] }],
       group: ['department_id', 'status', 'Department.id', 'Department.name'],
       raw: true,
@@ -119,11 +121,11 @@ exports.getReports = async (req, res) => {
 
     const faqs = await Faq.findAll({
       attributes: ['id', 'question', 'keywords'],
-      ...(departmentScope ? { where: { department_id: departmentScope } } : {}),
+      ...(selectedDepartmentScope ? { where: { department_id: selectedDepartmentScope } } : {}),
     });
     const chatMessages = await ChatLog.findAll({
       attributes: ['message'],
-      ...(departmentScope ? { where: { matched_department_id: departmentScope } } : {}),
+      ...(selectedDepartmentScope ? { where: { matched_department_id: selectedDepartmentScope } } : {}),
     });
     const normalizeText = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ');
     const faqUsage = faqs.map((faq) => {
@@ -139,7 +141,7 @@ exports.getReports = async (req, res) => {
 
     const concernCounts = await Ticket.findAll({
       attributes: ['category', [Ticket.sequelize.fn('COUNT', Ticket.sequelize.col('id')), 'count']],
-      where: ticketWhere,
+      where: reportTicketWhere,
       group: ['category'],
       order: [[Ticket.sequelize.literal('count'), 'DESC']],
       raw: true,
@@ -149,7 +151,7 @@ exports.getReports = async (req, res) => {
       concern: row.category || 'Uncategorized',
       count: row.count,
     }));
-    const availableCategories = [...new Set((await Ticket.findAll({ attributes: ['category'], where: ticketWhere, raw: true }))
+    const availableCategories = [...new Set((await Ticket.findAll({ attributes: ['category'], where: reportTicketWhere, raw: true }))
       .map((row) => row.category || 'Uncategorized'))].sort((first, second) => first.localeCompare(second));
 
     const usersByRole = await User.findAll({
@@ -174,7 +176,7 @@ exports.getReports = async (req, res) => {
         'user_id',
         [Ticket.sequelize.fn('COUNT', Ticket.sequelize.col('Ticket.id')), 'count'],
       ],
-      where: ticketWhere,
+      where: scopedTicketWhere,
       include: [{ model: User, attributes: ['id', 'name', 'email'] }],
       group: ['user_id', 'User.id', 'User.name', 'User.email'],
       order: [[Ticket.sequelize.literal('count'), 'DESC']],
@@ -189,7 +191,7 @@ exports.getReports = async (req, res) => {
 
     const recentTickets = await Ticket.findAll({
       attributes: ['id', 'user_id', 'department_id', 'subject', 'category', 'priority', 'status', 'created_at'],
-      where: ticketWhere,
+      where: scopedTicketWhere,
       order: [['created_at', 'DESC']],
       limit: 100,
       include: [{ model: Department }, { model: User, include: [{ model: Department }] }],
@@ -200,7 +202,7 @@ exports.getReports = async (req, res) => {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const monthlyTickets = await Ticket.findAll({
       attributes: ['created_at'],
-      where: { [Op.and]: [ticketWhere, { created_at: { [Op.gte]: thirtyDaysAgo } }] },
+      where: { [Op.and]: [reportTicketWhere, { created_at: { [Op.gte]: thirtyDaysAgo } }] },
       raw: true,
     });
     const monthlyCounts = new Map();
@@ -213,7 +215,7 @@ exports.getReports = async (req, res) => {
 
     const filteredTickets = await Ticket.findAll({
       attributes: ['id', 'created_at', 'status', 'department_id'],
-      where: ticketWhere,
+      where: reportTicketWhere,
       include: [
         { model: TicketUpdate, attributes: ['created_at', 'action', 'message', 'updated_by'], include: [{ model: User, as: 'Updater', attributes: ['role'] }] },
       ],
@@ -234,7 +236,8 @@ exports.getReports = async (req, res) => {
       const stats = responseStats.get(departmentId);
       if (firstStaffUpdate) stats.response_durations.push(new Date(firstStaffUpdate.created_at) - new Date(ticket.created_at));
       if (terminalUpdate) stats.resolution_durations.push(new Date(terminalUpdate.created_at) - new Date(ticket.created_at));
-      updates.filter((update) => auditActions.has(update.action)).forEach((update) => auditRecords.push({
+      updates.filter((update) => auditActions.has(update.action)
+        && (!departmentScope || Number(ticket.department_id) === Number(departmentScope))).forEach((update) => auditRecords.push({
         ticket_id: ticket.id,
         action: update.action,
         actor_role: update.Updater?.role || 'unknown',
@@ -277,7 +280,7 @@ exports.getReports = async (req, res) => {
       filters: {
         start_date: req.query.start_date || null,
         end_date: req.query.end_date || null,
-        department_id: departmentScope || req.query.department_id || null,
+        department_id: req.query.department_id || null,
         category: req.query.category || null,
         priority: req.query.priority || null,
         status: req.query.status || null,
@@ -305,8 +308,7 @@ exports.getAuditLogs = async (req, res) => {
     const offsetValue = Number(req.query.offset);
     const offset = Number.isInteger(offsetValue) && offsetValue >= 0 ? Math.min(offsetValue, 100000) : 0;
     const where = {};
-    if (req.user.department_id) where.department_id = req.user.department_id;
-    else if (req.query.department_id) where.department_id = Number(req.query.department_id);
+    if (req.query.department_id) where.department_id = Number(req.query.department_id);
     if (req.query.entity_type) where.entity_type = String(req.query.entity_type).slice(0, 60);
     if (req.query.action) where.action = String(req.query.action).slice(0, 80);
     const createdAt = {};
