@@ -478,7 +478,7 @@ function AdminReportsPage() {
     }
   };
 
-  const userRoleGroups = ['student', 'faculty', 'staff'].map((roleName) => ({
+  const userRoleGroups = ['admin', 'student', 'faculty', 'staff'].map((roleName) => ({
     name: roleName,
     label: roleName.charAt(0).toUpperCase() + roleName.slice(1),
     users: (reports?.users || []).filter((directoryUser) => directoryUser.role === roleName && directoryUser.account_status !== 'terminated'),
@@ -641,27 +641,29 @@ function AdminReportsPage() {
                             <th>Department</th>
                             {roleGroup.name === 'student' && <th>Student Number</th>}
                             <th>Status</th>
-                            <th>Actions</th>
+                            {roleGroup.name !== 'admin' && <th>Actions</th>}
                           </tr>
                         </thead>
                         <tbody>
                           {roleGroup.users.length === 0 ? (
-                            <tr><td colSpan={roleGroup.name === 'student' ? 6 : 5} className="small-muted">No users in this group</td></tr>
+                            <tr><td colSpan={roleGroup.name === 'student' ? 6 : roleGroup.name === 'admin' ? 4 : 5} className="small-muted">No users in this group</td></tr>
                           ) : roleGroup.users.map((directoryUser) => (
                             <tr key={directoryUser.id}>
                               <td>{directoryUser.name || 'Unknown'}</td>
                               <td>{directoryUser.email}</td>
-                              <td>
-                                <select className="institutional-select" value={directoryUser.department_id || ''} onChange={(event) => updateUserDepartment(directoryUser, event.target.value)} disabled={updatingUserId === directoryUser.id} aria-label={`Department for ${directoryUser.name || directoryUser.email}`}>
-                                  <option value="" disabled>Select department</option>
-                                  {departments.map((department) => <option key={department.id} value={department.id}>{department.display_name || department.name}</option>)}
-                                </select>
-                              </td>
+                              <td>{roleGroup.name === 'admin'
+                                ? (directoryUser.Department?.name || 'Global — all departments')
+                                : (
+                                  <select className="institutional-select" value={directoryUser.department_id || ''} onChange={(event) => updateUserDepartment(directoryUser, event.target.value)} disabled={updatingUserId === directoryUser.id} aria-label={`Department for ${directoryUser.name || directoryUser.email}`}>
+                                    <option value="" disabled>Select department</option>
+                                    {departments.map((department) => <option key={department.id} value={department.id}>{department.display_name || department.name}</option>)}
+                                  </select>
+                                )}</td>
                               {roleGroup.name === 'student' && <td>{directoryUser.student_number || 'N/A'}</td>}
                               <td>{directoryUser.account_status || 'active'}</td>
-                              <td><button type="button" className="user-terminate-button" onClick={() => terminateUser(directoryUser)} disabled={updatingUserId === directoryUser.id}>
+                              {roleGroup.name !== 'admin' && <td><button type="button" className="user-terminate-button" onClick={() => terminateUser(directoryUser)} disabled={updatingUserId === directoryUser.id}>
                                 {updatingUserId === directoryUser.id ? 'Updating...' : 'Terminate'}
-                              </button></td>
+                              </button></td>}
                             </tr>
                           ))}
                         </tbody>

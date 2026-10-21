@@ -156,7 +156,14 @@ exports.getReports = async (req, res) => {
 
     const usersByRole = await User.findAll({
       attributes: ['role', [User.sequelize.fn('COUNT', User.sequelize.col('id')), 'count']],
-      ...(departmentScope ? { where: { department_id: departmentScope } } : {}),
+      ...(departmentScope ? {
+        where: {
+          [Op.or]: [
+            { department_id: departmentScope, role: { [Op.in]: ['student', 'faculty', 'staff'] } },
+            { role: 'admin' },
+          ],
+        },
+      } : {}),
       group: ['role'],
       raw: true,
     });
@@ -164,8 +171,13 @@ exports.getReports = async (req, res) => {
     const users = await User.findAll({
       attributes: ['id', 'name', 'email', 'role', 'student_number', 'account_status'],
       where: {
-        role: { [Op.in]: ['student', 'faculty', 'staff'] },
-        ...(departmentScope ? { department_id: departmentScope } : {}),
+        role: { [Op.in]: ['student', 'faculty', 'staff', 'admin'] },
+        ...(departmentScope ? {
+          [Op.or]: [
+            { department_id: departmentScope, role: { [Op.in]: ['student', 'faculty', 'staff'] } },
+            { role: 'admin' },
+          ],
+        } : {}),
       },
       include: [{ model: Department, attributes: ['name'] }],
       order: [['role', 'ASC'], ['name', 'ASC']],
