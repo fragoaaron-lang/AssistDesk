@@ -27,10 +27,12 @@ h1{font-size:16px;margin:0 0 8px;font-weight:700}
 #info{left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));padding:10px 14px;min-width:220px;max-width:calc(100% - 24px);display:none}
 #info b{font-size:15px;display:block}
 #info span{font-size:12px;color:var(--mute)}
-#heatmap,#ticketLayer{position:absolute;inset:0;pointer-events:none;overflow:hidden;display:none}
-.heat-dot{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,87,34,.82) 0%,rgba(255,153,0,.72) 18%,rgba(255,194,0,.45) 42%,rgba(255,194,0,.16) 58%,rgba(255,194,0,0) 78%);filter:blur(5px);box-shadow:0 0 24px rgba(255,120,40,.38),0 0 56px rgba(255,150,0,.2);opacity:1}
-.ticket-pin{position:absolute;transform:translate(-50%,-100%);display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:3px solid rgba(255,255,255,.9);box-shadow:0 0 0 2px rgba(16,24,40,.18),0 8px 18px rgba(18,33,60,.35);pointer-events:auto;cursor:pointer;font-size:9px;font-weight:800;color:#fff;line-height:1}
-.ticket-pin.low{background:#34c759}.ticket-pin.medium{background:#3b82f6}.ticket-pin.urgent{background:#ef4444}
+#heatmap,#ticketLayer{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+#heatmap{z-index:2}#ticketLayer{z-index:3}
+.heat-dot{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(237,23,37,.78) 0%,rgba(255,76,24,.68) 18%,rgba(255,194,0,.56) 42%,rgba(94,220,70,.46) 66%,rgba(36,190,111,.2) 82%,rgba(36,190,111,0) 100%);filter:blur(4px);mix-blend-mode:multiply;opacity:1}
+.ticket-pin{position:absolute;z-index:4;transform:translate(-50%,-100%) rotate(-45deg);width:25px;height:25px;padding:0;border:2px solid #fff;border-radius:50% 50% 50% 0;box-shadow:0 2px 8px rgba(16,24,40,.78),0 0 0 2px rgba(8,32,56,.44);pointer-events:auto;cursor:pointer}
+.ticket-pin::after{content:"";position:absolute;inset:6px;border-radius:50%;background:#fff;pointer-events:none}
+.ticket-pin.low,.ticket-pin.medium{background:#1458ed}.ticket-pin.urgent{background:#ed1725}
 #legend{right:12px;bottom:calc(70px + env(safe-area-inset-bottom,0px));padding:10px 12px;min-width:180px;display:none}
 #legend strong{display:block;font-size:12px;margin-bottom:8px}
 #legend .row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mute);margin-bottom:4px}
@@ -187,13 +189,13 @@ function worldPointFromBuildingEntry(entry){
  const [name,c,x1,y1,x2,y2,f,x]=entry;
  return new THREE.Vector3(((x1+x2)/2)*P, 3.2, ((y1+y2)/2)*P);
 }
-function makeHeatDot(entry, index){
+function makeHeatDot(entry, count){
  const el=document.createElement('div');
  el.className='heat-dot';
- const size=28 + (index % 5) * 12 + (entry[1] === 'park' ? 12 : 0);
+ const size=Math.min(190,96 + Math.sqrt(count) * 20);
  el.style.width=size+'px';
  el.style.height=size+'px';
- el.style.opacity=String(0.55 + (index % 5) * 0.15);
+ el.style.opacity=String(Math.min(1,0.9 + count * 0.02));
  heatLayer.appendChild(el);
  return el;
 }
@@ -202,8 +204,8 @@ function makeTicketPin(ticket, index){
  const btn=document.createElement('button');
  btn.type='button';
  btn.className='ticket-pin '+priority;
- btn.textContent=priority[0].toUpperCase();
  btn.title=subject;
+ btn.setAttribute('aria-label',name.replace(/\|/g,' ')+' · '+subject+' · '+priority+' priority');
  btn.addEventListener('click',()=>{
    info.innerHTML='<b>'+name.replace(/\|/g,' ')+'</b><span>'+subject+' · '+priority.toUpperCase()+' priority</span>';
  });
@@ -214,12 +216,17 @@ function syncLayers(){
  heatLayer.innerHTML='';
  ticketLayer.innerHTML='';
  const v=new THREE.Vector3();
- B.forEach((entry,index)=>{
+ const ticketCountsByBuilding=new Map();
+ TICKETS.forEach(ticket=>{
+   const match=B.find(([name])=>name.toLowerCase()===ticket[0].toLowerCase());
+   if(match) ticketCountsByBuilding.set(match,(ticketCountsByBuilding.get(match)||0)+1);
+ });
+ ticketCountsByBuilding.forEach((count,entry)=>{
    const p=worldPointFromBuildingEntry(entry);
    v.copy(p).project(cam);
    const visible=v.z > -1 && v.z < 1;
    if(!visible) return;
-   const el=makeHeatDot(entry,index);
+   const el=makeHeatDot(entry,count);
    const left=(v.x*.5+.5)*innerWidth;
    const top=(-v.y*.5+.5)*innerHeight;
    el.style.left=left+'px';
