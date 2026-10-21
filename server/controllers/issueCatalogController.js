@@ -1,5 +1,7 @@
 const { Department, GeneralIssue, SpecificIssue } = require('../models');
 const { recordAudit } = require('../utils/auditLog');
+const seedTicketIssues = require('../seed-ticket-issues');
+const { seedDepartmentIssueOptions } = seedTicketIssues;
 
 const isDepartmentScopedAdmin = (user) => user?.role === 'admin' && Number(user.department_id) > 0;
 const canManageIssue = (user, issue) => !isDepartmentScopedAdmin(user)
@@ -31,6 +33,16 @@ const getSpecificIssue = async (id) => SpecificIssue.findByPk(id, {
 
 exports.getIssues = async (req, res) => {
   try {
+    if (isDepartmentScopedAdmin(req.user)) {
+      const department = await Department.findByPk(req.user.department_id);
+      if (department && !await GeneralIssue.count({ where: { department_id: department.id } })) {
+        await seedDepartmentIssueOptions(department);
+      }
+    } else if (!await GeneralIssue.count()) {
+      // Heal databases whose first deploy skipped startup seeding before departments existed.
+      await seedTicketIssues({ closeConnection: false });
+    }
+
     const generalIssues = await GeneralIssue.findAll({
       ...(isDepartmentScopedAdmin(req.user) ? { where: { department_id: req.user.department_id } } : {}),
       include: [

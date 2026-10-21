@@ -67,8 +67,10 @@ function AdminCatalogPage() {
   const loadData = async (showSkeleton = false) => {
     if (showSkeleton) setCatalogLoading(true);
     try {
-      const [deptRes, serviceRes, issueRes, faqRes] = await Promise.all([
-        api.get('/departments/manage'),
+      // Department loading creates/initializes built-in departments and their issue options.
+      // Fetch it first so the parallel issues request cannot race and read an empty catalog.
+      const deptRes = await api.get('/departments/manage');
+      const [serviceRes, issueRes, faqRes] = await Promise.all([
         api.get('/services'),
         api.get('/issues'),
         api.get('/faqs'),
