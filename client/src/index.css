@@ -6575,10 +6575,11 @@ body.dark-mode .ticket-status-badge.closed { background: #303b44; border-color: 
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
+  cursor: pointer;
+  list-style-position: inside;
 }
 
-.catalog-issue-department-heading h4 {
-  margin: 0;
+.catalog-issue-department-heading strong {
   color: var(--text);
   font-size: 1rem;
 }
@@ -6597,7 +6598,42 @@ body.dark-mode .ticket-status-badge.closed { background: #303b44; border-color: 
 .catalog-issue-group {
   display: grid;
   min-width: 0;
-  gap: 8px;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+
+.catalog-issue-category-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.catalog-issue-category-heading strong {
+  overflow-wrap: anywhere;
+}
+
+.catalog-issue-category-heading span {
+  flex: 0 0 auto;
+  color: var(--muted-text);
+  font-size: 0.82rem;
+}
+
+.catalog-issue-department-heading:focus-visible,
+.catalog-issue-category-heading:focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.catalog-issue-category-content {
+  display: grid;
+  gap: 10px;
 }
 
 .catalog-issue-children {
