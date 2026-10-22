@@ -284,6 +284,7 @@ function DashboardPage() {
   }
 
   if (user?.account_status === 'terminated') {
+    const appealEmail = user.appeal_email || 'fragoaaron@gmail.com';
     const appealSubject = encodeURIComponent('AssistDesk account termination appeal');
     const appealBody = encodeURIComponent([
       'Hello AssistDesk administrator,',
@@ -298,9 +299,7 @@ function DashboardPage() {
       'Termination reason:',
       user.termination_reason || 'No reason was recorded.',
     ].join('\n'));
-    const appealMailto = user.appeal_email
-      ? `mailto:${user.appeal_email}?subject=${appealSubject}&body=${appealBody}`
-      : null;
+    const appealMailto = `mailto:${appealEmail}?subject=${appealSubject}&body=${appealBody}`;
 
     return (
       <div className="app-shell">
@@ -318,7 +317,7 @@ function DashboardPage() {
               <p>{user.termination_reason || 'No reason was recorded. Please contact an administrator for details.'}</p>
               {user.terminated_at && <small>Decision date: {new Date(user.terminated_at).toLocaleDateString()}</small>}
             </div>
-            {user.appeal_email && <p className="helper-text">Administrator contact: <a href={`mailto:${user.appeal_email}`}>{user.appeal_email}</a></p>}
+            <p className="helper-text">Administrator contact: <a href={`mailto:${appealEmail}`}>{appealEmail}</a></p>
             <div className="account-appeal-form">
               <label htmlFor="termination-appeal-message"><strong>Appeal to the administrator</strong></label>
               <p className="helper-text">Explain why you are appealing. The button opens a draft addressed to the administrator for you to review and send.</p>
@@ -332,15 +331,13 @@ function DashboardPage() {
                 maxLength={3000}
                 rows={5}
                 aria-describedby="termination-appeal-hint"
-                disabled={!user.appeal_email}
               />
               <small id="termination-appeal-hint" className="helper-text">20–3000 characters</small>
               <div className="inline-actions">
-                {appealMailto && appealMessage.trim().length >= 20 && appealMessage.trim().length <= 3000
+                {appealMessage.trim().length >= 20 && appealMessage.trim().length <= 3000
                   ? <a className="institutional-btn" href={appealMailto}>Email appeal to administrator</a>
                   : <button className="institutional-btn" type="button" disabled>Email appeal to administrator</button>}
               </div>
-              {!user.appeal_email && <p className="admin-feedback" role="alert">Appeal email is not configured. Please contact an administrator directly.</p>}
             </div>
             <p className="helper-text" style={{ marginTop: '24px' }}>Other account services are unavailable while the account is terminated. You may sign out below.</p>
           </main>
