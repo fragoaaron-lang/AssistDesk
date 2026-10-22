@@ -8,6 +8,14 @@ const isTerminatedAccountRouteAllowed = (req) => req.baseUrl === '/api/auth'
     || (req.path === '/appeal' && req.method === 'POST')
     || (req.path === '/logout' && req.method === 'POST'));
 
+const isStaffApprovalAccountRouteAllowed = (req, accountStatus) => {
+  if (req.baseUrl !== '/api/auth') return false;
+  if ((req.path === '/me' && req.method === 'GET') || (req.path === '/logout' && req.method === 'POST')) return true;
+  return ['pending_id', 'id_rejected'].includes(accountStatus)
+    && req.path === '/staff-id'
+    && req.method === 'POST';
+};
+
 const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -44,7 +52,10 @@ const authMiddleware = async (req, res, next) => {
 
     const isTerminatedAccountRoute = user.account_status === 'terminated'
       && isTerminatedAccountRouteAllowed(req);
-    if (user.account_status !== 'active' && !isTerminatedAccountRoute) {
+    const isPendingStaffAccountRoute = ['faculty', 'staff'].includes(user.role)
+      && ['pending_id', 'pending_approval', 'id_rejected'].includes(user.account_status)
+      && isStaffApprovalAccountRouteAllowed(req, user.account_status);
+    if (user.account_status !== 'active' && !isTerminatedAccountRoute && !isPendingStaffAccountRoute) {
       return res.status(403).json({ message: 'This account is not active.' });
     }
 
@@ -59,5 +70,6 @@ const authMiddleware = async (req, res, next) => {
 };
 
 authMiddleware.isTerminatedAccountRouteAllowed = isTerminatedAccountRouteAllowed;
+authMiddleware.isStaffApprovalAccountRouteAllowed = isStaffApprovalAccountRouteAllowed;
 
 module.exports = authMiddleware;

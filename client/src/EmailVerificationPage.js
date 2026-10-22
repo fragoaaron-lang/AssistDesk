@@ -119,10 +119,12 @@ function EmailVerificationPage() {
     setMessage('Checking the code you entered…');
 
     try {
-      await completeEmailVerification(email, code);
+      const verificationResult = await completeEmailVerification(email, code);
       sessionStorage.removeItem('assistdesk_pending_verification_email');
       setStatus('success');
-      setMessage('Your email is confirmed. Taking you to your support workspace…');
+      setMessage(verificationResult?.user?.account_status === 'pending_id'
+        ? 'Your email is confirmed. Next, submit your faculty/staff ID for administrator confirmation.'
+        : 'Your email is confirmed. Taking you to your support workspace…');
       redirectTimerRef.current = window.setTimeout(() => navigate('/dashboard', { replace: true }), 1400);
     } catch (error) {
       setStatus('error');

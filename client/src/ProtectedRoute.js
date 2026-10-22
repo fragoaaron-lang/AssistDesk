@@ -19,7 +19,8 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     return <Navigate to="/" replace />;
   }
 
-  if (user.account_status === 'terminated' && location.pathname !== '/dashboard') {
+  const accountNoticeStatuses = ['terminated', 'pending_id', 'pending_approval', 'id_rejected'];
+  if (accountNoticeStatuses.includes(user.account_status) && location.pathname !== '/dashboard') {
     return <Navigate to="/dashboard" replace />;
   }
 

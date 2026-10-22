@@ -260,6 +260,11 @@ function AdminReportsPage() {
   const [reportsLoadError, setReportsLoadError] = useState('');
   const [auditLogs, setAuditLogs] = useState([]);
   const [departments, setDepartments] = useState([]);
+  const [pendingStaffApprovals, setPendingStaffApprovals] = useState([]);
+  const [selectedStaffReview, setSelectedStaffReview] = useState(null);
+  const [staffIdPreview, setStaffIdPreview] = useState(null);
+  const [staffApprovalLoading, setStaffApprovalLoading] = useState(false);
+  const [staffReviewReason, setStaffReviewReason] = useState('');
   const [reportFiltersBySection, setReportFiltersBySection] = useState(() => Object.fromEntries(
     Object.keys(reportSectionNames).map((section) => [section, { ...reportFilterDefaults }])
   ));
@@ -327,6 +332,58 @@ function AdminReportsPage() {
       if (auditRequestId.current === requestId) setAuditLogs(response.data.auditLogs || []);
     } catch (error) {
       if (auditRequestId.current === requestId) setMessage(error.response?.data?.message || 'Unable to load audit history.');
+    }
+  };
+
+  const loadPendingStaffApprovals = async () => {
+    if (!token) return;
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/admin/users/pending-approvals`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPendingStaffApprovals(response.data.users || []);
+    } catch (error) {
+      setMessage(error.response?.data?.message || 'Unable to load faculty/staff confirmations.');
+    }
+  };
+
+  const openStaffIdReview = async (directoryUser) => {
+    setStaffApprovalLoading(true);
+    setStaffReviewReason('');
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/admin/users/${directoryUser.id}/staff-id`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setStaffIdPreview(response.data);
+      setSelectedStaffReview(directoryUser);
+    } catch (error) {
+      setMessage(error.response?.data?.message || 'Unable to load this ID document.');
+    } finally {
+      setStaffApprovalLoading(false);
+    }
+  };
+
+  const decideStaffApproval = async (decision) => {
+    if (!selectedStaffReview || staffApprovalLoading) return;
+    const reason = decision === 'reject' ? staffReviewReason.trim() : '';
+    if (decision === 'reject' && (reason.length < 3 || reason.length > 1000)) {
+      setMessage('Enter a review note between 3 and 1000 characters before rejecting.');
+      return;
+    }
+    setStaffApprovalLoading(true);
+    try {
+      const endpoint = decision === 'approve' ? 'approve-staff' : 'reject-staff';
+      const response = await axios.post(`${API_BASE_URL}/api/admin/users/${selectedStaffReview.id}/${endpoint}`,
+        decision === 'reject' ? { reason } : {},
+        { headers: { Authorization: `Bearer ${token}` } });
+      setMessage(response.data.message || `Faculty/staff account ${decision}d.`);
+      setSelectedStaffReview(null);
+      setStaffIdPreview(null);
+      await Promise.all([loadReports(), loadPendingStaffApprovals()]);
+    } catch (error) {
+      setMessage(error.response?.data?.message || `Unable to ${decision} this account.`);
+    } finally {
+      setStaffApprovalLoading(false);
     }
   };
 
@@ -400,6 +457,7 @@ function AdminReportsPage() {
     if (token) {
       loadReports();
       loadAuditLogs();
+      loadPendingStaffApprovals();
       axios.get(`${API_BASE_URL}/api/catalog/departments`, { headers: { Authorization: `Bearer ${token}` } })
         .then((response) => setDepartments(response.data.departments || []))
         .catch(() => setMessage('Unable to load departments for personnel management.'));
@@ -488,7 +546,7 @@ function AdminReportsPage() {
   const userRoleGroups = ['admin', 'student', 'faculty', 'staff'].map((roleName) => ({
     name: roleName,
     label: roleName.charAt(0).toUpperCase() + roleName.slice(1),
-    users: (reports?.users || []).filter((directoryUser) => directoryUser.role === roleName && directoryUser.account_status !== 'terminated'),
+    users: (reports?.users || []).filter((directoryUser) => directoryUser.role === roleName && directoryUser.account_status === 'active'),
   }));
 
   const terminatedRoleGroups = ['student', 'faculty', 'staff'].map((roleName) => ({
@@ -596,6 +654,7 @@ function AdminReportsPage() {
               setShowTerminatedUsers(false);
               setMessage('');
               loadReports();
+              loadPendingStaffApprovals();
             }
             if (linkKey === 'reports') setShowUserDirectory(false);
           }}
@@ -630,6 +689,37 @@ function AdminReportsPage() {
                 </button>
               </div>
             </div>
+            <section className="staff-approval-queue" aria-labelledby="staff-approval-queue-title">
+              <div className="staff-approval-queue-heading">
+                <div>
+                  <h3 id="staff-approval-queue-title">Faculty and staff confirmations</h3>
+                  <p>Review the submitted work ID before confirming account access.</p>
+                </div>
+                <span className="ticket-department-count">{pendingStaffApprovals.length} pending</span>
+              </div>
+              {pendingStaffApprovals.length === 0 ? (
+                <p className="small-muted">No faculty or staff accounts are waiting for confirmation.</p>
+              ) : (
+                <div className="report-table-scroll">
+                  <table className="report-table">
+                    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Department</th><th>ID document</th></tr></thead>
+                    <tbody>
+                      {pendingStaffApprovals.map((pendingUser) => (
+                        <tr key={pendingUser.id}>
+                          <td>{pendingUser.name}</td>
+                          <td>{pendingUser.email}</td>
+                          <td>{pendingUser.role}</td>
+                          <td>{pendingUser.Department?.name || 'Unassigned'}</td>
+                          <td><button type="button" className="institutional-btn small secondary" onClick={() => openStaffIdReview(pendingUser)} disabled={staffApprovalLoading}>
+                            {staffApprovalLoading ? 'Loading…' : 'Review ID'}
+                          </button></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
             <div className="list-stack">
               {userRoleGroups.map((roleGroup) => (
                 <section key={roleGroup.name} className="ticket-department-group">
@@ -733,6 +823,40 @@ function AdminReportsPage() {
               ))}
             </div>
           </section>
+          </div>
+        )}
+
+        {showUserDirectory && selectedStaffReview && staffIdPreview && (
+          <div className="user-directory-archive-backdrop" role="presentation" onMouseDown={() => {
+            if (!staffApprovalLoading) {
+              setSelectedStaffReview(null);
+              setStaffIdPreview(null);
+            }
+          }}>
+            <section className="institutional-card staff-id-review-modal" role="dialog" aria-modal="true" aria-labelledby="staff-id-review-title" onMouseDown={(event) => event.stopPropagation()}>
+              <div className="report-card-heading">
+                <div>
+                  <h3 id="staff-id-review-title">Confirm {selectedStaffReview.role} account</h3>
+                  <span>{selectedStaffReview.name} · {selectedStaffReview.email} · {selectedStaffReview.Department?.name || 'Department unavailable'}</span>
+                </div>
+                <button type="button" className="user-directory-close-button" aria-label="Close ID review" disabled={staffApprovalLoading} onClick={() => { setSelectedStaffReview(null); setStaffIdPreview(null); }}>×</button>
+              </div>
+              <p className="small-muted">Check that the uploaded ID clearly identifies this faculty or staff member.</p>
+              <img className="staff-id-review-image" src={staffIdPreview.id_document} alt={`ID document submitted by ${selectedStaffReview.name}`} />
+              <p className="small-muted">{staffIdPreview.file_name}</p>
+              <label className="staff-id-rejection-field">
+                Review note (required to reject)
+                <textarea className="institutional-textarea" value={staffReviewReason} onChange={(event) => setStaffReviewReason(event.target.value)} minLength={3} maxLength={1000} rows={3} placeholder="Explain what needs correction so the user can resubmit." />
+              </label>
+              <div className="inline-actions staff-id-review-actions">
+                <button type="button" className="institutional-btn" onClick={() => decideStaffApproval('approve')} disabled={staffApprovalLoading}>
+                  {staffApprovalLoading ? 'Saving…' : 'Approve account'}
+                </button>
+                <button type="button" className="institutional-btn danger" onClick={() => decideStaffApproval('reject')} disabled={staffApprovalLoading || staffReviewReason.trim().length < 3}>
+                  Reject and request new ID
+                </button>
+              </div>
+            </section>
           </div>
         )}
 

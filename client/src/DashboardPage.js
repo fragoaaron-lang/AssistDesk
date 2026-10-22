@@ -7,7 +7,7 @@ import AuthenticatedNavigation from './AuthenticatedNavigation';
 import { playLoginBell } from './audioUtils';
 
 function DashboardPage() {
-  const { user, token } = useAuth();
+  const { user, token, updateAccountUser } = useAuth();
   const [dashboard, setDashboard] = useState({ departments: [], services: [], announcements: [], stats: {} });
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [campusMapLoaded, setCampusMapLoaded] = useState(false);
@@ -16,6 +16,9 @@ function DashboardPage() {
   const [selectedMapTicket, setSelectedMapTicket] = useState(null);
   const [hoveredMapTicket, setHoveredMapTicket] = useState(null);
   const [showWelcomeSplash, setShowWelcomeSplash] = useState(() => sessionStorage.getItem('assistdesk_show_welcome_splash') === 'true');
+  const [staffIdFile, setStaffIdFile] = useState(null);
+  const [staffIdSubmitting, setStaffIdSubmitting] = useState(false);
+  const [staffIdMessage, setStaffIdMessage] = useState('');
   const [appealMessage, setAppealMessage] = useState('');
   const campusMapFrame = useRef(null);
 
@@ -32,6 +35,8 @@ function DashboardPage() {
   }, [showWelcomeSplash]);
 
   const welcomeName = (sessionStorage.getItem('assistdesk_welcome_name') || user?.name || 'User').split(' ')[0];
+  const isApprovalPending = ['pending_id', 'pending_approval', 'id_rejected'].includes(user?.account_status);
+  const isRestrictedAccount = user?.account_status === 'terminated' || isApprovalPending;
 
   const visibleDepartments = dashboard.departments || [];
 
@@ -72,6 +77,48 @@ function DashboardPage() {
       }))
     ));
   }, [dashboard.tickets, visibleDepartments]);
+
+  const handleStaffIdSelection = (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    setStaffIdMessage('');
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setStaffIdFile(null);
+      setStaffIdMessage('Choose a JPG, PNG, or WEBP image of your faculty/staff ID.');
+      return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      setStaffIdFile(null);
+      setStaffIdMessage('The ID image must be 3 MB or smaller.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setStaffIdFile({ data: reader.result, name: file.name, type: file.type });
+    reader.onerror = () => setStaffIdMessage('Unable to read that image. Please select it again.');
+    reader.readAsDataURL(file);
+  };
+
+  const submitStaffId = async (event) => {
+    event.preventDefault();
+    if (!staffIdFile || !token || staffIdSubmitting) return;
+    setStaffIdSubmitting(true);
+    setStaffIdMessage('');
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/auth/staff-id`, {
+        id_document: staffIdFile.data,
+        file_name: staffIdFile.name,
+        mime_type: staffIdFile.type,
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      updateAccountUser(response.data.user || { account_status: 'pending_approval', staff_id_submitted: true, staff_id_review_reason: null });
+      setStaffIdFile(null);
+      setStaffIdMessage(response.data.message || 'Your ID was submitted for administrator review.');
+    } catch (error) {
+      setStaffIdMessage(error.response?.data?.message || 'Unable to submit your ID. Please try again.');
+    } finally {
+      setStaffIdSubmitting(false);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -172,7 +219,7 @@ function DashboardPage() {
   }, [syncCampusMap]);
 
   useEffect(() => {
-    if (!token || user?.account_status === 'terminated') return;
+    if (!token || isRestrictedAccount) return;
 
     loadData();
     loadCampusMapData();
@@ -206,7 +253,7 @@ function DashboardPage() {
 
   useEffect(() => {
     const refreshDashboard = (event) => {
-      if (event.detail?.page !== 'dashboard' || !token || user?.account_status === 'terminated') return;
+      if (event.detail?.page !== 'dashboard' || !token || isRestrictedAccount) return;
       setDashboardLoading(true);
       loadData();
       loadCampusMapData();
@@ -267,7 +314,7 @@ function DashboardPage() {
   );
 
 
-  if (showWelcomeSplash && user?.account_status !== 'terminated') {
+  if (showWelcomeSplash && !isRestrictedAccount) {
     return (
       <main className="splash-screen" aria-label="Loading AssistDesk">
         <div className="splash-mark">
@@ -340,6 +387,39 @@ function DashboardPage() {
               </div>
             </div>
             <p className="helper-text" style={{ marginTop: '24px' }}>Other account services are unavailable while the account is terminated. You may sign out below.</p>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  if (isApprovalPending) {
+    const canSubmitId = ['pending_id', 'id_rejected'].includes(user.account_status);
+    return (
+      <div className="app-shell">
+        <div className="page-shell">
+          <AuthenticatedNavigation user={user} subtitle="Faculty/staff account confirmation" minimal />
+          <main className="institutional-card staff-approval-card" role="status" aria-live="polite">
+            <p className="eyebrow">Account verification</p>
+            <h2>{user.account_status === 'pending_approval' ? 'Waiting for administrator confirmation' : 'Submit your faculty/staff ID'}</h2>
+            {user.account_status === 'pending_approval' ? (
+              <p>Your email is verified and your ID is in the administrator’s review queue. You can sign in, but account features will unlock after approval.</p>
+            ) : (
+              <>
+                <p>Your email is verified. Upload a clear photo of your faculty/staff ID so an administrator can confirm your account. Access remains limited until the review is complete.</p>
+                {user.staff_id_review_reason && <p className="staff-id-review-note"><strong>Administrator note:</strong> {user.staff_id_review_reason}</p>}
+                <form className="staff-id-upload-form" onSubmit={submitStaffId}>
+                  <label htmlFor="staff-id-document"><strong>Faculty/staff ID image</strong><small>JPG, PNG, or WEBP · up to 3 MB</small></label>
+                  <input id="staff-id-document" className="institutional-input" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleStaffIdSelection} disabled={staffIdSubmitting} required />
+                  {staffIdFile && <div className="staff-id-preview"><img src={staffIdFile.data} alt="Selected faculty or staff ID preview" /><span>{staffIdFile.name}</span></div>}
+                  <button className="institutional-btn" type="submit" disabled={!staffIdFile || staffIdSubmitting}>
+                    {staffIdSubmitting ? 'Submitting ID…' : 'Submit ID for confirmation'}
+                  </button>
+                  {staffIdMessage && <p className="helper-text" role="status">{staffIdMessage}</p>}
+                </form>
+              </>
+            )}
+            <p className="helper-text staff-approval-signout">You can sign out at any time. No other account features are available until confirmation.</p>
           </main>
         </div>
       </div>

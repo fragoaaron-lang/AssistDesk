@@ -263,7 +263,8 @@ function ChatbotWidget() {
     return () => window.removeEventListener('assistdesk:ai-question-answered', handleAnsweredTicketQuestion);
   }, [pathname]);
 
-  if (pathname === '/' || !token || !user || user.account_status === 'terminated') return null;
+  if (pathname === '/' || !token || !user
+    || ['terminated', 'pending_id', 'pending_approval', 'id_rejected'].includes(user.account_status)) return null;
 
   const getAssistantName = () => {
     if (gender === 'boy') return 'Alex';

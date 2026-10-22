@@ -169,7 +169,7 @@ exports.getReports = async (req, res) => {
     });
 
     const users = await User.findAll({
-      attributes: ['id', 'name', 'email', 'role', 'student_number', 'account_status'],
+      attributes: ['id', 'name', 'email', 'role', 'department_id', 'student_number', 'account_status'],
       where: {
         role: { [Op.in]: ['student', 'faculty', 'staff', 'admin'] },
         ...(departmentScope ? {
@@ -303,6 +303,164 @@ exports.getReports = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Unable to generate reports.' });
+  }
+};
+
+const canReviewStaffAccount = (admin, target) => {
+  const scope = getDepartmentScope(admin);
+  return scope == null || Number(target.department_id) === Number(scope);
+};
+
+exports.getPendingStaffApprovals = async (req, res) => {
+  try {
+    const departmentScope = getDepartmentScope(req.user);
+    const users = await User.findAll({
+      attributes: ['id', 'name', 'email', 'role', 'department_id', 'account_status', 'staff_id_file_name', 'staff_id_mime_type', 'created_at'],
+      where: {
+        role: { [Op.in]: ['faculty', 'staff'] },
+        account_status: 'pending_approval',
+        ...(departmentScope ? { department_id: departmentScope } : {}),
+      },
+      include: [{ model: Department, attributes: ['name'] }],
+      order: [['created_at', 'ASC'], ['name', 'ASC']],
+    });
+    return res.json({ users });
+  } catch (error) {
+    console.error('Pending staff approval list failed:', error);
+    return res.status(500).json({ message: 'Unable to load pending faculty and staff approvals.' });
+  }
+};
+
+exports.getStaffIdDocument = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.params.id, {
+      attributes: ['id', 'name', 'email', 'role', 'department_id', 'account_status', 'staff_id_document', 'staff_id_file_name', 'staff_id_mime_type'],
+    });
+    if (!user || !['faculty', 'staff'].includes(user.role) || user.account_status !== 'pending_approval') {
+      return res.status(404).json({ message: 'Pending faculty/staff ID submission not found.' });
+    }
+    if (!canReviewStaffAccount(req.user, user)) {
+      return res.status(403).json({ message: 'You may only review accounts in your authorized department.' });
+    }
+    if (!user.staff_id_document || !user.staff_id_mime_type) {
+      return res.status(404).json({ message: 'No ID document is available for review.' });
+    }
+
+    await recordAudit({
+      actor: req.user,
+      action: 'account.staff_id_viewed',
+      entityType: 'user',
+      entityId: user.id,
+      departmentId: user.department_id,
+      metadata: { file_name: user.staff_id_file_name || null },
+    });
+    res.setHeader('Cache-Control', 'no-store');
+    return res.json({
+      id_document: user.staff_id_document,
+      file_name: user.staff_id_file_name,
+      mime_type: user.staff_id_mime_type,
+    });
+  } catch (error) {
+    console.error('Staff ID retrieval failed:', error);
+    return res.status(500).json({ message: 'Unable to load the ID document.' });
+  }
+};
+
+exports.approveStaffAccount = async (req, res) => {
+  try {
+    const transaction = await User.sequelize.transaction();
+    try {
+      const user = await User.findByPk(req.params.id, { transaction, lock: transaction.LOCK.UPDATE });
+      if (!user || !['faculty', 'staff'].includes(user.role) || user.account_status !== 'pending_approval') {
+        await transaction.rollback();
+        return res.status(404).json({ message: 'Pending faculty/staff approval not found.' });
+      }
+      if (!canReviewStaffAccount(req.user, user)) {
+        await transaction.rollback();
+        return res.status(403).json({ message: 'You may only review accounts in your authorized department.' });
+      }
+      if (!user.staff_id_document) {
+        await transaction.rollback();
+        return res.status(409).json({ message: 'This account has no ID document to approve.' });
+      }
+
+      await user.update({
+        account_status: 'active',
+        staff_id_document: null,
+        staff_id_file_name: null,
+        staff_id_mime_type: null,
+        staff_id_review_reason: null,
+      }, { transaction });
+      await recordAudit({
+        actor: req.user,
+        action: 'account.staff_id_approved',
+        entityType: 'user',
+        entityId: user.id,
+        departmentId: user.department_id,
+        before: { account_status: 'pending_approval' },
+        after: { account_status: 'active' },
+        transaction,
+      });
+      await transaction.commit();
+      disconnectUser(user.id);
+      return res.json({ message: 'Faculty/staff account approved.' });
+    } catch (error) {
+      if (!transaction.finished) await transaction.rollback();
+      throw error;
+    }
+  } catch (error) {
+    console.error('Staff account approval failed:', error);
+    return res.status(500).json({ message: 'Unable to approve the account.' });
+  }
+};
+
+exports.rejectStaffAccount = async (req, res) => {
+  try {
+    const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim() : '';
+    if (reason.length < 3 || reason.length > 1000) {
+      return res.status(400).json({ message: 'A review note between 3 and 1000 characters is required.' });
+    }
+
+    const transaction = await User.sequelize.transaction();
+    try {
+      const user = await User.findByPk(req.params.id, { transaction, lock: transaction.LOCK.UPDATE });
+      if (!user || !['faculty', 'staff'].includes(user.role) || user.account_status !== 'pending_approval') {
+        await transaction.rollback();
+        return res.status(404).json({ message: 'Pending faculty/staff approval not found.' });
+      }
+      if (!canReviewStaffAccount(req.user, user)) {
+        await transaction.rollback();
+        return res.status(403).json({ message: 'You may only review accounts in your authorized department.' });
+      }
+
+      await user.update({
+        account_status: 'id_rejected',
+        staff_id_document: null,
+        staff_id_file_name: null,
+        staff_id_mime_type: null,
+        staff_id_review_reason: reason,
+      }, { transaction });
+      await recordAudit({
+        actor: req.user,
+        action: 'account.staff_id_rejected',
+        entityType: 'user',
+        entityId: user.id,
+        departmentId: user.department_id,
+        before: { account_status: 'pending_approval' },
+        after: { account_status: 'id_rejected' },
+        metadata: { reason },
+        transaction,
+      });
+      await transaction.commit();
+      disconnectUser(user.id);
+      return res.json({ message: 'ID submission rejected. The user can submit a corrected ID.' });
+    } catch (error) {
+      if (!transaction.finished) await transaction.rollback();
+      throw error;
+    }
+  } catch (error) {
+    console.error('Staff account rejection failed:', error);
+    return res.status(500).json({ message: 'Unable to reject the ID submission.' });
   }
 };
 
@@ -457,7 +615,13 @@ exports.deleteUser = async (req, res) => {
       await ChatLog.destroy({ where: { user_id: user.id }, transaction });
       await Admin.destroy({ where: { user_id: user.id }, transaction });
       await PasswordResetToken.destroy({ where: { email: user.email }, transaction });
-      await user.update({ account_status: 'terminated', session_version: Number(user.session_version || 0) + 1 }, { transaction });
+      await user.update({
+        account_status: 'terminated',
+        session_version: Number(user.session_version || 0) + 1,
+        staff_id_document: null,
+        staff_id_file_name: null,
+        staff_id_mime_type: null,
+      }, { transaction });
       await recordAudit({
         actor: req.user,
         action: 'account.deactivated',

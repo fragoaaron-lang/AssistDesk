@@ -13,15 +13,12 @@ const { buildPersonalActivityQuery } = require('../utils/personalActivityQuery')
 const { disconnectUser } = require('../utils/socket');
 const { getJwtSecret } = require('../config/security');
 const { getLoginTokenExpiry } = require('../utils/authTokenExpiry');
+const { getAppealContactEmail } = require('../utils/appealContact');
+const { validateImageDataUrl } = require('../utils/inputValidation');
 
 const JWT_SECRET = getJwtSecret();
 const JWT_EXPIRES_IN = process.env.NODE_ENV === 'production' ? '1h' : (process.env.JWT_EXPIRES_IN || '1h');
 const DUMMY_PASSWORD_HASH = bcrypt.hashSync(crypto.randomBytes(32).toString('hex'), 12);
-
-const getAppealContactEmail = () => {
-  const configured = String(process.env.APPEAL_CONTACT_EMAIL || '').trim();
-  return configured.match(/<([^>]+)>/)?.[1] || configured || null;
-};
 
 const getLatestTerminationInfo = async (userId) => {
   const record = await AuditLog.findOne({
@@ -53,7 +50,14 @@ const sanitizeUser = (user, terminationInfo = null) => ({
     ...terminationInfo,
     appeal_email: getAppealContactEmail(),
   } : {}),
+  ...(user.role === 'faculty' || user.role === 'staff' ? {
+    staff_id_submitted: Boolean(user.staff_id_file_name),
+    staff_id_review_reason: user.staff_id_review_reason || null,
+  } : {}),
 });
+
+const isFacultyOrStaff = (user) => ['faculty', 'staff'].includes(user?.role);
+const isStaffApprovalStatus = (status) => ['pending_id', 'pending_approval', 'id_rejected'].includes(status);
 
 const PASSWORD_POLICY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{12,128}$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -223,9 +227,10 @@ exports.verifyEmail = async (req, res) => {
       return res.status(400).json({ message: 'Verification could not be completed. Check the email and code, or request a new code.' });
     }
 
+    const nextAccountStatus = isFacultyOrStaff(user) ? 'pending_id' : 'active';
     const transaction = await User.sequelize.transaction();
     try {
-      await user.update({ account_status: 'active', verification_token: null }, { transaction });
+      await user.update({ account_status: nextAccountStatus, verification_token: null }, { transaction });
       await recordAudit({
         actor: user,
         action: 'account.email_verified',
@@ -233,7 +238,7 @@ exports.verifyEmail = async (req, res) => {
         entityId: user.id,
         departmentId: user.department_id,
         before: { account_status: 'pending_verification' },
-        after: { account_status: 'active' },
+        after: { account_status: nextAccountStatus },
         transaction,
       });
       await transaction.commit();
@@ -244,7 +249,13 @@ exports.verifyEmail = async (req, res) => {
     await user.reload({ include: [{ model: Department }] });
     const token = signToken(user);
 
-    return res.status(200).json({ message: 'Email verified. Registration complete.', token, user: sanitizeUser(user) });
+    return res.status(200).json({
+      message: nextAccountStatus === 'pending_id'
+        ? 'Email verified. Submit your faculty/staff ID for administrator confirmation.'
+        : 'Email verified. Registration complete.',
+      token,
+      user: sanitizeUser(user),
+    });
   } catch (error) {
     console.error(JSON.stringify({ event: 'email_verification_failed', request_id: req.requestId, error_name: error.name || 'Error' }));
     return res.status(500).json({ message: 'Unable to verify email address.' });
@@ -283,7 +294,11 @@ exports.login = async (req, res) => {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-    const user = await User.findOne({ where: { email: normalizedEmail }, include: [{ model: Department }] });
+    const user = await User.findOne({
+      where: { email: normalizedEmail },
+      attributes: ['id', 'name', 'email', 'password_hash', 'role', 'department_id', 'account_status', 'student_number', 'profile_picture', 'created_at', 'session_version', 'staff_id_file_name', 'staff_id_review_reason'],
+      include: [{ model: Department }],
+    });
     if (!user) {
       await bcrypt.compare(password, DUMMY_PASSWORD_HASH);
       await recordAudit({ actor: { name: normalizedEmail, role: 'anonymous' }, action: 'auth.login_failed', entityType: 'authentication_attempt', metadata: { attempted_email: normalizedEmail, reason: 'unknown_account' } });
@@ -299,7 +314,9 @@ exports.login = async (req, res) => {
     if (user.account_status === 'pending_verification') {
       await recordAudit({ actor: user, action: 'auth.login_denied', entityType: 'user', entityId: user.id, metadata: { reason: 'pending_verification' } });
       return res.status(401).json({ message: 'Invalid email or password.' });
-    } else if (user.account_status !== 'active' && user.account_status !== 'terminated') {
+    } else if (user.account_status !== 'active'
+      && user.account_status !== 'terminated'
+      && !(isFacultyOrStaff(user) && isStaffApprovalStatus(user.account_status))) {
       await recordAudit({ actor: user, action: 'auth.login_denied', entityType: 'user', entityId: user.id, metadata: { reason: 'inactive_account', account_status: user.account_status } });
       return res.status(403).json({ message: 'This account is not active.' });
     }
@@ -313,7 +330,13 @@ exports.login = async (req, res) => {
     return res.json({
       message: user.account_status === 'terminated'
         ? 'Your account is terminated. Review the notice and submit an appeal if you believe this is a mistake.'
-        : 'Login successful.',
+        : user.account_status === 'pending_id'
+          ? 'Email verified. Submit your faculty/staff ID to continue.'
+          : user.account_status === 'pending_approval'
+            ? 'Your faculty/staff ID is awaiting administrator confirmation.'
+            : user.account_status === 'id_rejected'
+              ? 'Your submitted ID needs attention. Review the administrator note and submit it again.'
+              : 'Login successful.',
       token,
       user: sanitizeUser(user, terminationInfo),
     });
@@ -344,7 +367,10 @@ exports.logout = async (req, res) => {
 
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findByPk(req.user.id, { include: [{ model: Department }] });
+    const user = await User.findByPk(req.user.id, {
+      attributes: ['id', 'name', 'email', 'role', 'department_id', 'account_status', 'student_number', 'profile_picture', 'created_at', 'staff_id_file_name', 'staff_id_review_reason'],
+      include: [{ model: Department }],
+    });
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
     }
@@ -356,6 +382,52 @@ exports.getMe = async (req, res) => {
   } catch (error) {
     console.error(JSON.stringify({ event: 'profile_load_failed', request_id: req.requestId, error_name: error.name || 'Error' }));
     return res.status(500).json({ message: 'Unable to load profile.' });
+  }
+};
+
+exports.submitStaffId = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id);
+    if (!user || !isFacultyOrStaff(user)) {
+      return res.status(403).json({ message: 'Only faculty and staff accounts can submit an ID for review.' });
+    }
+    if (!['pending_id', 'id_rejected'].includes(user.account_status)) {
+      return res.status(409).json({ message: 'This account is not currently waiting for an ID submission.' });
+    }
+
+    let document;
+    try {
+      document = validateImageDataUrl(req.body?.id_document, req.body?.file_name, req.body?.mime_type);
+    } catch (error) {
+      return res.status(error.status || 400).json({ message: error.message });
+    }
+
+    const previousStatus = user.account_status;
+    await user.update({
+      staff_id_document: document.data,
+      staff_id_file_name: document.name,
+      staff_id_mime_type: document.type,
+      staff_id_review_reason: null,
+      account_status: 'pending_approval',
+    });
+    await recordAudit({
+      actor: user,
+      action: 'account.staff_id_submitted',
+      entityType: 'user',
+      entityId: user.id,
+      departmentId: user.department_id,
+      before: { account_status: previousStatus },
+      after: { account_status: 'pending_approval' },
+      metadata: { mime_type: document.type, file_name: document.name },
+    });
+
+    return res.json({
+      message: 'Your ID was submitted. You can sign in, but access is limited until an administrator confirms it.',
+      user: sanitizeUser(user),
+    });
+  } catch (error) {
+    console.error(JSON.stringify({ event: 'staff_id_submission_failed', request_id: req.requestId, error_name: error.name || 'Error' }));
+    return res.status(500).json({ message: 'Unable to submit your ID for review.' });
   }
 };
 

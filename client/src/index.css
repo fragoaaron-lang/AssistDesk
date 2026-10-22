@@ -8147,3 +8147,136 @@ body.dark-mode .auth-modal .remember-me-option small {
 .account-appeal-form > .helper-text {
   margin: 0;
 }
+
+.registration-approval-hint {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.staff-approval-card {
+  width: min(760px, 100%);
+  margin: clamp(24px, 6vh, 64px) auto;
+  padding: clamp(22px, 5vw, 42px);
+}
+
+.staff-approval-card h2 {
+  margin: 8px 0 12px;
+  color: var(--navy);
+}
+
+.staff-approval-card > p {
+  line-height: 1.65;
+}
+
+.staff-id-upload-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.staff-id-upload-form label,
+.staff-id-rejection-field {
+  display: grid;
+  gap: 6px;
+  color: var(--text);
+}
+
+.staff-id-upload-form label small {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.staff-id-preview {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  overflow-wrap: anywhere;
+}
+
+.staff-id-preview img {
+  width: min(420px, 100%);
+  max-height: 280px;
+  object-fit: contain;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.staff-id-review-note {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.staff-approval-signout {
+  margin-top: 24px;
+}
+
+.staff-approval-queue {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0 24px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+
+.staff-approval-queue-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.staff-approval-queue-heading h3 {
+  margin: 0 0 4px;
+  color: var(--navy);
+}
+
+.staff-approval-queue-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.staff-id-review-modal {
+  display: grid;
+  gap: 12px;
+  width: min(760px, calc(100vw - 32px));
+  max-height: min(90vh, 900px);
+  overflow: auto;
+  padding: clamp(18px, 4vw, 28px);
+}
+
+.staff-id-review-image {
+  display: block;
+  width: 100%;
+  max-height: 52vh;
+  object-fit: contain;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.staff-id-review-actions {
+  justify-content: flex-end;
+}
+
+@media (max-width: 560px) {
+  .staff-approval-queue-heading {
+    align-items: flex-start;
+  }
+
+  .staff-id-review-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}

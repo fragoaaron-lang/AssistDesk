@@ -50,6 +50,13 @@ const accountAppealLimiter = createLimiter({
   message: 'Too many appeal submissions. Please try again later.',
 });
 
+const staffIdSubmissionLimiter = createLimiter({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  scope: 'staff_id_submission',
+  message: 'Too many ID submissions. Please try again later.',
+});
+
 const registrationLimiter = createLimiter({
   windowMs: 60 * 60 * 1000,
   limit: 60,
@@ -78,4 +85,4 @@ const apiRequestLimiter = createLimiter({
   message: 'API request limit reached. Please try again later.',
 });
 
-module.exports = { accountAppealLimiter, accountRecoveryLimiter, aiRequestLimiter, apiRequestLimiter, createLimiter, loginLimiter, registrationLimiter, ticketCreationLimiter };
+module.exports = { accountAppealLimiter, accountRecoveryLimiter, aiRequestLimiter, apiRequestLimiter, createLimiter, loginLimiter, registrationLimiter, staffIdSubmissionLimiter, ticketCreationLimiter };

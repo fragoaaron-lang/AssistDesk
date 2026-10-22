@@ -52,6 +52,26 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
         defaultValue: null,
       },
+      staff_id_document: {
+        type: DataTypes.TEXT('medium'),
+        allowNull: true,
+        defaultValue: null,
+      },
+      staff_id_file_name: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+        defaultValue: null,
+      },
+      staff_id_mime_type: {
+        type: DataTypes.STRING(80),
+        allowNull: true,
+        defaultValue: null,
+      },
+      staff_id_review_reason: {
+        type: DataTypes.STRING(1000),
+        allowNull: true,
+        defaultValue: null,
+      },
       verification_token: {
         type: DataTypes.STRING(128),
         allowNull: true,

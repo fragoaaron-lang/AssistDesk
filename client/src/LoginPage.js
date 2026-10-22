@@ -37,6 +37,13 @@ function LoginPage({ modal = false, onSwitch }) {
         navigate('/dashboard');
         return;
       }
+      if (result?.user?.account_status && result.user.account_status !== 'active') {
+        sessionStorage.removeItem('assistdesk_show_welcome_splash');
+        sessionStorage.removeItem('assistdesk_welcome_name');
+        sessionStorage.removeItem('assistdesk_play_login_sound');
+        navigate('/dashboard');
+        return;
+      }
       setWelcomeName(firstName);
       sessionStorage.setItem('assistdesk_show_welcome_splash', 'true');
       sessionStorage.setItem('assistdesk_welcome_name', firstName);

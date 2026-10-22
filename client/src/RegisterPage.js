@@ -328,6 +328,11 @@ function RegisterPage({ modal = false, onSwitch }) {
                 ))}
               </div>
             </fieldset>
+            {['faculty', 'staff'].includes(role) && (
+              <p className="helper-text registration-approval-hint">
+                After verifying your email, submit a photo of your faculty/staff ID. You can sign in while an administrator reviews it, but other account features stay locked until confirmation.
+              </p>
+            )}
             <button className="institutional-btn auth-submit-btn" type="submit">Register</button>
           </form>
           {message && <p className="registration-form-error" role="alert">{message}</p>}
