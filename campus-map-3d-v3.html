@@ -29,7 +29,7 @@ h1{font-size:16px;margin:0 0 8px;font-weight:700}
 #info span{font-size:12px;color:var(--mute)}
 #heatmap,#ticketLayer{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 #heatmap{z-index:2}#ticketLayer{z-index:3}
-.heat-dot{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(237,23,37,.82) 0%,rgba(255,74,25,.72) 16%,rgba(255,174,30,.62) 35%,rgba(255,224,45,.5) 53%,rgba(95,220,70,.38) 72%,rgba(36,190,111,.16) 88%,rgba(36,190,111,0) 100%);filter:blur(7px);mix-blend-mode:multiply;opacity:1}
+.heat-dot{position:absolute;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(31,111,120,.34) 0%,rgba(69,139,144,.27) 24%,rgba(132,190,195,.19) 52%,rgba(191,228,226,.11) 78%,rgba(191,228,226,0) 100%);filter:blur(8px);mix-blend-mode:multiply;opacity:1}
 .ticket-pin{position:absolute;z-index:4;transform:translate(-50%,-100%) rotate(-45deg);width:25px;height:25px;padding:0;border:2px solid #fff;border-radius:50% 50% 50% 0;box-shadow:0 2px 8px rgba(16,24,40,.78),0 0 0 2px rgba(8,32,56,.44);pointer-events:auto;cursor:pointer}
 .ticket-pin::after{content:"";position:absolute;inset:6px;border-radius:50%;background:#fff;pointer-events:none}
 .ticket-pin.low,.ticket-pin.medium{background:#1458ed}.ticket-pin.urgent{background:#ed1725}
@@ -196,7 +196,7 @@ function makeHeatDot(entry, count){
  const size=Math.min(260,138 + Math.sqrt(count) * 28);
  el.style.width=size+'px';
  el.style.height=size+'px';
- el.style.opacity=String(Math.min(0.9,0.58 + Math.log2(count + 1) * 0.14));
+ el.style.opacity=String(Math.min(0.56,0.3 + Math.log2(count + 1) * 0.08));
  heatLayer.appendChild(el);
  return el;
 }

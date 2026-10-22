@@ -276,7 +276,7 @@ function makeHeatCloud(department, count) {
   const size = Math.min(260, 138 + Math.sqrt(count) * 28);
   cloud.style.width = size + 'px';
   cloud.style.height = size + 'px';
-  cloud.style.opacity = String(Math.min(0.9, 0.58 + Math.log2(count + 1) * 0.14));
+  cloud.style.opacity = String(Math.min(0.56, 0.3 + Math.log2(count + 1) * 0.08));
   cloud.title = department.name + ' · ' + count + ' ticket' + (count === 1 ? '' : 's');
   heatLayer.appendChild(cloud);
   return cloud;
