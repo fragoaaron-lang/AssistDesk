@@ -185,6 +185,7 @@ for(let x=600;x<860;x+=60)tree(x,670);
 const labels=[],lab=document.getElementById('labels');
 // background mode: hide all campus labels so the map acts purely as ambient scenery.
 const heatLayer=document.getElementById('heatmap');const ticketLayer=document.getElementById('ticketLayer');
+const heatItems=[],ticketItems=[];
 function worldPointFromBuildingEntry(entry){
  const [name,c,x1,y1,x2,y2,f,x]=entry;
  return new THREE.Vector3(((x1+x2)/2)*P, 3.2, ((y1+y2)/2)*P);
@@ -212,36 +213,35 @@ function makeTicketPin(ticket, index){
  ticketLayer.appendChild(btn);
  return btn;
 }
-function syncLayers(){
+function buildLayers(){
  heatLayer.innerHTML='';
  ticketLayer.innerHTML='';
- const v=new THREE.Vector3();
  const ticketCountsByBuilding=new Map();
  TICKETS.forEach(ticket=>{
    const match=B.find(([name])=>name.toLowerCase()===ticket[0].toLowerCase());
    if(match) ticketCountsByBuilding.set(match,(ticketCountsByBuilding.get(match)||0)+1);
  });
  ticketCountsByBuilding.forEach((count,entry)=>{
-   const p=worldPointFromBuildingEntry(entry);
-   v.copy(p).project(cam);
-   const visible=v.z > -1 && v.z < 1;
-   if(!visible) return;
-   const el=makeHeatDot(entry,count);
-   const left=(v.x*.5+.5)*innerWidth;
-   const top=(-v.y*.5+.5)*innerHeight;
-   el.style.left=left+'px';
-   el.style.top=top+'px';
+   heatItems.push({el:makeHeatDot(entry,count),position:worldPointFromBuildingEntry(entry)});
  });
  TICKETS.forEach((ticket,index)=>{
    const match=B.find(([name]) => name.toLowerCase() === ticket[0].toLowerCase());
    if(!match) return;
-   const p=worldPointFromBuildingEntry(match);
-   v.copy(p).project(cam);
-   if(v.z < -1 || v.z > 1) return;
-  const btn=makeTicketPin({name:match[0],subject:ticket[1],priority:ticket[2]}, index);
-   btn.style.left=(v.x*.5+.5)*innerWidth+'px';
-   btn.style.top=(-v.y*.5+.5)*innerHeight+'px';
+   ticketItems.push({el:makeTicketPin({name:match[0],subject:ticket[1],priority:ticket[2]}, index),position:worldPointFromBuildingEntry(match)});
  });
+}
+function syncLayers(){
+ const v=new THREE.Vector3();
+ const positionItems=(items)=>items.forEach(({el,position})=>{
+   v.copy(position).project(cam);
+   const visible=v.z > -1 && v.z < 1 && Math.abs(v.x) <= 1.1 && Math.abs(v.y) <= 1.1;
+   el.style.display=visible?'':'none';
+   if(!visible)return;
+   el.style.left=(v.x*.5+.5)*innerWidth+'px';
+   el.style.top=(-v.y*.5+.5)*innerHeight+'px';
+ });
+ positionItems(heatItems);
+ positionItems(ticketItems);
 }
 // legend
 const act=new Set(Object.keys(CATS)),chips=document.getElementById('chips');
@@ -263,6 +263,7 @@ ctl.autoRotate = true;
 br.setAttribute('aria-pressed', 'true');
 document.getElementById('bz').onclick=()=>{cam.position.copy(home.p);ctl.target.copy(home.t)};
 function size(){R.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();syncLayers()}
+buildLayers();
 addEventListener('resize',size);size();
 const v=new THREE.Vector3();
 (function loop(){requestAnimationFrame(loop);ctl.update();R.render(S,cam);
