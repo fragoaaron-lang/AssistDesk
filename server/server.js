@@ -302,14 +302,11 @@ sequelize
   .authenticate()
   .then(() => {
     console.log('Database connection established successfully.');
-    return Admin.sync({ alter: false });
-  })
-  .then(() => {
-    console.log('Admins table is ready.');
-    return normalizeLegacyTicketPriorities();
-  })
-  .then(() => {
     return sequelize.sync({ alter: false, force: false });
+  })
+  .then(() => {
+    console.log('Database tables are ready.');
+    return normalizeLegacyTicketPriorities();
   })
   .then(() => ensureUserProfileColumns())
   .then(() => ensureUserSessionVersionColumn())
