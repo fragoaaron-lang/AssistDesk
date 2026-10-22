@@ -298,8 +298,11 @@ function AdminCatalogPage() {
             {issueGroups.length === 0 ? <p className="catalog-empty-state">No issue categories have been added yet.</p> : issueGroupsByDepartment.map((departmentGroup) => (
               <details className="catalog-issue-department" key={departmentGroup.id}>
                 <summary className="catalog-issue-department-heading">
+                  <span className="ticket-folder-icon" aria-hidden="true" />
                   <strong>{departmentGroup.name}</strong>
-                  <span>{departmentGroup.groups.length} categories · {departmentGroup.groups.reduce((total, group) => total + (group.specificIssues || []).length, 0)} issues</span>
+                  <span className="catalog-issue-department-count">
+                    {departmentGroup.groups.length} categories · {departmentGroup.groups.reduce((total, group) => total + (group.specificIssues || []).length, 0)} issues
+                  </span>
                 </summary>
                 <div className="catalog-issue-department-groups">
                   {departmentGroup.groups.map((group) => (
