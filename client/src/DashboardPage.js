@@ -17,8 +17,6 @@ function DashboardPage() {
   const [hoveredMapTicket, setHoveredMapTicket] = useState(null);
   const [showWelcomeSplash, setShowWelcomeSplash] = useState(() => sessionStorage.getItem('assistdesk_show_welcome_splash') === 'true');
   const [appealMessage, setAppealMessage] = useState('');
-  const [appealState, setAppealState] = useState({ status: 'idle', message: '' });
-  const [appealSubmitting, setAppealSubmitting] = useState(false);
   const campusMapFrame = useRef(null);
 
   useEffect(() => {
@@ -34,24 +32,6 @@ function DashboardPage() {
   }, [showWelcomeSplash]);
 
   const welcomeName = (sessionStorage.getItem('assistdesk_welcome_name') || user?.name || 'User').split(' ')[0];
-
-  const submitTerminationAppeal = async (event) => {
-    event.preventDefault();
-    if (!token || appealSubmitting) return;
-    setAppealSubmitting(true);
-    setAppealState({ status: 'idle', message: '' });
-    try {
-      const response = await axios.post(`${API_BASE_URL}/api/auth/appeal`, { message: appealMessage.trim() }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setAppealMessage('');
-      setAppealState({ status: 'success', message: response.data.message || 'Your appeal was sent to the administrator.' });
-    } catch (error) {
-      setAppealState({ status: 'error', message: error.response?.data?.message || 'Unable to send your appeal. Please try again.' });
-    } finally {
-      setAppealSubmitting(false);
-    }
-  };
 
   const visibleDepartments = dashboard.departments || [];
 
@@ -304,6 +284,24 @@ function DashboardPage() {
   }
 
   if (user?.account_status === 'terminated') {
+    const appealSubject = encodeURIComponent('AssistDesk account termination appeal');
+    const appealBody = encodeURIComponent([
+      'Hello AssistDesk administrator,',
+      '',
+      appealMessage.trim(),
+      '',
+      `Name: ${user.name || ''}`,
+      `Email: ${user.email || ''}`,
+      `Role: ${user.role || ''}`,
+      `Department: ${user.department_name || 'Not assigned'}`,
+      '',
+      'Termination reason:',
+      user.termination_reason || 'No reason was recorded.',
+    ].join('\n'));
+    const appealMailto = user.appeal_email
+      ? `mailto:${user.appeal_email}?subject=${appealSubject}&body=${appealBody}`
+      : null;
+
     return (
       <div className="app-shell">
         <div className="page-shell">
@@ -321,9 +319,9 @@ function DashboardPage() {
               {user.terminated_at && <small>Decision date: {new Date(user.terminated_at).toLocaleDateString()}</small>}
             </div>
             {user.appeal_email && <p className="helper-text">Administrator contact: <a href={`mailto:${user.appeal_email}`}>{user.appeal_email}</a></p>}
-            <form className="account-appeal-form" onSubmit={submitTerminationAppeal}>
+            <div className="account-appeal-form">
               <label htmlFor="termination-appeal-message"><strong>Appeal to the administrator</strong></label>
-              <p className="helper-text">Explain why you are appealing. Your account details and the reason shown above will be included in the email.</p>
+              <p className="helper-text">Explain why you are appealing. The button opens a draft addressed to the administrator for you to review and send.</p>
               <textarea
                 id="termination-appeal-message"
                 className="institutional-textarea"
@@ -333,17 +331,17 @@ function DashboardPage() {
                 minLength={20}
                 maxLength={3000}
                 rows={5}
-                required
-                disabled={appealSubmitting || !user.appeal_email}
+                aria-describedby="termination-appeal-hint"
+                disabled={!user.appeal_email}
               />
+              <small id="termination-appeal-hint" className="helper-text">20–3000 characters</small>
               <div className="inline-actions">
-                <button className="institutional-btn" type="submit" disabled={appealSubmitting || !user.appeal_email || appealMessage.trim().length < 20}>
-                  {appealSubmitting ? 'Sending appeal…' : 'Send appeal'}
-                </button>
+                {appealMailto && appealMessage.trim().length >= 20 && appealMessage.trim().length <= 3000
+                  ? <a className="institutional-btn" href={appealMailto}>Email appeal to administrator</a>
+                  : <button className="institutional-btn" type="button" disabled>Email appeal to administrator</button>}
               </div>
-              {appealState.message && <p className={appealState.status === 'error' ? 'admin-feedback' : 'helper-text'} role={appealState.status === 'error' ? 'alert' : 'status'}>{appealState.message}</p>}
               {!user.appeal_email && <p className="admin-feedback" role="alert">Appeal email is not configured. Please contact an administrator directly.</p>}
-            </form>
+            </div>
             <p className="helper-text" style={{ marginTop: '24px' }}>Other account services are unavailable while the account is terminated. You may sign out below.</p>
           </main>
         </div>
