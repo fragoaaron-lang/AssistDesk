@@ -53,6 +53,15 @@ function AdminCatalogPage() {
     groups[departmentId].faqs.push(faq);
     return groups;
   }, {})).sort((first, second) => first.name.localeCompare(second.name));
+  const issueGroupsByDepartment = Object.values(issueGroups.reduce((groups, issueGroup) => {
+    const departmentId = issueGroup.department_id || 'unassigned';
+    const departmentName = issueGroup.Department?.display_name
+      || issueGroup.Department?.name
+      || 'Unassigned Department';
+    if (!groups[departmentId]) groups[departmentId] = { id: departmentId, name: departmentName, groups: [] };
+    groups[departmentId].groups.push(issueGroup);
+    return groups;
+  }, {})).sort((first, second) => first.name.localeCompare(second.name));
   const isDepartmentScopedAdmin = user?.role === 'admin' && Number(user.department_id) > 0;
   const getDepartmentNameById = (departmentId) => {
     const match = departments.find((department) => Number(department.id) === Number(departmentId));
@@ -286,28 +295,38 @@ function AdminCatalogPage() {
           </form>
 
           <div className="catalog-issue-groups" aria-label="General and specific issue list">
-            {issueGroups.length === 0 ? <p className="catalog-empty-state">No issue categories have been added yet.</p> : issueGroups.map((group) => (
-              <section className="catalog-issue-group" key={group.id}>
-                <div className="catalog-record">
-                  <div className="catalog-record-copy"><strong>{group.name}</strong><span>{group.Department?.display_name || group.Department?.name || 'Department unavailable'}</span><small>{(group.specificIssues || []).length} specific issues</small></div>
-                  <div className="inline-actions">
-                    <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingGeneralIssueId(group.id); setEditingSpecificIssueId(null); setGeneralIssueForm({ department_id: String(group.department_id), name: group.name || '' }); }}>Edit</button>
-                    <button className="institutional-btn small danger" type="button" onClick={() => deleteIssueItem('issues', group.id, group.name)}>Delete</button>
-                  </div>
+            {issueGroups.length === 0 ? <p className="catalog-empty-state">No issue categories have been added yet.</p> : issueGroupsByDepartment.map((departmentGroup) => (
+              <section className="catalog-issue-department" key={departmentGroup.id} aria-label={`${departmentGroup.name} issue categories`}>
+                <div className="catalog-issue-department-heading">
+                  <h4>{departmentGroup.name}</h4>
+                  <span>{departmentGroup.groups.length} categories</span>
                 </div>
-                {(group.specificIssues || []).length > 0 ? (
-                  <div className="catalog-issue-children">
-                    {group.specificIssues.map((specificIssue) => (
-                      <div className="catalog-record" key={specificIssue.id}>
-                        <div className="catalog-record-copy"><strong>{specificIssue.name}</strong></div>
+                <div className="catalog-issue-department-groups">
+                  {departmentGroup.groups.map((group) => (
+                    <section className="catalog-issue-group" key={group.id}>
+                      <div className="catalog-record">
+                        <div className="catalog-record-copy"><strong>{group.name}</strong><small>{(group.specificIssues || []).length} specific issues</small></div>
                         <div className="inline-actions">
-                          <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingSpecificIssueId(specificIssue.id); setEditingGeneralIssueId(null); setSpecificIssueForm({ general_issue_id: String(group.id), name: specificIssue.name || '' }); }}>Edit</button>
-                          <button className="institutional-btn small danger" type="button" onClick={() => deleteIssueItem('specific-issues', specificIssue.id, specificIssue.name)}>Delete</button>
+                          <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingGeneralIssueId(group.id); setEditingSpecificIssueId(null); setGeneralIssueForm({ department_id: String(group.department_id), name: group.name || '' }); }}>Edit</button>
+                          <button className="institutional-btn small danger" type="button" onClick={() => deleteIssueItem('issues', group.id, group.name)}>Delete</button>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ) : <p className="catalog-empty-state catalog-issue-empty">No specific issues yet.</p>}
+                      {(group.specificIssues || []).length > 0 ? (
+                        <div className="catalog-issue-children">
+                          {group.specificIssues.map((specificIssue) => (
+                            <div className="catalog-record" key={specificIssue.id}>
+                              <div className="catalog-record-copy"><strong>{specificIssue.name}</strong></div>
+                              <div className="inline-actions">
+                                <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingSpecificIssueId(specificIssue.id); setEditingGeneralIssueId(null); setSpecificIssueForm({ general_issue_id: String(group.id), name: specificIssue.name || '' }); }}>Edit</button>
+                                <button className="institutional-btn small danger" type="button" onClick={() => deleteIssueItem('specific-issues', specificIssue.id, specificIssue.name)}>Delete</button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : <p className="catalog-empty-state catalog-issue-empty">No specific issues yet.</p>}
+                    </section>
+                  ))}
+                </div>
               </section>
             ))}
           </div>

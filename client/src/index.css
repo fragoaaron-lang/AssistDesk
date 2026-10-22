@@ -6557,6 +6557,43 @@ body.dark-mode .ticket-status-badge.closed { background: #303b44; border-color: 
   margin-top: 18px;
 }
 
+.catalog-issue-department {
+  display: grid;
+  min-width: 0;
+  gap: 10px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.catalog-issue-department:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.catalog-issue-department-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.catalog-issue-department-heading h4 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.catalog-issue-department-heading span {
+  color: var(--muted-text);
+  font-size: 0.82rem;
+}
+
+.catalog-issue-department-groups {
+  display: grid;
+  gap: 12px;
+  padding-left: clamp(12px, 3vw, 24px);
+}
+
 .catalog-issue-group {
   display: grid;
   min-width: 0;
