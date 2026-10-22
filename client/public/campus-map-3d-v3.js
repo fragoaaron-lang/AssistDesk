@@ -321,10 +321,11 @@ function setMapData(data) {
   const departments = Array.isArray(data.departments) ? data.departments : [];
   const ticketCounts = Array.isArray(data.ticketCounts) ? data.ticketCounts : [];
   const departmentsById = new Map(departments.map((department) => [String(department.id), department]));
+  const getTicketCount = (ticketGroup) => Math.max(0, Number(ticketGroup.count ?? ticketGroup.ticket_count) || 0);
   const counts = new Map();
   ticketCounts.forEach((ticketGroup) => counts.set(
     String(ticketGroup.department_id),
-    (counts.get(String(ticketGroup.department_id)) || 0) + (Number(ticketGroup.count) || 0),
+    (counts.get(String(ticketGroup.department_id)) || 0) + getTicketCount(ticketGroup),
   ));
   departments.forEach((department) => {
     const count = counts.get(String(department.id)) || 0;
@@ -334,9 +335,9 @@ function setMapData(data) {
   });
   const unlocatedGroups = ticketCounts.filter((ticketGroup) => {
     const department = departmentsById.get(String(ticketGroup.department_id));
-    return !department || !worldPointFromDepartment(department);
+    return getTicketCount(ticketGroup) > 0 && (!department || !worldPointFromDepartment(department));
   });
-  const unlocatedCount = unlocatedGroups.reduce((total, group) => total + (Number(group.count) || 0), 0);
+  const unlocatedCount = unlocatedGroups.reduce((total, group) => total + getTicketCount(group), 0);
   const unlocatedPosition = new THREE.Vector3(61.44, 3.2, 32.85);
   if (unlocatedCount > 0) {
     const unlocatedDepartmentCount = new Set(unlocatedGroups.map((group) => String(group.department_id))).size;
@@ -363,7 +364,7 @@ function setMapData(data) {
     const base = mappedPosition || unlocatedPosition;
     const departmentKey = String(ticketGroup.department_id);
     let index = ticketOffsets.get(departmentKey) || 0;
-    const pinCount = Math.max(0, Number(ticketGroup.count) || 0);
+    const pinCount = getTicketCount(ticketGroup);
     for (let pin = 0; pin < pinCount; pin += 1) {
       const angle = index * 2.39996;
       const radius = index === 0 ? 0 : Math.min(unlocated ? 42 : 96, 18 + Math.sqrt(index) * 16);
