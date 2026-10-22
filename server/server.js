@@ -152,14 +152,15 @@ async function normalizeLegacyTicketPriorities() {
   const ticketsTableExists = await queryInterface.tableExists('tickets');
   if (!ticketsTableExists) return;
 
+  const priorityColumn = sequelize.getDialect() === 'postgres' ? 'priority::text' : 'priority';
   const [results] = await sequelize.query(`
     UPDATE tickets
     SET priority = CASE
-      WHEN priority = 'moderate' THEN 'medium'
-      WHEN priority = 'high' THEN 'urgent'
+      WHEN ${priorityColumn} = 'moderate' THEN 'medium'
+      WHEN ${priorityColumn} = 'high' THEN 'urgent'
       ELSE priority
     END
-    WHERE priority IN ('moderate', 'high');
+    WHERE ${priorityColumn} IN ('moderate', 'high');
   `);
 
   if (results && results.affectedRows) {
