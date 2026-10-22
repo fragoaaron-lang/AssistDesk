@@ -2,7 +2,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { User, Department, PasswordResetToken, AuditLog } = require('../models');
-const { sendPasswordResetEmail, sendEmailVerificationEmail, generateVerificationCode } = require('../utils/email');
+const {
+  sendPasswordResetEmail,
+  sendEmailVerificationEmail,
+  sendAccountAppealEmail,
+  generateVerificationCode,
+} = require('../utils/email');
 const { recordAudit } = require('../utils/auditLog');
 const { buildPersonalActivityQuery } = require('../utils/personalActivityQuery');
 const { disconnectUser } = require('../utils/socket');
@@ -13,7 +18,27 @@ const JWT_SECRET = getJwtSecret();
 const JWT_EXPIRES_IN = process.env.NODE_ENV === 'production' ? '1h' : (process.env.JWT_EXPIRES_IN || '1h');
 const DUMMY_PASSWORD_HASH = bcrypt.hashSync(crypto.randomBytes(32).toString('hex'), 12);
 
-const sanitizeUser = (user) => ({
+const getAppealContactEmail = () => {
+  const configured = String(process.env.APPEAL_CONTACT_EMAIL || '').trim();
+  return configured.match(/<([^>]+)>/)?.[1] || configured || null;
+};
+
+const getLatestTerminationInfo = async (userId) => {
+  const record = await AuditLog.findOne({
+    where: { action: 'account.deactivated', entity_type: 'user', entity_id: String(userId) },
+    attributes: ['metadata', 'created_at'],
+    order: [['created_at', 'DESC'], ['id', 'DESC']],
+  });
+  const metadata = record?.metadata || {};
+  return {
+    termination_reason: typeof metadata.reason === 'string' && metadata.reason.trim()
+      ? metadata.reason.trim()
+      : 'No reason was recorded. Please contact an administrator for details.',
+    terminated_at: record?.created_at || null,
+  };
+};
+
+const sanitizeUser = (user, terminationInfo = null) => ({
   id: user.id,
   name: user.name,
   email: user.email,
@@ -24,8 +49,10 @@ const sanitizeUser = (user) => ({
   student_number: user.student_number || null,
   profile_picture: user.profile_picture || null,
   created_at: user.created_at,
-  appeal_email: (process.env.APPEAL_CONTACT_EMAIL || process.env.MAIL_USER || process.env.MAIL_FROM || '')
-    .match(/<([^>]+)>/)?.[1] || process.env.APPEAL_CONTACT_EMAIL || process.env.MAIL_USER || process.env.MAIL_FROM || null,
+  ...(user.account_status === 'terminated' ? {
+    ...terminationInfo,
+    appeal_email: getAppealContactEmail(),
+  } : {}),
 });
 
 const PASSWORD_POLICY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{12,128}$/;
@@ -279,11 +306,16 @@ exports.login = async (req, res) => {
 
     await recordAudit({ actor: user, action: 'auth.login', entityType: 'user', entityId: user.id, after: { account_status: user.account_status } });
     const token = signToken(user, req.body?.remember_me === true);
+    const terminationInfo = user.account_status === 'terminated'
+      ? await getLatestTerminationInfo(user.id)
+      : null;
 
     return res.json({
-      message: user.account_status === 'terminated' ? 'Account status notice.' : 'Login successful.',
+      message: user.account_status === 'terminated'
+        ? 'Your account is terminated. Review the notice and submit an appeal if you believe this is a mistake.'
+        : 'Login successful.',
       token,
-      user: sanitizeUser(user),
+      user: sanitizeUser(user, terminationInfo),
     });
   } catch (error) {
     console.error(JSON.stringify({ event: 'login_failed', request_id: req.requestId, error_name: error.name || 'Error' }));
@@ -317,10 +349,61 @@ exports.getMe = async (req, res) => {
       return res.status(404).json({ message: 'User not found.' });
     }
 
-    return res.json({ user: sanitizeUser(user) });
+    const terminationInfo = user.account_status === 'terminated'
+      ? await getLatestTerminationInfo(user.id)
+      : null;
+    return res.json({ user: sanitizeUser(user, terminationInfo) });
   } catch (error) {
     console.error(JSON.stringify({ event: 'profile_load_failed', request_id: req.requestId, error_name: error.name || 'Error' }));
     return res.status(500).json({ message: 'Unable to load profile.' });
+  }
+};
+
+exports.submitTerminationAppeal = async (req, res) => {
+  try {
+    const user = await User.findByPk(req.user.id, { include: [{ model: Department }] });
+    if (!user || user.account_status !== 'terminated') {
+      return res.status(403).json({ message: 'Only terminated accounts can submit a termination appeal.' });
+    }
+
+    const appealMessage = typeof req.body?.message === 'string' ? req.body.message.trim() : '';
+    if (appealMessage.length < 20 || appealMessage.length > 3000) {
+      return res.status(400).json({ message: 'Write an appeal between 20 and 3000 characters.' });
+    }
+
+    const to = getAppealContactEmail();
+    if (!to) {
+      return res.status(503).json({ message: 'Appeal email is not configured. Please contact an administrator directly.' });
+    }
+
+    const terminationInfo = await getLatestTerminationInfo(user.id);
+    try {
+      await sendAccountAppealEmail({
+        to,
+        userName: user.name,
+        userEmail: user.email,
+        role: user.role,
+        departmentName: user.Department?.name || null,
+        terminationReason: terminationInfo.termination_reason,
+        appealMessage,
+      });
+    } catch (emailError) {
+      console.error(JSON.stringify({ event: 'termination_appeal_email_failed', user_id: user.id, error_name: emailError.name || 'Error' }));
+      return res.status(503).json({ message: 'The appeal could not be emailed. Please try again later or contact the administrator directly.' });
+    }
+
+    await recordAudit({
+      actor: user,
+      action: 'account.termination_appeal_submitted',
+      entityType: 'user',
+      entityId: user.id,
+      departmentId: user.department_id,
+      metadata: { delivered_to_admin: true },
+    });
+    return res.json({ message: 'Your appeal was sent to the administrator.' });
+  } catch (error) {
+    console.error(JSON.stringify({ event: 'termination_appeal_failed', request_id: req.requestId, error_name: error.name || 'Error' }));
+    return res.status(500).json({ message: 'Unable to submit your appeal.' });
   }
 };
 

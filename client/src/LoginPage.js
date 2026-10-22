@@ -31,6 +31,9 @@ function LoginPage({ modal = false, onSwitch }) {
       const userName = result?.user?.name || email.split('@')[0];
       const firstName = userName.split(' ')[0];
       if (result?.user?.account_status === 'terminated') {
+        sessionStorage.removeItem('assistdesk_show_welcome_splash');
+        sessionStorage.removeItem('assistdesk_welcome_name');
+        sessionStorage.removeItem('assistdesk_play_login_sound');
         navigate('/dashboard');
         return;
       }

@@ -438,6 +438,10 @@ exports.createAnnouncement = async (req, res) => {
 
 exports.deleteUser = async (req, res) => {
   try {
+    const terminationReason = typeof req.body?.reason === 'string' ? req.body.reason.trim() : '';
+    if (terminationReason.length < 3 || terminationReason.length > 1000) {
+      return res.status(400).json({ message: 'A termination reason between 3 and 1000 characters is required.' });
+    }
     const user = await User.findByPk(req.params.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
@@ -454,7 +458,17 @@ exports.deleteUser = async (req, res) => {
       await Admin.destroy({ where: { user_id: user.id }, transaction });
       await PasswordResetToken.destroy({ where: { email: user.email }, transaction });
       await user.update({ account_status: 'terminated', session_version: Number(user.session_version || 0) + 1 }, { transaction });
-      await recordAudit({ actor: req.user, action: 'account.deactivated', entityType: 'user', entityId: user.id, departmentId: user.department_id, before, after: { ...before, account_status: 'terminated' }, transaction });
+      await recordAudit({
+        actor: req.user,
+        action: 'account.deactivated',
+        entityType: 'user',
+        entityId: user.id,
+        departmentId: user.department_id,
+        before,
+        after: { ...before, account_status: 'terminated' },
+        metadata: { reason: terminationReason },
+        transaction,
+      });
       await transaction.commit();
     } catch (error) {
       await transaction.rollback();

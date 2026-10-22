@@ -8113,3 +8113,37 @@ body.dark-mode .auth-modal .remember-me-option small {
     height: 260px;
   }
 }
+
+.account-termination-reason {
+  margin: 20px 0;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+
+.account-termination-reason strong,
+.account-appeal-form > label {
+  color: var(--navy);
+}
+
+.account-termination-reason p {
+  margin: 8px 0;
+  color: var(--text);
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.account-termination-reason small {
+  color: var(--muted);
+}
+
+.account-appeal-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.account-appeal-form > .helper-text {
+  margin: 0;
+}

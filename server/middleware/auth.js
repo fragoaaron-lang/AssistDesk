@@ -3,7 +3,12 @@ const { User } = require('../models');
 const { getJwtSecret } = require('../config/security');
 const JWT_SECRET = getJwtSecret();
 
-module.exports = async (req, res, next) => {
+const isTerminatedAccountRouteAllowed = (req) => req.baseUrl === '/api/auth'
+  && ((req.path === '/me' && req.method === 'GET')
+    || (req.path === '/appeal' && req.method === 'POST')
+    || (req.path === '/logout' && req.method === 'POST'));
+
+const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -37,9 +42,9 @@ module.exports = async (req, res, next) => {
       account_status: user.account_status,
     };
 
-    const isTerminatedAccountView = user.account_status === 'terminated'
-      && req.baseUrl === '/api/auth' && req.path === '/me' && req.method === 'GET';
-    if (user.account_status !== 'active' && !isTerminatedAccountView) {
+    const isTerminatedAccountRoute = user.account_status === 'terminated'
+      && isTerminatedAccountRouteAllowed(req);
+    if (user.account_status !== 'active' && !isTerminatedAccountRoute) {
       return res.status(403).json({ message: 'This account is not active.' });
     }
 
@@ -52,3 +57,7 @@ module.exports = async (req, res, next) => {
     return res.status(401).json({ message: 'Invalid or expired token.' });
   }
 };
+
+authMiddleware.isTerminatedAccountRouteAllowed = isTerminatedAccountRouteAllowed;
+
+module.exports = authMiddleware;

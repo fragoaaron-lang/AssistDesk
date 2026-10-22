@@ -153,10 +153,37 @@ const sendTicketEtaExpiredEmail = async ({ to, userName, ticketSubject, ticketId
   });
 };
 
+const buildAccountAppealEmail = ({ userName, userEmail, role, departmentName, terminationReason, appealMessage }) => ({
+  subject: 'AssistDesk account termination appeal',
+  html: `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 680px; margin: 0 auto;">
+      <h2 style="margin-bottom: 12px; color: #0f2d52;">Account termination appeal</h2>
+      <p>A terminated AssistDesk user submitted an appeal.</p>
+      <dl>
+        <dt><strong>Name</strong></dt><dd>${escapeHtml(userName)}</dd>
+        <dt><strong>Email</strong></dt><dd>${escapeHtml(userEmail)}</dd>
+        <dt><strong>Role</strong></dt><dd>${escapeHtml(role)}</dd>
+        <dt><strong>Department</strong></dt><dd>${escapeHtml(departmentName || 'Not assigned')}</dd>
+      </dl>
+      <p><strong>Recorded termination reason</strong></p>
+      <p>${escapeHtml(terminationReason || 'No reason was recorded.').replace(/\n/g, '<br>')}</p>
+      <p><strong>Appeal statement</strong></p>
+      <p>${escapeHtml(appealMessage).replace(/\n/g, '<br>')}</p>
+    </div>
+  `,
+});
+
+const sendAccountAppealEmail = async ({ to, ...appeal }) => {
+  const message = buildAccountAppealEmail(appeal);
+  await sendEmail({ to, ...message });
+};
+
 module.exports = {
   sendPasswordResetEmail,
   sendEmailVerificationEmail,
   sendTicketEtaExpiredEmail,
+  sendAccountAppealEmail,
+  buildAccountAppealEmail,
   generateVerificationCode,
   buildResetLink,
   escapeHtml,

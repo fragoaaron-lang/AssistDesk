@@ -43,6 +43,13 @@ const accountRecoveryLimiter = createLimiter({
   message: 'Too many account recovery requests. Please try again later.',
 });
 
+const accountAppealLimiter = createLimiter({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  scope: 'account_appeal',
+  message: 'Too many appeal submissions. Please try again later.',
+});
+
 const registrationLimiter = createLimiter({
   windowMs: 60 * 60 * 1000,
   limit: 60,
@@ -71,4 +78,4 @@ const apiRequestLimiter = createLimiter({
   message: 'API request limit reached. Please try again later.',
 });
 
-module.exports = { accountRecoveryLimiter, aiRequestLimiter, apiRequestLimiter, createLimiter, loginLimiter, registrationLimiter, ticketCreationLimiter };
+module.exports = { accountAppealLimiter, accountRecoveryLimiter, aiRequestLimiter, apiRequestLimiter, createLimiter, loginLimiter, registrationLimiter, ticketCreationLimiter };

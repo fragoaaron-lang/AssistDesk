@@ -433,10 +433,17 @@ function AdminReportsPage() {
 
   const terminateUser = async (directoryUser) => {
     if (!window.confirm(`Terminate ${directoryUser.name || directoryUser.email}'s account? Access will be disabled, chat history removed, and ticket/audit records retained for operational traceability.`)) return;
+    const reason = window.prompt('Enter the reason for terminating this account. The user will see it when they sign in.', '');
+    if (reason == null) return;
+    if (reason.trim().length < 3) {
+      setMessage('Enter a termination reason of at least 3 characters.');
+      return;
+    }
     setUpdatingUserId(directoryUser.id);
     try {
       await axios.delete(`${API_BASE_URL}/api/admin/users/${directoryUser.id}`, {
         headers: { Authorization: `Bearer ${token}` },
+        data: { reason: reason.trim() },
       });
       setMessage('User account terminated successfully.');
       await loadReports();
