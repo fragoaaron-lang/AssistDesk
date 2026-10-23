@@ -80,22 +80,27 @@ function DashboardPage() {
 
   const handleStaffIdSelection = (event) => {
     const file = event.target.files?.[0];
-    event.target.value = '';
     setStaffIdMessage('');
     if (!file) return;
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
       setStaffIdFile(null);
+      event.target.value = '';
       setStaffIdMessage('Choose a JPG, PNG, or WEBP image of your faculty/staff ID.');
       return;
     }
     if (file.size > 3 * 1024 * 1024) {
       setStaffIdFile(null);
+      event.target.value = '';
       setStaffIdMessage('The ID image must be 3 MB or smaller.');
       return;
     }
     const reader = new FileReader();
     reader.onload = () => setStaffIdFile({ data: reader.result, name: file.name, type: file.type });
-    reader.onerror = () => setStaffIdMessage('Unable to read that image. Please select it again.');
+    reader.onerror = () => {
+      setStaffIdFile(null);
+      event.target.value = '';
+      setStaffIdMessage('Unable to read that image. Please select it again.');
+    };
     reader.readAsDataURL(file);
   };
 
@@ -112,6 +117,8 @@ function DashboardPage() {
       }, { headers: { Authorization: `Bearer ${token}` } });
       updateAccountUser(response.data.user || { account_status: 'pending_approval', staff_id_submitted: true, staff_id_review_reason: null });
       setStaffIdFile(null);
+      const fileInput = document.getElementById('staff-id-document');
+      if (fileInput) fileInput.value = '';
       setStaffIdMessage(response.data.message || 'Your ID was submitted for administrator review.');
     } catch (error) {
       setStaffIdMessage(error.response?.data?.message || 'Unable to submit your ID. Please try again.');
@@ -412,6 +419,11 @@ function DashboardPage() {
                   <label htmlFor="staff-id-document"><strong>Faculty/staff ID image</strong><small>JPG, PNG, or WEBP · up to 3 MB</small></label>
                   <input id="staff-id-document" className="institutional-input" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleStaffIdSelection} disabled={staffIdSubmitting} required />
                   {staffIdFile && <div className="staff-id-preview"><img src={staffIdFile.data} alt="Selected faculty or staff ID preview" /><span>{staffIdFile.name}</span></div>}
+                  {staffIdFile && <button type="button" className="institutional-btn small secondary" onClick={() => {
+                    setStaffIdFile(null);
+                    const fileInput = document.getElementById('staff-id-document');
+                    if (fileInput) fileInput.value = '';
+                  }} disabled={staffIdSubmitting}>Choose a different image</button>}
                   <button className="institutional-btn" type="submit" disabled={!staffIdFile || staffIdSubmitting}>
                     {staffIdSubmitting ? 'Submitting ID…' : 'Submit ID for confirmation'}
                   </button>
