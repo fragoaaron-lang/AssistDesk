@@ -3785,7 +3785,7 @@ body.dark-mode .campus-map-expanded-header h2 { color: #edf7fa; }
 .map-ticket-detail-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 110;
+  z-index: 1000;
   display: grid;
   place-items: center;
   padding: 24px;

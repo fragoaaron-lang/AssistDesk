@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
@@ -617,7 +618,7 @@ function DashboardPage() {
           </div>
         )}
 
-        {selectedMapTicket && (
+        {selectedMapTicket && createPortal(
           <div className="map-ticket-detail-backdrop" role="presentation" onClick={() => setSelectedMapTicket(null)}>
             <div className="map-ticket-detail" role="dialog" aria-modal="true" aria-labelledby="map-ticket-detail-title" onClick={(event) => event.stopPropagation()}>
               <button type="button" className="map-ticket-detail-close" onClick={() => setSelectedMapTicket(null)} aria-label="Close ticket summary">×</button>
@@ -632,7 +633,8 @@ function DashboardPage() {
               <span className="map-ticket-description-label">Short description</span>
               <p className="map-ticket-detail-description">{getShortTicketDescription(selectedMapTicket)}</p>
             </div>
-          </div>
+          </div>,
+          document.body,
         )}
 
       </div>
