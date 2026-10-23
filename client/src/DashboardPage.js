@@ -625,7 +625,7 @@ function DashboardPage() {
               <p className="small-muted">Ticket details</p>
               <h3 id="map-ticket-detail-title">{getTicketMapSubject(selectedMapTicket)}</h3>
               <div className="map-ticket-detail-meta">
-                {!selectedMapTicket.unavailable && <span>ID: {getTicketCode(selectedMapTicket)}</span>}
+                <span>Ticket ID: {selectedMapTicket.unavailable ? 'Hidden' : getTicketCode(selectedMapTicket)}</span>
                 <span>Status: {selectedMapTicket.status || 'open'}</span>
                 {selectedMapTicket.priority && <span>Priority: {selectedMapTicket.priority}</span>}
               </div>
