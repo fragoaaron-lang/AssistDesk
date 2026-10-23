@@ -7,13 +7,13 @@ import AuthenticatedNavigation from './AuthenticatedNavigation';
 function CatalogPageSkeleton() {
   return (
     <div className="catalog-skeleton-grid" role="status" aria-label="Loading catalog" aria-busy="true">
-      <span className="report-skeleton-announcement">Loading departments, services, issue options, and FAQs…</span>
-      {[0, 1, 2, 3].map((section) => (
+      <span className="report-skeleton-announcement">Loading departments, issue options, and FAQs…</span>
+      {[0, 1, 2].map((section) => (
         <section className="institutional-card catalog-section-card catalog-skeleton-card" key={section} aria-hidden="true">
           <span className="surface-skeleton-block catalog-skeleton-title" />
           <span className="surface-skeleton-block catalog-skeleton-copy" />
           <div className="catalog-skeleton-fields">
-            {Array.from({ length: section === 0 ? 6 : section === 2 ? 3 : 4 }, (_, index) => (
+            {Array.from({ length: section === 0 ? 6 : section === 1 ? 3 : 4 }, (_, index) => (
               <span className="surface-skeleton-block" key={index} />
             ))}
           </div>
@@ -31,16 +31,13 @@ function AdminCatalogPage() {
   const { token, user } = useAuth();
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [departments, setDepartments] = useState([]);
-  const [services, setServices] = useState([]);
   const [issueGroups, setIssueGroups] = useState([]);
   const [faqs, setFaqs] = useState([]);
   const [departmentForm, setDepartmentForm] = useState({ name: '', description: '', point_person: '', contact_number: '', location: '', office_hours: '', map_x: '', map_y: '' });
-  const [serviceForm, setServiceForm] = useState({ department_id: '', name: '', requirements: '', processing_time: '' });
   const [generalIssueForm, setGeneralIssueForm] = useState({ department_id: '', name: '' });
   const [specificIssueForm, setSpecificIssueForm] = useState({ general_issue_id: '', name: '' });
   const [faqForm, setFaqForm] = useState({ department_id: '', question: '', answer: '', keywords: '' });
   const [editingDepartmentId, setEditingDepartmentId] = useState(null);
-  const [editingServiceId, setEditingServiceId] = useState(null);
   const [editingGeneralIssueId, setEditingGeneralIssueId] = useState(null);
   const [editingSpecificIssueId, setEditingSpecificIssueId] = useState(null);
   const [editingFaqId, setEditingFaqId] = useState(null);
@@ -79,13 +76,11 @@ function AdminCatalogPage() {
       // Department loading creates/initializes built-in departments and their issue options.
       // Fetch it first so the parallel issues request cannot race and read an empty catalog.
       const deptRes = await api.get('/departments/manage');
-      const [serviceRes, issueRes, faqRes] = await Promise.all([
-        api.get('/services'),
+      const [issueRes, faqRes] = await Promise.all([
         api.get('/issues'),
         api.get('/faqs'),
       ]);
       setDepartments(deptRes.data.departments || []);
-      setServices(serviceRes.data.services || []);
       setIssueGroups(issueRes.data.generalIssues || []);
       setFaqs(faqRes.data.faqs || []);
     } finally {
@@ -115,16 +110,6 @@ function AdminCatalogPage() {
     else await api.post('/departments', departmentForm);
     setEditingDepartmentId(null);
     setDepartmentForm({ name: '', description: '', point_person: '', contact_number: '', location: '', office_hours: '', map_x: '', map_y: '' });
-    loadData();
-  };
-
-  const createService = async (e) => {
-    e.preventDefault();
-    const payload = isDepartmentScopedAdmin ? { ...serviceForm, department_id: String(user.department_id) } : serviceForm;
-    if (editingServiceId) await api.put(`/services/${editingServiceId}`, payload);
-    else await api.post('/services', payload);
-    setEditingServiceId(null);
-    setServiceForm({ department_id: isDepartmentScopedAdmin ? String(user.department_id) : '', name: '', requirements: '', processing_time: '' });
     loadData();
   };
 
@@ -198,7 +183,7 @@ function AdminCatalogPage() {
         <div className="page-intro">
           <div>
             <h2>Catalog administration</h2>
-            <p>Maintain departments, services, and FAQs from one institutional workspace.</p>
+            <p>Maintain departments, ticket issue options, and FAQs from one institutional workspace.</p>
           </div>
         </div>
 
@@ -233,33 +218,6 @@ function AdminCatalogPage() {
               <div className="inline-actions">
                 <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingDepartmentId(dept.id); setDepartmentForm({ name: dept.name || '', description: dept.description || '', point_person: dept.point_person || '', contact_number: dept.contact_number || '', location: dept.location || '', office_hours: dept.office_hours || '', map_x: dept.map_x ?? '', map_y: dept.map_y ?? '' }); }}>Edit</button>
                 <button className="institutional-btn small danger" type="button" onClick={() => deleteCatalogItem('departments', dept.id, dept.name)}>Delete</button>
-              </div>
-            </div>)}
-          </div>
-        </div>
-
-        <div className="institutional-card catalog-section-card" style={{ marginBottom: '20px' }}>
-          <div className="catalog-section-heading"><div><h3>{editingServiceId ? 'Edit Service' : 'Add Service'}</h3><p>Describe an available service and what requesters need to prepare.</p></div></div>
-          <form className="catalog-form-grid" onSubmit={createService}>
-            {isDepartmentScopedAdmin ? (
-              <label className="catalog-field">Department<input className="institutional-input" value={getDepartmentNameById(user.department_id) || 'Your department'} readOnly /></label>
-            ) : (
-              <label className="catalog-field">Department<select className="institutional-select" value={serviceForm.department_id} onChange={(e) => setServiceForm({ ...serviceForm, department_id: e.target.value })} required>
-                <option value="">Select department</option>{departments.map((department) => <option key={department.id} value={department.id}>{department.display_name || department.name}</option>)}
-              </select></label>
-            )}
-            <label className="catalog-field">Service name<input className="institutional-input" placeholder="e.g. Certificate request" value={serviceForm.name} onChange={(e) => setServiceForm({ ...serviceForm, name: e.target.value })} required /></label>
-            <label className="catalog-field">Requirements<input className="institutional-input" placeholder="Documents or information needed" value={serviceForm.requirements} onChange={(e) => setServiceForm({ ...serviceForm, requirements: e.target.value })} /></label>
-            <label className="catalog-field">Processing time<input className="institutional-input" placeholder="e.g. 3 business days" value={serviceForm.processing_time} onChange={(e) => setServiceForm({ ...serviceForm, processing_time: e.target.value })} /></label>
-            <button className="institutional-btn" type="submit">{editingServiceId ? 'Update Service' : 'Save Service'}</button>
-            {editingServiceId && <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingServiceId(null); setServiceForm({ department_id: isDepartmentScopedAdmin ? String(user.department_id) : '', name: '', requirements: '', processing_time: '' }); }}>Cancel edit</button>}
-          </form>
-          <div className="catalog-record-list" style={{ marginTop: '12px' }}>
-            {services.length === 0 ? <p className="catalog-empty-state">No services are listed yet.</p> : services.map((service) => <div className="catalog-record" key={service.id}>
-              <div className="catalog-record-copy"><strong>{service.name}</strong><span>{service.Department?.name || 'Department unavailable'}</span>{service.processing_time && <small>Processing time: {service.processing_time}</small>}</div>
-              <div className="inline-actions">
-                <button className="institutional-btn small secondary" type="button" onClick={() => { setEditingServiceId(service.id); setServiceForm({ department_id: String(service.department_id), name: service.name || '', requirements: service.requirements || '', processing_time: service.processing_time || '' }); }}>Edit</button>
-                <button className="institutional-btn small danger" type="button" onClick={() => deleteCatalogItem('services', service.id, service.name)}>Delete</button>
               </div>
             </div>)}
           </div>
