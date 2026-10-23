@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
+import { mapChatLogsToEntries } from './aiChatHistory';
 
 const FAQ_GROUPS = [
   {
@@ -220,10 +221,39 @@ function ChatbotWidget() {
   const [message, setMessage] = useState('');
   const [showFaqs, setShowFaqs] = useState(true);
   const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState('');
   const [sending, setSending] = useState(false);
   const [gender, setGender] = useState(() => localStorage.getItem('chatbot_gender') || 'neutral');
   const [showGenderSelect, setShowGenderSelect] = useState(() => !localStorage.getItem('chatbot_gender'));
   const chatEndRef = useRef(null);
+  const historyLoadedForRef = useRef(null);
+
+  useEffect(() => {
+    if (!token || !user?.id) {
+      historyLoadedForRef.current = null;
+      setHistory([]);
+      return undefined;
+    }
+    if (!open || historyLoadedForRef.current === user.id) return undefined;
+    let active = true;
+    setHistory([]);
+    setHistoryLoading(true);
+    setHistoryError('');
+    axios.get(`${API_BASE_URL}/api/ai/history`, {
+      headers: { Authorization: `Bearer ${token}` },
+      params: { limit: 50, offset: 0 },
+    }).then((response) => {
+      if (!active) return;
+      setHistory(mapChatLogsToEntries(response.data.history || []));
+      historyLoadedForRef.current = user.id;
+    }).catch((error) => {
+      if (active) setHistoryError(error.response?.data?.message || 'Unable to load saved conversations.');
+    }).finally(() => {
+      if (active) setHistoryLoading(false);
+    });
+    return () => { active = false; };
+  }, [open, token, user?.id]);
 
   useEffect(() => {
     if (!open) return;
@@ -276,9 +306,9 @@ function ChatbotWidget() {
     setGender(selectedGender);
     localStorage.setItem('chatbot_gender', selectedGender);
     setShowGenderSelect(false);
-    setHistory([{ 
-      role: 'assistant', 
-      text: `Hi! I'm ${selectedGender === 'boy' ? 'Alex' : 'Maya'}, your AssistDesk help center assistant. I'm here to help you find answers to your questions. Choose from our FAQs or ask me anything!` 
+    setHistory((current) => current.length ? current : [{
+      role: 'assistant',
+      text: `Hi! I'm ${selectedGender === 'boy' ? 'Alex' : 'Maya'}, your AssistDesk help center assistant. I'm here to help you find answers to your questions. Choose from our FAQs or ask me anything!`,
     }]);
   };
 
@@ -307,9 +337,16 @@ function ChatbotWidget() {
         }, { headers: { Authorization: `Bearer ${token}` } }),
         new Promise((resolve) => window.setTimeout(resolve, 1400)),
       ]);
+      const savedAt = response.data.chatLog?.created_at;
+      setHistory((current) => current.map((entry, index) => (
+        index === current.length - 1 && entry.role === 'user' && entry.text === text
+          ? { ...entry, timestamp: savedAt }
+          : entry
+      )));
       setHistory((current) => [...current, {
         role: 'assistant',
         text: response.data.ai_response,
+        timestamp: savedAt,
         details: response.data.department_details,
         source: response.data.source,
         clarificationRequired: response.data.clarification_required,
@@ -382,10 +419,13 @@ function ChatbotWidget() {
                 <p className="chatbot-welcome">Welcome! I'm here to answer your questions about departments, services, and FAQs. Select from below or type your question.</p>
               </div>
             )}
+            {historyLoading && <p className="chatbot-history-status" role="status">Loading your saved conversations…</p>}
+            {historyError && <p className="chatbot-history-status is-error" role="alert">{historyError}</p>}
             {history.map((entry, index) => (
               <div key={`${entry.role}-${index}`} className={`chat-message ${entry.role}`}>
                 {entry.role === 'assistant' && <span style={{ fontSize: '1.2rem', marginRight: '8px' }}>{gender === 'boy' ? '👦' : '👧'}</span>}
                 <span>{entry.text}</span>
+                {entry.timestamp && <small className="chatbot-history-timestamp">{new Date(entry.timestamp).toLocaleString()}</small>}
                 {entry.details && <small>{entry.details.name} · {entry.details.office_hours || 'Contact the department for office hours.'}</small>}
                 {entry.source && <small className="chatbot-source">Source: {entry.source.type} #{entry.source.id} — {entry.source.label}{entry.source.department ? ` (${entry.source.department})` : ''}</small>}
                 {entry.clarificationRequired && entry.clarificationOptions.length > 0 && (
@@ -436,7 +476,7 @@ function ChatbotWidget() {
                       <div className="chatbot-faq-group-questions">
                         {group.questions.map((question) => {
                           const questionText = typeof question === 'string' ? question : question.text;
-                          return <button type="button" key={questionText} onClick={() => { setShowFaqs(false); sendMessage(null, question); }}>{questionText}</button>;
+                          return <button type="button" key={questionText} disabled={historyLoading} onClick={() => { setShowFaqs(false); sendMessage(null, question); }}>{questionText}</button>;
                         })}
                       </div>
                     </details>
@@ -447,8 +487,8 @@ function ChatbotWidget() {
             <div ref={chatEndRef} aria-hidden="true" />
           </div>
           <form className="chatbot-input" onSubmit={sendMessage}>
-            <input value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Ask a question..." aria-label="Ask AssistDesk" />
-            <button type="submit" aria-label="Send message" disabled={sending}>Send</button>
+            <input value={message} onChange={(event) => setMessage(event.target.value)} placeholder="Ask a question..." aria-label="Ask AssistDesk" disabled={historyLoading} />
+            <button type="submit" aria-label="Send message" disabled={sending || historyLoading}>Send</button>
           </form>
           <button type="button" className="chatbot-faq-toggle" onClick={() => setShowFaqs((value) => !value)}>{showFaqs ? 'Hide FAQs' : 'Show FAQs'}</button>
         </section>

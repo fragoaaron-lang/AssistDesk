@@ -1,13 +1,41 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 import AuthenticatedNavigation from './AuthenticatedNavigation';
+import { mapChatLogsToEntries } from './aiChatHistory';
 
 function AiChatPage() {
   const { token, user } = useAuth();
   const [message, setMessage] = useState('');
   const [history, setHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [historyError, setHistoryError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    const loadHistory = async () => {
+      if (!token || !user?.id) {
+        setHistoryLoading(false);
+        return;
+      }
+      setHistoryLoading(true);
+      setHistoryError('');
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/ai/history`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { limit: 50, offset: 0 },
+        });
+        if (active) setHistory(mapChatLogsToEntries(response.data.history || []));
+      } catch (error) {
+        if (active) setHistoryError(error.response?.data?.message || 'Unable to load saved conversations.');
+      } finally {
+        if (active) setHistoryLoading(false);
+      }
+    };
+    loadHistory();
+    return () => { active = false; };
+  }, [token, user?.id]);
 
   const sendMessage = async (e, selectedQuestion = null) => {
     e?.preventDefault();
@@ -23,8 +51,8 @@ function AiChatPage() {
 
       setHistory((prev) => [
         ...prev,
-        { role: 'user', text },
-        { role: 'assistant', text: res.data.ai_response, details: res.data.department_details, service: res.data.service_details, source: res.data.source, clarificationRequired: res.data.clarification_required, clarificationOptions: res.data.clarification_options || [], escalationAvailable: res.data.escalation_available, ticket: res.data.ticket, tickets: res.data.tickets },
+        { role: 'user', text, timestamp: res.data.chatLog?.created_at },
+        { role: 'assistant', text: res.data.ai_response, timestamp: res.data.chatLog?.created_at, details: res.data.department_details, service: res.data.service_details, source: res.data.source, clarificationRequired: res.data.clarification_required, clarificationOptions: res.data.clarification_options || [], escalationAvailable: res.data.escalation_available, ticket: res.data.ticket, tickets: res.data.tickets },
       ]);
       setMessage('');
     } catch (error) {
@@ -51,7 +79,7 @@ function AiChatPage() {
           </div>
           <form onSubmit={sendMessage} style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <input className="institutional-input" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Ask about enrollment, transcript, IT support..." style={{ flex: '1 1 280px', marginBottom: 0 }} />
-            <button className="institutional-btn" type="submit">Send</button>
+            <button className="institutional-btn" type="submit" disabled={historyLoading}>Send</button>
           </form>
           <div className="inline-actions" style={{ marginTop: '0.8rem' }}>
             <button className="institutional-btn small secondary" type="button" onClick={() => setMessage('status of my tickets')}>Track my requests</button>
@@ -59,10 +87,13 @@ function AiChatPage() {
           </div>
 
           <div className="ai-chat-transcript" style={{ marginTop: '1rem', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem', minHeight: '300px' }}>
-            {history.length === 0 && <p className="helper-text">No conversation yet.</p>}
+            {historyLoading && <p className="helper-text" role="status">Loading your saved conversation history…</p>}
+            {historyError && <p className="helper-text" role="alert">{historyError}</p>}
+            {!historyLoading && history.length === 0 && <p className="helper-text">No conversation yet.</p>}
             {history.map((entry, index) => (
               <div key={index} className={`ai-chat-entry ${entry.role}`} style={{ marginBottom: '1rem' }}>
                 <strong>{entry.role === 'user' ? 'You' : 'Assistant'}:</strong> {entry.text}
+                {entry.timestamp && <div><small>{new Date(entry.timestamp).toLocaleString()}</small></div>}
                 {entry.source && <div className="ai-response-source">Source: {entry.source.type} #{entry.source.id} — {entry.source.label}{entry.source.department ? ` (${entry.source.department})` : ''}</div>}
                 {entry.clarificationRequired && entry.clarificationOptions.length > 0 && (
                   <div className="ai-clarification-options" aria-label="Clarify your question">

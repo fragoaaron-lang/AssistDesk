@@ -21,6 +21,7 @@ const { isDepartmentLocationRequest, findDepartmentByName, getDepartmentLocation
 const ASSISTANT_SYSTEM_INSTRUCTION = require('../utils/assistantSystemInstruction');
 const { isFilipinoOrTaglish } = require('../utils/responseLanguage');
 const { getOfficeFactRequest, findOfficeFactFaq } = require('../utils/officeLocationFaqs');
+const { buildPersonalChatHistoryQuery } = require('../utils/personalChatHistoryQuery');
 
 const normalize = normalizeStudentQuery;
 
@@ -776,5 +777,17 @@ exports.askAssistant = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Unable to process assistant request.' });
+  }
+};
+
+exports.getMyChatHistory = async (req, res) => {
+  try {
+    const query = buildPersonalChatHistoryQuery(req.user.id, req.query.limit, req.query.offset);
+    const { count, rows } = await ChatLog.findAndCountAll(query);
+
+    return res.json({ history: rows, total: count, limit: query.limit, offset: query.offset });
+  } catch (error) {
+    console.error(JSON.stringify({ event: 'personal_chat_history_load_failed', request_id: req.requestId, error_name: error.name || 'Error' }));
+    return res.status(500).json({ message: 'Unable to load your assistant conversation history.' });
   }
 };
