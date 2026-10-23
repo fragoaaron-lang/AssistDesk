@@ -11,7 +11,7 @@ function DashboardPage() {
   const [dashboard, setDashboard] = useState({ departments: [], services: [], announcements: [], stats: {} });
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [campusMapLoaded, setCampusMapLoaded] = useState(false);
-  const [campusMapData, setCampusMapData] = useState({ departments: [], ticketCounts: [] });
+  const [campusMapData, setCampusMapData] = useState({ departments: [], ticketCounts: [], tickets: [] });
   const [campusMapError, setCampusMapError] = useState('');
   const [expandedCampusMap, setExpandedCampusMap] = useState(false);
   const [selectedMapTicket, setSelectedMapTicket] = useState(null);
@@ -168,6 +168,7 @@ function DashboardPage() {
       setCampusMapData({
         departments: mapDepartments,
         ticketCounts,
+        tickets: response.data.tickets || [],
       });
       setCampusMapError('');
     } catch (error) {
@@ -178,6 +179,7 @@ function DashboardPage() {
         setCampusMapData({
           departments: fallback.data.departments || [],
           ticketCounts: fallback.data.mapTicketCounts || [],
+          tickets: fallback.data.tickets || [],
         });
         setCampusMapError('');
       } catch (fallbackError) {
@@ -206,7 +208,7 @@ function DashboardPage() {
         status: String(row.status || 'open'),
         count: Number(row.ticket_count) || 0,
       })),
-      tickets: (dashboard.tickets || []).map((ticket) => ({
+      tickets: campusMapData.tickets.map((ticket) => ({
         id: ticket.id,
         ticket_code: ticket.ticket_code,
         department_id: Number(ticket.department_id),
@@ -217,7 +219,7 @@ function DashboardPage() {
       })),
     };
     frames.forEach((frame) => frame.contentWindow.postMessage(mapMessage, window.location.origin));
-  }, [campusMapData, dashboard.tickets]);
+  }, [campusMapData]);
 
   useEffect(() => {
     syncCampusMap();
@@ -353,9 +355,14 @@ function DashboardPage() {
   const getTicketCode = (ticket) => ticket.unavailable ? 'Details unavailable' : (ticket.ticket_code || `#${ticket.id}`);
 
   const getShortTicketDescription = (ticket) => {
-    if (ticket.unavailable) return 'Ticket details are not available for this account.';
+    if (ticket.unavailable) {
+      const department = ticket.department_name || 'this department';
+      const status = String(ticket.status || 'open').replace(/_/g, ' ');
+      const priority = String(ticket.priority || 'medium').toLowerCase();
+      return `This pin marks a ${status}, ${priority}-priority ticket for ${department}. Subject and description are limited to the requester and authorized department staff.`;
+    }
     const description = String(ticket.description || '').replace(/\s+/g, ' ').trim();
-    if (!description) return 'No description was provided.';
+    if (!description) return 'The requester did not add a description to this ticket.';
     return description.length > 220 ? `${description.slice(0, 217).trimEnd()}…` : description;
   };
 
@@ -622,6 +629,7 @@ function DashboardPage() {
                 {selectedMapTicket.priority && <span>Priority: {selectedMapTicket.priority}</span>}
               </div>
               <p>{getTicketMapSubject(selectedMapTicket)}</p>
+              <span className="map-ticket-description-label">Short description</span>
               <p className="map-ticket-detail-description">{getShortTicketDescription(selectedMapTicket)}</p>
             </div>
           </div>

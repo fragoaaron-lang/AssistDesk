@@ -3821,8 +3821,19 @@ body.dark-mode .campus-map-expanded-header h2 { color: #edf7fa; }
 
 .map-ticket-detail .map-ticket-detail-description {
   max-height: 132px;
+  margin-top: 5px;
   color: var(--text);
   overflow-wrap: anywhere;
+}
+
+.map-ticket-description-label {
+  display: block;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .map-ticket-detail-meta {

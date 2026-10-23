@@ -110,15 +110,30 @@ async function ensureCampusMapDepartments() {
 exports.getCampusMapData = async (req, res) => {
   try {
     await ensureCampusMapDepartments();
-    const [departments, ticketCounts] = await Promise.all([
+    const [departments, ticketCounts, visibleTickets] = await Promise.all([
       Department.findAll({
         attributes: ['id', 'name', 'map_x', 'map_y'],
         order: [['name', 'ASC']],
         raw: true,
       }),
       getGlobalCampusTicketCounts(Ticket, sequelize),
+      Ticket.findAll({
+        attributes: ['id', 'department_id', 'subject', 'description', 'priority', 'status'],
+        where: getTicketAccessWhere(req.user),
+        order: [['created_at', 'DESC']],
+        raw: true,
+      }),
     ]);
-    return res.json({ departments, ticketCounts });
+    const tickets = visibleTickets.map((ticket) => ({
+      ...ticket,
+      ticket_code: formatTicketNumber(
+        ticket.id,
+        departments.find((department) => Number(department.id) === Number(ticket.department_id))?.name,
+      ),
+    }));
+    // Pin details follow the same ticket-access scope as the dashboard; only aggregate
+    // counts are global, so unrelated users' ticket subjects and descriptions stay private.
+    return res.json({ departments, ticketCounts, tickets });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: 'Unable to load campus ticket map.' });
