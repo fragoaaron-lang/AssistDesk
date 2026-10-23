@@ -285,7 +285,7 @@ function makeHeatCloud(department, count) {
   heatLayer.appendChild(cloud);
   return cloud;
 }
-function makeTicketPin(ticket, department, position, offsetX, offsetY) {
+function makeTicketPin(ticket, department, position, offsetX, offsetY, ticketDetail = null) {
   const btn = document.createElement('button');
   btn.type = 'button';
   const priority = ['low', 'medium', 'urgent'].includes(ticket.priority) ? ticket.priority : 'medium';
@@ -295,10 +295,25 @@ function makeTicketPin(ticket, department, position, offsetX, offsetY) {
   btn.title = department.name + locationNote + ' · ' + status + ' · ' + priority + ' priority';
   btn.setAttribute('aria-label', 'Ticket at ' + department.name + locationNote + ', ' + status + ', ' + priority + ' priority');
   btn.addEventListener('click', () => {
+    if (parent !== window) {
+      parent.postMessage({
+        type: 'assistdesk:campus-map-ticket-selected',
+        ticket: ticketDetail || {
+          unavailable: true,
+          department_name: department.name,
+          status,
+          priority,
+        },
+      }, location.origin);
+      return;
+    }
+
     const heading = document.createElement('b');
     heading.textContent = department.name;
     const detail = document.createElement('span');
-    detail.textContent = (ticket.unlocated ? 'Department map location not set · ' : '') + status + ' · ' + priority.toUpperCase() + ' priority';
+    detail.textContent = ticketDetail
+      ? (ticketDetail.subject || 'Ticket') + ' · ' + (ticketDetail.description || 'No description was provided.')
+      : (ticket.unlocated ? 'Department map location not set · ' : '') + status + ' · ' + priority.toUpperCase() + ' priority';
     info.replaceChildren(heading, detail);
   });
   ticketLayer.appendChild(btn);
@@ -324,6 +339,14 @@ function setMapData(data) {
   ticketLayer.replaceChildren();
   const departments = Array.isArray(data.departments) ? data.departments : [];
   const ticketCounts = Array.isArray(data.ticketCounts) ? data.ticketCounts : [];
+  const scopedTickets = Array.isArray(data.tickets) ? data.tickets : [];
+  const ticketsByGroup = new Map();
+  scopedTickets.forEach((ticket) => {
+    const key = [ticket.department_id, String(ticket.priority || 'medium').toLowerCase(), String(ticket.status || 'open').toLowerCase()].join(':');
+    const groupTickets = ticketsByGroup.get(key) || [];
+    groupTickets.push(ticket);
+    ticketsByGroup.set(key, groupTickets);
+  });
   const departmentsById = new Map(departments.map((department) => [String(department.id), department]));
   const getTicketCount = (ticketGroup) => Math.max(0, Number(ticketGroup.count ?? ticketGroup.ticket_count) || 0);
   const counts = new Map();
@@ -332,6 +355,7 @@ function setMapData(data) {
     (counts.get(String(ticketGroup.department_id)) || 0) + getTicketCount(ticketGroup),
   ));
   departments.forEach((department) => {
+  const groupOffsets = new Map();
     const count = counts.get(String(department.id)) || 0;
     const position = worldPointFromDepartment(department);
     if (!count || !position) return;
@@ -369,13 +393,19 @@ function setMapData(data) {
     const departmentKey = String(ticketGroup.department_id);
     let index = ticketOffsets.get(departmentKey) || 0;
     const pinCount = getTicketCount(ticketGroup);
+    const groupKey = [ticketGroup.department_id, String(ticketGroup.priority || 'medium').toLowerCase(), String(ticketGroup.status || 'open').toLowerCase()].join(':');
+    const groupTickets = ticketsByGroup.get(groupKey) || [];
+    let groupIndex = groupOffsets.get(groupKey) || 0;
     for (let pin = 0; pin < pinCount; pin += 1) {
       const angle = index * 2.39996;
       const radius = index === 0 ? 0 : Math.min(unlocated ? 42 : 96, 18 + Math.sqrt(index) * 16);
-      ticketItems.push(makeTicketPin({ ...ticketGroup, unlocated }, pinDepartment, base, Math.cos(angle) * radius, Math.sin(angle) * radius));
+      const ticketDetail = groupTickets[groupIndex] || null;
+      ticketItems.push(makeTicketPin({ ...ticketGroup, unlocated }, pinDepartment, base, Math.cos(angle) * radius, Math.sin(angle) * radius, ticketDetail));
+      if (ticketDetail) groupIndex += 1;
       index += 1;
     }
     ticketOffsets.set(departmentKey, index);
+    groupOffsets.set(groupKey, groupIndex);
   });
   syncLayers();
 }

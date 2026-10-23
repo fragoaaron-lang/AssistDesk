@@ -3819,6 +3819,12 @@ body.dark-mode .campus-map-expanded-header h2 { color: #edf7fa; }
   overflow-y: auto;
 }
 
+.map-ticket-detail .map-ticket-detail-description {
+  max-height: 132px;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
 .map-ticket-detail-meta {
   display: flex;
   flex-wrap: wrap;

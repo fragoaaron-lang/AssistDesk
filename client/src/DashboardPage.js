@@ -206,9 +206,18 @@ function DashboardPage() {
         status: String(row.status || 'open'),
         count: Number(row.ticket_count) || 0,
       })),
+      tickets: (dashboard.tickets || []).map((ticket) => ({
+        id: ticket.id,
+        ticket_code: ticket.ticket_code,
+        department_id: Number(ticket.department_id),
+        priority: String(ticket.priority || 'medium').toLowerCase(),
+        status: String(ticket.status || 'open').toLowerCase(),
+        subject: String(ticket.subject || ''),
+        description: String(ticket.description || '').replace(/\s+/g, ' ').trim().slice(0, 220),
+      })),
     };
     frames.forEach((frame) => frame.contentWindow.postMessage(mapMessage, window.location.origin));
-  }, [campusMapData]);
+  }, [campusMapData, dashboard.tickets]);
 
   useEffect(() => {
     syncCampusMap();
@@ -216,15 +225,22 @@ function DashboardPage() {
 
   useEffect(() => {
     const handleCampusMapReady = (event) => {
+      const sourceFrame = [campusMapFrame.current, expandedCampusMapFrame.current]
+        .find((frame) => frame?.contentWindow === event.source);
+      if (event.origin === window.location.origin && sourceFrame
+        && event.data?.type === 'assistdesk:campus-map-ticket-selected') {
+        setSelectedMapTicket(event.data.ticket || null);
+        return;
+      }
+
       if (event.source === campusMapFrame.current?.contentWindow
+        && event.origin === window.location.origin
         && event.data?.type === 'assistdesk:campus-map-expand') {
         setExpandedCampusMap(true);
         return;
       }
 
-      const isKnownMapFrame = [campusMapFrame.current, expandedCampusMapFrame.current]
-        .some((frame) => frame?.contentWindow === event.source);
-      if (!isKnownMapFrame || event.data?.type !== 'assistdesk:campus-map-ready') return;
+      if (!sourceFrame || event.origin !== window.location.origin || event.data?.type !== 'assistdesk:campus-map-ready') return;
       syncCampusMap();
     };
 
@@ -329,11 +345,19 @@ function DashboardPage() {
   };
 
   const getTicketMapSubject = (ticket) => {
+    if (ticket.unavailable) return `${ticket.department_name || 'Campus'} ticket`;
     const subject = String(ticket.subject || '').trim().toLowerCase();
     return subject === 'general request' || subject.includes('administrative') ? 'Current general issue' : ticket.subject;
   };
 
-  const getTicketCode = (ticket) => ticket.ticket_code || `#${ticket.id}`;
+  const getTicketCode = (ticket) => ticket.unavailable ? 'Details unavailable' : (ticket.ticket_code || `#${ticket.id}`);
+
+  const getShortTicketDescription = (ticket) => {
+    if (ticket.unavailable) return 'Ticket details are not available for this account.';
+    const description = String(ticket.description || '').replace(/\s+/g, ' ').trim();
+    if (!description) return 'No description was provided.';
+    return description.length > 220 ? `${description.slice(0, 217).trimEnd()}…` : description;
+  };
 
   const renderMapTicketSummary = (ticket, compact = false) => (
     <>
@@ -593,10 +617,12 @@ function DashboardPage() {
               <p className="small-muted">Ticket details</p>
               <h3 id="map-ticket-detail-title">{getTicketMapSubject(selectedMapTicket)}</h3>
               <div className="map-ticket-detail-meta">
-                <span>ID: {getTicketCode(selectedMapTicket)}</span>
+                {!selectedMapTicket.unavailable && <span>ID: {getTicketCode(selectedMapTicket)}</span>}
                 <span>Status: {selectedMapTicket.status || 'open'}</span>
+                {selectedMapTicket.priority && <span>Priority: {selectedMapTicket.priority}</span>}
               </div>
-              <p>{getTicketHoverDescription(selectedMapTicket)}</p>
+              <p>{getTicketMapSubject(selectedMapTicket)}</p>
+              <p className="map-ticket-detail-description">{getShortTicketDescription(selectedMapTicket)}</p>
             </div>
           </div>
         )}
