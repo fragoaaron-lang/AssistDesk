@@ -354,8 +354,8 @@ function setMapData(data) {
     String(ticketGroup.department_id),
     (counts.get(String(ticketGroup.department_id)) || 0) + getTicketCount(ticketGroup),
   ));
-  departments.forEach((department) => {
   const groupOffsets = new Map();
+  departments.forEach((department) => {
     const count = counts.get(String(department.id)) || 0;
     const position = worldPointFromDepartment(department);
     if (!count || !position) return;
