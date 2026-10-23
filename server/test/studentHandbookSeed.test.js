@@ -15,6 +15,10 @@ function createSeedModels() {
     { id: 3, name: 'College of Nursing' },
     { id: 4, name: 'CBA' },
     { id: 5, name: 'Education Department' },
+    { id: 6, name: 'Registrar Office' },
+    { id: 7, name: 'Accounting Department' },
+    { id: 8, name: 'College of Criminology' },
+    { id: 9, name: 'CHARM' },
   ];
   const DepartmentModel = { findAll: async () => departments };
   const FaqModel = {
@@ -50,6 +54,15 @@ test('handbook seed contains institution, CS, and Nursing knowledge with source-
   assert.ok(rows.some((faq) => faq.question === 'What is the vision of the College of Nursing?'));
   assert.equal(rows.find((faq) => faq.question === 'What programs are listed under Computer Science?').department_id, 2);
   assert.equal(rows.find((faq) => faq.question === 'What majors does the handbook list for BSBA?').department_id, 4);
+  assert.equal(rows.find((faq) => faq.question === 'What are the admission requirements for entering freshmen?').department_id, 6);
+  assert.equal(rows.find((faq) => faq.question === 'What are the benefits of the Student Assistantship Program?').department_id, 1);
+  assert.equal(rows.find((faq) => faq.question === 'What payment arrangements are listed for tuition and fees?').department_id, 7);
+  assert.equal(rows.find((faq) => faq.question === 'What is the vision of the College of Criminology?').department_id, 8);
+  assert.equal(rows.find((faq) => faq.question === 'What is the mission of the College of Hospitality Management?').department_id, 9);
+  assert.ok(rows.some((faq) => faq.question === 'Who are the Academic Officials named in the TCC Student Handbook 2025?'));
+  assert.ok(rows.some((faq) => faq.question === 'What GWA and grade requirements are listed for Latin honors?'));
+  assert.ok(rows.some((faq) => faq.question === 'What are the TCC Student Handbook requirements for on-the-job training (OJT)?'));
+  assert.ok(rows.some((faq) => faq.question === 'How does the handbook say to report a student code-of-conduct violation?'));
 });
 
 test('handbook seed is idempotent when run more than once', async () => {
