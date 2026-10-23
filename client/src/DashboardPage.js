@@ -13,6 +13,7 @@ function DashboardPage() {
   const [campusMapLoaded, setCampusMapLoaded] = useState(false);
   const [campusMapData, setCampusMapData] = useState({ departments: [], ticketCounts: [] });
   const [campusMapError, setCampusMapError] = useState('');
+  const [expandedCampusMap, setExpandedCampusMap] = useState(false);
   const [selectedMapTicket, setSelectedMapTicket] = useState(null);
   const [hoveredMapTicket, setHoveredMapTicket] = useState(null);
   const [showWelcomeSplash, setShowWelcomeSplash] = useState(() => sessionStorage.getItem('assistdesk_show_welcome_splash') === 'true');
@@ -21,6 +22,9 @@ function DashboardPage() {
   const [staffIdMessage, setStaffIdMessage] = useState('');
   const [appealMessage, setAppealMessage] = useState('');
   const campusMapFrame = useRef(null);
+  const expandedCampusMapFrame = useRef(null);
+  const expandMapButton = useRef(null);
+  const closeExpandedMapButton = useRef(null);
 
   useEffect(() => {
     if (!showWelcomeSplash) return;
@@ -183,10 +187,11 @@ function DashboardPage() {
   }, [token]);
 
   const syncCampusMap = useCallback(() => {
-    const frame = campusMapFrame.current;
-    if (!frame?.contentWindow) return;
+    const frames = [campusMapFrame.current, expandedCampusMapFrame.current]
+      .filter((frame) => frame?.contentWindow);
+    if (!frames.length) return;
 
-    frame.contentWindow.postMessage({
+    const mapMessage = {
       type: 'assistdesk:campus-map-data',
       darkMode: document.body.classList.contains('dark-mode'),
       departments: campusMapData.departments.map((department) => ({
@@ -201,7 +206,8 @@ function DashboardPage() {
         status: String(row.status || 'open'),
         count: Number(row.ticket_count) || 0,
       })),
-    }, window.location.origin);
+    };
+    frames.forEach((frame) => frame.contentWindow.postMessage(mapMessage, window.location.origin));
   }, [campusMapData]);
 
   useEffect(() => {
@@ -210,14 +216,35 @@ function DashboardPage() {
 
   useEffect(() => {
     const handleCampusMapReady = (event) => {
-      if (event.source !== campusMapFrame.current?.contentWindow
-        || event.data?.type !== 'assistdesk:campus-map-ready') return;
+      if (event.source === campusMapFrame.current?.contentWindow
+        && event.data?.type === 'assistdesk:campus-map-expand') {
+        setExpandedCampusMap(true);
+        return;
+      }
+
+      const isKnownMapFrame = [campusMapFrame.current, expandedCampusMapFrame.current]
+        .some((frame) => frame?.contentWindow === event.source);
+      if (!isKnownMapFrame || event.data?.type !== 'assistdesk:campus-map-ready') return;
       syncCampusMap();
     };
 
     window.addEventListener('message', handleCampusMapReady);
     return () => window.removeEventListener('message', handleCampusMapReady);
   }, [syncCampusMap]);
+
+  useEffect(() => {
+    if (!expandedCampusMap) return undefined;
+
+    closeExpandedMapButton.current?.focus();
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') setExpandedCampusMap(false);
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('keydown', closeOnEscape);
+      expandMapButton.current?.focus();
+    };
+  }, [expandedCampusMap]);
 
   useEffect(() => {
     const themeObserver = new MutationObserver(() => syncCampusMap());
@@ -502,10 +529,15 @@ function DashboardPage() {
           <div className="map-toolbar">
             <div>
               <h3>Campus 3D overview</h3>
-              <p className="map-subtitle">Ticket-volume heat clouds and priority pinpoints across departments.</p>
+              <p className="map-subtitle">Ticket-volume heat clouds and priority pinpoints across departments. Double-click the map to expand.</p>
               {campusMapError && <p className="map-subtitle" role="alert">{campusMapError}</p>}
             </div>
-            <div className="map-toolbar-pill">Live map</div>
+            <div className="map-toolbar-actions">
+              <div className="map-toolbar-pill">Live map</div>
+              <button ref={expandMapButton} type="button" className="institutional-btn secondary small map-expand-button" onClick={() => setExpandedCampusMap(true)}>
+                Expand map
+              </button>
+            </div>
           </div>
           <div className="map-shell dashboard-map-shell" aria-busy={dashboardLoading || !campusMapLoaded}>
             <div className="map-frame campus-3d-frame">
@@ -530,6 +562,29 @@ function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {expandedCampusMap && (
+          <div className="campus-map-expanded-backdrop" role="presentation" onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setExpandedCampusMap(false);
+          }}>
+            <section className="campus-map-expanded-dialog" role="dialog" aria-modal="true" aria-labelledby="expanded-campus-map-title">
+              <header className="campus-map-expanded-header">
+                <div>
+                  <h2 id="expanded-campus-map-title">Campus 3D map</h2>
+                  <p>Drag to rotate, scroll or pinch to zoom.</p>
+                </div>
+                <button ref={closeExpandedMapButton} type="button" className="map-ticket-detail-close campus-map-expanded-close" onClick={() => setExpandedCampusMap(false)} aria-label="Close expanded campus map">×</button>
+              </header>
+              <iframe
+                ref={expandedCampusMapFrame}
+                src="/campus-map-3d-v3.html"
+                title="Expanded campus 3D map"
+                className="campus-map-expanded-frame"
+                onLoad={syncCampusMap}
+              />
+            </section>
+          </div>
+        )}
 
         {selectedMapTicket && (
           <div className="map-ticket-detail-backdrop" role="presentation" onClick={() => setSelectedMapTicket(null)}>

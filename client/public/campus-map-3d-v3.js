@@ -66,6 +66,10 @@ const B = [
 const P = 0.06;
 const FH = 2.6;
 const cv = document.getElementById('c');
+cv.addEventListener('dblclick', () => {
+  if (new URLSearchParams(location.search).get('background') === '1' || parent === window) return;
+  parent.postMessage({ type: 'assistdesk:campus-map-expand' }, location.origin);
+});
 const R = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true });
 R.setPixelRatio(Math.min(devicePixelRatio, 2));
 R.shadowMap.enabled = true;

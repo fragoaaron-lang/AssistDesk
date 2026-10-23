@@ -3495,6 +3495,13 @@ a.overview-stat:focus-visible {
 
 .map-toolbar .actions { display: flex; gap: 8px; }
 
+.map-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
 .map-frame {
   position: relative;
   padding: 14px;
@@ -3515,6 +3522,102 @@ a.overview-stat:focus-visible {
   min-height: 680px;
   border: 0;
   background: transparent;
+}
+
+.campus-map-expanded-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: clamp(10px, 2vw, 28px);
+  background: rgba(5, 18, 28, 0.76);
+  animation: campus-map-overlay-in 180ms ease-out both;
+}
+
+.campus-map-expanded-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(1500px, 96vw);
+  height: min(940px, 94dvh);
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid rgba(220, 230, 238, 0.5);
+  border-radius: 16px;
+  background: var(--surface, #fff);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.38);
+  animation: campus-map-dialog-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.campus-map-expanded-header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface, #fff);
+}
+
+.campus-map-expanded-header h2 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 1.05rem;
+}
+
+.campus-map-expanded-header p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.campus-map-expanded-close {
+  position: static;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  font-size: 1.45rem;
+}
+
+.campus-map-expanded-frame {
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  border: 0;
+  background: transparent;
+}
+
+@keyframes campus-map-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes campus-map-dialog-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+body.dark-mode .campus-map-expanded-dialog,
+body.dark-mode .campus-map-expanded-header { background: #17222a; }
+
+body.dark-mode .campus-map-expanded-header h2 { color: #edf7fa; }
+
+@media (max-width: 640px) {
+  .map-toolbar-actions { width: 100%; justify-content: space-between; }
+  .campus-map-expanded-backdrop { padding: 0; }
+  .campus-map-expanded-dialog {
+    width: 100vw;
+    height: 100dvh;
+    border-radius: 0;
+  }
+  .campus-map-expanded-header { padding: 10px 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .campus-map-expanded-backdrop,
+  .campus-map-expanded-dialog { animation: none; }
 }
 
 .map-image {
