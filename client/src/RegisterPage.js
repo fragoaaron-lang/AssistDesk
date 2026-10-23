@@ -129,13 +129,15 @@ const formatStudentNumber = (value) => {
 };
 
 const getPasswordRules = (password) => [
-  { label: 'At least 8 characters', met: password.length >= 8 },
-  { label: 'An uppercase letter', met: /[A-Z]/.test(password) },
-  { label: 'A lowercase letter', met: /[a-z]/.test(password) },
-  { label: 'A number', met: /\d/.test(password) },
-  { label: 'A special character', met: /[^A-Za-z\d]/.test(password) },
-  { label: 'Password length is valid', met: new TextEncoder().encode(password).length <= 72 },
+  { label: 'One lowercase character', met: /[a-z]/.test(password) },
+  { label: 'One uppercase character', met: /[A-Z]/.test(password) },
+  { label: 'One number', met: /\d/.test(password) },
+  { label: 'One special character', met: /[^A-Za-z\d]/.test(password) },
+  { label: '8 characters minimum', met: password.length >= 8 },
 ];
+
+const isPasswordValid = (password, rules) => rules.every((rule) => rule.met)
+  && new TextEncoder().encode(password).length <= 72;
 
 const getRegistrationErrors = ({ firstName, middleInitial, lastName, email, studentNumber, departmentId, password, confirmPassword, role }) => {
   const errors = {};
@@ -174,6 +176,7 @@ function RegisterPage({ modal = false, onSwitch }) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [passwordFieldActivated, setPasswordFieldActivated] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [role, setRole] = useState('student');
   const [departmentId, setDepartmentId] = useState('');
@@ -189,8 +192,9 @@ function RegisterPage({ modal = false, onSwitch }) {
   const validationErrors = getRegistrationErrors(formValues);
   const fieldErrors = { ...validationErrors, ...serverFieldErrors };
   const passwordRules = getPasswordRules(password);
-  const passwordIsValid = passwordRules.every((rule) => rule.met);
-  const showPasswordValidity = Boolean(password.length || touched.password || submitted);
+  const passwordIsValid = isPasswordValid(password, passwordRules);
+  const unmetPasswordRules = passwordRules.filter((rule) => !rule.met).length;
+  const showPasswordValidity = passwordFieldActivated;
 
   const updateField = (field, value, setter) => {
     setter(value);
@@ -318,17 +322,25 @@ function RegisterPage({ modal = false, onSwitch }) {
             )}
             <div className="registration-field password-field">
               <label className="auth-field-label" htmlFor="registration-password">Password</label>
-              <input className={`institutional-input password-policy-input ${showPasswordValidity ? (passwordIsValid ? 'is-valid' : 'is-invalid') : ''}`} type={showPassword ? 'text' : 'password'} {...getFieldProps('password')} aria-invalid={showPasswordValidity && !passwordIsValid} aria-describedby={fieldError('password') ? 'registration-password-rules registration-password-error' : 'registration-password-rules'} aria-label="Password" value={password} onChange={(e) => updateField('password', e.target.value, setPassword)} autoComplete="new-password" required />
+              <input className={`institutional-input password-policy-input ${showPasswordValidity ? (passwordIsValid ? 'is-valid' : 'is-invalid') : ''}`} type={showPassword ? 'text' : 'password'} {...getFieldProps('password')} onFocus={() => setPasswordFieldActivated(true)} aria-invalid={showPasswordValidity && !passwordIsValid} aria-describedby={passwordFieldActivated ? (fieldError('password') ? 'registration-password-rules registration-password-error' : 'registration-password-rules') : undefined} aria-label="Password" value={password} onChange={(e) => updateField('password', e.target.value, setPassword)} autoComplete="new-password" required />
               <button type="button" className={`password-visibility ${showPassword ? 'visible' : ''}`} onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Hide password' : 'Show password'}><span className="password-eye" aria-hidden="true" /></button>
               {fieldError('password') && <span className="registration-field-error" id="registration-password-error">{fieldError('password')}</span>}
-              <ul className="registration-password-rules" id="registration-password-rules" aria-label="Password requirements">
-                {passwordRules.map((rule) => (
-                  <li className={rule.met ? 'is-met' : 'is-needed'} key={rule.label}>
-                    <span>{rule.label}</span>
-                    <span className="password-rule-status">{rule.met ? 'Met' : 'Needed'}</span>
-                  </li>
-                ))}
-              </ul>
+              {passwordFieldActivated && (
+                <ul className="registration-password-rules" id="registration-password-rules" aria-label="Password requirements">
+                  {passwordRules.map((rule) => (
+                    <li className={rule.met ? 'is-met' : 'is-needed'} key={rule.label}>
+                      <span className="password-rule-icon" aria-hidden="true" />
+                      <span>{rule.label}</span>
+                      <span className="visually-hidden">{rule.met ? 'Requirement met' : 'Requirement not met'}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {passwordFieldActivated && (
+                <span className="visually-hidden" aria-live="polite" aria-atomic="true">
+                  {passwordIsValid ? 'All password requirements met.' : `${unmetPasswordRules} password requirements remaining.`}
+                </span>
+              )}
             </div>
             <div className="registration-field password-field">
               <label className="auth-field-label" htmlFor="registration-confirmPassword">Confirm password</label>
