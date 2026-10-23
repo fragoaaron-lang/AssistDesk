@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { escapeHtml, generateVerificationCode, buildAccountAppealEmail } = require('../utils/email');
+const { escapeHtml, generateVerificationCode, buildAccountAppealEmail, buildTicketUpdateEmail } = require('../utils/email');
 
 test('email HTML escapes untrusted values before template interpolation', () => {
   assert.equal(escapeHtml(`<img src=x onerror="alert('x')"> &`), '&lt;img src=x onerror=&quot;alert(&#39;x&#39;)&quot;&gt; &amp;');
@@ -25,4 +25,19 @@ test('termination appeal emails escape user-provided fields and preserve plain-t
   assert.match(email.html, /Policy &lt;violation&gt;/);
   assert.match(email.html, /Please review\.<br>I believe this was a mistake\./);
   assert.doesNotMatch(email.html, /<img src=x>/);
+});
+
+test('ticket update email includes the posted message and escapes requester-supplied content', () => {
+  const email = buildTicketUpdateEmail({
+    userName: 'Requester <One>',
+    ticketSubject: 'Laptop <repair>',
+    ticketId: 'TCC-123',
+    updateMessage: 'We are checking this.\n<script>alert("x")</script>',
+  });
+
+  assert.equal(email.subject, 'New update on ticket #TCC-123: Laptop <repair>');
+  assert.match(email.html, /Requester &lt;One&gt;/);
+  assert.match(email.html, /Laptop &lt;repair&gt;/);
+  assert.match(email.html, /We are checking this\.<br>&lt;script&gt;alert\(&quot;x&quot;\)&lt;\/script&gt;/);
+  assert.doesNotMatch(email.html, /<script>alert/);
 });

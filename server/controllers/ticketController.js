@@ -1,7 +1,7 @@
 const { Ticket, TicketUpdate, Department, User, Notification } = require('../models');
 const { notifyUser, notifyAdmins, notifyDepartmentAdmins, notifyDepartmentStaff, notifyAllUsers } = require('../utils/socket');
 const { addTicketNumber } = require('../utils/ticketNumber');
-const { sendTicketEtaExpiredEmail } = require('../utils/email');
+const { sendTicketEtaExpiredEmail, sendTicketUpdateEmail } = require('../utils/email');
 const { inferDepartment } = require('../utils/departmentRouting');
 const { recordAudit } = require('../utils/auditLog');
 const { validateImageDataUrl } = require('../utils/inputValidation');
@@ -77,6 +77,10 @@ const mapPriorityToDatabase = (priority) => {
   return priority || 'medium';
 };
 
+const buildTicketUpdateNotification = (ticket, update) => (
+  `Update on your ticket "${ticket.subject}": ${update.message}`
+);
+
 exports.processMissedEtaTickets = async () => {
   try {
     const candidates = await Ticket.findAll({
@@ -105,7 +109,7 @@ exports.processMissedEtaTickets = async () => {
         ticket.updated_at = new Date();
         const escalationMessage = `ETA expired for ticket "${ticket.subject}" and priority was automatically set to urgent.`;
         await ticket.save({ transaction });
-        await TicketUpdate.create({
+        const ticketUpdate = await TicketUpdate.create({
           ticket_id: ticket.id,
           message: escalationMessage,
           updated_by: ticket.user_id,
@@ -123,12 +127,12 @@ exports.processMissedEtaTickets = async () => {
           metadata: { department_id: ticket.department_id, estimated_completion_at: ticket.estimated_completion_at },
           transaction,
         });
-        return { ticket, previousPriority, previousStatus };
+        return { ticket, previousPriority, previousStatus, ticketUpdate };
       });
       if (!escalation) continue;
 
       escalatedCount += 1;
-      const { ticket } = escalation;
+      const { ticket, ticketUpdate } = escalation;
       const submitter = candidate.User || await User.findByPk(ticket.user_id, { attributes: ['id', 'name', 'email', 'role', 'department_id'] });
       const departmentAdmins = await User.findAll({
         where: { role: 'admin', department_id: ticket.department_id },
@@ -138,7 +142,7 @@ exports.processMissedEtaTickets = async () => {
 
       await Notification.create({
         user_id: ticket.user_id,
-        message: `Your ticket "${ticket.subject}" missed its ETA and has been escalated to urgent priority.`,
+        message: buildTicketUpdateNotification(ticket, ticketUpdate),
       });
 
       for (const admin of adminRecipients) {
@@ -252,6 +256,7 @@ exports.createTicket = async (req, res) => {
     const databasePriority = mapPriorityToDatabase(priority);
 
     let ticket;
+    let ticketCreatedUpdate;
     await withTicketTransaction(async (transaction) => {
       ticket = await Ticket.create({
         user_id: req.user.id,
@@ -271,7 +276,7 @@ exports.createTicket = async (req, res) => {
       }, { transaction });
       ticket.Department = await Department.findByPk(ticket.department_id, { attributes: ['name'], transaction });
       addTicketNumber(ticket);
-      await TicketUpdate.create({
+      ticketCreatedUpdate = await TicketUpdate.create({
         ticket_id: ticket.id,
         message: selectedDepartment
           ? `Ticket submitted to ${resolvedDepartment.name} by requester selection. Routing suggestion: ${routing.candidates[0]?.name || 'none'} (score ${routing.score}).`
@@ -294,7 +299,7 @@ exports.createTicket = async (req, res) => {
     try {
       await Notification.create({
         user_id: ticket.user_id,
-        message: `Your ticket "${subject}" has been created and routed to the assigned department.`,
+        message: `${buildTicketUpdateNotification(ticket, ticketCreatedUpdate)} Ticket created successfully.`,
       });
 
       const adminUsers = await User.findAll({ where: { role: 'admin', department_id: resolvedDepartmentId } });
@@ -408,6 +413,7 @@ exports.updateTicketStatus = async (req, res) => {
     const previousStatus = ticket.status;
     ticket.status = status;
     ticket.updated_at = new Date();
+    let update;
     await withTicketTransaction(async (transaction) => {
       await ticket.save({ transaction });
       await recordAudit({
@@ -421,7 +427,7 @@ exports.updateTicketStatus = async (req, res) => {
         metadata: { department_id: ticket.department_id },
         transaction,
       });
-      await TicketUpdate.create({
+      update = await TicketUpdate.create({
         ticket_id: ticket.id,
         message: `Status updated to ${status}.`,
         updated_by: req.user.id,
@@ -434,7 +440,7 @@ exports.updateTicketStatus = async (req, res) => {
     try {
       await Notification.create({
         user_id: ticket.user_id,
-        message: `Your ticket "${ticket.subject}" status changed to ${status}.`,
+        message: buildTicketUpdateNotification(ticket, update),
       });
 
       const adminUsers = await User.findAll({ where: { role: 'admin', department_id: ticket.department_id } });
@@ -505,7 +511,7 @@ exports.updateTicketEta = async (req, res) => {
 
     await Notification.create({
       user_id: ticket.user_id,
-      message: `The estimated completion time for "${ticket.subject}" is ${eta.toLocaleString()}.`,
+      message: buildTicketUpdateNotification(ticket, update),
     });
     notifyUser(ticket.user_id, 'ticketEtaUpdated', { ticket, update });
     notifyDepartmentStaff(ticket.department_id, 'ticketEtaUpdated', { ticket, update });
@@ -566,6 +572,7 @@ exports.updateTicketEta = async (req, res) => {
       const wasOpen = ticket.status === 'open' && Boolean(assignee);
       if (wasOpen) ticket.status = 'pending';
       ticket.updated_at = new Date();
+      let ticketUpdate;
       await withTicketTransaction(async (transaction) => {
         await ticket.save({ transaction });
         await recordAudit({
@@ -579,7 +586,7 @@ exports.updateTicketEta = async (req, res) => {
           metadata: { department_id: ticket.department_id },
           transaction,
         });
-        await TicketUpdate.create({
+        ticketUpdate = await TicketUpdate.create({
           ticket_id: ticket.id,
           updated_by: req.user.id,
           action: assignee ? (previousAssigneeId ? 'ticket_reassigned' : 'ticket_accepted') : 'ticket_unassigned',
@@ -598,9 +605,10 @@ exports.updateTicketEta = async (req, res) => {
         await Notification.create({ user_id: assignee.id, message: `Ticket ${ticket.id} was assigned to you: "${ticket.subject}".` });
         notifyUser(assignee.id, 'ticketAssignmentUpdated', { ticket });
       }
-      if (wasOpen) {
-        await Notification.create({ user_id: ticket.user_id, message: `Your ticket "${ticket.subject}" has been accepted and is pending department action.` });
-      }
+      await Notification.create({
+        user_id: ticket.user_id,
+        message: buildTicketUpdateNotification(ticket, ticketUpdate),
+      });
 
       await ticket.reload({ include: [{ model: Department }, { model: User, as: 'Assignee', attributes: ['id', 'name', 'email', 'role'] }] });
       addTicketNumber(ticket);
@@ -650,6 +658,7 @@ exports.updateTicketEta = async (req, res) => {
       ticket.assigned_at = null;
       ticket.routing_method = 'corrected';
       ticket.updated_at = new Date();
+      let update;
       await withTicketTransaction(async (transaction) => {
         await ticket.save({ transaction });
         await recordAudit({
@@ -664,7 +673,7 @@ exports.updateTicketEta = async (req, res) => {
           transaction,
         });
 
-        await TicketUpdate.create({
+        update = await TicketUpdate.create({
           ticket_id: ticket.id,
           updated_by: req.user.id,
           action: 'department_rerouted',
@@ -673,7 +682,10 @@ exports.updateTicketEta = async (req, res) => {
           message: `Routing corrected from ${oldDepartment?.name || oldDepartmentId} to ${newDepartment.name}.${previousAssignee ? ` Previous assignee ${previousAssignee.name} was released.` : ''}${reason ? ` Reason: ${reason}` : ''}`,
         }, { transaction });
       });
-      await Notification.create({ user_id: ticket.user_id, message: `Your ticket "${ticket.subject}" was routed to ${newDepartment.name}.` });
+      await Notification.create({
+        user_id: ticket.user_id,
+        message: buildTicketUpdateNotification(ticket, update),
+      });
       if (previousAssignee) {
         await Notification.create({ user_id: previousAssignee.id, message: `Ticket ${ticket.id} was rerouted and removed from your assigned queue.` });
       }
@@ -717,6 +729,7 @@ exports.updateTicketEta = async (req, res) => {
       const previousStatus = ticket.status;
       ticket.priority = priority;
       ticket.updated_at = new Date();
+      let update;
       await withTicketTransaction(async (transaction) => {
         await ticket.save({ transaction });
         await recordAudit({
@@ -730,7 +743,7 @@ exports.updateTicketEta = async (req, res) => {
           metadata: { reason: String(req.body.reason || '').trim() || null, department_id: ticket.department_id },
           transaction,
         });
-        await TicketUpdate.create({
+        update = await TicketUpdate.create({
           ticket_id: ticket.id,
           updated_by: req.user.id,
           action: 'priority_escalated',
@@ -738,7 +751,10 @@ exports.updateTicketEta = async (req, res) => {
           message: `Priority escalated from ${previousPriority} to ${priority}. ${String(req.body.reason || '').trim()}`.trim(),
         }, { transaction });
       });
-      await Notification.create({ user_id: ticket.user_id, message: `Your ticket "${ticket.subject}" was escalated to ${priority} priority.` });
+      await Notification.create({
+        user_id: ticket.user_id,
+        message: buildTicketUpdateNotification(ticket, update),
+      });
       addTicketNumber(ticket);
       notifyUser(ticket.user_id, 'ticketPriorityUpdated', { ticket });
       notifyDepartmentAdmins(ticket.department_id, 'ticketPriorityUpdated', { ticket });
@@ -834,9 +850,23 @@ exports.addTicketUpdate = async (req, res) => {
     });
     await Notification.create({
       user_id: ticket.user_id,
-      message: `New update on your ticket "${ticket.subject}".`,
+      message: buildTicketUpdateNotification(ticket, update),
     });
     notifyUser(ticket.user_id, 'ticketUpdateAdded', { ticket, update });
+    try {
+      const requester = await User.findByPk(ticket.user_id, { attributes: ['id', 'name', 'email'] });
+      if (requester?.email) {
+        await sendTicketUpdateEmail({
+          to: requester.email,
+          userName: requester.name,
+          ticketSubject: ticket.subject,
+          ticketId: ticket.ticket_code || ticket.id,
+          updateMessage: update.message,
+        });
+      }
+    } catch (emailError) {
+      console.error(JSON.stringify({ event: 'ticket_update_email_failed', ticket_id: ticket.id, recipient_type: 'requester', error_name: emailError.name || 'Error' }));
+    }
     return res.status(201).json(update);
   } catch (error) {
     console.error(error);

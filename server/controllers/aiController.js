@@ -695,14 +695,17 @@ const handleTicketCommand = async (message, userId) => {
   });
   ticket.Department = department;
   addTicketNumber(ticket);
-  await TicketUpdate.create({
+  const ticketCreatedUpdate = await TicketUpdate.create({
     ticket_id: ticket.id,
     message: `Ticket created through the assistant and automatically routed to ${department?.name || 'the suggested department'} with routing score ${routing.score}.`,
     updated_by: userId,
     action: 'ticket_created',
     department_id: departmentId,
   });
-  await Notification.create({ user_id: userId, message: `Your ticket "${ticket.subject}" has been created.` });
+  await Notification.create({
+    user_id: userId,
+    message: `Update on your ticket "${ticket.subject}": ${ticketCreatedUpdate.message} Ticket created successfully.`,
+  });
   const departmentStaff = await User.findAll({ where: { role: 'staff', department_id: departmentId, account_status: 'active' } });
   if (departmentStaff.length > 0) {
     await Notification.bulkCreate(departmentStaff.map((staffMember) => ({

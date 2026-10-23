@@ -95,16 +95,24 @@ function NotificationBell() {
     const refreshNotifications = () => loadNotifications();
 
     socket.on('ticketCreated', refreshNotifications);
+    socket.on('ticketUpdateAdded', refreshNotifications);
     socket.on('ticketStatusUpdated', refreshNotifications);
     socket.on('ticketEtaUpdated', refreshNotifications);
     socket.on('ticketEtaExpired', refreshNotifications);
+    socket.on('ticketAssignmentUpdated', refreshNotifications);
+    socket.on('ticketDepartmentUpdated', refreshNotifications);
+    socket.on('ticketPriorityUpdated', refreshNotifications);
     socket.on('announcementCreated', refreshNotifications);
 
     return () => {
       socket.off('ticketCreated', refreshNotifications);
+      socket.off('ticketUpdateAdded', refreshNotifications);
       socket.off('ticketStatusUpdated', refreshNotifications);
       socket.off('ticketEtaUpdated', refreshNotifications);
       socket.off('ticketEtaExpired', refreshNotifications);
+      socket.off('ticketAssignmentUpdated', refreshNotifications);
+      socket.off('ticketDepartmentUpdated', refreshNotifications);
+      socket.off('ticketPriorityUpdated', refreshNotifications);
       socket.off('announcementCreated', refreshNotifications);
     };
   }, [token]);
