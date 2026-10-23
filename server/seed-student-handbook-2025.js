@@ -7,6 +7,31 @@ const faqGroups = [
     departmentAliases: ['Office of Student Affairs', 'Office of the Student Affairs', 'Student Affairs'],
     entries: [
       {
+        question: 'What does the Flexible Learning Option student agreement require?',
+        answer: `${SOURCE} the student agreement says TCC owns course content and students should use resources issued or suggested by the College. Students agree to submit requirements honestly through the prescribed learning option, not share, reproduce, or upload learning content without TCC approval, protect their learning-management account password and subject passcodes, and allow the institution to reproduce or publish their thesis royalty-free. The agreement states that, after due process, violations may result in suspension or dismissal. This summarizes the supplied appendix; check the official agreement for exact terms.`,
+        keywords: 'Flexible Learning Option student agreement student responsibilities TCC owns course content resources intellectual property academic honesty requirements LMS learning management password passcode share reproduce upload thesis royalty free suspension dismissal due process',
+      },
+      {
+        question: 'What does the Flexible Learning Option teacher agreement require of faculty?',
+        answer: `${SOURCE} the teacher agreement says TCC owns course content and faculty should use resources issued or suggested by the College. Faculty agree not to share, reproduce, or upload learning content without TCC approval, to protect their learning-management account passwords, and not to share the passcodes or password IDs used for flexible learning in each subject. The appendix states that, after due process, violations may result in suspension or dismissal. Check the official faculty agreement for exact terms.`,
+        keywords: 'Flexible Learning Option teacher faculty agreement responsibilities course content ownership intellectual property resources share reproduce upload approval LMS learning management password passcode subject suspension dismissal due process',
+      },
+      {
+        question: 'What does the student handbook compliance agreement confirm?',
+        answer: `${SOURCE} by signing the compliance agreement, a student acknowledges receiving the official TCC Student Handbook, accepts responsibility for reading and following its policies, rules, and regulations, and agrees to respectful and responsible conduct on campus and during school-related activities. The agreement also confirms the student's understanding of academic, attendance, and conduct requirements and that violations may result in disciplinary action, including suspension or non-readmission, after applicable process. The form requests the student's name and signature, course/year/block, address, contact number, parent or guardian name and signature, and date.`,
+        keywords: 'student handbook compliance agreement acknowledge receive read understand comply rules regulations policies signature student parent guardian course year block address contact number suspension non-readmission discipline attendance conduct',
+      },
+      {
+        question: 'What is the Tomas Claudio Colleges alma mater hymn?',
+        answer: `${SOURCE} the supplied final-page excerpt includes the TCC alma mater hymn beginning “Minamahal na dalubhasaan, Palihan ng talino, Dangal nitong bayan.” The excerpt appears to contain OCR errors and does not reliably capture the full lyrics, so consult the official handbook or College materials for the complete and accurate hymn.`,
+        keywords: 'TCC Tomas Claudio Colleges alma mater hymn school song lyrics Minamahal na dalubhasaan Palihan ng talino Dangal nitong bayan official',
+      },
+      {
+        question: 'What TCC contact information is printed in the 2025 handbook?',
+        answer: `${SOURCE} the supplied final-page excerpt prints the phone number (02) 8234-5566 and the website https://www.tomasclaudiocolleges.edu.ph, along with a reference to the Tomas Claudio Colleges Facebook page. Confirm current contact details on the College's official website or social-media page because they may change.`,
+        keywords: 'TCC contact phone telephone number website official Facebook Tomas Claudio Colleges 02 8234 5566 https tomasclaudiocolleges.edu.ph',
+      },
+      {
         question: 'What academic courses and degree programs are listed in the TCC Student Handbook 2025?',
         answer: `${SOURCE} the listed programs are: Arts and Sciences—Bachelor of Science in Nursing (BSN), Physical Therapy (BSPT), Public Administration (BSPAd), and Criminology; Business Administration—Bachelor of Science in Accountancy (BSA), Hospitality Management (BSHM), and Business Administration (BSBA); Computer Science—Bachelor of Science in Computer Science (BSCS) and Associate in Computer Technology (ACT); Education—Bachelor of Elementary Education (BEEd) and Bachelor of Secondary Education (BSEd); Graduate School—Master of Arts in Education (MAED), Master of Arts in Counseling (MAC), Master in Business Administration (MBA), and Master in Public Administration (MPA); and College of Law—Juris Doctor. This answer reflects the supplied handbook excerpt; confirm current offerings with the school before applying.`,
         keywords: 'tcc tomas claudio colleges student handbook 2025 academic courses offered courses programs degree list undergraduate graduate school law arts sciences business administration computer science education BSN BSPT BSPAd criminology BSA BSHM BSBA BSCS ACT BEEd BSEd MAED MAC MBA MPA juris doctor what courses degrees programs are available',
@@ -132,6 +157,56 @@ const faqGroups = [
         keywords: 'student organization facility facilities use request written letter Office President three weeks program proposal signature adviser Dean OSA Student Affairs form Accounting',
       },
       {
+        question: 'How do student organizations request permission to conduct an activity?',
+        answer: `${SOURCE} the organization president submits a letter of request to the Office of the President describing the activity name and purpose, date, time and location, expected participants, budget if applicable, and risk assessment with mitigation plan. The excerpt says the letter must be signed by the organization president, adviser, and Head of OSA. The administration reviews policy compliance, information accuracy, and alignment with the school's mission and may require additional documents, a briefing, or clarification before conditional approval. This activity-approval procedure is separate from the facility-use request, which the handbook excerpt says should be submitted at least three weeks before the activity. Confirm the required routing and current forms with OSA.`,
+        keywords: 'student activity event permission approval request letter Office President organization president adviser Head OSA purpose date time location participants budget risk assessment mitigation conditional approval documents briefing',
+      },
+      {
+        question: 'What happens after a student activity is approved, and can permission be revoked?',
+        answer: `${SOURCE} students must carry out an approved activity according to its approved plan. The administration may supervise and monitor it, and incidents or emergencies must be reported immediately. Permission may be revoked for non-compliance with school policy or if newly identified risks cannot be mitigated. The procedure is reviewed annually; contact OSA for current implementation requirements.`,
+        keywords: 'student activity after approval implementation approved plan supervision monitoring incident emergency report revoke permission non-compliance risk hazard mitigation annual review',
+      },
+      {
+        question: 'How can a student organization have posters or announcements approved?',
+        answer: `${SOURCE} only announcements, posters, or similar literature from College authorities or recognized student organizations are allowed. A recognized organization's material must first go through its adviser for comments and recommendations, then be submitted to OSA for approval. Only material bearing the OSA Head's signature may be posted, and it may be placed only on bulletin boards or in locations designated by the Office.`,
+        keywords: 'student organization poster announcement literature flyer publication adviser comments recommendations OSA approval signature Head bulletin board designated posting places',
+      },
+      {
+        question: 'How can students apply to establish a new student organization?',
+        answer: `${SOURCE} an application may be made to the Dean, but a new organization will not be approved if a similar organization already exists. Applications are accepted only within 30 days after the beginning of a regular semester. The application must state the organization's primary objectives and include its by-laws, a list of elected officers, and an annual calendar of activities for consideration. Confirm the current application steps with the Dean or OSA.`,
+        keywords: 'new student organization create establish apply application Dean 30 days regular semester similar organization objectives bylaws by-laws elected officers annual calendar activities',
+      },
+      {
+        question: 'Who may join a recognized student organization, and what are the officer requirements?',
+        answer: `${SOURCE} membership in an approved student organization is limited to students currently enrolled at the College. Elected officers must have good academic standing, defined in the excerpt as passing grades in all subjects in the preceding semester. The listed officers include a president, internal and external vice presidents, secretary, treasurer, auditor, public relations officer, two sergeants-at-arms, muse, escort, and year-level representatives. Elections should be held within 60 days after classes begin for the regular school year, and students graduating in the first semester may not be elected. The excerpt says organization by-laws should cover election procedures. Organizations following officer requirements set by a national chapter may submit a similar number of officers.`,
+        keywords: 'student organization membership currently enrolled eligibility elected officers academic standing passing grades preceding semester president vice president secretary treasurer auditor public relations sergeant arms muse escort year level representatives election 60 days graduating',
+      },
+      {
+        question: 'What advance notice is required for student organization meetings and activities?',
+        answer: `${SOURCE} the excerpt says meetings or activities that require a College facility or excuse students from class should be calendared with the Dean at least 24 hours in advance for a meeting, and one week in advance for a convocation, seminar-workshop, or other affair involving speakers or guests. A separate facility-use procedure in the supplied excerpt requires a written request at least three weeks before an activity. Because these excerpts describe different requests and timelines, confirm the applicable deadline with the Dean and OSA, and allow the longer lead time when facility use is involved.`,
+        keywords: 'student organization meeting activity advance notice schedule calendar Dean 24 hours one week convocation seminar workshop speaker guest facility use three weeks deadline',
+      },
+      {
+        question: 'When and where must a student organization submit its annual calendar of activities?',
+        answer: `${SOURCE} each organization submits its proposed whole-year activity calendar to its adviser at the beginning of the school year for presentation to the proper College authority or committee. After the Dean approves it, the adviser and organization president submit the calendar to the Office of Student Affairs. The excerpt says non-compliance may result in automatic suspension for a period determined at the discretion of the OSA Head and approved by the College President. Confirm the current submission schedule with OSA.`,
+        keywords: 'student organization annual yearly calendar proposed activities beginning school year adviser College committee Dean approval president OSA Office Student Affairs non-compliance suspension',
+      },
+      {
+        question: 'What financial report must a student organization submit at the end of the school year?',
+        answer: `${SOURCE} each organization submits a brief year-end financial report showing its contributions, expenditures, and the holder of any remaining balance. The faculty adviser must note the report. If there were no financial transactions, a brief statement to that effect is sufficient. Non-compliance may result in suspension for the succeeding school year, subject to the Dean's approval.`,
+        keywords: 'student organization finances financial report year end school year contributions expenditures balance fund holder adviser notation no transactions suspension succeeding year Dean approval',
+      },
+      {
+        question: 'Who may advise a student organization, and what are the adviser’s duties?',
+        answer: `${SOURCE} an organization adviser is nominated by the organization's officers and appointed from among the College's regular faculty. Advisers are expected to attend organization meetings and activities. Their listed duties include conducting the organizational meeting; supervising meetings and attending socials and undertakings; resolving procedural questions not covered by the rules; advising officers and members; coordinating activities and projects; commenting on proposed projects, activities, and posters; reviewing acts, resolutions, and fund disbursements before submission to the TCC President or Dean; submitting a written annual achievements report with observations and recommendations to the Dean before the school year ends; and monitoring organization funds. The excerpt says the adviser is a signatory on transactions involving funds or contributions.`,
+        keywords: 'student organization adviser faculty regular nominated appointed duties responsibilities attend meetings activities supervise advise coordinate projects posters resolutions fund disbursement annual report Dean signatory finances',
+      },
+      {
+        question: 'Which student organizations are listed as recognized in the 2025 handbook?',
+        answer: `${SOURCE} the recognized organizations listed are: Supreme Student Council of Leaders; The Educators; Hospitality Management Society; Nightingale Society Organization; Bachelor of Science in Business Administration; Junior Philippine Institute of Accountants; CSA: ComSci Attitude; Guns and Roses Club; ROTARACT Club; NextGen Teachers Alliance; The Euclideans; English Vanguards; The Inquisitives; KAPARIZ; The Explorer; The Generalists; and National Service Reserve Corps (NSRC). This is the handbook's list and may not reflect current recognition status; confirm with OSA.`,
+        keywords: 'recognized student organizations clubs list Supreme Student Council Leaders Educators Hospitality Management Society Nightingale BSBA Business Administration Junior Philippine Institute Accountants JPIA CSA ComSci Attitude Guns Roses ROTARACT NextGen Teachers Euclideans English Vanguards Inquisitives KAPARIZ Explorer Generalists NSRC',
+      },
+      {
         question: 'How can a student consult with a faculty member?',
         answer: `${SOURCE} the Dean's Office prepares and posts faculty consultation schedules on college bulletin boards. Students may visit a faculty member during the listed consultation period at the designated room or office, complete the counseling form, and register in the logbook. The handbook says the faculty member may refer the student to Guidance and Counseling if further counseling is needed.`,
         keywords: 'student faculty consultation schedule hours bulletin board Dean office designated room counseling form logbook Guidance referral',
@@ -145,6 +220,66 @@ const faqGroups = [
         question: 'What is required for a Curricular Enhancement Program or educational field trip?',
         answer: `${SOURCE} the excerpt says a Curricular Enhancement Program must follow CHED Memorandum Order No. 17, Series of 2012, on educational tours and field trips. The Dean files a written permit application with supporting documents signed by the Dean to the Office of the President. After review, the President may grant the permit, and the Dean submits a narrative report to the President one week after the activity. Do not proceed until the required approval is confirmed.`,
         keywords: 'curricular enhancement program educational tour field trip permit CHED CMO 17 2012 Dean written application supporting documents President approval narrative report one week',
+      },
+      {
+        question: 'Who is covered by the handbook policies on sexual harassment, Safe Spaces, and bullying?',
+        answer: `${SOURCE} the excerpts state that the policies apply to members of the educational community, including students, pupils, parents or guardians, administrators, teaching staff, academic and non-academic personnel. The sexual-harassment and Safe Spaces provisions also expressly cover applicants for employment, interns, volunteers, contractors, and visitors. The bullying policy describes coverage across the educational community and workplace. The excerpts are summaries of handbook rules, not legal advice; contact OSA or Human Resources for guidance about a specific situation.`,
+        keywords: 'sexual harassment Safe Spaces anti bullying policy coverage who applies students pupils parents guardians administrators teachers staff employees applicants interns volunteers contractors visitors educational community workplace',
+      },
+      {
+        question: 'What conduct does the handbook identify as sexual harassment or a Safe Spaces violation?',
+        answer: `${SOURCE} the excerpts describe work-, education-, or training-related sexual harassment as unwelcome sexual demands, requests, advances, or conduct by a person with authority, influence, or moral ascendancy, including conduct that affects employment or education, conditions benefits on a sexual favor, or creates an intimidating, hostile, or offensive environment. Listed examples include persistent unwanted attempts to turn a professional or educational relationship into a personal one; unwelcome advances or sexual jokes and messages; sexual comments about a person's body; leering, whistling, or unwanted touching; and displaying sexually offensive material. The Safe Spaces excerpt also identifies gender-based online harassment, such as unwanted sexual remarks, threats, sharing images or recordings without consent, cyberstalking, and online identity theft, and unwanted sexual remarks or actions in streets and public places. This summary is not a legal determination; report concerns through the school process.`,
+        keywords: 'sexual harassment Safe Spaces conduct definition unwanted advances sexual favors quid pro quo hostile offensive environment sexual jokes texts comments body touching leering online harassment threats images without consent cyberstalking public spaces catcalling',
+      },
+      {
+        question: 'How can I report sexual harassment, a Safe Spaces violation, or bullying at TCC?',
+        answer: `${SOURCE} the excerpt says a student may file a written complaint or report with the Office of Student Affairs (OSA); an employee may file with Human Resources. Any student or employee may report or file a complaint. It encourages reporting and describes informal resolution first, followed by formal resolution if informal steps do not resolve the matter. The written report should include the complainant's and respondent's names and addresses, the substance and grounds of the complaint, when and where the incident occurred, and witness names. If someone is in immediate danger, seek immediate help from school authorities or emergency services. Ask OSA or HR how to submit information safely and confidentially.`,
+        keywords: 'report file complaint sexual harassment Safe Spaces bullying student employee OSA Office Student Affairs Human Resources HR written names addresses respondent grounds incident when where witnesses informal formal resolution',
+      },
+      {
+        question: 'What committee investigates sexual-harassment, Safe Spaces, and bullying complaints?',
+        answer: `${SOURCE} the Committee on Decorum and Investigation (CODI) is described as responsible for prevention and awareness meetings and investigating alleged sexual-harassment, Safe Spaces, and bullying cases. Its membership should include at least one representative each from administration, teaching or academic staff, academic non-teaching and non-academic personnel, and students or trainees, as applicable. The excerpt says the committee may also initiate a case on its own (motu proprio). For filing instructions or current committee membership, contact OSA or HR.`,
+        keywords: 'Committee Decorum Investigation CODI committee investigates sexual harassment Safe Spaces bullying composition administration academic teaching nonteaching non-academic student trainee motu proprio',
+      },
+      {
+        question: 'What due-process steps are described for sexual-harassment or bullying complaints?',
+        answer: `${SOURCE} the excerpt says the respondent is given the complaint and attachments and generally has 10 calendar days after receipt to answer and submit supporting documents. The parties are to be notified of a conference scheduled after the answer, with the goal of an amicable settlement. The respondent must be informed in writing of the accusation and evidence, may answer with counsel if desired, and may present evidence; the committee must consider the evidence. If a summary decision is not appropriate, both parties may be directed to submit position papers or memoranda within 10 calendar days after notice. Where complicated factual issues require it, the committee may request affidavits and ask clarifying questions. The excerpt also describes a possible waiver if a respondent does not answer or attend; consult OSA or HR for the official procedure and applicable deadlines.`,
+        keywords: 'due process complaint respondent answer 10 calendar days evidence counsel conference amicable settlement position papers memorandum affidavits clarifying questions waiver investigation sexual harassment bullying CODI',
+      },
+      {
+        question: 'How are sexual-harassment, Safe Spaces, or bullying cases decided and kept confidential?',
+        answer: `${SOURCE} the excerpt says the committee evaluates the evidence and decides the case; it describes the committee's decision as final and executory. It may decide from the record when sufficient grounds exist, otherwise it may request position papers or conduct an investigation with affidavits and clarifying questions. The evaluation should consider the perspective of a person similarly situated to the complainant. Written case records must be kept confidential as much as possible under data-privacy requirements, while complainants should be told that complete anonymity may not be possible because the institution may need to investigate and act. The excerpt says discretion should be used in deciding which witnesses are necessary. Contact OSA or HR about records and support in a specific case.`,
+        keywords: 'case decision judgment resolution evidence confidentiality privacy data privacy anonymity witness investigation summary judgment position paper affidavit final executory sexual harassment bullying Safe Spaces',
+      },
+      {
+        question: 'What support and prevention measures are listed for people affected by harassment or bullying?',
+        answer: `${SOURCE} the excerpt states that counseling and legal assistance will be available to people who have experienced sexual harassment or bullying. It also calls for regular training for employees and students on recognizing and preventing harassment and bullying, along with educational materials. Affected members of the educational community should be treated with respect and given an opportunity to present their side. Contact OSA, HR, or the Guidance and Counseling Office to ask about current support options.`,
+        keywords: 'harassment bullying victim support services counseling legal assistance prevention training education materials respect present side OSA HR Guidance',
+      },
+      {
+        question: 'What types of bullying are described in the handbook?',
+        answer: `${SOURCE} the excerpts describe severe or repeated written, verbal, electronic, physical, or gestural conduct that causes or reasonably threatens physical or emotional harm or property damage, creates a hostile school environment, infringes another student's rights, or substantially disrupts education or school operations. Examples include unwanted physical contact, pranks or fighting; emotional harm; slander, profanity, name-calling, or humiliating comments; spreading rumors or provoking conflict; targeting someone based on race, gender, sexual orientation, or disability; and cyberbullying through email, the internet, or other electronic devices. The workplace-bullying section also describes harm to workplace safety, teams, attendance, and productivity. Report concerns to OSA for students or HR for employees.`,
+        keywords: 'bullying types physical verbal indirect cyberbullying school workplace severe repeated harm hostile environment rights disruption rumors race gender sexual orientation disability email internet electronic devices',
+      },
+      {
+        question: 'What sanctions may apply to sexual harassment, bullying, or Safe Spaces violations?',
+        answer: `${SOURCE} the excerpts list administrative sanctions that may include warning (for educational or training-related bullying), suspension, dismissal, or termination, depending on the policy and whether the incident is work- or education-related. They state that administrative sanctions do not prevent prosecution in the proper courts for unlawful conduct. The handbook also says violations may lead to disciplinary action and that all affected parties should have an opportunity to present their side. Sanctions depend on the findings and applicable process; this summary does not predict an individual outcome.`,
+        keywords: 'sanctions penalty warning suspension dismissal termination sexual harassment bullying Safe Spaces work education training court prosecution administrative discipline',
+      },
+      {
+        question: 'What does TCC’s drug-free workplace and school-campus policy say?',
+        answer: `${SOURCE} the handbook prohibits the use, sale, transfer, ownership, possession, and related transactions involving dangerous drugs or intoxicating liquor on campus/workplace. It describes education and awareness activities, random drug testing of students and a selected annual sample of 10–15% of the current workforce, with screening and confirmatory testing if a screening test is positive. Testing is to follow Department of Health procedures at DOH-accredited centers, and screening and results are to be kept confidential; employees are to be informed of results. The excerpt states that prospective employees pay for pre-employment testing and the school pays testing costs for existing employees. Any discipline must follow due process; contact HR or OSA for current policy and procedures.`,
+        keywords: 'drug free workplace campus policy dangerous drugs intoxicating liquor alcohol possession sale transfer testing random sample 10 15 percent employees students DOH accredited screening confirmatory confidentiality costs due process',
+      },
+      {
+        question: 'What are the guidelines for attending flexible or online classes?',
+        answer: `${SOURCE} the flexible-learning excerpt lists Zoom and Google Meet, supplemented by Messenger, text, and other devices; classroom group chats may be used for communication, schedules, announcements, and school-related activity posts. For online-class etiquette, it advises joining five minutes early, using a real name, wearing presentable and decent clothing (uniform or organization T-shirt; collared polo for first-year students and transferees), choosing a clear and suitable learning space, turning on the camera when called to recite or participate, muting the microphone unless asked to speak, and listening attentively. It also advises students to turn off video when eating or drinking, take notes, and use careful language. Follow the professor's current instructions if platform or class rules differ.`,
+        keywords: 'flexible learning online class Zoom Google Meet Messenger text classroom group chat schedule announcement etiquette join five minutes early real name dress uniform polo camera microphone mute learning space participation',
+      },
+      {
+        question: 'How should students submit requirements in flexible learning classes?',
+        answer: `${SOURCE} requirements should be submitted through the prescribed learning option. Professors are expected to give concrete instructions about how to submit required work, and the time allotted should remain within the specified timeframe. Check the course or classroom group chat for the professor's submission directions and deadlines, and ask the professor if the instructions are unclear.`,
+        keywords: 'flexible learning submit requirements assignments coursework prescribed platform learning option professor instructions timeframe deadline classroom group chat',
       },
       {
         question: 'How does the handbook say to report a student code-of-conduct violation?',
@@ -270,6 +405,121 @@ const faqGroups = [
         question: 'Are student varsity athletes exempt from Physical Education classes?',
         answer: `${SOURCE} the supplied Student Varsity Policy says students actively participating in competitive sports are exempt from Physical Education classes to accommodate training and competition schedules. Confirm how to document active participation with the school.`,
         keywords: 'student athlete varsity exempt PE physical education classes competitive sports training competition schedule',
+      },
+      {
+        question: 'Who is eligible to file a student insurance claim, and what documents are listed?',
+        answer: `${SOURCE} a claimant must be currently enrolled, included in the list submitted to the school's accredited insurer, and covered by an active policy at the time of the incident. The listed claim documents, submitted as originals plus two photocopies, are a detailed claim form, statement of account, hospital and prescription official receipts, doctor's prescription and certificate, clinical abstract, police report, narrative report, school ID, driver's license, and birth certificate, as applicable. Claims must be reported within the insurer's specified timeframe. Coverage, exclusions, required documents, and deadlines depend on the actual insurance policy, so contact the school or insurer to confirm what applies.`,
+        keywords: 'student insurance claim eligibility enrolled active coverage accredited insurer documents requirements claim form statement account hospital receipt prescription doctor certificate clinical abstract police report narrative report school ID drivers license birth certificate deadline timeframe',
+      },
+      {
+        question: 'What does the handbook say about student insurance coverage, exclusions, and claim disputes?',
+        answer: `${SOURCE} insurance coverage depends on the school's current policy with its selected insurer. The excerpt warns that claims arising from pre-existing conditions, risky behavior, or illegal activity may not be reimbursed. Claims are reviewed by the insurance provider, and approved reimbursement or coverage follows the policy terms. A formal appeal process is described for disputes, and students should use the insurer contact information provided by the school. These statements are a handbook summary only; review the actual policy and contact the insurer or OSA for a specific claim.`,
+        keywords: 'student insurance policy coverage exclusions pre-existing condition risky behavior illegal activity reimbursement claim approval appeal dispute insurer contact',
+      },
+      {
+        question: 'What does the Office of Student Affairs do for students and organizations?',
+        answer: `${SOURCE} the Office of Student Affairs (OSA) is both an administrative and service office. It implements institutional and Department of Education policies concerning student conduct, behavior, discipline, organizations, associations, programs, forums, and activities, while also considering student interests. The handbook lists duties including preparing the Student Handbook for the President's approval; advising the student government; supervising organization advisers, membership, annual reports, records, and officers; holding regular meetings and consultations; recommending facility-use requests to the Physical Facilities Coordinator for approval; conducting first-year orientation; coordinating student development, guidance, counseling, and community-extension services; developing external linkages; implementing uniform guidelines; and assisting with insurance claims.`,
+        keywords: 'Office Student Affairs OSA responsibilities duties student government organizations membership annual reports records monthly meetings orientation facility requests physical facilities student services guidance counseling community extension uniforms insurance claims',
+      },
+      {
+        question: 'What are the TCC Library hours and basic library rules?',
+        answer: `${SOURCE} the Library is listed as open 8:00 AM–6:00 PM Monday through Friday and 8:00 AM–5:00 PM Saturday. Students need a library ID card, which the excerpt says may be obtained from the librarian by presenting a registration card, completing an application, and submitting one colored 1-by-1-inch photo. The card is not transferable. The rules require silence, cleanliness, care of materials, and no sleeping, eating, or chatting; rule violations may result in being asked to leave or temporary loss of privileges.`,
+        keywords: 'library hours open schedule Monday Friday Saturday library ID card application registration card photo rules silence clean food eating sleeping talking chatting books materials privileges',
+      },
+      {
+        question: 'How long can students borrow library books, and what are the library fines?',
+        answer: `${SOURCE} one reserve book may be borrowed overnight, starting at 4:00 PM and due by 9:00 AM the next day. Reference materials, pamphlets, theses, newspapers, magazines, periodicals, and book sets are for room use only; theses may not be taken out or photocopied. Books not in demand may be borrowed for one week and renewed for another week depending on demand. The excerpt lists a late-return penalty of Php 5 per day for elementary, high-school, college, and graduate students. Confirm current borrowing terms and fines with the Library.`,
+        keywords: 'library borrow borrowing book reserve overnight 4 PM 9 AM reference room use thesis photocopy circulation one week renew fine overdue late return P5 5 pesos per day',
+      },
+      {
+        question: 'What medical services and clinic hours are listed in the handbook?',
+        answer: `${SOURCE} the Medical and Dental Clinic attends to minor ailments, sudden illness, and injuries from accidents on school premises; complicated cases may be referred to Morong Doctors' Hospital. The handbook lists clinic hours as Monday–Friday 6:30 AM–7:30 PM and Saturday 8:00 AM–5:00 PM. Students must present a school ID and sign in; clinic staff conduct preliminary checks and provide first aid, while the doctor may assess the patient, prescribe or refer, and request tests. The excerpt says complimentary medicine may be provided if available. It also states that students sent home with a fever of 37.5°C or higher should remain away until fever-free without medication for 24 hours, and students returning after a suspected communicable disease should be readmitted through the Clinic with a family-doctor medical certificate. Verify current hours and health directions with the Clinic.`,
+        keywords: 'medical clinic health services hours open schedule minor illness injury first aid ID logbook nurse doctor referral Morong Doctors Hospital fever 37.5 communicable disease readmission certificate',
+      },
+      {
+        question: 'When may a student be observed in the school infirmary, and what happens during observation?',
+        answer: `${SOURCE} students needing monitoring may be observed in the infirmary for conditions such as nausea or vomiting, fever, vertigo, dysmenorrhea, migraine or tension headache, asthma, allergies, diarrhea with fewer than three episodes per hour, hypertension, or another condition that needs monitoring. The nurse monitors the student and updates the doctor on duty, who evaluates the situation and determines disposition. The excerpt prohibits overnight confinement in the Clinic and says the nurse records the case and notifies the student's parent or guardian and adviser. For medical concerns, follow the Clinic's current assessment and instructions.`,
+        keywords: 'clinic infirmary observation temporary monitoring nausea vomiting fever vertigo dysmenorrhea migraine headache asthma allergies diarrhea LBM hypertension nurse doctor overnight parent guardian adviser',
+      },
+      {
+        question: 'What are the school clinic medication rules?',
+        answer: `${SOURCE} the handbook says prescription and non-prescription medicines are kept in the Clinic and administered by a nurse or medical assistant. Medication permits and physician statements must be filed at the start of the school year or before administration begins; prescription or dosage changes require a physician's statement, while over-the-counter medication requires a parent's note for each medication. Medicines must remain in their original container with dosage and expiration information. The excerpt says the Clinic does not supply cough drops, antibiotics, inhalers, or throat sprays; students with asthma may keep an inhaler if written parental permission or a medical prescription is on file. Confirm current requirements with the Clinic before bringing or taking medication at school.`,
+        keywords: 'clinic medicine medication policy prescription nonprescription over the counter OTC nurse medical assistant parent note physician statement dosage change original container expiration asthma inhaler cough drops antibiotics throat spray',
+      },
+      {
+        question: 'How can an organization request a first-aid kit from the Clinic?',
+        answer: `${SOURCE} for an activity on or off campus, request a first-aid kit from the Clinic using a First Aid Kits Borrow Form at least one week before the event. Record medicines and supplies used in the kit's logbook. The requesting department is responsible for lost or unaccounted-for supplies; kits must be picked up from and returned to the Clinic. If a kit is lost, the department must replace its exact contents within two weeks.`,
+        keywords: 'first aid kit borrow request form Clinic event activity one week advance logbook supplies medicine loss return replace exact contents two weeks',
+      },
+      {
+        question: 'What dental services are available through the school Clinic?',
+        answer: `${SOURCE} the school dentist conducts an oral screening as part of the physical examination and provides students with free dental consultation. The excerpt lists a 20% discount on other dental services for TCC students and says available medication may be dispensed for symptomatic relief. Complicated cases beyond the Clinic's equipment may be referred to Dr. Daisy Victorio's Dental Clinic. Confirm current services, discounts, and referrals with the Clinic.`,
+        keywords: 'school dentist dental clinic oral examination screening free consultation 20 percent discount medication complicated case referral Dr Daisy Victorio',
+      },
+      {
+        question: 'What services does the Guidance and Counseling Office provide, and how can I request counseling?',
+        answer: `${SOURCE} the Guidance and Counseling Office coordinates guidance services and provides information and support for educational, career, emotional, and moral concerns. Listed services include maintaining student information inventories, counseling to help students understand themselves and their environment and make workable decisions, and standardized achievement, aptitude, and career testing. For a walk-in counseling request, obtain a self-referral form from the Guidance secretary, complete it with informed consent, and ask for an appointment; if the student is a minor, the excerpt says a parent or guardian must complete the consent. With a referral slip, present it to the counselor, complete informed consent, and request an appointment. Contact the office for current scheduling and confidentiality details.`,
+        keywords: 'Guidance Counseling Office services counseling self referral walk in appointment informed consent minor parent guardian referral slip inventory student information testing achievement aptitude career emotional educational',
+      },
+      {
+        question: 'How do students request entrance-exam testing or a Certificate of Good Moral Character?',
+        answer: `${SOURCE} for an entrance exam, the excerpt says to complete the application through the Google Form linked or QR code posted on TCC's Facebook page, or visit the Guidance and Counseling Office to schedule. Attend at the Testing Center at the scheduled time, show a screenshot of the submitted application, claim the entrance-exam certification, and ask when results will be available. For a Certificate of Good Moral Character, obtain and complete the Guidance office request form, collect required signatures, pay the fee at the Cashier, then submit the completed form and receipt to Guidance. After verification, claim the certificate, sign the office logbook, and proceed to Registrar Window 5 for the dry seal. Confirm current forms, fees, and steps with the offices.`,
+        keywords: 'entrance exam test application Google Form QR code Facebook Guidance Testing Center schedule screenshot certification result Certificate Good Moral Character request form signatures cashier fee receipt logbook Registrar Window 5 dry seal',
+      },
+      {
+        question: 'What is the Career Placement Program for?',
+        answer: `${SOURCE} the Career Placement Program, a Student Affairs support service, addresses pre-employment and employment needs of graduating students and alumni. It also networks with industry practitioners to gather feedback that can support curricular improvement and student skills development. Contact Student Affairs for current placement services and opportunities.`,
+        keywords: 'career placement program employment jobs pre-employment graduating students alumni industry practitioners networking feedback curriculum improvement skills development',
+      },
+      {
+        question: 'What approval is needed for student outreach activities?',
+        answer: `${SOURCE} outreach activities initiated by students or student organizations require prior approval from both the Community Extension Services (CES) Coordinator and the Head of Student Affairs. The handbook advises organizations to reach agreement among members before starting, identify a focus based on community input, available resources, and members' skills, and publicize activities through suitable channels. Participation is voluntary and must not affect or be linked to a student's academic performance. Contact CES and OSA before making commitments or announcing an event.`,
+        keywords: 'student outreach community extension CES approval coordinator Head Student Affairs OSA organization voluntary consensus community input resources skills publicity academic performance',
+      },
+      {
+        question: 'Who can qualify for the Gawad Tomas Claudio community-service award?',
+        answer: `${SOURCE} the Gawad Tomas Claudio for Excellence and Virtue in Community Service recognizes community-service dedication, leadership, and impact. The excerpt says an awardee must be a TCC student or alumnus/alumna; must have led or be leading community-engagement initiatives, with service-learning leadership or participation also considered; must have no derogatory record under institutional ethics and applicable laws or policies; and must have voluntarily led or spearheaded at least one community-service or engagement activity while at TCC. Confirm current nomination procedures and eligibility with Community Extension Services.`,
+        keywords: 'Gawad Tomas Claudio award excellence virtue community service eligibility student alumni alumnus leadership engagement service learning ethical record voluntary led spearheaded CES',
+      },
+      {
+        question: 'How do researchers request statistical services from the TCC Statistical Center?',
+        answer: `${SOURCE} the Statistical Center processes only the data and output specified on the Job Order Form. The listed steps are to obtain the form from the Center, complete it, pay the SPSS fee at the Cashier and keep the receipt, then submit the form with required documents and a photocopy of the receipt to the Center. The researcher pays the total service amount before data analysis is released. Ask the Center about current forms, required documents, and fees.`,
+        keywords: 'TCC Statistical Center statistics statistical services research data analysis job order form service contract SPSS fee cashier receipt documentary requirements output payment release',
+      },
+      {
+        question: 'What originality score is required for a thesis under the handbook anti-plagiarism rules?',
+        answer: `${SOURCE} the Statistical Center Head is identified as custodian and administrator of the anti-plagiarism software, and research studies submitted to the Center for statistical requirements and all theses are subject to testing. The listed minimum originality ratings are 80% for undergraduate theses and 85% for master's theses. Work below the required rating may be returned for editing or paraphrasing with proper acknowledgment, or relevant text may be quoted and acknowledged using the handbook's stated SPSS style. The excerpt says a thesis may be tested only twice. Confirm the software interpretation and current citation instructions with the Statistical Center; an originality score alone does not determine whether citation practices are adequate.`,
+        keywords: 'research thesis anti plagiarism plagiarism originality rating score undergraduate 80 percent masters 85 percent Statistical Center software appeal review paraphrase acknowledgement quotation twice SPSS style',
+      },
+      {
+        question: 'What are the student responsibilities and opportunities under the International Relations Office?',
+        answer: `${SOURCE} the International Relations Office (IRO) supports international partnerships, intercultural exchange, and internationalization of education. The handbook describes opportunities such as seminars, research collaborations, workshops and conferences, joint academic programs, student exchanges, and international internships. Students are expected to follow IRO requirements, submit documents on time, attend pre-departure orientations and re-entry programs, respect host-culture norms, maintain academic and personal standards, participate actively, and provide feedback. The supplied text lists exchange-program criteria including the program's minimum GPA, good moral record, communication skills, and a recommendation from the student's dean. Confirm current opportunities and requirements with IRO.`,
+        keywords: 'International Relations Office IRO international exchange study abroad student exchange internship seminars research collaboration workshops conferences joint academic programs requirements GPA good moral communication dean recommendation orientation reentry culture',
+      },
+      {
+        question: 'What documents and steps does the handbook list for international internships?',
+        answer: `${SOURCE} the handbook excerpt says internship applicants must be of legal age and understand the hosting agency's Memorandum of Agreement (MOA). Listed items include a dean's recommendation letter, signed departure and arrival forms, and an overseas visa sponsor. The excerpt also mentions completing a J-1 visa process, attending an International Cultural Exchange Program orientation with parents, and passing an interview with the visa sponsor and prospective employer. These are handbook-listed requirements and may be incomplete or outdated; confirm current program, visa, and travel requirements with IRO and the relevant authorities before relying on them.`,
+        keywords: 'international internship legal age MOA memorandum agreement dean recommendation departure arrival forms visa sponsor J1 J-1 visa process cultural exchange orientation parents interview employer IRO',
+      },
+      {
+        question: 'What is the purpose of NSTP, and what are its components?',
+        answer: `${SOURCE} the National Service Training Program (NSTP) aims to develop nationalism, patriotism, civic consciousness, leadership, social responsibility, and commitment to nation-building through training and community service. The excerpt lists three components: Civic Welfare Training Service (CWTS), involving community immersion, volunteering, and outreach; Literacy Training Service (LTS), promoting literacy and numeracy through tutoring and education; and Reserve Officers' Training Corps (ROTC), providing military training, leadership, and discipline in preparation for national defense and disaster response.`,
+        keywords: 'NSTP National Service Training Program purpose components CWTS Civic Welfare Training Service LTS Literacy Training Service ROTC Reserve Officers Training Corps civic consciousness patriotism nationalism community service literacy military training',
+      },
+      {
+        question: 'Who is required or exempt from NSTP, and how long does the program take?',
+        answer: `${SOURCE} the excerpt says incoming freshmen, male and female, enrolled in a baccalaureate, at least two-year technical-vocational, or associate course must complete one NSTP component as a graduation requirement. It describes one to two semesters, with three units and 54–90 training hours per semester. Listed exclusions include students who already completed the NSTP requirement and will finish or graduate from a baccalaureate or two-year TVET program; students who completed a component but transferred or shifted courses or institutions; qualifying Sangguniang Kabataan officials in good standing during their incumbency, who must submit written reports or documentation of participation; and foreign students. The excerpt summarizes RA 9163 and related rules; confirm a student's status and current requirements with the NSTP Coordinator.`,
+        keywords: 'NSTP eligibility required freshman baccalaureate associate two year TVET technical vocational units semesters training hours exemption completed transferred shifted Sangguniang Kabataan SK officials good standing foreign students RA 9163',
+      },
+      {
+        question: 'What are the NSTP attendance, conduct, and assessment expectations?',
+        answer: `${SOURCE} participants are expected to attend scheduled NSTP sessions and events, demonstrate respect, discipline, teamwork, and integrity, engage actively and contribute to service projects, and follow the rules and facilitator instructions. Assessment is described as based on participation, leadership, completion of service projects, and compliance with program guidelines. Non-compliance may lead to disciplinary action, including warnings, probation, or removal from the program. Ask the NSTP coordinating body for current procedures and any announced policy amendments.`,
+        keywords: 'NSTP attendance sessions conduct respect discipline teamwork integrity performance participation leadership service projects compliance rules assessment evaluation warning probation removal amendments',
+      },
+      {
+        question: 'What student support services and facilities are listed in the handbook?',
+        answer: `${SOURCE} Article V describes the Registrar as custodian of student records and provider of academic record, transcript, diploma, and credential services; Admission handles applications, enrollment, and admissions inquiries; and OSA administers student conduct and organization matters while supporting student interests. Other listed services include the Library, Medical and Dental Clinic, Guidance and Counseling, Career Placement, Community Extension Services, Statistical Center, International Relations Office, and NSTP. The handbook also describes a canteen and food-service locations, campus security and designated parking (vehicle stickers are available from HR), the D. H. Soriano Multi Media Hall/AVR, Multi-Purpose Gymnasium, CHARM Hall for school-related activities, chapel, and printing/photocopying machines in accessible locations. Confirm availability, access rules, and current hours with the relevant office.`,
+        keywords: 'student support services facilities Registrar Admission OSA Library Clinic Guidance Counseling Placement CES Statistical Center IRO NSTP canteen food security parking sticker HR AVR multimedia hall gymnasium CHARM Hall chapel printing photocopying',
       },
     ],
   },
