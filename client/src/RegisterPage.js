@@ -276,6 +276,17 @@ function RegisterPage({ modal = false, onSwitch }) {
         <div className="auth-form">
           <h3>Register</h3>
           <form className="registration-form" onSubmit={handleSubmit} noValidate>
+            <fieldset className="registration-role-picker">
+              <legend>Account type</legend>
+              <div className="registration-role-options">
+                {['student', 'faculty', 'staff'].map((accountType) => (
+                  <label className={`registration-role-option ${role === accountType ? 'is-selected' : ''}`} key={accountType}>
+                    <input type="radio" name="registration-role" value={accountType} checked={role === accountType} onChange={() => { setRole(accountType); setDepartmentId(''); setServerFieldErrors({}); }} />
+                    <span>{accountType[0].toUpperCase() + accountType.slice(1)}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
             <div className="form-row">
               <div className="registration-field">
                 <label className="auth-field-label" htmlFor="registration-firstName">First name</label>
@@ -348,17 +359,6 @@ function RegisterPage({ modal = false, onSwitch }) {
               <button type="button" className={`password-visibility ${showConfirmPassword ? 'visible' : ''}`} onClick={() => setShowConfirmPassword((visible) => !visible)} aria-label={showConfirmPassword ? 'Hide confirmed password' : 'Show confirmed password'}><span className="password-eye" aria-hidden="true" /></button>
               {fieldError('confirmPassword') && <span className="registration-field-error" id="registration-confirmPassword-error">{fieldError('confirmPassword')}</span>}
             </div>
-            <fieldset className="registration-role-picker">
-              <legend>Account type</legend>
-              <div className="registration-role-options">
-                {['student', 'faculty', 'staff'].map((accountType) => (
-                  <label className={`registration-role-option ${role === accountType ? 'is-selected' : ''}`} key={accountType}>
-                    <input type="radio" name="registration-role" value={accountType} checked={role === accountType} onChange={() => { setRole(accountType); setDepartmentId(''); setServerFieldErrors({}); }} />
-                    <span>{accountType[0].toUpperCase() + accountType.slice(1)}</span>
-                  </label>
-                ))}
-              </div>
-            </fieldset>
             {['faculty', 'staff'].includes(role) && (
               <p className="helper-text registration-approval-hint">
                 After verifying your email, submit a photo of your faculty/staff ID. You can sign in while an administrator reviews it, but other account features stay locked until confirmation.
