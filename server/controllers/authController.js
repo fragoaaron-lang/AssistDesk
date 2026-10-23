@@ -60,6 +60,7 @@ const sanitizeUser = (user, terminationInfo = null) => ({
 const isFacultyOrStaff = (user) => ['faculty', 'staff'].includes(user?.role);
 const isStaffApprovalStatus = (status) => ['pending_id', 'pending_approval', 'id_rejected'].includes(status);
 
+const REGISTRATION_PASSWORD_POLICY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,128}$/;
 const PASSWORD_POLICY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{12,128}$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const STUDENT_NUMBER_PATTERN = /^(\d{4})-\d{5}$/;
@@ -89,6 +90,14 @@ const TCC_INSTITUTION_NAMES = ['tcc', 'tomas claudio colleges'];
 const validatePassword = (password) => {
   if (typeof password !== 'string' || Buffer.byteLength(password, 'utf8') > 72 || !PASSWORD_POLICY.test(password)) {
     return 'Password must be 12–72 characters long and include an uppercase letter, lowercase letter, number, and special character.';
+  }
+
+  return null;
+};
+
+const validateRegistrationPassword = (password) => {
+  if (typeof password !== 'string' || Buffer.byteLength(password, 'utf8') > 72 || !REGISTRATION_PASSWORD_POLICY.test(password)) {
+    return 'Password must be at least 8 characters long and include an uppercase letter, lowercase letter, number, and special character.';
   }
 
   return null;
@@ -145,7 +154,7 @@ exports.register = async (req, res) => {
         return res.status(400).json({ message: 'Student number must use a valid academic year. It should follow the format 2026-XXXXX.' });
       }
     }
-    const passwordError = validatePassword(password);
+    const passwordError = validateRegistrationPassword(password);
 
     if (passwordError) {
       return res.status(400).json({ message: passwordError });

@@ -128,6 +128,15 @@ const formatStudentNumber = (value) => {
   return digits.length > 4 ? `${digits.slice(0, 4)}-${digits.slice(4)}` : digits;
 };
 
+const getPasswordRules = (password) => [
+  { label: 'At least 8 characters', met: password.length >= 8 },
+  { label: 'An uppercase letter', met: /[A-Z]/.test(password) },
+  { label: 'A lowercase letter', met: /[a-z]/.test(password) },
+  { label: 'A number', met: /\d/.test(password) },
+  { label: 'A special character', met: /[^A-Za-z\d]/.test(password) },
+  { label: 'Password length is valid', met: new TextEncoder().encode(password).length <= 72 },
+];
+
 const getRegistrationErrors = ({ firstName, middleInitial, lastName, email, studentNumber, departmentId, password, confirmPassword, role }) => {
   const errors = {};
   if (!firstName.trim()) errors.firstName = 'Enter your first name.';
@@ -145,8 +154,8 @@ const getRegistrationErrors = ({ firstName, middleInitial, lastName, email, stud
   }
 
   if (!departmentId) errors.departmentId = 'Select your department.';
-  if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{12,128}$/.test(password) || new TextEncoder().encode(password).length > 72) {
-    errors.password = 'Use 12–72 characters with uppercase, lowercase, a number, and a symbol.';
+  if (getPasswordRules(password).some((rule) => !rule.met)) {
+    errors.password = 'Use at least 8 characters with uppercase, lowercase, a number, and a special character.';
   }
   if (!confirmPassword) {
     errors.confirmPassword = 'Confirm your password.';
@@ -179,6 +188,9 @@ function RegisterPage({ modal = false, onSwitch }) {
   const formValues = { firstName, middleInitial, lastName, email, studentNumber, departmentId, password, confirmPassword, role };
   const validationErrors = getRegistrationErrors(formValues);
   const fieldErrors = { ...validationErrors, ...serverFieldErrors };
+  const passwordRules = getPasswordRules(password);
+  const passwordIsValid = passwordRules.every((rule) => rule.met);
+  const showPasswordValidity = Boolean(password.length || touched.password || submitted);
 
   const updateField = (field, value, setter) => {
     setter(value);
@@ -306,9 +318,17 @@ function RegisterPage({ modal = false, onSwitch }) {
             )}
             <div className="registration-field password-field">
               <label className="auth-field-label" htmlFor="registration-password">Password</label>
-              <input className="institutional-input" type={showPassword ? 'text' : 'password'} {...getFieldProps('password')} aria-label="Password" value={password} onChange={(e) => updateField('password', e.target.value, setPassword)} autoComplete="new-password" required />
+              <input className={`institutional-input password-policy-input ${showPasswordValidity ? (passwordIsValid ? 'is-valid' : 'is-invalid') : ''}`} type={showPassword ? 'text' : 'password'} {...getFieldProps('password')} aria-invalid={showPasswordValidity && !passwordIsValid} aria-describedby={fieldError('password') ? 'registration-password-rules registration-password-error' : 'registration-password-rules'} aria-label="Password" value={password} onChange={(e) => updateField('password', e.target.value, setPassword)} autoComplete="new-password" required />
               <button type="button" className={`password-visibility ${showPassword ? 'visible' : ''}`} onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Hide password' : 'Show password'}><span className="password-eye" aria-hidden="true" /></button>
               {fieldError('password') && <span className="registration-field-error" id="registration-password-error">{fieldError('password')}</span>}
+              <ul className="registration-password-rules" id="registration-password-rules" aria-label="Password requirements">
+                {passwordRules.map((rule) => (
+                  <li className={rule.met ? 'is-met' : 'is-needed'} key={rule.label}>
+                    <span>{rule.label}</span>
+                    <span className="password-rule-status">{rule.met ? 'Met' : 'Needed'}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
             <div className="registration-field password-field">
               <label className="auth-field-label" htmlFor="registration-confirmPassword">Confirm password</label>
@@ -316,7 +336,6 @@ function RegisterPage({ modal = false, onSwitch }) {
               <button type="button" className={`password-visibility ${showConfirmPassword ? 'visible' : ''}`} onClick={() => setShowConfirmPassword((visible) => !visible)} aria-label={showConfirmPassword ? 'Hide confirmed password' : 'Show confirmed password'}><span className="password-eye" aria-hidden="true" /></button>
               {fieldError('confirmPassword') && <span className="registration-field-error" id="registration-confirmPassword-error">{fieldError('confirmPassword')}</span>}
             </div>
-            <p className="helper-text registration-password-hint">Use 12–72 characters with uppercase, lowercase, a number, and a symbol.</p>
             <fieldset className="registration-role-picker">
               <legend>Account type</legend>
               <div className="registration-role-options">
