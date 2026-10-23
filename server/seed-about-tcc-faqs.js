@@ -30,7 +30,7 @@ const faqEntries = [
   },
   {
     question: 'What does Tomas Claudio Colleges (TCC) offer?',
-    answer: 'TCC offers Accountancy, Business Administration, Public Administration, Computer Science, Elementary Education, Secondary Education, Criminology, Hospitality Management, Nursing, Physical Therapy, TESDA Caregiving, and a Juris Doctor program through the College of Law. Basic Education includes Kindergarten, Elementary, Junior High School, Senior High School, and Special Needs Education. Graduate programs include Master in Business Administration, Master in Public Administration, and Master of Arts in Education.',
+    answer: 'According to the TCC Student Handbook, 2025 Edition excerpt provided, the listed programs are: Arts and Sciences—BSN, BSPT, BSPAd, and Criminology; Business Administration—BSA, BSHM, and BSBA; Computer Science—BSCS and Associate in Computer Technology (ACT); Education—BEEd and BSEd; Graduate School—MAED, MAC, MBA, and MPA; and College of Law—Juris Doctor. The excerpt does not provide details for every program or confirm current availability, so check with the school before applying.',
     keywords: 'about tcc programs courses accountancy business administration public administration computer science education criminology hospitality nursing physical therapy caregiving basic education graduate studies law juris doctor',
   },
   {
