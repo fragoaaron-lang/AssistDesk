@@ -134,6 +134,7 @@ const getPasswordRules = (password) => [
   { label: 'One number', met: /\d/.test(password) },
   { label: 'One special character', met: /[^A-Za-z\d]/.test(password) },
   { label: '8 characters minimum', met: password.length >= 8 },
+  { label: '72 UTF-8 bytes maximum', met: new TextEncoder().encode(password).length <= 72 },
 ];
 
 const isPasswordValid = (password, rules) => rules.every((rule) => rule.met)
@@ -156,8 +157,9 @@ const getRegistrationErrors = ({ firstName, middleInitial, lastName, email, stud
   }
 
   if (!departmentId) errors.departmentId = 'Select your department.';
-  if (getPasswordRules(password).some((rule) => !rule.met)) {
-    errors.password = 'Use at least 8 characters with uppercase, lowercase, a number, and a special character.';
+  if (getPasswordRules(password).some((rule) => !rule.met)
+    || new TextEncoder().encode(password).length > 72) {
+    errors.password = 'Use at least 8 characters with uppercase, lowercase, a number, and a special character; maximum 72 UTF-8 bytes.';
   }
   if (!confirmPassword) {
     errors.confirmPassword = 'Confirm your password.';

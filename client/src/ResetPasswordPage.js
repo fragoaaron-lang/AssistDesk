@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from './config';
 
+const PASSWORD_RULE_MESSAGE = 'Password must be at least 8 characters long, include an uppercase letter, lowercase letter, number, and special character, and use no more than 72 UTF-8 bytes.';
+
 function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -35,6 +37,12 @@ function ResetPasswordPage() {
 
     if (password !== confirmPassword) {
       setMessage('Passwords do not match.');
+      return;
+    }
+
+    if (new TextEncoder().encode(password).length > 72
+      || !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,128}$/.test(password)) {
+      setMessage(PASSWORD_RULE_MESSAGE);
       return;
     }
 
@@ -85,6 +93,7 @@ function ResetPasswordPage() {
                   <span className="password-eye" aria-hidden="true" />
                 </button>
               </div>
+              <small className="helper-text">Use at least 8 characters with uppercase, lowercase, a number, and a special character. Maximum length: 72 UTF-8 bytes.</small>
 
               <input
                 className="institutional-input"

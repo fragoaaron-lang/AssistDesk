@@ -10,6 +10,7 @@ const {
 } = require('../utils/email');
 const { recordAudit } = require('../utils/auditLog');
 const { buildPersonalActivityQuery } = require('../utils/personalActivityQuery');
+const { validateRegistrationPassword } = require('../utils/passwordPolicy');
 const { disconnectUser } = require('../utils/socket');
 const { getJwtSecret } = require('../config/security');
 const { getLoginTokenExpiry } = require('../utils/authTokenExpiry');
@@ -60,8 +61,6 @@ const sanitizeUser = (user, terminationInfo = null) => ({
 const isFacultyOrStaff = (user) => ['faculty', 'staff'].includes(user?.role);
 const isStaffApprovalStatus = (status) => ['pending_id', 'pending_approval', 'id_rejected'].includes(status);
 
-const REGISTRATION_PASSWORD_POLICY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,128}$/;
-const PASSWORD_POLICY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{12,128}$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const STUDENT_NUMBER_PATTERN = /^(\d{4})-\d{5}$/;
 const PUBLIC_ROLES = ['student', 'faculty', 'staff'];
@@ -86,22 +85,6 @@ const STAFF_DEPARTMENTS = [
   'IT Department',
 ];
 const TCC_INSTITUTION_NAMES = ['tcc', 'tomas claudio colleges'];
-
-const validatePassword = (password) => {
-  if (typeof password !== 'string' || Buffer.byteLength(password, 'utf8') > 72 || !PASSWORD_POLICY.test(password)) {
-    return 'Password must be 12–72 characters long and include an uppercase letter, lowercase letter, number, and special character.';
-  }
-
-  return null;
-};
-
-const validateRegistrationPassword = (password) => {
-  if (typeof password !== 'string' || Buffer.byteLength(password, 'utf8') > 72 || !REGISTRATION_PASSWORD_POLICY.test(password)) {
-    return 'Password must be at least 8 characters long and include an uppercase letter, lowercase letter, number, and special character.';
-  }
-
-  return null;
-};
 
 const signToken = (user, rememberMe = false) =>
   jwt.sign({ id: user.id, role: user.role, department_id: user.department_id || null, session_version: Number(user.session_version) || 0 }, JWT_SECRET, {
@@ -556,7 +539,7 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ message: 'Reset token and new password are required.' });
     }
 
-    const passwordError = validatePassword(newPassword);
+    const passwordError = validateRegistrationPassword(newPassword);
     if (passwordError) {
       return res.status(400).json({ message: passwordError });
     }
@@ -617,7 +600,7 @@ exports.changePassword = async (req, res) => {
       return res.status(400).json({ message: 'Current password and new password are required.' });
     }
 
-    const passwordError = validatePassword(newPassword);
+    const passwordError = validateRegistrationPassword(newPassword);
     if (passwordError) {
       return res.status(400).json({ message: passwordError });
     }

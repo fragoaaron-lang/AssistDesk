@@ -15,7 +15,7 @@ const defaultPrefs = {
   accent: 'teal',
 };
 
-const PASSWORD_RULE_MESSAGE = 'Password must be 12–72 characters long and include an uppercase letter, lowercase letter, number, and special character.';
+const PASSWORD_RULE_MESSAGE = 'Password must be at least 8 characters long, include an uppercase letter, lowercase letter, number, and special character, and use no more than 72 UTF-8 bytes.';
 
 const getUserStorageKey = (user, suffix) => {
   const identifier = user?.id ?? user?.email ?? 'guest';
@@ -391,8 +391,8 @@ function ProfilePage() {
       return;
     }
 
-    if (new TextEncoder().encode(passwordForm.newPassword).length > 72 || !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{12,72}$/.test(passwordForm.newPassword)) {
-      setPasswordState({ status: 'error', message: 'new password is weak' });
+    if (new TextEncoder().encode(passwordForm.newPassword).length > 72 || !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,128}$/.test(passwordForm.newPassword)) {
+      setPasswordState({ status: 'error', message: PASSWORD_RULE_MESSAGE });
       return;
     }
 
@@ -432,8 +432,8 @@ function ProfilePage() {
         const normalized = (data.message || '').toLowerCase();
         const mappedMessage = normalized.includes('current password is incorrect') || normalized.includes('wrong current password')
           ? 'entered wrong current password'
-          : normalized.includes('weak') || normalized.includes('password must be at least 8')
-            ? 'new password is weak'
+          : normalized.includes('weak') || normalized.includes('password must')
+            ? PASSWORD_RULE_MESSAGE
             : data.message || 'Unable to change password.';
 
         throw new Error(mappedMessage);
@@ -446,7 +446,7 @@ function ProfilePage() {
       const message = fallback.toLowerCase().includes('wrong current password')
         ? 'entered wrong current password'
         : fallback.toLowerCase().includes('weak')
-          ? 'new password is weak'
+          ? PASSWORD_RULE_MESSAGE
           : fallback;
 
       setPasswordState({ status: 'error', message });
