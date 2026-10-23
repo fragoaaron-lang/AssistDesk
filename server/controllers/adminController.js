@@ -4,6 +4,7 @@ const { addTicketNumber } = require('../utils/ticketNumber');
 const { recordAudit } = require('../utils/auditLog');
 const { getDepartmentScope, canUseDepartmentFilter, applyDepartmentScope } = require('../utils/departmentScope');
 const { mergeDepartmentTicketCounts, mergeDepartmentStatusCounts } = require('../utils/departmentTicketCounts');
+const { readStaffIdDocument, removeStaffIdDocument } = require('../utils/staffIdStorage');
 const { Op } = require('sequelize');
 
 const buildTicketFilters = (query = {}) => {
@@ -334,7 +335,7 @@ exports.getPendingStaffApprovals = async (req, res) => {
 exports.getStaffIdDocument = async (req, res) => {
   try {
     const user = await User.findByPk(req.params.id, {
-      attributes: ['id', 'name', 'email', 'role', 'department_id', 'account_status', 'staff_id_document', 'staff_id_file_name', 'staff_id_mime_type'],
+      attributes: ['id', 'name', 'email', 'role', 'department_id', 'account_status', 'staff_id_document', 'staff_id_storage_key', 'staff_id_file_name', 'staff_id_mime_type'],
     });
     if (!user || !['faculty', 'staff'].includes(user.role) || user.account_status !== 'pending_approval') {
       return res.status(404).json({ message: 'Pending faculty/staff ID submission not found.' });
@@ -342,9 +343,12 @@ exports.getStaffIdDocument = async (req, res) => {
     if (!canReviewStaffAccount(req.user, user)) {
       return res.status(403).json({ message: 'You may only review accounts in your authorized department.' });
     }
-    if (!user.staff_id_document || !user.staff_id_mime_type) {
+    if ((!user.staff_id_document && !user.staff_id_storage_key) || !user.staff_id_mime_type) {
       return res.status(404).json({ message: 'No ID document is available for review.' });
     }
+    const idDocument = user.staff_id_storage_key
+      ? await readStaffIdDocument(user.staff_id_storage_key, user.staff_id_mime_type)
+      : user.staff_id_document;
 
     await recordAudit({
       actor: req.user,
@@ -356,7 +360,7 @@ exports.getStaffIdDocument = async (req, res) => {
     });
     res.setHeader('Cache-Control', 'no-store');
     return res.json({
-      id_document: user.staff_id_document,
+      id_document: idDocument,
       file_name: user.staff_id_file_name,
       mime_type: user.staff_id_mime_type,
     });
@@ -379,14 +383,16 @@ exports.approveStaffAccount = async (req, res) => {
         await transaction.rollback();
         return res.status(403).json({ message: 'You may only review accounts in your authorized department.' });
       }
-      if (!user.staff_id_document) {
+      if (!user.staff_id_document && !user.staff_id_storage_key) {
         await transaction.rollback();
         return res.status(409).json({ message: 'This account has no ID document to approve.' });
       }
 
+      const storageKey = user.staff_id_storage_key;
       await user.update({
         account_status: 'active',
         staff_id_document: null,
+        staff_id_storage_key: null,
         staff_id_file_name: null,
         staff_id_mime_type: null,
         staff_id_review_reason: null,
@@ -402,6 +408,7 @@ exports.approveStaffAccount = async (req, res) => {
         transaction,
       });
       await transaction.commit();
+      if (storageKey) await removeStaffIdDocument(storageKey);
       disconnectUser(user.id);
       return res.json({ message: 'Faculty/staff account approved.' });
     } catch (error) {
@@ -433,9 +440,11 @@ exports.rejectStaffAccount = async (req, res) => {
         return res.status(403).json({ message: 'You may only review accounts in your authorized department.' });
       }
 
+      const storageKey = user.staff_id_storage_key;
       await user.update({
         account_status: 'id_rejected',
         staff_id_document: null,
+        staff_id_storage_key: null,
         staff_id_file_name: null,
         staff_id_mime_type: null,
         staff_id_review_reason: reason,
@@ -452,6 +461,7 @@ exports.rejectStaffAccount = async (req, res) => {
         transaction,
       });
       await transaction.commit();
+      if (storageKey) await removeStaffIdDocument(storageKey);
       disconnectUser(user.id);
       return res.json({ message: 'ID submission rejected. The user can submit a corrected ID.' });
     } catch (error) {
@@ -609,6 +619,7 @@ exports.deleteUser = async (req, res) => {
     }
 
     const before = { name: user.name, email: user.email, role: user.role, department_id: user.department_id, account_status: user.account_status };
+    const staffIdStorageKey = user.staff_id_storage_key;
     const transaction = await User.sequelize.transaction();
     try {
       await Notification.destroy({ where: { user_id: user.id }, transaction });
@@ -619,6 +630,7 @@ exports.deleteUser = async (req, res) => {
         account_status: 'terminated',
         session_version: Number(user.session_version || 0) + 1,
         staff_id_document: null,
+        staff_id_storage_key: null,
         staff_id_file_name: null,
         staff_id_mime_type: null,
       }, { transaction });
@@ -638,6 +650,7 @@ exports.deleteUser = async (req, res) => {
       await transaction.rollback();
       throw error;
     }
+    if (staffIdStorageKey) await removeStaffIdDocument(staffIdStorageKey);
     disconnectUser(user.id);
 
     return res.json({ message: 'User account terminated successfully.' });

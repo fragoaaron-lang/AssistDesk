@@ -8,7 +8,7 @@ This document records the security controls implemented for the OWASP Top 10:202
 | --- | --- |
 | A03 Software Supply Chain Failures | CI installs tracked lockfiles with `npm ci`, runs server tests and a production client build, and audits production dependencies. Dependabot checks server, client, root npm manifests, and GitHub Actions weekly. |
 | A04 Cryptographic Failures | Bcrypt cost 12; 12–72 character passwords; 256-bit password-reset tokens stored only as SHA-256 hashes; CSPRNG verification codes stored hashed; verified TLS for configured database and SMTP connections; HTTPS-only production reset URLs; HSTS and no-store API responses. |
-| A05 Injection | ORM parameterized data access; explicit catalog update allowlists; bounded inputs; attachment binary-signature checks; HTML escaping for email templates; pinned external scripts with SRI and a restrictive CSP. |
+| A05 Injection | ORM parameterized data access; explicit catalog update allowlists; bounded inputs; attachment binary-signature checks; faculty/staff ID images are stored outside static web roots with generated filenames and admin-only retrieval; HTML escaping for email templates; pinned external scripts with SRI and a restrictive CSP. |
 | A06 Insecure Design | Per-IP rate limits for API, authentication/recovery, ticket creation, and AI; server-calculated ticket ETAs; bounded staff ETAs and request/file sizes; workflow checks; post-commit notification failures no longer report committed ticket mutations as failed. |
 | A07 Authentication Failures | Login/recovery/signup throttles; non-enumerating login, registration, verification, and recovery messages; equal-cost unknown-account password checks; one-hour production JWTs restricted by algorithm/issuer/audience; session-version revocation on logout/password change/reset/account changes; current account status and database role checked for APIs and sockets. |
 | A08 Software or Data Integrity Failures | Lockfile-based reproducible installs; PR/push build-and-test workflow; SRI for the pinned Three.js CDN scripts; allowlisted catalog fields; reset and verification secrets protected against tampering/disclosure. |
@@ -21,6 +21,7 @@ This document records the security controls implemented for the OWASP Top 10:202
 - Configure `FRONTEND_URL` or `CLIENT_URL` as the actual HTTPS production origin. Reset/verification links use this origin.
 - `TRUST_PROXY_HOPS` defaults to one in production for Railway’s proxy and zero in development. Set the value to match the real number of trusted reverse-proxy hops; do not increase it to accommodate arbitrary client-supplied forwarded headers.
 - Configure database TLS (`DB_SSL=true` or `PGSSLMODE=require`) with a trusted certificate. SMTP certificate validation is enforced.
+- Faculty/staff ID images are written to `server/private/staff-ids` by default. Set `STAFF_ID_STORAGE_DIR` to a private, persistent mounted directory in production; the application filesystem may be ephemeral, and multiple API instances need shared durable storage.
 - The in-memory rate limiter is per application process. Multi-instance deployments should configure a shared rate-limit store for consistent cluster-wide limits.
 
 ## Remaining security work / known limits

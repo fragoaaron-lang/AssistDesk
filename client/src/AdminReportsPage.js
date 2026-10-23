@@ -690,35 +690,49 @@ function AdminReportsPage() {
               </div>
             </div>
             <section className="staff-approval-queue" aria-labelledby="staff-approval-queue-title">
-              <div className="staff-approval-queue-heading">
-                <div>
-                  <h3 id="staff-approval-queue-title">Faculty and staff confirmations</h3>
-                  <p>Review the submitted work ID before confirming account access.</p>
-                </div>
+              <button
+                type="button"
+                id="staff-approval-queue-title"
+                className="ticket-department-heading staff-confirmation-folder-heading"
+                aria-expanded={expandedUserRoles.staffConfirmations === true}
+                aria-controls="staff-confirmations-content"
+                onClick={() => toggleUserRole('staffConfirmations')}
+              >
+                <span className="ticket-folder-icon" aria-hidden="true" />
+                <span className="staff-confirmation-folder-copy">
+                  <strong>Faculty and staff confirmations</strong>
+                  <small>Review the submitted work ID before confirming account access.</small>
+                </span>
                 <span className="ticket-department-count">{pendingStaffApprovals.length} pending</span>
+              </button>
+              <div
+                id="staff-confirmations-content"
+                className="staff-confirmation-folder-content"
+                hidden={expandedUserRoles.staffConfirmations !== true}
+              >
+                  {pendingStaffApprovals.length === 0 ? (
+                    <p className="small-muted">No faculty or staff accounts are waiting for confirmation.</p>
+                  ) : (
+                    <div className="report-table-scroll">
+                      <table className="report-table">
+                        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Department</th><th>ID document</th></tr></thead>
+                        <tbody>
+                          {pendingStaffApprovals.map((pendingUser) => (
+                            <tr key={pendingUser.id}>
+                              <td>{pendingUser.name}</td>
+                              <td>{pendingUser.email}</td>
+                              <td>{pendingUser.role}</td>
+                              <td>{pendingUser.Department?.name || 'Unassigned'}</td>
+                              <td><button type="button" className="institutional-btn small secondary" onClick={() => openStaffIdReview(pendingUser)} disabled={staffApprovalLoading}>
+                                {staffApprovalLoading ? 'Loading…' : 'Review ID'}
+                              </button></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
               </div>
-              {pendingStaffApprovals.length === 0 ? (
-                <p className="small-muted">No faculty or staff accounts are waiting for confirmation.</p>
-              ) : (
-                <div className="report-table-scroll">
-                  <table className="report-table">
-                    <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Department</th><th>ID document</th></tr></thead>
-                    <tbody>
-                      {pendingStaffApprovals.map((pendingUser) => (
-                        <tr key={pendingUser.id}>
-                          <td>{pendingUser.name}</td>
-                          <td>{pendingUser.email}</td>
-                          <td>{pendingUser.role}</td>
-                          <td>{pendingUser.Department?.name || 'Unassigned'}</td>
-                          <td><button type="button" className="institutional-btn small secondary" onClick={() => openStaffIdReview(pendingUser)} disabled={staffApprovalLoading}>
-                            {staffApprovalLoading ? 'Loading…' : 'Review ID'}
-                          </button></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
             </section>
             <div className="list-stack">
               {userRoleGroups.map((roleGroup) => (

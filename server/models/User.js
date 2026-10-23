@@ -57,6 +57,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: true,
         defaultValue: null,
       },
+      staff_id_storage_key: {
+        type: DataTypes.STRING(255),
+        allowNull: true,
+        defaultValue: null,
+      },
       staff_id_file_name: {
         type: DataTypes.STRING(255),
         allowNull: true,

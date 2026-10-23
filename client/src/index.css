@@ -8247,6 +8247,30 @@ body.dark-mode .auth-modal .remember-me-option small {
   font-size: 0.86rem;
 }
 
+.staff-confirmation-folder-heading {
+  margin: 0;
+}
+
+.staff-confirmation-folder-copy {
+  display: grid;
+  flex: 1;
+  gap: 3px;
+}
+
+.staff-confirmation-folder-copy small {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.staff-confirmation-folder-content {
+  padding: 4px 2px 2px;
+}
+
+.staff-confirmation-folder-content > .small-muted {
+  margin: 8px 0 2px;
+}
+
 .staff-id-review-modal {
   display: grid;
   gap: 12px;

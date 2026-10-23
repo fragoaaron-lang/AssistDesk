@@ -15,6 +15,7 @@ const { getJwtSecret } = require('../config/security');
 const { getLoginTokenExpiry } = require('../utils/authTokenExpiry');
 const { getAppealContactEmail } = require('../utils/appealContact');
 const { validateImageDataUrl } = require('../utils/inputValidation');
+const { saveStaffIdDocument, removeStaffIdDocument } = require('../utils/staffIdStorage');
 
 const JWT_SECRET = getJwtSecret();
 const JWT_EXPIRES_IN = process.env.NODE_ENV === 'production' ? '1h' : (process.env.JWT_EXPIRES_IN || '1h');
@@ -403,23 +404,36 @@ exports.submitStaffId = async (req, res) => {
     }
 
     const previousStatus = user.account_status;
-    await user.update({
-      staff_id_document: document.data,
-      staff_id_file_name: document.name,
-      staff_id_mime_type: document.type,
-      staff_id_review_reason: null,
-      account_status: 'pending_approval',
-    });
-    await recordAudit({
-      actor: user,
-      action: 'account.staff_id_submitted',
-      entityType: 'user',
-      entityId: user.id,
-      departmentId: user.department_id,
-      before: { account_status: previousStatus },
-      after: { account_status: 'pending_approval' },
-      metadata: { mime_type: document.type, file_name: document.name },
-    });
+    const previousStorageKey = user.staff_id_storage_key;
+    const storageKey = await saveStaffIdDocument(user.id, document);
+    const transaction = await User.sequelize.transaction();
+    try {
+      await user.update({
+        staff_id_document: null,
+        staff_id_storage_key: storageKey,
+        staff_id_file_name: document.name,
+        staff_id_mime_type: document.type,
+        staff_id_review_reason: null,
+        account_status: 'pending_approval',
+      }, { transaction });
+      await recordAudit({
+        actor: user,
+        action: 'account.staff_id_submitted',
+        entityType: 'user',
+        entityId: user.id,
+        departmentId: user.department_id,
+        before: { account_status: previousStatus },
+        after: { account_status: 'pending_approval' },
+        metadata: { mime_type: document.type, file_name: document.name },
+        transaction,
+      });
+      await transaction.commit();
+    } catch (error) {
+      if (!transaction.finished) await transaction.rollback();
+      await removeStaffIdDocument(storageKey);
+      throw error;
+    }
+    if (previousStorageKey) await removeStaffIdDocument(previousStorageKey);
 
     return res.json({
       message: 'Your ID was submitted. You can sign in, but access is limited until an administrator confirms it.',
@@ -650,6 +664,7 @@ exports.deleteAccount = async (req, res) => {
     }
 
     const previousValues = { name: user.name, email: user.email, role: user.role, department_id: user.department_id, account_status: user.account_status };
+    const staffIdStorageKey = user.staff_id_storage_key;
     const models = require('../models');
     const anonymizedPasswordHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 12);
     const transaction = await models.sequelize.transaction();
@@ -666,6 +681,10 @@ exports.deleteAccount = async (req, res) => {
         department_id: null,
         student_number: null,
         profile_picture: null,
+        staff_id_document: null,
+        staff_id_storage_key: null,
+        staff_id_file_name: null,
+        staff_id_mime_type: null,
         verification_token: null,
       }, { transaction });
       await recordAudit({
@@ -683,6 +702,7 @@ exports.deleteAccount = async (req, res) => {
       await transaction.rollback();
       throw error;
     }
+    if (staffIdStorageKey) await removeStaffIdDocument(staffIdStorageKey);
 
     disconnectUser(user.id);
 

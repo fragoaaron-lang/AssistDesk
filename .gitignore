@@ -29,6 +29,10 @@ Thumbs.db
 .idea/
 coverage/
 
+# Private faculty/staff ID uploads (keep the empty runtime folder tracked)
+server/private/staff-ids/*
+!server/private/staff-ids/.gitkeep
+
 # Local dev environment artifacts
 supabase/
 *.lnk
