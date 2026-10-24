@@ -291,15 +291,13 @@ function RegisterPage({ modal = false, onSwitch }) {
             </fieldset>
             {role === 'staff' && (
               <div className="registration-field registration-department-field registration-wide-field">
-                <label className="auth-field-label" htmlFor="registration-departmentId">Working department</label>
-                <select className="institutional-select" {...getFieldProps('departmentId')} aria-label="Staff working department" value={departmentId} onChange={(e) => updateField('departmentId', e.target.value, setDepartmentId)} required>
-                  <option value="">Select your working department</option>
+                <label className="auth-field-label" htmlFor="registration-departmentId">Department</label>
+                <select className="institutional-select" {...getFieldProps('departmentId')} aria-label="Staff department" aria-describedby={fieldError('departmentId') ? 'registration-departmentId-error' : undefined} value={departmentId} onChange={(e) => updateField('departmentId', e.target.value, setDepartmentId)} required>
                   {availableDepartments.map((department) => (
                     <option key={department.id} value={department.id}>{getDepartmentDisplayName(department)}</option>
                   ))}
                 </select>
-                <small className="registration-field-hint">Choose the department where you work.</small>
-                {fieldError('departmentId') && <span className="registration-field-error" id="registration-departmentId-error">{fieldError('departmentId')}</span>}
+                {fieldError('departmentId') && <span className="registration-field-error" id="registration-departmentId-error">Choose a department to continue.</span>}
               </div>
             )}
             <div className="form-row">
