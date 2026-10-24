@@ -41,11 +41,13 @@ function AiChatPage() {
     e?.preventDefault();
     const text = (selectedQuestion || message).trim();
     if (!text) return;
+    const selectedGender = localStorage.getItem('chatbot_gender');
+    const assistantName = selectedGender === 'boy' ? 'Alex' : selectedGender === 'girl' ? 'Maya' : 'Assistant';
 
     try {
       const res = await axios.post(
         `${API_BASE_URL}/api/ai/ask`,
-        { message: text, user_id: user?.id || 0 },
+        { message: text, user_id: user?.id || 0, assistant_name: assistantName },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

@@ -19,6 +19,7 @@ const {
 } = require('../utils/departmentIntent');
 const { isDepartmentLocationRequest, findDepartmentByName, getDepartmentLocationAnswer } = require('../utils/departmentLocation');
 const ASSISTANT_SYSTEM_INSTRUCTION = require('../utils/assistantSystemInstruction');
+const getAssistantHelpResponse = require('../utils/assistantHelpResponses');
 const { isFilipinoOrTaglish } = require('../utils/responseLanguage');
 const { getOfficeFactRequest, findOfficeFactFaq } = require('../utils/officeLocationFaqs');
 const { buildPersonalChatHistoryQuery } = require('../utils/personalChatHistoryQuery');
@@ -252,7 +253,20 @@ const buildDepartmentLocationResult = (department) => ({
   escalation_available: false,
 });
 
-const buildResponse = async (query, suggestedQuestionKeywords = '') => {
+const buildResponse = async (query, suggestedQuestionKeywords = '', assistantName = 'Assistant') => {
+  const assistantHelpResponse = getAssistantHelpResponse(query, assistantName);
+  if (assistantHelpResponse) {
+    return {
+      ai_response: assistantHelpResponse,
+      matched_department: null,
+      department_details: null,
+      service_details: null,
+      source: { type: 'Guide', label: 'AssistDesk assistant help' },
+      clarification_required: false,
+      escalation_available: false,
+    };
+  }
+
   const officeFactRequest = getOfficeFactRequest(query);
   const isLocationQuery = isDepartmentLocationRequest(query);
   const departments = isLocationQuery ? await Department.findAll() : null;
@@ -748,8 +762,9 @@ exports.askAssistant = async (req, res) => {
     const previousAssistantMessage = [...conversationContext].reverse()
       .find((entry) => entry.role === 'assistant')?.text;
     const scheduleFollowupQuery = getClassScheduleFollowupQuery(message, previousAssistantMessage);
+    const assistantName = ['Alex', 'Maya'].includes(requestedAssistantName) ? requestedAssistantName : 'Assistant';
     const commandResult = await handleTicketCommand(message, req.user.id);
-    const result = commandResult || await buildResponse(scheduleFollowupQuery || message, suggestedQuestionKeywords);
+    const result = commandResult || await buildResponse(scheduleFollowupQuery || message, suggestedQuestionKeywords, assistantName);
     if (!commandResult && isFilipinoOrTaglish(message)) {
       try {
         const localizedResponse = await getLocalizedGroundedResponse(message, result.ai_response);
@@ -759,7 +774,6 @@ exports.askAssistant = async (req, res) => {
       }
     }
 
-    const assistantName = ['Alex', 'Maya'].includes(requestedAssistantName) ? requestedAssistantName : 'Assistant';
     result.ai_response = result.ai_response
       .replace('I am AssistDesk, your campus support assistant', `I am ${assistantName}, your AssistDesk campus support assistant`)
       .replace('Hello! I am AssistDesk, your campus support assistant', `Hello! I am ${assistantName}, your AssistDesk campus support assistant`);
