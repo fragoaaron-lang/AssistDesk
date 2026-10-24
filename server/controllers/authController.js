@@ -16,7 +16,7 @@ const { getJwtSecret } = require('../config/security');
 const { getLoginTokenExpiry } = require('../utils/authTokenExpiry');
 const { getAppealContactEmail } = require('../utils/appealContact');
 const { validateImageDataUrl } = require('../utils/inputValidation');
-const { saveStaffIdDocument, removeStaffIdDocument } = require('../utils/staffIdStorage');
+const { removeStaffIdDocument } = require('../utils/staffIdStorage');
 
 const JWT_SECRET = getJwtSecret();
 const JWT_EXPIRES_IN = process.env.NODE_ENV === 'production' ? '1h' : (process.env.JWT_EXPIRES_IN || '1h');
@@ -399,12 +399,11 @@ exports.submitStaffId = async (req, res) => {
 
     const previousStatus = user.account_status;
     const previousStorageKey = user.staff_id_storage_key;
-    const storageKey = await saveStaffIdDocument(user.id, document);
     const transaction = await User.sequelize.transaction();
     try {
       await user.update({
-        staff_id_document: null,
-        staff_id_storage_key: storageKey,
+        staff_id_document: document.data,
+        staff_id_storage_key: null,
         staff_id_file_name: document.name,
         staff_id_mime_type: document.type,
         staff_id_review_reason: null,
@@ -424,7 +423,6 @@ exports.submitStaffId = async (req, res) => {
       await transaction.commit();
     } catch (error) {
       if (!transaction.finished) await transaction.rollback();
-      await removeStaffIdDocument(storageKey);
       throw error;
     }
     if (previousStorageKey) await removeStaffIdDocument(previousStorageKey);

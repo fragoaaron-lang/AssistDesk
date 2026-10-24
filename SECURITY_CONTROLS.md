@@ -21,7 +21,7 @@ This document records the security controls implemented for the OWASP Top 10:202
 - Configure `FRONTEND_URL` or `CLIENT_URL` as the actual HTTPS production origin. Reset/verification links use this origin.
 - `TRUST_PROXY_HOPS` defaults to one in production for Railway’s proxy and zero in development. Set the value to match the real number of trusted reverse-proxy hops; do not increase it to accommodate arbitrary client-supplied forwarded headers.
 - Configure database TLS (`DB_SSL=true` or `PGSSLMODE=require`) with a trusted certificate. SMTP certificate validation is enforced.
-- Faculty/staff ID images are written to `server/private/staff-ids` by default. Set `STAFF_ID_STORAGE_DIR` to a private, persistent mounted directory in production; the application filesystem may be ephemeral, and multiple API instances need shared durable storage.
+- New faculty/staff ID images are stored in the database so they remain available across deploys and API instances. Legacy ID files referenced by storage keys are read from `server/private/staff-ids` by default; set `STAFF_ID_STORAGE_DIR` to a private, persistent shared directory if those legacy files still need to be reviewed. Restrict database and legacy-file access because these documents contain sensitive personal information.
 - The in-memory rate limiter is per application process. Multi-instance deployments should configure a shared rate-limit store for consistent cluster-wide limits.
 
 ## Remaining security work / known limits

@@ -4,7 +4,7 @@ const { addTicketNumber } = require('../utils/ticketNumber');
 const { recordAudit } = require('../utils/auditLog');
 const { getDepartmentScope, canUseDepartmentFilter, applyDepartmentScope } = require('../utils/departmentScope');
 const { mergeDepartmentTicketCounts, mergeDepartmentStatusCounts } = require('../utils/departmentTicketCounts');
-const { readStaffIdDocument, removeStaffIdDocument } = require('../utils/staffIdStorage');
+const { readUserStaffIdDocument, removeStaffIdDocument } = require('../utils/staffIdStorage');
 const { Op } = require('sequelize');
 
 const buildTicketFilters = (query = {}) => {
@@ -346,9 +346,7 @@ exports.getStaffIdDocument = async (req, res) => {
     if ((!user.staff_id_document && !user.staff_id_storage_key) || !user.staff_id_mime_type) {
       return res.status(404).json({ message: 'No ID document is available for review.' });
     }
-    const idDocument = user.staff_id_storage_key
-      ? await readStaffIdDocument(user.staff_id_storage_key, user.staff_id_mime_type)
-      : user.staff_id_document;
+    const idDocument = await readUserStaffIdDocument(user);
 
     await recordAudit({
       actor: req.user,

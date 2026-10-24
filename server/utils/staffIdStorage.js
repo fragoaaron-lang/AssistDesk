@@ -45,6 +45,16 @@ async function readStaffIdDocument(storageKey, mimeType) {
   return `data:${mimeType};base64,${image.toString('base64')}`;
 }
 
+async function readUserStaffIdDocument(user) {
+  if (typeof user?.staff_id_document === 'string' && user.staff_id_document.startsWith('data:image/')) {
+    return user.staff_id_document;
+  }
+  if (user?.staff_id_storage_key) {
+    return readStaffIdDocument(user.staff_id_storage_key, user.staff_id_mime_type);
+  }
+  throw new Error('Staff ID document is unavailable.');
+}
+
 async function removeStaffIdDocument(storageKey) {
   if (!storageKey) return;
   try {
@@ -60,5 +70,6 @@ module.exports = {
   getStaffIdStorageDirectory,
   saveStaffIdDocument,
   readStaffIdDocument,
+  readUserStaffIdDocument,
   removeStaffIdDocument,
 };

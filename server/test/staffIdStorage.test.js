@@ -6,6 +6,7 @@ const path = require('path');
 const {
   saveStaffIdDocument,
   readStaffIdDocument,
+  readUserStaffIdDocument,
   removeStaffIdDocument,
 } = require('../utils/staffIdStorage');
 
@@ -20,6 +21,11 @@ test('stores faculty/staff ID images in a private folder and removes them after 
     const storageKey = await saveStaffIdDocument(42, { data: pngData, type: 'image/png' });
     assert.match(storageKey, /^42-[0-9a-f-]{36}\.png$/);
     assert.equal(await readStaffIdDocument(storageKey, 'image/png'), pngData);
+    assert.equal(await readUserStaffIdDocument({ staff_id_document: pngData }), pngData);
+    assert.equal(await readUserStaffIdDocument({
+      staff_id_storage_key: storageKey,
+      staff_id_mime_type: 'image/png',
+    }), pngData);
     await removeStaffIdDocument(storageKey);
     await assert.rejects(fs.access(path.join(temporaryDirectory, storageKey)), { code: 'ENOENT' });
     await assert.rejects(readStaffIdDocument('../outside.png', 'image/png'), /Invalid staff ID storage key/);
@@ -28,4 +34,12 @@ test('stores faculty/staff ID images in a private folder and removes them after 
     else process.env.STAFF_ID_STORAGE_DIR = originalDirectory;
     await fs.rm(temporaryDirectory, { recursive: true, force: true });
   }
+});
+
+test('database-backed ID documents take precedence over old storage keys', async () => {
+  assert.equal(await readUserStaffIdDocument({
+    staff_id_document: pngData,
+    staff_id_storage_key: '42-00000000-0000-0000-0000-000000000000.png',
+    staff_id_mime_type: 'image/png',
+  }), pngData);
 });
