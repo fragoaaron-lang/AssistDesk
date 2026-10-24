@@ -289,6 +289,19 @@ function RegisterPage({ modal = false, onSwitch }) {
                 ))}
               </div>
             </fieldset>
+            {role === 'staff' && (
+              <div className="registration-field registration-department-field registration-wide-field">
+                <label className="auth-field-label" htmlFor="registration-departmentId">Working department</label>
+                <select className="institutional-select" {...getFieldProps('departmentId')} aria-label="Staff working department" value={departmentId} onChange={(e) => updateField('departmentId', e.target.value, setDepartmentId)} required>
+                  <option value="">Select your working department</option>
+                  {availableDepartments.map((department) => (
+                    <option key={department.id} value={department.id}>{getDepartmentDisplayName(department)}</option>
+                  ))}
+                </select>
+                <small className="registration-field-hint">Choose the department where you work.</small>
+                {fieldError('departmentId') && <span className="registration-field-error" id="registration-departmentId-error">{fieldError('departmentId')}</span>}
+              </div>
+            )}
             <div className="form-row">
               <div className="registration-field">
                 <label className="auth-field-label" htmlFor="registration-firstName">First name</label>
@@ -321,6 +334,7 @@ function RegisterPage({ modal = false, onSwitch }) {
                     {fieldError('studentNumber') && <span className="registration-field-error" id="registration-studentNumber-error">{fieldError('studentNumber')}</span>}
                   </div>
                 )}
+                {role !== 'staff' && (
                 <div className={`registration-field registration-department-field ${role === 'student' ? '' : 'registration-wide-field'}`}>
                   <label className="auth-field-label" htmlFor="registration-departmentId">Department</label>
                   <select className="institutional-select" {...getFieldProps('departmentId')} aria-label="Department" value={departmentId} onChange={(e) => updateField('departmentId', e.target.value, setDepartmentId)} required>
@@ -331,6 +345,7 @@ function RegisterPage({ modal = false, onSwitch }) {
                   </select>
                   {fieldError('departmentId') && <span className="registration-field-error" id="registration-departmentId-error">{fieldError('departmentId')}</span>}
                 </div>
+                )}
               </>
             )}
             <div className="registration-field password-field">
