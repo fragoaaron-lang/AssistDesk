@@ -4970,7 +4970,36 @@ body.dark-mode .map-ticket-detail-close {
 @media (max-width: 640px) {
   .header-profile-row .header-profile { display: none; }
   .header-actions > .logout-button { display: none !important; }
-  .page-header-minimal .header-actions > .logout-button { display: inline-flex !important; }
+  .page-header-minimal .header-actions > .logout-button {
+    display: inline-flex !important;
+    min-height: 40px;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.68);
+    border-radius: 11px;
+    background: rgba(8, 32, 56, 0.2);
+    color: #fff;
+    font-size: 0.76rem;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    box-shadow: none;
+    transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+  }
+  .page-header-minimal .header-actions > .logout-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    border-color: #fff;
+    background: rgba(8, 32, 56, 0.42);
+  }
+  .page-header-minimal .header-actions > .logout-button:focus-visible {
+    outline: 3px solid #ffd35a;
+    outline-offset: 3px;
+  }
+  .page-header-minimal .header-actions > .logout-button:disabled {
+    opacity: 0.72;
+    cursor: wait;
+  }
   .app-shell { padding: 12px; }
   .page-header { padding: 12px; gap: 10px; border-radius: 16px; top: 8px; }
   .header-brand { min-width: 0; gap: 9px; flex: 1 1 auto; }
@@ -6084,6 +6113,11 @@ body.dark-mode .auth-modal-close {
     width: 40px;
     min-width: 40px;
   }
+
+  .page-header-minimal { gap: 8px; padding-inline: 10px; }
+  .page-header-minimal .header-brand { gap: 7px; }
+  .page-header-minimal .header-brand-copy strong { font-size: 0.96rem; }
+  .page-header-minimal .header-actions > .logout-button { padding-inline: 9px; font-size: 0.7rem; }
 
   .header-actions .notification-button {
     width: 40px;
