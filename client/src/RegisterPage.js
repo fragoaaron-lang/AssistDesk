@@ -197,7 +197,11 @@ function RegisterPage({ modal = false, onSwitch }) {
     setMessage('');
   };
 
-  const fieldError = (field) => ((touched[field] || submitted || serverFieldErrors[field]) ? fieldErrors[field] : '');
+  const fieldError = (field) => {
+    if (serverFieldErrors[field]) return serverFieldErrors[field];
+    if (field === 'password') return '';
+    return (touched[field] || submitted) ? fieldErrors[field] : '';
+  };
 
   const getFieldProps = (field) => {
     const error = fieldError(field);
