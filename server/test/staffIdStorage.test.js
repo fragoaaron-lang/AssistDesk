@@ -43,3 +43,20 @@ test('database-backed ID documents take precedence over old storage keys', async
     staff_id_mime_type: 'image/png',
   }), pngData);
 });
+
+test('missing legacy ID files report ENOENT so the review flow can request a replacement', async () => {
+  const originalDirectory = process.env.STAFF_ID_STORAGE_DIR;
+  const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), 'assistdesk-missing-staff-id-'));
+  process.env.STAFF_ID_STORAGE_DIR = temporaryDirectory;
+
+  try {
+    await assert.rejects(readUserStaffIdDocument({
+      staff_id_storage_key: '42-00000000-0000-0000-0000-000000000000.png',
+      staff_id_mime_type: 'image/png',
+    }), { code: 'ENOENT' });
+  } finally {
+    if (originalDirectory === undefined) delete process.env.STAFF_ID_STORAGE_DIR;
+    else process.env.STAFF_ID_STORAGE_DIR = originalDirectory;
+    await fs.rm(temporaryDirectory, { recursive: true, force: true });
+  }
+});

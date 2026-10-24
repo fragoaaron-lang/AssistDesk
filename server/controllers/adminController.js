@@ -363,6 +363,12 @@ exports.getStaffIdDocument = async (req, res) => {
       mime_type: user.staff_id_mime_type,
     });
   } catch (error) {
+    if (error.code === 'ENOENT') {
+      return res.status(410).json({
+        code: 'STAFF_ID_DOCUMENT_MISSING',
+        message: 'The stored ID image is no longer available. Request a replacement ID from the user.',
+      });
+    }
     console.error('Staff ID retrieval failed:', error);
     return res.status(500).json({ message: 'Unable to load the ID document.' });
   }

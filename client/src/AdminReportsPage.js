@@ -357,7 +357,13 @@ function AdminReportsPage() {
       setStaffIdPreview(response.data);
       setSelectedStaffReview(directoryUser);
     } catch (error) {
-      setMessage(error.response?.data?.message || 'Unable to load this ID document.');
+      if (error.response?.status === 410 && error.response?.data?.code === 'STAFF_ID_DOCUMENT_MISSING') {
+        setStaffIdPreview({ unavailable: true, file_name: directoryUser.staff_id_file_name });
+        setSelectedStaffReview(directoryUser);
+        setMessage('This older ID image is missing from server storage. Request a replacement so the user can upload it again.');
+      } else {
+        setMessage(error.response?.data?.message || 'Unable to load this ID document.');
+      }
     } finally {
       setStaffApprovalLoading(false);
     }
@@ -855,19 +861,27 @@ function AdminReportsPage() {
                 </div>
                 <button type="button" className="user-directory-close-button" aria-label="Close ID review" disabled={staffApprovalLoading} onClick={() => { setSelectedStaffReview(null); setStaffIdPreview(null); }}>×</button>
               </div>
-              <p className="small-muted">Check that the uploaded ID clearly identifies this faculty or staff member.</p>
-              <img className="staff-id-review-image" src={staffIdPreview.id_document} alt={`ID document submitted by ${selectedStaffReview.name}`} />
-              <p className="small-muted">{staffIdPreview.file_name}</p>
+              {staffIdPreview.unavailable ? (
+                <p className="small-muted" role="status">The stored ID image is missing. Request a replacement; the user will be able to upload another ID.</p>
+              ) : (
+                <>
+                  <p className="small-muted">Check that the uploaded ID clearly identifies this faculty or staff member.</p>
+                  <img className="staff-id-review-image" src={staffIdPreview.id_document} alt={`ID document submitted by ${selectedStaffReview.name}`} />
+                  <p className="small-muted">{staffIdPreview.file_name}</p>
+                </>
+              )}
               <label className="staff-id-rejection-field">
-                Review note (required to reject)
-                <textarea className="institutional-textarea" value={staffReviewReason} onChange={(event) => setStaffReviewReason(event.target.value)} minLength={3} maxLength={1000} rows={3} placeholder="Explain what needs correction so the user can resubmit." />
+                {staffIdPreview.unavailable ? 'Message to user (required)' : 'Review note (required to reject)'}
+                <textarea className="institutional-textarea" value={staffReviewReason} onChange={(event) => setStaffReviewReason(event.target.value)} minLength={3} maxLength={1000} rows={3} placeholder={staffIdPreview.unavailable ? 'Explain that the image was lost and a replacement is needed.' : 'Explain what needs correction so the user can resubmit.'} />
               </label>
               <div className="inline-actions staff-id-review-actions">
-                <button type="button" className="institutional-btn" onClick={() => decideStaffApproval('approve')} disabled={staffApprovalLoading}>
-                  {staffApprovalLoading ? 'Saving…' : 'Approve account'}
-                </button>
+                {!staffIdPreview.unavailable && (
+                  <button type="button" className="institutional-btn" onClick={() => decideStaffApproval('approve')} disabled={staffApprovalLoading}>
+                    {staffApprovalLoading ? 'Saving…' : 'Approve account'}
+                  </button>
+                )}
                 <button type="button" className="institutional-btn danger" onClick={() => decideStaffApproval('reject')} disabled={staffApprovalLoading || staffReviewReason.trim().length < 3}>
-                  Reject and request new ID
+                  {staffIdPreview.unavailable ? 'Request replacement ID' : 'Reject and request new ID'}
                 </button>
               </div>
             </section>
