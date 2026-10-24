@@ -8269,69 +8269,47 @@ body.dark-mode .chatbot-ticket-status.is-error { color: #ffaaa5; }
   box-shadow: 0 0 0 3px rgba(22, 128, 74, 0.15);
 }
 
-.registration-password-rules {
-  display: grid;
-  gap: 9px;
+.registration-password-progress {
   margin: 8px 0 0;
-  padding: 0;
-  color: var(--muted);
-  font-size: 0.88rem;
-  line-height: 1.4;
-  list-style: none;
 }
 
-.registration-password-rules li {
+.registration-password-progress-heading {
   display: flex;
   align-items: center;
-  gap: 11px;
-  color: #a64220;
-  transition: color 180ms ease;
+  justify-content: space-between;
+  gap: 12px;
+  color: #163548;
+  font-size: 0.78rem;
+  font-weight: 650;
 }
 
-.registration-password-rules .is-met { color: #16804a; }
-.registration-password-rules .is-needed { color: #a64220; }
-
-.password-rule-icon {
-  position: relative;
-  display: inline-block;
-  flex: 0 0 18px;
-  width: 18px;
-  height: 18px;
-  color: currentColor;
-  transform: scale(0.88);
-  transition: color 180ms ease, transform 180ms ease;
+.registration-password-progress-track {
+  height: 7px;
+  margin-top: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #dce6ee;
+  box-shadow: inset 0 1px 2px rgba(8, 32, 56, 0.12);
 }
 
-.password-rule-icon::before,
-.password-rule-icon::after {
-  position: absolute;
-  top: 8px;
-  left: 3px;
-  width: 14px;
-  height: 2px;
-  border-radius: 2px;
-  background: currentColor;
-  content: '';
-  transform: rotate(45deg);
-  transition: opacity 180ms ease, transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+.registration-password-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #1f6f78;
+  transition: width 220ms cubic-bezier(0.2, 0.8, 0.2, 1), background-color 180ms ease;
 }
 
-.password-rule-icon::after { transform: rotate(-45deg); }
-
-.is-met .password-rule-icon { transform: scale(1); }
-.is-met .password-rule-icon::before {
-  top: 7px;
-  left: 2px;
-  width: 7px;
-  height: 4px;
-  border: solid currentColor;
-  border-width: 0 0 2px 2px;
-  border-radius: 0;
-  background: transparent;
-  transform: rotate(-45deg);
+.is-complete .registration-password-progress-fill {
+  background: #16804a;
 }
 
-.is-met .password-rule-icon::after { opacity: 0; transform: rotate(-45deg) scale(0.4); }
+.registration-password-progress-status {
+  margin: 6px 0 0;
+  color: #526b79;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
 
 .visually-hidden {
   position: absolute;
@@ -8345,15 +8323,8 @@ body.dark-mode .chatbot-ticket-status.is-error { color: #ffaaa5; }
   border: 0;
 }
 
-@media (max-width: 420px) {
-  .registration-password-rules { gap: 8px; }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .registration-password-rules li,
-  .password-rule-icon,
-  .password-rule-icon::before,
-  .password-rule-icon::after { transition: none; }
+  .registration-password-progress-fill { transition: none; }
 }
 
 .auth-modal .auth-form-message {

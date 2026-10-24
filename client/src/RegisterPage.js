@@ -181,6 +181,7 @@ function RegisterPage({ modal = false, onSwitch }) {
   const fieldErrors = { ...validationErrors, ...serverFieldErrors };
   const passwordRules = getPasswordRules(password);
   const passwordIsValid = isPasswordValid(password, passwordRules);
+  const metPasswordRules = passwordRules.length - passwordRules.filter((rule) => !rule.met).length;
   const unmetPasswordRules = passwordRules.filter((rule) => !rule.met).length;
   const showPasswordValidity = passwordFieldActivated;
 
@@ -327,20 +328,31 @@ function RegisterPage({ modal = false, onSwitch }) {
               <button type="button" className={`password-visibility ${showPassword ? 'visible' : ''}`} onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Hide password' : 'Show password'}><span className="password-eye" aria-hidden="true" /></button>
               {fieldError('password') && <span className="registration-field-error" id="registration-password-error">{fieldError('password')}</span>}
               {passwordFieldActivated && (
-                <ul className="registration-password-rules" id="registration-password-rules" aria-label="Password requirements">
-                  {passwordRules.map((rule) => (
-                    <li className={rule.met ? 'is-met' : 'is-needed'} key={rule.label}>
-                      <span className="password-rule-icon" aria-hidden="true" />
-                      <span>{rule.label}</span>
-                      <span className="visually-hidden">{rule.met ? 'Requirement met' : 'Requirement not met'}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {passwordFieldActivated && (
-                <span className="visually-hidden" aria-live="polite" aria-atomic="true">
-                  {passwordIsValid ? 'All password requirements met.' : `${unmetPasswordRules} password requirements remaining.`}
-                </span>
+                <div className={`registration-password-progress ${passwordIsValid ? 'is-complete' : ''}`} id="registration-password-rules">
+                  <div className="registration-password-progress-heading">
+                    <span>Password requirements</span>
+                    <span>{metPasswordRules} of {passwordRules.length}</span>
+                  </div>
+                  <div
+                    className="registration-password-progress-track"
+                    role="progressbar"
+                    aria-label="Password requirements met"
+                    aria-valuemin={0}
+                    aria-valuemax={passwordRules.length}
+                    aria-valuenow={metPasswordRules}
+                    aria-valuetext={`${metPasswordRules} of ${passwordRules.length} requirements met`}
+                  >
+                    <span className="registration-password-progress-fill" style={{ width: `${(metPasswordRules / passwordRules.length) * 100}%` }} />
+                  </div>
+                  <p className="registration-password-progress-status" aria-live="polite" aria-atomic="true">
+                    {passwordIsValid
+                      ? 'All requirements met.'
+                      : `Still needed: ${passwordRules.filter((rule) => !rule.met).map((rule) => rule.label).join(', ')}.`}
+                  </p>
+                  <span className="visually-hidden" aria-live="polite" aria-atomic="true">
+                    {passwordIsValid ? 'All password requirements met.' : `${unmetPasswordRules} password requirements remaining.`}
+                  </span>
+                </div>
               )}
             </div>
             <div className="registration-field password-field">
