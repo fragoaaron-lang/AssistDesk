@@ -342,6 +342,7 @@ function setMapData(data) {
   const scopedTickets = Array.isArray(data.tickets) ? data.tickets : [];
   const ticketsByGroup = new Map();
   scopedTickets.forEach((ticket) => {
+    if (String(ticket.status || '').toLowerCase() === 'closed') return;
     const key = [ticket.department_id, String(ticket.priority || 'medium').toLowerCase(), String(ticket.status || 'open').toLowerCase()].join(':');
     const groupTickets = ticketsByGroup.get(key) || [];
     groupTickets.push(ticket);
@@ -385,6 +386,7 @@ function setMapData(data) {
   }
   const ticketOffsets = new Map();
   ticketCounts.forEach((ticketGroup) => {
+    if (String(ticketGroup.status || '').toLowerCase() === 'closed') return;
     const department = departmentsById.get(String(ticketGroup.department_id));
     const mappedPosition = department && worldPointFromDepartment(department);
     const unlocated = !mappedPosition;

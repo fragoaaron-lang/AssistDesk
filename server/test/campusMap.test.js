@@ -1,5 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { Op } = require('sequelize');
 const { getGlobalCampusTicketCounts } = require('../utils/campusMap');
 
 test('campus map counts tickets across submitters, departments, priorities, and statuses', async () => {
@@ -28,7 +29,7 @@ test('campus map counts tickets across submitters, departments, priorities, and 
   assert.deepEqual(result, expectedCounts);
   assert.deepEqual(capturedOptions.group, ['department_id', 'priority', 'status']);
   assert.equal(capturedOptions.raw, true);
-  assert.equal(Object.hasOwn(capturedOptions, 'where'), false);
+  assert.deepEqual(capturedOptions.where, { status: { [Op.ne]: 'closed' } });
   assert.equal(capturedOptions.attributes.includes('department_id'), true);
   assert.equal(capturedOptions.attributes.includes('priority'), true);
   assert.equal(capturedOptions.attributes.includes('status'), true);
