@@ -550,6 +550,7 @@ exports.resetPassword = async (req, res) => {
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
     const password_hash = await bcrypt.hash(newPassword, 12);
     const transaction = await User.sequelize.transaction();
+    let user;
     try {
       const resetRecord = await PasswordResetToken.findOne({
         where: { token: tokenHash },
@@ -566,7 +567,7 @@ exports.resetPassword = async (req, res) => {
         return res.status(400).json({ message: 'Invalid or expired reset token.' });
       }
 
-      const user = await User.findOne({ where: { email: resetRecord.email }, transaction, lock: transaction.LOCK.UPDATE });
+      user = await User.findOne({ where: { email: resetRecord.email }, transaction, lock: transaction.LOCK.UPDATE });
       if (!user) {
         await resetRecord.destroy({ transaction });
         await transaction.commit();
