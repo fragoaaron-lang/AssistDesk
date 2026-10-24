@@ -17,10 +17,10 @@ test('explains what the assistant is and how it can be used', () => {
 
 test('explains the ticket creation process including maintenance photo requirement', () => {
   const response = getAssistantHelpResponse('How to create a ticket?');
-  assert.match(response, /Open Tickets/);
-  assert.match(response, /general issue and specific issue/);
-  assert.match(response, /Maintenance requests, attach a photo.*required/);
-  assert.match(response, /Create Ticket to submit it/);
+  assert.match(response, /Create a ticket.*below the chat/);
+  assert.match(response, /Choose a department.*select the issue and priority/);
+  assert.match(response, /Maintenance requests require a photo/);
+  assert.match(response, /ticket number here after it is created/);
   assert.match(response, /submit request:/);
 });
 

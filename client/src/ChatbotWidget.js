@@ -5,6 +5,46 @@ import { useLocation } from 'react-router-dom';
 import { API_BASE_URL } from './config';
 import { useAuth } from './AuthContext';
 import { mapChatLogsToEntries } from './aiChatHistory';
+import ticketIssueOptions from './ticketIssueOptions.json';
+
+const { defaultGeneralIssueOptions, departmentGeneralIssueOptions } = ticketIssueOptions;
+
+const getCollegeDepartmentKey = (department) => {
+  const name = String(department?.name || department || '').toLowerCase().trim();
+  if (name === 'basic education department') return 'basic-education';
+  if (['cs', 'computer science department', 'college of computer studies'].includes(name)) return 'cs';
+  if (['cba', 'college of business administration', 'college of business and accountancy'].includes(name)) return 'cba';
+  if (['charm', 'college of hospitality and restaurant management', 'college of hospitality management'].includes(name)) return 'charm';
+  if (['education department', 'college of education'].includes(name)) return 'education';
+  if (['college of nursing', 'nursing department'].includes(name)) return 'nursing';
+  if (['college of criminology', 'criminology department'].includes(name)) return 'crim';
+  if (['college of physical therapy', 'physical therapy department'].includes(name)) return 'pt';
+  return null;
+};
+
+const getDepartmentIssueOptions = (department) => {
+  const name = String(department?.name || '').toLowerCase();
+  if (name.includes('maintenance')) return departmentGeneralIssueOptions.maintenance;
+  if (name.includes('clinic')) return departmentGeneralIssueOptions.clinic;
+  if (name.includes('library')) return departmentGeneralIssueOptions.library;
+  if (name.includes('accounting')) return departmentGeneralIssueOptions.accounting;
+  if (name.includes('registrar')) return departmentGeneralIssueOptions.registrar;
+  if (name.includes('student affairs') || name === 'osa') return departmentGeneralIssueOptions.osa;
+  if (name.includes('guidance')) return departmentGeneralIssueOptions.guidance;
+  if (name.includes('information technology') || name.includes('it department')) return departmentGeneralIssueOptions.it;
+  if (name.includes('basic education')) return departmentGeneralIssueOptions.basic;
+  if (name.includes('computer science') || name.includes('computer studies') || name === 'cs' || name.includes('bscs')) return departmentGeneralIssueOptions.cs;
+  if (name.includes('business administration') || name.includes('business and accountancy') || name === 'cba' || name.includes('accountancy') || name.includes('bsa') || name.includes('bsba')) return departmentGeneralIssueOptions.cba;
+  if (name.includes('criminology') || name.includes('crim') || name.includes('bscrim')) return departmentGeneralIssueOptions.crim;
+  if (name.includes('hospitality') || name.includes('charm') || name.includes('bshm') || name === 'hm') return departmentGeneralIssueOptions.hm;
+  if (name.includes('physical therapy') || name.includes('bspt')) return departmentGeneralIssueOptions.pt;
+  if (name.includes('nursing') || name === 'bsn') return departmentGeneralIssueOptions.nursing;
+  if (['education department', 'college of education'].includes(name)) return departmentGeneralIssueOptions.education;
+  if (getCollegeDepartmentKey(department)) return departmentGeneralIssueOptions.college;
+  return defaultGeneralIssueOptions;
+};
+
+const emptyTicketForm = { subject: '', description: '', category: '', priority: 'medium', department_id: '' };
 
 const FAQ_GROUPS = [
   {
@@ -237,6 +277,14 @@ function ChatbotWidget() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState('');
   const [sending, setSending] = useState(false);
+  const [ticketComposerOpen, setTicketComposerOpen] = useState(false);
+  const [ticketCatalogLoading, setTicketCatalogLoading] = useState(false);
+  const [ticketCatalogError, setTicketCatalogError] = useState('');
+  const [ticketDepartments, setTicketDepartments] = useState([]);
+  const [ticketIssueGroups, setTicketIssueGroups] = useState([]);
+  const [ticketForm, setTicketForm] = useState(emptyTicketForm);
+  const [ticketAttachment, setTicketAttachment] = useState(null);
+  const [ticketSubmitState, setTicketSubmitState] = useState({ status: 'idle', message: '' });
   const [faqSearch, setFaqSearch] = useState('');
   const [gender, setGender] = useState(() => localStorage.getItem('chatbot_gender') || 'neutral');
   const [showGenderSelect, setShowGenderSelect] = useState(() => !localStorage.getItem('chatbot_gender'));
@@ -369,7 +417,7 @@ function ChatbotWidget() {
   useEffect(() => {
     if (!open) return;
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [history, sending, open]);
+  }, [history, sending, open, ticketComposerOpen]);
 
   useEffect(() => {
     if (pathname === '/') setOpen(false);
@@ -411,6 +459,128 @@ function ChatbotWidget() {
     if (gender === 'boy') return 'Alex';
     if (gender === 'girl') return 'Maya';
     return 'Assistant';
+  };
+
+  const studentCollegeKey = getCollegeDepartmentKey(user?.department_name || user?.Department?.name);
+  const availableTicketDepartments = user?.role === 'student' && studentCollegeKey
+    ? ticketDepartments.filter((department) => {
+      const departmentCollegeKey = getCollegeDepartmentKey(department);
+      return !departmentCollegeKey || departmentCollegeKey === studentCollegeKey;
+    })
+    : ticketDepartments;
+  const selectedTicketDepartment = ticketDepartments.find((department) => String(department.id) === String(ticketForm.department_id));
+  const selectedTicketIssueGroups = ticketIssueGroups.filter((group) => Number(group.department_id) === Number(ticketForm.department_id));
+  const ticketIssueOptionsByCategory = ticketForm.department_id
+    ? (selectedTicketIssueGroups.length
+      ? selectedTicketIssueGroups.reduce((options, group) => {
+        options[group.name] = (group.specificIssues || []).map((issue) => issue.name);
+        return options;
+      }, {})
+      : getDepartmentIssueOptions(selectedTicketDepartment))
+    : defaultGeneralIssueOptions;
+  const ticketSpecificIssues = ticketIssueOptionsByCategory[ticketForm.category] || [];
+  const isMaintenanceTicket = selectedTicketDepartment?.name?.toLowerCase().includes('maintenance');
+
+  const openTicketComposer = async () => {
+    setShowFaqs(false);
+    setTicketComposerOpen(true);
+    setTicketSubmitState({ status: 'idle', message: '' });
+    if (ticketDepartments.length && ticketIssueGroups.length) return;
+
+    setTicketCatalogLoading(true);
+    setTicketCatalogError('');
+    try {
+      const headers = { Authorization: `Bearer ${token}` };
+      const [departmentResponse, issueResponse] = await Promise.all([
+        axios.get(`${API_BASE_URL}/api/catalog/departments`, { headers }),
+        axios.get(`${API_BASE_URL}/api/catalog/issues`, { headers }),
+      ]);
+      setTicketDepartments(departmentResponse.data.departments || []);
+      setTicketIssueGroups(issueResponse.data.generalIssues || []);
+    } catch (error) {
+      setTicketCatalogError(error.response?.data?.message || 'Could not load ticket options. Try again.');
+    } finally {
+      setTicketCatalogLoading(false);
+    }
+  };
+
+  const handleTicketDepartmentChange = (departmentId) => {
+    const department = ticketDepartments.find((item) => String(item.id) === String(departmentId));
+    const groups = ticketIssueGroups.filter((item) => Number(item.department_id) === Number(departmentId));
+    const categories = departmentId
+      ? (groups.length ? groups.map((group) => group.name) : Object.keys(getDepartmentIssueOptions(department)))
+      : Object.keys(defaultGeneralIssueOptions);
+    setTicketForm((current) => ({
+      ...current,
+      department_id: departmentId,
+      category: categories[0] || '',
+      subject: '',
+    }));
+    setTicketAttachment(null);
+  };
+
+  const handleTicketAttachment = (file) => {
+    if (!file) {
+      setTicketAttachment(null);
+      return;
+    }
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setTicketSubmitState({ status: 'error', message: 'Choose a JPG, PNG, or WEBP image.' });
+      return;
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      setTicketSubmitState({ status: 'error', message: 'Choose an image smaller than 3 MB.' });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setTicketAttachment({ data: reader.result, name: file.name, type: file.type });
+    reader.onerror = () => setTicketSubmitState({ status: 'error', message: 'Could not read that image. Please choose it again.' });
+    reader.readAsDataURL(file);
+  };
+
+  const submitChatTicket = async (event) => {
+    event.preventDefault();
+    if (ticketSubmitState.status === 'loading') return;
+    if (isMaintenanceTicket && !ticketAttachment) {
+      setTicketSubmitState({ status: 'error', message: 'Attach a photo for a Maintenance ticket.' });
+      return;
+    }
+
+    setTicketSubmitState({ status: 'loading', message: '' });
+    try {
+      const response = await axios.post(`${API_BASE_URL}/api/tickets`, {
+        ...ticketForm,
+        user_id: user.id,
+        attachment_data: ticketAttachment?.data || null,
+        attachment_name: ticketAttachment?.name || null,
+        attachment_type: ticketAttachment?.type || null,
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      const ticket = response.data;
+      const ticketCode = ticket.ticket_code || `#${ticket.id}`;
+      const departmentName = ticket.Department?.name || selectedTicketDepartment?.name;
+      const savedAt = ticket.created_at;
+      setHistory((current) => [
+        ...current,
+        { role: 'user', text: `Create ticket: ${ticket.subject}`, timestamp: savedAt },
+        {
+          role: 'assistant',
+          text: `Your ticket was created successfully${departmentName ? ` for ${departmentName}` : ''}. Ticket ID: ${ticketCode}. You can ask me to check its status anytime.`,
+          timestamp: savedAt,
+          ticket,
+        },
+      ]);
+      setTicketForm(emptyTicketForm);
+      setTicketAttachment(null);
+      setTicketComposerOpen(false);
+      setTicketSubmitState({ status: 'idle', message: '' });
+    } catch (error) {
+      const message = error.response?.data?.message || 'Unable to create your ticket. Please try again.';
+      const suggestions = error.response?.data?.routing_candidates?.map((candidate) => candidate.name).filter(Boolean);
+      setTicketSubmitState({
+        status: 'error',
+        message: suggestions?.length ? `${message} Possible departments: ${suggestions.join(', ')}.` : message,
+      });
+    }
   };
 
   const saveGender = (selectedGender) => {
@@ -599,6 +769,95 @@ function ChatbotWidget() {
                 </div>
               </div>
             ))}
+            {ticketComposerOpen && (
+              <section className="chatbot-ticket-composer" aria-labelledby="chatbot-ticket-title">
+                <div className="chatbot-ticket-composer-heading">
+                  <div>
+                    <strong id="chatbot-ticket-title">Create a support ticket</strong>
+                    <span>Share the issue and choose where it should go.</span>
+                  </div>
+                  <button type="button" onClick={() => setTicketComposerOpen(false)} aria-label="Close ticket form">×</button>
+                </div>
+                {ticketCatalogLoading ? (
+                  <p className="chatbot-ticket-status" role="status">Loading ticket options…</p>
+                ) : ticketCatalogError ? (
+                  <div className="chatbot-ticket-status is-error" role="alert">
+                    <span>{ticketCatalogError}</span>
+                    <button type="button" onClick={openTicketComposer}>Retry</button>
+                  </div>
+                ) : (
+                  <form className="chatbot-ticket-form" onSubmit={submitChatTicket} aria-busy={ticketSubmitState.status === 'loading'}>
+                    <label>
+                      <span>Department <small>Optional</small></span>
+                      <select value={ticketForm.department_id} onChange={(event) => handleTicketDepartmentChange(event.target.value)}>
+                        <option value="">Let AssistDesk route it</option>
+                        {availableTicketDepartments.map((department) => (
+                          <option key={department.id} value={department.id}>{department.display_name || department.name}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      <span>General issue</span>
+                      <select
+                        value={ticketForm.category}
+                        onChange={(event) => setTicketForm((current) => ({ ...current, category: event.target.value, subject: '' }))}
+                        required
+                      >
+                        <option value="">Choose a category</option>
+                        {Object.keys(ticketIssueOptionsByCategory).map((category) => <option key={category} value={category}>{category}</option>)}
+                      </select>
+                    </label>
+                    <label>
+                      <span>Specific issue</span>
+                      <select
+                        value={ticketForm.subject}
+                        onChange={(event) => setTicketForm((current) => ({ ...current, subject: event.target.value }))}
+                        required
+                        disabled={!ticketForm.category}
+                      >
+                        <option value="">Choose an issue</option>
+                        {ticketSpecificIssues.map((issue) => <option key={issue} value={issue}>{issue}</option>)}
+                      </select>
+                    </label>
+                    <label>
+                      <span>Priority</span>
+                      <select value={ticketForm.priority} onChange={(event) => setTicketForm((current) => ({ ...current, priority: event.target.value }))}>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="urgent">Urgent</option>
+                      </select>
+                    </label>
+                    <label>
+                      <span>Describe the issue</span>
+                      <textarea
+                        value={ticketForm.description}
+                        onChange={(event) => setTicketForm((current) => ({ ...current, description: event.target.value }))}
+                        placeholder="What happened? Add a location or details that may help."
+                        maxLength={10000}
+                        required
+                      />
+                    </label>
+                    <label className="chatbot-ticket-photo">
+                      <span>Photo <small>{isMaintenanceTicket ? 'Required for Maintenance' : 'Optional'} · JPG, PNG, or WEBP · max 3 MB</small></span>
+                      <input type="file" accept="image/jpeg,image/png,image/webp" required={Boolean(isMaintenanceTicket && !ticketAttachment)} onChange={(event) => { handleTicketAttachment(event.target.files?.[0]); event.target.value = ''; }} />
+                      {ticketAttachment && (
+                        <span className="chatbot-ticket-file">
+                          {ticketAttachment.name}
+                          <button type="button" onClick={() => setTicketAttachment(null)}>Remove</button>
+                        </span>
+                      )}
+                    </label>
+                    {ticketSubmitState.message && <p className="chatbot-ticket-status is-error" role="alert">{ticketSubmitState.message}</p>}
+                    <div className="chatbot-ticket-actions">
+                      <button type="button" className="is-secondary" onClick={() => setTicketComposerOpen(false)}>Cancel</button>
+                      <button type="submit" disabled={ticketSubmitState.status === 'loading'}>
+                        {ticketSubmitState.status === 'loading' ? 'Submitting…' : 'Submit ticket'}
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </section>
+            )}
             {sending && (
               <div className="chat-message assistant chatbot-typing" aria-live="polite">
                 <AssistantAvatar small />
@@ -635,6 +894,15 @@ function ChatbotWidget() {
             <div ref={chatEndRef} aria-hidden="true" />
           </div>
           <div className="chatbot-footer">
+            <button
+              type="button"
+              className="chatbot-ticket-toggle"
+              onClick={() => (ticketComposerOpen ? setTicketComposerOpen(false) : openTicketComposer())}
+              aria-expanded={ticketComposerOpen}
+            >
+              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12" /></svg>
+              {ticketComposerOpen ? 'Close ticket form' : 'Create a ticket'}
+            </button>
             <button type="button" className="chatbot-faq-toggle" onClick={() => { setShowFaqs((value) => !value); setFaqSearch(''); }} aria-expanded={showFaqs}>
               <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4.5h14M3 10h14M3 15.5h8" /></svg>
               {showFaqs ? 'Hide FAQ browser' : 'Browse common questions'}

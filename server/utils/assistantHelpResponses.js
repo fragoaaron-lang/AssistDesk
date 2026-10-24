@@ -13,7 +13,7 @@ const getAssistantHelpResponse = (query, assistantName = 'Assistant') => {
   }
 
   if (/\bhow\b.*\b(?:create|submit|make|file)\b.*\b(?:ticket|request)\b|\bhow (?:is|are) (?:a |the )?(?:ticket|request)s? created\b|\bsteps to (?:create|submit|make|file) (?:a )?(?:ticket|request)\b/.test(normalized)) {
-    return 'To create a ticket:\n1. Open Tickets (Support tickets).\n2. Optionally choose a department, then select a general issue and specific issue.\n3. Choose a priority and describe what happened, including helpful details or location.\n4. For Maintenance requests, attach a photo of the issue (required).\n5. Select Create Ticket to submit it. You’ll see the ticket number after submission. You can later ask me to check its status. You can also type “submit request:” followed by a description to submit a request through chat.';
+    return 'To create a ticket right here, select “Create a ticket” below the chat. Choose a department (or let AssistDesk route it), select the issue and priority, describe what happened, then submit. Maintenance requests require a photo. You’ll see your ticket number here after it is created. You can also create one from the Tickets page or type “submit request:” followed by a description to submit through chat.';
   }
 
   return null;
