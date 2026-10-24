@@ -4976,21 +4976,21 @@ body.dark-mode .map-ticket-detail-close {
     align-items: center;
     justify-content: center;
     padding: 8px 12px;
-    border: 1px solid rgba(255, 255, 255, 0.68);
-    border-radius: 11px;
-    background: rgba(8, 32, 56, 0.2);
+    border: 1px solid #b42318;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #d92d20, #b42318);
     color: #fff;
     font-size: 0.76rem;
     font-weight: 700;
     line-height: 1;
     white-space: nowrap;
-    box-shadow: none;
-    transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+    box-shadow: 0 6px 14px rgba(180, 35, 24, 0.2);
+    transition: background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
   }
   .page-header-minimal .header-actions > .logout-button:hover:not(:disabled) {
     transform: translateY(-1px);
-    border-color: #fff;
-    background: rgba(8, 32, 56, 0.42);
+    background: linear-gradient(135deg, #c5221a, #912018);
+    box-shadow: 0 8px 16px rgba(180, 35, 24, 0.26);
   }
   .page-header-minimal .header-actions > .logout-button:focus-visible {
     outline: 3px solid #ffd35a;
