@@ -113,7 +113,9 @@ exports.register = async (req, res) => {
       return res.status(403).json({ message: 'Administrator accounts are created by the system developer.' });
     }
     let departmentId = null;
-    if (role === 'student' || role === 'faculty' || role === 'staff') {
+    const departmentProvided = department_id !== undefined && department_id !== null && department_id !== '';
+    const departmentRequired = role === 'student' || role === 'faculty';
+    if (departmentRequired || departmentProvided) {
       departmentId = Number(department_id);
       if (!Number.isInteger(departmentId) || departmentId <= 0) {
         return res.status(400).json({ message: 'Please select your department.' });

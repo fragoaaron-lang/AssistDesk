@@ -132,3 +132,79 @@ test('registration rejects passwords shorter than 8 characters', async () => {
     Department.findByPk = originalFindByPk;
   }
 });
+
+test('staff registration does not require a department assignment', async () => {
+  const originalFindOne = User.findOne;
+  const originalFindByPk = Department.findByPk;
+  let departmentLookupAttempted = false;
+
+  try {
+    User.findOne = async () => ({ id: 99, email: 'existing@staff.test' });
+    Department.findByPk = async () => {
+      departmentLookupAttempted = true;
+      return null;
+    };
+
+    const req = {
+      body: {
+        name: 'Staff Name Middle Last',
+        email: 'newstaff@example.com',
+        password: 'Abcdefghijk1!',
+        role: 'staff',
+      },
+    };
+    const res = {
+      statusCode: null,
+      data: null,
+      status(code) { this.statusCode = code; return this; },
+      json(payload) { this.data = payload; return this; },
+    };
+
+    await register(req, res);
+
+    assert.equal(res.statusCode, 202);
+    assert.equal(departmentLookupAttempted, false);
+  } finally {
+    User.findOne = originalFindOne;
+    Department.findByPk = originalFindByPk;
+  }
+});
+
+test('student registration still requires a department assignment', async () => {
+  const originalFindOne = User.findOne;
+  const originalFindByPk = Department.findByPk;
+  let userLookupAttempted = false;
+
+  try {
+    User.findOne = async () => {
+      userLookupAttempted = true;
+      return null;
+    };
+    Department.findByPk = async () => null;
+
+    const req = {
+      body: {
+        name: 'Student Name Middle Last',
+        email: 'newstudent@example.com',
+        password: 'Abcdefghijk1!',
+        role: 'student',
+        student_number: '2026-12345',
+      },
+    };
+    const res = {
+      statusCode: null,
+      data: null,
+      status(code) { this.statusCode = code; return this; },
+      json(payload) { this.data = payload; return this; },
+    };
+
+    await register(req, res);
+
+    assert.equal(res.statusCode, 400);
+    assert.match(res.data.message, /select your department/i);
+    assert.equal(userLookupAttempted, false);
+  } finally {
+    User.findOne = originalFindOne;
+    Department.findByPk = originalFindByPk;
+  }
+});

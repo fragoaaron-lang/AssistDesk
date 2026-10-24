@@ -33,17 +33,6 @@ const facultyDepartmentNames = [
   'college of education',
 ];
 
-const staffDepartmentNames = [
-  'maintenance department',
-  'accounting department',
-  'library',
-  'office of student affairs',
-  'registrar office',
-  'guidance office',
-  'clinic',
-  'information technology department',
-];
-
 const normalizeDepartmentLabel = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 
 const canonicalDepartmentLabels = {
@@ -117,9 +106,6 @@ const getDepartmentsForRole = (allDepartments, selectedRole) => {
   if (selectedRole === 'faculty') {
     return allDepartments.filter((department) => facultyDepartmentNames.includes(normalizeDepartmentLabel(getDepartmentDisplayName(department))));
   }
-  if (selectedRole === 'staff') {
-    return allDepartments.filter((department) => staffDepartmentNames.includes(normalizeDepartmentLabel(getDepartmentDisplayName(department))));
-  }
   return allDepartments;
 };
 
@@ -156,7 +142,7 @@ const getRegistrationErrors = ({ firstName, middleInitial, lastName, email, stud
     }
   }
 
-  if (!departmentId) errors.departmentId = 'Select your department.';
+  if (role !== 'staff' && !departmentId) errors.departmentId = 'Select your department.';
   if (getPasswordRules(password).some((rule) => !rule.met)
     || new TextEncoder().encode(password).length > 72) {
     errors.password = 'Use at least 8 characters with uppercase, lowercase, a number, and a special character; maximum 72 UTF-8 bytes.';
@@ -289,17 +275,6 @@ function RegisterPage({ modal = false, onSwitch }) {
                 ))}
               </div>
             </fieldset>
-            {role === 'staff' && (
-              <div className="registration-field registration-department-field registration-wide-field">
-                <label className="auth-field-label" htmlFor="registration-departmentId">Department</label>
-                <select className="institutional-select" {...getFieldProps('departmentId')} aria-label="Staff department" aria-describedby={fieldError('departmentId') ? 'registration-departmentId-error' : undefined} value={departmentId} onChange={(e) => updateField('departmentId', e.target.value, setDepartmentId)} required>
-                  {availableDepartments.map((department) => (
-                    <option key={department.id} value={department.id}>{getDepartmentDisplayName(department)}</option>
-                  ))}
-                </select>
-                {fieldError('departmentId') && <span className="registration-field-error" id="registration-departmentId-error">Choose a department to continue.</span>}
-              </div>
-            )}
             <div className="form-row">
               <div className="registration-field">
                 <label className="auth-field-label" htmlFor="registration-firstName">First name</label>
