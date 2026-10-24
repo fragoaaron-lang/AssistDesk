@@ -138,6 +138,10 @@ body {
   gap: 12px;
 }
 
+body.campus-map-expanded-open .chatbot-widget {
+  display: none !important;
+}
+
 .chatbot-launcher {
   border: 0;
   min-width: 74px;

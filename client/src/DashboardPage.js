@@ -28,6 +28,11 @@ function DashboardPage() {
   const closeExpandedMapButton = useRef(null);
 
   useEffect(() => {
+    document.body.classList.toggle('campus-map-expanded-open', expandedCampusMap);
+    return () => document.body.classList.remove('campus-map-expanded-open');
+  }, [expandedCampusMap]);
+
+  useEffect(() => {
     if (!showWelcomeSplash) return;
 
     const splashTimer = window.setTimeout(() => {
