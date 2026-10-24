@@ -1,14 +1,15 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { API_BASE_URL } from './config';
+import { clearResetPasswordToken, getResetPasswordToken, persistResetPasswordToken } from './resetPasswordToken';
 
 const PASSWORD_RULE_MESSAGE = 'Password must be at least 8 characters long, include an uppercase letter, lowercase letter, number, and special character, and use no more than 72 UTF-8 bytes.';
 
 function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const token = useMemo(() => searchParams.get('token') || '', [searchParams]);
+  const [token, setToken] = useState(() => getResetPasswordToken(searchParams));
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -17,6 +18,7 @@ function ResetPasswordPage() {
 
   useEffect(() => {
     if (!token) return;
+    persistResetPasswordToken(token);
     let referrerPolicy = document.querySelector('meta[name="referrer"]');
     if (!referrerPolicy) {
       referrerPolicy = document.createElement('meta');
@@ -55,10 +57,17 @@ function ResetPasswordPage() {
         newPassword: password,
       });
 
+      clearResetPasswordToken();
+      setToken('');
       setMessage(response.data.message || 'Password reset successful.');
       setTimeout(() => navigate('/'), 1600);
     } catch (error) {
-      setMessage(error.response?.data?.message || 'Unable to reset password.');
+      const responseMessage = error.response?.data?.message;
+      if (responseMessage === 'Invalid or expired reset token.') {
+        clearResetPasswordToken();
+        setToken('');
+      }
+      setMessage(responseMessage || 'Unable to reset password.');
     } finally {
       setIsLoading(false);
     }
