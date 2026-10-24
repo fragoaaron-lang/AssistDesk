@@ -23,6 +23,7 @@ function LoginPage({ modal = false, onSwitch }) {
 
     if (isLoading) return;
 
+    document.body.classList.add('dashboard-loading');
     setMessage('');
     setIsLoading(true);
 
@@ -51,11 +52,13 @@ function LoginPage({ modal = false, onSwitch }) {
       navigate('/dashboard');
     } catch (error) {
       if (error.response?.status === 403 && error.response?.data?.message === 'Please verify your email address before signing in.') {
+        document.body.classList.remove('dashboard-loading');
         const verificationEmail = email.trim().toLowerCase();
         sessionStorage.setItem('assistdesk_pending_verification_email', verificationEmail);
         navigate('/verify-email', { state: { email: verificationEmail } });
         return;
       }
+      document.body.classList.remove('dashboard-loading');
       setMessage(error.response?.data?.message || 'Login failed.');
     } finally {
       setIsLoading(false);

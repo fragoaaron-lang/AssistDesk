@@ -29,11 +29,11 @@ function DashboardPage() {
 
   useLayoutEffect(() => {
     document.body.classList.toggle('campus-map-expanded-open', expandedCampusMap);
-    document.body.classList.toggle('dashboard-loading', dashboardLoading);
+    document.body.classList.toggle('dashboard-loading', dashboardLoading || showWelcomeSplash);
     return () => {
       document.body.classList.remove('campus-map-expanded-open', 'dashboard-loading');
     };
-  }, [expandedCampusMap, dashboardLoading]);
+  }, [expandedCampusMap, dashboardLoading, showWelcomeSplash]);
 
   useEffect(() => {
     if (!showWelcomeSplash) return;
