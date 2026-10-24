@@ -8,19 +8,73 @@ import { mapChatLogsToEntries } from './aiChatHistory';
 import ticketIssueOptions from './ticketIssueOptions.json';
 
 const { defaultGeneralIssueOptions, departmentGeneralIssueOptions } = ticketIssueOptions;
+const collegeDepartmentNames = [
+  'basic education department',
+  'college of nursing',
+  'cs',
+  'cba',
+  'charm',
+  'college of criminology',
+  'college of physical therapy',
+  'education department',
+  'college of education',
+];
+
+const normalizeDepartmentName = (department) => String(department?.name || department || '').toLowerCase().trim();
 
 const getCollegeDepartmentKey = (department) => {
-  const name = String(department?.name || department || '').toLowerCase().trim();
+  const name = normalizeDepartmentName(department);
   if (name === 'basic education department') return 'basic-education';
   if (['cs', 'computer science department', 'college of computer studies'].includes(name)) return 'cs';
   if (['cba', 'college of business administration', 'college of business and accountancy'].includes(name)) return 'cba';
   if (['charm', 'college of hospitality and restaurant management', 'college of hospitality management'].includes(name)) return 'charm';
   if (['education department', 'college of education'].includes(name)) return 'education';
-  if (['college of nursing', 'nursing department'].includes(name)) return 'nursing';
-  if (['college of criminology', 'criminology department'].includes(name)) return 'crim';
-  if (['college of physical therapy', 'physical therapy department'].includes(name)) return 'pt';
+  if (collegeDepartmentNames.includes(name)) return name;
   return null;
 };
+
+const getDepartmentDisplayName = (department) => {
+  const name = normalizeDepartmentName(department);
+  if (['cs', 'cs department', 'computer science department', 'college of computer studies'].includes(name)) return 'College of Computer Studies';
+  if (['charm', 'hm department', 'college of hospitality and restaurant management', 'college of hospitality management'].includes(name)) return 'College of Hospitality Management';
+  if (['cba', 'accountancy', 'college of business administration', 'college of business and accountancy'].includes(name)) return 'College of Business and Accountancy';
+  if (['education department', 'college of education'].includes(name)) return 'College of Education';
+  if (['college of nursing', 'nursing department'].includes(name)) return 'College of Nursing';
+  if (['college of criminology', 'crim department', 'criminology department'].includes(name)) return 'College of Criminology';
+  if (['college of physical therapy', 'physical therapy department'].includes(name)) return 'College of Physical Therapy';
+  if (['accounting', 'accounting department'].includes(name)) return 'Accounting Department';
+  if (['maintenance', 'maintenance department'].includes(name)) return 'Maintenance Department';
+  if (['registrar department', 'registrar office'].includes(name)) return 'Registrar Office';
+  if (['student affairs', 'office of student affairs', 'office of the student affairs'].includes(name)) return 'Office of Student Affairs';
+  if (['library', 'library department'].includes(name)) return 'Library Department';
+  return department?.display_name || department?.name;
+};
+
+const getDepartmentOptionPriority = (department) => {
+  const preferredNames = [
+    'basic education department', 'education department', 'college of nursing', 'cs', 'cba', 'charm',
+    'college of criminology', 'college of physical therapy', 'maintenance department', 'accounting department',
+    'registrar office', 'library', 'guidance', 'office of student affairs', 'clinic', 'it department',
+  ];
+  const preferredIndex = preferredNames.indexOf(normalizeDepartmentName(department));
+  return preferredIndex === -1 ? preferredNames.length : preferredIndex;
+};
+
+const deduplicateDepartments = (records) => {
+  const unique = new Map();
+  [...records]
+    .sort((first, second) => getDepartmentOptionPriority(first) - getDepartmentOptionPriority(second)
+      || Number(first.id) - Number(second.id))
+    .forEach((department) => {
+      const displayName = getDepartmentDisplayName(department);
+      const key = String(displayName || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+      if (!unique.has(key)) unique.set(key, { ...department, display_name: displayName });
+    });
+  return [...unique.values()].sort((first, second) => first.display_name.localeCompare(second.display_name));
+};
+
+const isCollegeStudent = (currentUser) => currentUser?.role === 'student'
+  && Boolean(getCollegeDepartmentKey(currentUser.department_name));
 
 const getDepartmentIssueOptions = (department) => {
   const name = String(department?.name || '').toLowerCase();
@@ -461,13 +515,13 @@ function ChatbotWidget() {
     return 'Assistant';
   };
 
-  const studentCollegeKey = getCollegeDepartmentKey(user?.department_name || user?.Department?.name);
-  const availableTicketDepartments = user?.role === 'student' && studentCollegeKey
-    ? ticketDepartments.filter((department) => {
+  const studentCollegeKey = getCollegeDepartmentKey(user?.department_name);
+  const availableTicketDepartments = isCollegeStudent(user)
+    ? deduplicateDepartments(ticketDepartments).filter((department) => {
       const departmentCollegeKey = getCollegeDepartmentKey(department);
       return !departmentCollegeKey || departmentCollegeKey === studentCollegeKey;
     })
-    : ticketDepartments;
+    : deduplicateDepartments(ticketDepartments);
   const selectedTicketDepartment = ticketDepartments.find((department) => String(department.id) === String(ticketForm.department_id));
   const selectedTicketIssueGroups = ticketIssueGroups.filter((group) => Number(group.department_id) === Number(ticketForm.department_id));
   const ticketIssueOptionsByCategory = ticketForm.department_id
@@ -507,13 +561,10 @@ function ChatbotWidget() {
   const handleTicketDepartmentChange = (departmentId) => {
     const department = ticketDepartments.find((item) => String(item.id) === String(departmentId));
     const groups = ticketIssueGroups.filter((item) => Number(item.department_id) === Number(departmentId));
-    const categories = departmentId
-      ? (groups.length ? groups.map((group) => group.name) : Object.keys(getDepartmentIssueOptions(department)))
-      : Object.keys(defaultGeneralIssueOptions);
     setTicketForm((current) => ({
       ...current,
       department_id: departmentId,
-      category: categories[0] || '',
+      category: '',
       subject: '',
     }));
     setTicketAttachment(null);
@@ -837,16 +888,18 @@ function ChatbotWidget() {
                         required
                       />
                     </label>
-                    <label className="chatbot-ticket-photo">
-                      <span>Photo <small>{isMaintenanceTicket ? 'Required for Maintenance' : 'Optional'} · JPG, PNG, or WEBP · max 3 MB</small></span>
-                      <input type="file" accept="image/jpeg,image/png,image/webp" required={Boolean(isMaintenanceTicket && !ticketAttachment)} onChange={(event) => { handleTicketAttachment(event.target.files?.[0]); event.target.value = ''; }} />
-                      {ticketAttachment && (
-                        <span className="chatbot-ticket-file">
-                          {ticketAttachment.name}
-                          <button type="button" onClick={() => setTicketAttachment(null)}>Remove</button>
-                        </span>
-                      )}
-                    </label>
+                    {isMaintenanceTicket && (
+                      <label className="chatbot-ticket-photo">
+                        <span>Photo <small>Required for Maintenance · JPG, PNG, or WEBP · max 3 MB</small></span>
+                        <input type="file" accept="image/jpeg,image/png,image/webp" required={!ticketAttachment} onChange={(event) => { handleTicketAttachment(event.target.files?.[0]); event.target.value = ''; }} />
+                        {ticketAttachment && (
+                          <span className="chatbot-ticket-file">
+                            {ticketAttachment.name}
+                            <button type="button" onClick={() => setTicketAttachment(null)}>Remove</button>
+                          </span>
+                        )}
+                      </label>
+                    )}
                     {ticketSubmitState.message && <p className="chatbot-ticket-status is-error" role="alert">{ticketSubmitState.message}</p>}
                     <div className="chatbot-ticket-actions">
                       <button type="button" className="is-secondary" onClick={() => setTicketComposerOpen(false)}>Cancel</button>

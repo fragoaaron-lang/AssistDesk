@@ -7682,7 +7682,9 @@ img {
 .chat-message { display: flex; align-items: flex-start; gap: 8px; width: 100%; max-width: 100%; margin: 0 0 12px; padding: 0; border: 0; background: transparent; font-size: 0.82rem; line-height: 1.52; }
 .chatbot-message-content { display: grid; min-width: 0; max-width: min(88%, 335px); gap: 7px; padding: 11px 13px; border: 1px solid #e0e8ed; border-radius: 14px 14px 14px 5px; background: #fff; color: #19394d; overflow-wrap: anywhere; box-shadow: 0 3px 9px rgba(10, 45, 67, 0.045); }
 .chat-message.assistant { justify-content: flex-start; margin-right: auto; }
+.chat-message.assistant > .chatbot-message-content { margin-right: auto; }
 .chat-message.user { justify-content: flex-end; margin-right: 0; margin-left: auto; background: transparent; color: inherit; }
+.chat-message.user > .chatbot-message-content { margin-left: auto; }
 .chat-message.user .chatbot-message-content { border-color: #d4e4f2; border-radius: 14px 14px 5px 14px; background: #e8f1fa; color: #143d5b; box-shadow: none; }
 .chat-message.assistant > .chatbot-message-content > span:first-child,
 .chat-message.user > .chatbot-message-content > span:first-child { white-space: pre-wrap; }
