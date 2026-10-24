@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { API_BASE_URL } from './config';
@@ -27,10 +27,13 @@ function DashboardPage() {
   const expandMapButton = useRef(null);
   const closeExpandedMapButton = useRef(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.body.classList.toggle('campus-map-expanded-open', expandedCampusMap);
-    return () => document.body.classList.remove('campus-map-expanded-open');
-  }, [expandedCampusMap]);
+    document.body.classList.toggle('dashboard-loading', dashboardLoading);
+    return () => {
+      document.body.classList.remove('campus-map-expanded-open', 'dashboard-loading');
+    };
+  }, [expandedCampusMap, dashboardLoading]);
 
   useEffect(() => {
     if (!showWelcomeSplash) return;

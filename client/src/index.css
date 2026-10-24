@@ -138,7 +138,8 @@ body {
   gap: 12px;
 }
 
-body.campus-map-expanded-open .chatbot-widget {
+body.campus-map-expanded-open .chatbot-widget,
+body.dashboard-loading .chatbot-widget {
   display: none !important;
 }
 
