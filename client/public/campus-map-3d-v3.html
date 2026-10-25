@@ -35,8 +35,7 @@ h1{font-size:16px;margin:0 0 8px;font-weight:700}
 .heat-dot{position:absolute;transform:translate(-50%,-50%);border:2px solid rgba(255,255,255,.24);border-radius:50%;background:radial-gradient(circle,rgba(237,23,37,.9) 0%,rgba(255,74,25,.8) 18%,rgba(255,174,30,.7) 38%,rgba(255,224,45,.55) 57%,rgba(95,220,70,.4) 76%,rgba(36,190,111,.18) 90%,rgba(36,190,111,0) 100%);filter:blur(5px) saturate(.55);mix-blend-mode:normal;pointer-events:none}
 .ticket-pin{position:absolute;transform:translate(-50%,-100%) rotate(-45deg);width:25px;height:25px;padding:0;border:2px solid #fff;border-radius:50% 50% 50% 0;box-shadow:0 2px 8px rgba(16,24,40,.78),0 0 0 2px rgba(8,32,56,.44);pointer-events:auto;cursor:pointer;z-index:4}
 .ticket-pin::after{content:"";position:absolute;inset:6px;border-radius:50%;background:#fff;pointer-events:none}
-.ticket-pin.low,.ticket-pin.medium{background:#1458ed}.ticket-pin.urgent{background:#ed1725}
-.ticket-pin.unlocated{background:#d97706}
+.ticket-pin.low{background:#34c759}.ticket-pin.medium{background:#3b82f6}.ticket-pin.urgent{background:#ef4444}
 .map-unlocated-label{position:absolute;z-index:5;transform:translate(-50%,10px);padding:4px 7px;border:1px solid rgba(146,64,14,.65);border-radius:5px;background:rgba(255,251,235,.96);color:#7c2d12;font-size:10px;font-weight:800;line-height:1.2;white-space:nowrap;box-shadow:0 2px 5px rgba(16,24,40,.25);pointer-events:none}
 #legend{right:12px;bottom:calc(70px + env(safe-area-inset-bottom,0px));padding:10px 12px;min-width:180px}
 #legend strong{display:block;font-size:12px;margin-bottom:8px}
