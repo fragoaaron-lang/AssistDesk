@@ -725,11 +725,11 @@ function AdminReportsPage() {
                         <tbody>
                           {pendingStaffApprovals.map((pendingUser) => (
                             <tr key={pendingUser.id}>
-                              <td data-label="Name">{pendingUser.name}</td>
-                              <td data-label="Email">{pendingUser.email}</td>
-                              <td data-label="Role">{pendingUser.role}</td>
-                              <td data-label="Department">{pendingUser.Department?.name || 'Unassigned'}</td>
-                              <td data-label="ID document"><button type="button" className="institutional-btn small secondary" onClick={() => openStaffIdReview(pendingUser)} disabled={staffApprovalLoading}>
+                              <td>{pendingUser.name}</td>
+                              <td>{pendingUser.email}</td>
+                              <td>{pendingUser.role}</td>
+                              <td>{pendingUser.Department?.name || 'Unassigned'}</td>
+                              <td><button type="button" className="institutional-btn small secondary" onClick={() => openStaffIdReview(pendingUser)} disabled={staffApprovalLoading}>
                                 {staffApprovalLoading ? 'Loading…' : 'Review ID'}
                               </button></td>
                             </tr>
@@ -766,9 +766,9 @@ function AdminReportsPage() {
                             <tr><td colSpan={roleGroup.name === 'student' ? 6 : roleGroup.name === 'admin' ? 4 : 5} className="small-muted">No users in this group</td></tr>
                           ) : roleGroup.users.map((directoryUser) => (
                             <tr key={directoryUser.id}>
-                              <td data-label="Name">{directoryUser.name || 'Unknown'}</td>
-                              <td data-label="Email">{directoryUser.email}</td>
-                              <td data-label="Department">{roleGroup.name === 'admin'
+                              <td>{directoryUser.name || 'Unknown'}</td>
+                              <td>{directoryUser.email}</td>
+                              <td>{roleGroup.name === 'admin'
                                 ? (directoryUser.Department?.name || 'Global — all departments')
                                 : (
                                   <select className="institutional-select" value={directoryUser.department_id || ''} onChange={(event) => updateUserDepartment(directoryUser, event.target.value)} disabled={updatingUserId === directoryUser.id} aria-label={`Department for ${directoryUser.name || directoryUser.email}`}>
@@ -776,9 +776,9 @@ function AdminReportsPage() {
                                     {departments.map((department) => <option key={department.id} value={department.id}>{department.display_name || department.name}</option>)}
                                   </select>
                                 )}</td>
-                              {roleGroup.name === 'student' && <td data-label="Student number">{directoryUser.student_number || 'N/A'}</td>}
-                              <td data-label="Status">{directoryUser.account_status || 'active'}</td>
-                              {roleGroup.name !== 'admin' && <td data-label="Actions"><button type="button" className="user-terminate-button" onClick={() => terminateUser(directoryUser)} disabled={updatingUserId === directoryUser.id}>
+                              {roleGroup.name === 'student' && <td>{directoryUser.student_number || 'N/A'}</td>}
+                              <td>{directoryUser.account_status || 'active'}</td>
+                              {roleGroup.name !== 'admin' && <td><button type="button" className="user-terminate-button" onClick={() => terminateUser(directoryUser)} disabled={updatingUserId === directoryUser.id}>
                                 {updatingUserId === directoryUser.id ? 'Updating...' : 'Terminate'}
                               </button></td>}
                             </tr>
@@ -820,12 +820,12 @@ function AdminReportsPage() {
                             <tr><td colSpan={roleGroup.name === 'student' ? 6 : 5} className="small-muted">No terminated users in this group</td></tr>
                           ) : roleGroup.users.map((directoryUser) => (
                             <tr key={directoryUser.id}>
-                              <td data-label="Name">{directoryUser.name || 'Unknown'}</td>
-                              <td data-label="Email">{directoryUser.email}</td>
-                              <td data-label="Department">{directoryUser.Department?.name || 'Unassigned'}</td>
-                              {roleGroup.name === 'student' && <td data-label="Student number">{directoryUser.student_number || 'N/A'}</td>}
-                              <td data-label="Status">Terminated</td>
-                              <td data-label="Actions"><button
+                              <td>{directoryUser.name || 'Unknown'}</td>
+                              <td>{directoryUser.email}</td>
+                              <td>{directoryUser.Department?.name || 'Unassigned'}</td>
+                              {roleGroup.name === 'student' && <td>{directoryUser.student_number || 'N/A'}</td>}
+                              <td>Terminated</td>
+                              <td><button
                                 type="button"
                                 className="user-reactivate-button"
                                 onClick={() => reactivateUser(directoryUser)}

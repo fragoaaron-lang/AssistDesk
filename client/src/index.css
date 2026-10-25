@@ -8865,14 +8865,21 @@ body.dark-mode .auth-modal .remember-me-option small {
 
 @media (max-width: 640px) {
   .user-directory-card > .report-card-heading {
-    align-items: stretch;
-    flex-direction: column;
-    gap: 12px;
+    align-items: center;
+    flex-direction: row;
+    gap: 10px;
   }
 
-  .user-directory-header-actions,
+  .user-directory-header-actions {
+    width: auto;
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+
   .user-directory-header-actions .user-directory-archive-button {
-    width: 100%;
+    width: auto;
+    min-width: 44px;
+    padding-inline: 12px;
   }
 
   .user-directory-card .staff-approval-queue {
@@ -8911,92 +8918,6 @@ body.dark-mode .auth-modal .remember-me-option small {
     grid-column: 2;
     justify-self: start;
     margin: 0;
-  }
-
-  .user-directory-card .report-table-scroll {
-    overflow: visible;
-  }
-
-  .user-directory-card .report-table {
-    display: block;
-    width: 100%;
-    min-width: 0;
-    font-size: 0.9rem;
-  }
-
-  .user-directory-card .report-table thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    clip-path: inset(50%);
-    border: 0;
-  }
-
-  .user-directory-card .report-table tbody {
-    display: grid;
-    gap: 10px;
-    padding: 6px 0 2px;
-  }
-
-  .user-directory-card .report-table tbody tr {
-    display: grid;
-    gap: 0;
-    padding: 5px 11px;
-    border: 1px solid var(--border);
-    border-radius: 9px;
-    background: var(--surface);
-  }
-
-  .user-directory-card .report-table tbody td {
-    display: grid;
-    grid-template-columns: minmax(6.2rem, 0.42fr) minmax(0, 1fr);
-    align-items: center;
-    gap: 10px;
-    min-width: 0;
-    padding: 9px 0;
-    border-bottom: 1px solid var(--border);
-    overflow-wrap: anywhere;
-  }
-
-  .user-directory-card .report-table tbody td:last-child {
-    border-bottom: 0;
-  }
-
-  .user-directory-card .report-table tbody td::before {
-    content: attr(data-label);
-    color: var(--muted);
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.045em;
-    line-height: 1.35;
-    text-transform: uppercase;
-  }
-
-  .user-directory-card .report-table tbody td[colspan] {
-    display: block;
-    grid-column: 1 / -1;
-    padding: 12px 0;
-    border: 0;
-    text-align: center;
-  }
-
-  .user-directory-card .report-table .institutional-select {
-    width: 100%;
-    min-width: 0;
-    min-height: 44px;
-    font-size: 16px;
-  }
-
-  .user-directory-card .user-terminate-button,
-  .user-directory-card .user-reactivate-button,
-  .user-directory-card .report-table .institutional-btn {
-    width: 100%;
-    min-height: 44px;
-    font-size: 0.82rem;
   }
 
   .user-directory-archive-backdrop {
