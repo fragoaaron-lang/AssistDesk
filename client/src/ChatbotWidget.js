@@ -509,6 +509,8 @@ function ChatbotWidget() {
   if (pathname === '/' || !token || !user
     || ['terminated', 'pending_id', 'pending_approval', 'id_rejected'].includes(user.account_status)) return null;
 
+  const isAdminUser = user.role === 'admin';
+
   const getAssistantName = () => {
     if (gender === 'boy') return 'Alex';
     if (gender === 'girl') return 'Maya';
@@ -536,6 +538,7 @@ function ChatbotWidget() {
   const isMaintenanceTicket = selectedTicketDepartment?.name?.toLowerCase().includes('maintenance');
 
   const openTicketComposer = async () => {
+    if (isAdminUser) return;
     setShowFaqs(false);
     setTicketComposerOpen(true);
     setTicketSubmitState({ status: 'idle', message: '' });
@@ -794,7 +797,7 @@ function ChatbotWidget() {
                     ))}
                   </div>
                 )}
-                {entry.escalationAvailable && <a className="chatbot-escalation-link" href="/tickets">Create a support ticket for staff follow-up</a>}
+                {entry.escalationAvailable && !isAdminUser && <a className="chatbot-escalation-link" href="/tickets">Create a support ticket for staff follow-up</a>}
                 {entry.ticket && (
                   <>
                     <small>
@@ -820,7 +823,7 @@ function ChatbotWidget() {
                 </div>
               </div>
             ))}
-            {ticketComposerOpen && (
+            {ticketComposerOpen && !isAdminUser && (
               <section className="chatbot-ticket-composer" aria-labelledby="chatbot-ticket-title">
                 <div className="chatbot-ticket-composer-heading">
                   <div>
@@ -947,15 +950,17 @@ function ChatbotWidget() {
             <div ref={chatEndRef} aria-hidden="true" />
           </div>
           <div className="chatbot-footer">
-            <button
-              type="button"
-              className="chatbot-ticket-toggle"
-              onClick={() => (ticketComposerOpen ? setTicketComposerOpen(false) : openTicketComposer())}
-              aria-expanded={ticketComposerOpen}
-            >
-              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12" /></svg>
-              {ticketComposerOpen ? 'Close ticket form' : 'Create a ticket'}
-            </button>
+            {!isAdminUser && (
+              <button
+                type="button"
+                className="chatbot-ticket-toggle"
+                onClick={() => (ticketComposerOpen ? setTicketComposerOpen(false) : openTicketComposer())}
+                aria-expanded={ticketComposerOpen}
+              >
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12" /></svg>
+                {ticketComposerOpen ? 'Close ticket form' : 'Create a ticket'}
+              </button>
+            )}
             <button type="button" className="chatbot-faq-toggle" onClick={() => { setShowFaqs((value) => !value); setFaqSearch(''); }} aria-expanded={showFaqs}>
               <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4.5h14M3 10h14M3 15.5h8" /></svg>
               {showFaqs ? 'Hide FAQ browser' : 'Browse common questions'}
