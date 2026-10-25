@@ -8822,7 +8822,13 @@ body.dark-mode .auth-modal .remember-me-option small {
 }
 
 .staff-confirmation-folder-content {
+  min-width: 0;
   padding: 4px 2px 2px;
+}
+
+.staff-confirmation-folder-content .report-table-scroll {
+  width: 100%;
+  min-width: 0;
 }
 
 .staff-confirmation-folder-content > .small-muted {
